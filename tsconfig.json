@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "tslint-language-service"
+      }
+    ],
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "./src",
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
+    "jsx": "preserve",
+    "module": "esnext",
+    "target": "es2017",
+    "moduleResolution": "node",
+    "noEmitHelpers": true,
+    "noEmitOnError": false,
+    "noImplicitAny": true,
+    "noImplicitThis": false,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "sourceMap": true
+  },
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".storybook/*.ts",
+    "stories/*.ts",
+    "stories/*.tsx"
+  ],
+  "files": [
+    "src/index.tsx",
+    ".storybook/config.js"
+  ]
+}

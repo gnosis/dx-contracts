@@ -1,0 +1,24 @@
+{
+  "extends": "stylelint-config-standard",
+  "rules": {
+    "selector-list-comma-newline-after": null,
+    "function-comma-space-after": null,
+    "number-leading-zero": null,
+    "declaration-empty-line-before": ["always", {
+      except: [
+        "first-nested"
+      ],
+      ignore: [
+        "after-comment",
+        "inside-single-line-block",
+        "after-declaration"
+      ],
+    }],
+    "at-rule-no-unknown": [true, {
+      "ignoreAtRules": ["function", "return", "if", "else", "for", "each", "mixin", "while", "include", "extend", "at-root"]
+    }],
+    "declaration-block-no-redundant-longhand-properties": [true, {
+      "ignoreShorthands": ["/grid/"]
+    }]
+  }
+}

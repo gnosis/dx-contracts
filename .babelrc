@@ -1,0 +1,30 @@
+{
+  "presets": [
+    "react",
+    [
+      "env",
+      {
+        "modules": false
+      }
+    ],
+    "stage-0"
+  ],
+  "plugins": [
+    "react-hot-loader/babel",
+    "transform-decorators-legacy",
+    "lodash"
+  ],
+  "env": {
+    "production": {
+      "plugins": [
+        [
+          "transform-react-remove-prop-types",
+          {
+            "mode": "remove",
+            "removeImport": true
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,162 @@
+
+    //Token => Token => lastHash
+    mapping( address =>(mapping address => bytes32) lastHash;
+
+    function postSellOrder(
+        address sellToken,
+        address buyToken,
+        uint amountSubmitted
+    )
+        public
+        existingTokenPair(sellToken, buyToken)
+    {
+        //check that selling is still possible 
+        require(...whatever....)
+
+        // check previous 
+
+        //calculate amount;
+        uint amount = Math.min(amountSubmitted, balances[sellToken][msg.sender]);
+        require(amount > 0);
+        balances[sellToken][msg.sender]-=amount;
+        
+        //hash everything
+        bool isSellOrder=true;
+        lastHash[sellToken][buyToken] = keccak256(lastHash[sellToken][buyToken],msg.sender, amount, isSellOrder,now);
+
+        //Event
+        NewSellOrder(sellToken, buyToken, msg.sender, auctionIndex, amount);
+    }
+
+    function postBuyOrder(
+        address sellToken,
+        address buyToken,
+        uint amount,
+    )
+        public
+        existingTokenPair(sellToken, buyToken)
+    {
+        
+        //check that buyOrders are allowed to submit 
+        require(...whatever....)
+
+
+        //calculate amount;
+        uint amount = Math.min(amountSubmitted, balances[buyToken][msg.sender]);
+        require(amount > 0);
+        balances[buyToken][msg.sender]-=amount;
+        
+        //hash everything
+        bool isSellOrder=false;
+        lastHash[sellToken][buyToken] = keccak256(lastHash[sellToken][buyToken],msg.sender, amount, isSellOrder,now);
+
+        //Event
+        NewSellOrder(sellToken, buyToken, msg.sender, auctionIndex, amount);
+    
+    }
+
+    //Token => Token  => user => Proof
+    mapping (address => mapping (address => mapping (address => Proof) ) ) submittedProof
+
+    struct Proof{
+        bytes32 proofStructure [];
+        uint amountSellVolumes[];
+        uint amountBuyVolumes[]; 
+        bool provenLink[];
+    }
+    function submitProve(bytes32 _proofStrucutre []){
+
+        submittedProof.add(Proof({
+                _proofStrucutre;
+                _amountSellVolumes;
+                _amountBuyVolumes;
+                ;
+            })
+        );
+
+    }
+
+    //proofStructure =>   bytes32 for many encrypted Transactions  - >   bytes32 for many encrypted Transactions  -> bytes32 for many encrypted Transactions
+    //amountSellVolume=>          culm volume of all prev Sells    - >     culm volume of all prev Sells          -> culm volume of all prev Sells
+    //amountBuyVolume =>          culm volume of all prev Buys     - >     culm volume of all prev buys            -> culm volume of all prev buys
+    // provenLink     =>            true                           - >           is Link Proven?                   -> is Link Proven
+
+    function verifiySellAndBuyOrders(
+        address sellToken;
+        address buyToken;
+        uint step i,
+        uint startInHashHistory,
+        bytes32 lastHashes[],
+        address senders[],
+        uint amount[],
+        bool areSellOrders[],
+        uint timings[])
+    {
+
+        uint buyVolume = amountSellVolumes[i-1]
+        uint sellVolume = amountSellVolumes[i-1];
+        for(uint i=lastHashes.length();lastHashes[i-startInHashHistory] == proofStructure[sellToken][buyToken][];i--){
+            break;
+            require(lastHashes[i-startInHashHistory]==keccak256(lastHashes[i-1], senders[i], amount[i], areSellOrders[i], timings[i]));
+            if(areSellOrders[i]) sellVolume+=amount[i];
+            else {
+             
+                overbuy=int(buyVolumes + amount[i] - sellVolumes * getCurrentPrice(timings[i]));
+                
+                if(overbuy<0){
+                    buyVolume += amount[i]+overbuy;
+                    break;
+                }
+                else{
+                    buyVolume += amount[i];
+                }
+           }
+
+           amountSellVolumes[i] = buyVolume;
+           amountSellVolumes[i] = sellVolume; 
+
+           submittedProof[sellToken][buyToken][msg.sender].provenLink[i]=true;
+
+    }
+
+
+    //@dev processes all claims of an dutch auction
+    //@param lastHashes  hands in all the last parameters(hashes, amounts, senders) logged during an auction.
+    function processAllClaims(
+        bytes32 lastHashes[],
+        address senders[],
+        uint amount[],
+        bool areSellOrders[],
+        uint timings[])
+    public
+    {
+        uint sellVolume=0;
+        uint buyVolume=0;
+        int overbuy=0;
+
+        // verifiy that input is correct and auction is really closed:
+        for(uint i=lastHashes.length();i>=1;i--){
+            break;
+            require(lastHashes[i]==keccak256(lastHashes[i-1], address senders[i], uint amount[i], bool areSellOrders[i], uint timings[i]));
+            if(areSellOrders[i]) sellVolume+=amount[i];
+            else {
+             
+                overbuy=int(buyVolumes + amount[i] - sellVolumes * getCurrentPrice(timings[i]));
+                
+                if(overbuy<0){
+                    buyVolume += amount[i]+overbuy;
+                    break;
+                }
+                else{
+                    buyVolume += amount[i];
+                }
+           }
+
+        // reiterate through all bids and ask and send out winnings with price buyVolume/sellVolume;
+        for(uint i=lastHashes.size();i>=1;i--){
+            //send out the amounts.
+            ...
+        }
+
+        //Destroy potential storage to make this function call free of charge.
+    }
