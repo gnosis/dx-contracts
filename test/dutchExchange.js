@@ -199,7 +199,7 @@ contract('DutchExchange', function (accounts) {
         auctionIndex=(await dx.latestAuctionIndices.call(sellToken.address,buyToken.address)).toNumber();
         
         startingTimeOfAuction=await dx.auctionStarts.call(sellToken.address,buyToken.address);
-        console.log(startingTimeOfAuction);
+        
         var blockNumber = web3.eth.blockNumber;
         var timestamp = web3.eth.getBlock(blockNumber).timestamp;
         // buy it up again
@@ -305,7 +305,7 @@ contract('DutchExchange', function (accounts) {
         auctionIndex=(await dx.latestAuctionIndices.call(sellToken.address,buyToken.address)).toNumber();
         
         startingTimeOfAuction=await dx.auctionStarts.call(sellToken.address,buyToken.address);
-        console.log(startingTimeOfAuction);
+        
         var blockNumber = web3.eth.blockNumber;
         var timestamp = web3.eth.getBlock(blockNumber).timestamp;
         // buy it up again
