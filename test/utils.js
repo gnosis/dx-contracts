@@ -11,4 +11,8 @@ async function assertRejects(q, msg) {
   }
 }
 
-module.exports = { assertRejects }
+const blockNumber = () => web3.eth.blockNumber
+
+const timestamp = (block = 'latest') => web3.eth.getBlock(block).timestamp
+
+module.exports = { assertRejects, timestamp, blockNumber }
