@@ -261,7 +261,7 @@ contract DutchExchange {
         require(balances[token2][msg.sender] >= token2Funding);
         
         balances[token1][msg.sender] -= token1Funding;
-        balances[token1][msg.sender] -= token1Funding;
+        balances[token2][msg.sender] -= token2Funding;
 
 
         // Save prices of opposite auctions
