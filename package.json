@@ -28,7 +28,7 @@
     "build-storybook": "build-storybook"
   },
   "lint-staged": {
-    "src/**/*.js?(x)": [
+    "@(src|test)/**/*.js?(x)": [
       "eslint --cache --fix",
       "git add"
     ],
