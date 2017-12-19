@@ -9,7 +9,7 @@ const TokenGNO = artifacts.require('TokenGNO')
 // const Token = artifacts.require('./Token.sol')
 // const OWL = artifacts.require('OWL')
 
-const { timestamp, blockNumber } = require('./utils')
+const { timestamp } = require('./utils')
 
 const { wait } = require('@digix/tempo')(web3)
 
@@ -33,20 +33,24 @@ const setupTest = async (accounts) => {
 
   // Await ALL Promises for each account setup
   await Promise.all(accounts.map((acct) => {
-    if (acct === accounts[0]) return
+    if (acct === accounts[0]) return null
 
-    eth.deposit({ from: acct, value: 10 ** 9 })
-    eth.approve(dx.address, 10 ** 9, { from: acct })
-    gno.transfer(acct, 10 ** 18, { from: accounts[0] })
-    gno.approve(dx.address, 10 ** 18, { from: acct })
+    return Promise.all([
+      eth.deposit({ from: acct, value: 10 ** 9 }),
+      eth.approve(dx.address, 10 ** 9, { from: acct }),
+      gno.transfer(acct, 10 ** 18, { from: accounts[0] }),
+      gno.approve(dx.address, 10 ** 18, { from: acct }),
+    ])
   }))
 
   // Deposit depends on ABOVE finishing first... so run here
   await Promise.all(accounts.map((acct) => {
-    if (acct === accounts[0]) return
+    if (acct === accounts[0]) return null
 
-    dx.deposit(eth.address, 10 ** 9, { from: acct })
-    dx.deposit(gno.address, 10 ** 18, { from: acct })
+    return Promise.all([
+      dx.deposit(eth.address, 10 ** 9, { from: acct }),
+      dx.deposit(gno.address, 10 ** 18, { from: acct }),
+    ])
   }))
 
   // add token Pair
@@ -104,13 +108,13 @@ const checkBalanceBeforeClaim = async (
   } else {
     const balanceBeforeClaim = (await dx.balances.call(buyToken.address, acct)).toNumber()
     await dx.claimSellerFunds(sellToken.address, buyToken.address, acct, idx)
-    //console.log(balanceBeforeClaim+"-->"+amt+"-->"+(await dx.balances.call(buyToken.address, acct)).toNumber())
+    // console.log(balanceBeforeClaim+"-->"+amt+"-->"+(await dx.balances.call(buyToken.address, acct)).toNumber())
     assert.equal(Math.abs(balanceBeforeClaim + amt - (await dx.balances.call(buyToken.address, acct)).toNumber()) < round, true)
   }
 }
 
 const getAuctionIndex = async (sell = eth, buy = gno) => (await dx.latestAuctionIndices.call(sell.address, buy.address)).toNumber()
-const getStartingTimeOfAuction = async (sell = eth, buy = gno) => (await dx.auctionStarts.call(sell.address, buy.address)).toNumber()
+// const getStartingTimeOfAuction = async (sell = eth, buy = gno) => (await dx.auctionStarts.call(sell.address, buy.address)).toNumber()
 
 contract('DutchExchange', (accounts) => {
   const [, seller1, , buyer1] = accounts
