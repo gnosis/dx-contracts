@@ -14,11 +14,10 @@ contract OWL is StandardToken {
     uint8 public constant decimals = 18;  // 18 is the most common number of decimal places
 
     address public GNOTokenAddress;
-
     address public oracleContract;
 
 
-    struct GNOLocker {
+    /* Not longer needed due to smart encryption. struct GNOLocker {
         address sender;
         uint nonce;
         uint GNOLocked;
@@ -26,9 +25,9 @@ contract OWL is StandardToken {
         uint lockingPeriod;
         uint GNOIssueRate;
         uint timeOfLastWithdraw;
-    }
+    } */
 
-    mapping ( bytes32 => GNOLocker ) public lockedGNO;
+    mapping ( bytes32 => bool ) public lockedGNO;
     uint public amountOfGNOLocked;                
     //tracks the amount of GNO currently locked down. Is used in calcIssueRate
     uint public amountOfGNOLockedInitially;       
@@ -56,8 +55,7 @@ contract OWL is StandardToken {
     //@param: lockingPeriod
     function lockGNO(uint amount, uint nonce, uint lockingPeriod) public
     {
-        bytes32 GNOLockHash = keccak256(amount, nonce, lockingPeriod);
-        require(lockedGNO[GNOLockHash].timeOfLocking != 0);
+       
         require(Token(GNOTokenAddress).transferFrom(msg.sender, this, amount));
 
         //adjustment of counter of GNOlocked
@@ -71,53 +69,100 @@ contract OWL is StandardToken {
         uint issueRate = calcIssueRate(amount);
         //one thrid of Tokens is issued immediatly
         balances[msg.sender] += issueRate*lockingPeriod/3;
-
-        lockedGNO[GNOLockHash] = GNOLocker(
-            msg.sender,
-            nonce,
-            amount,
-            now-(now%(1 days)),  // further OWL issuance is calculated in 5184000 sec[1 (1 days)] steps
-            lockingPeriod,
-            issueRate*2/3,
-            now-(now%(1 days)));
+        totalTokens += issueRate*lockingPeriod/3;
+        //bytes32 GNOLockHash = keccak256(sender, nonce, GNOLocked, timeOfLocking, lockingPeriod, NGOIssueRate, timeOfLastWithdraw);
+        bytes32 GNOLockHash = keccak256(msg.sender, nonce, amount, now-(now%(1 days)), lockingPeriod, issueRate*2/3, now-(now%(1 days)));
+        
+        require(lockedGNO[GNOLockHash] != true);
+        lockedGNO[GNOLockHash] = true;
     }
 
     //@dev: Allows GNO holders with locked GNO to unlock their GNO
     //@param: _GNOLockHash of their Locked GNO
-    function unlockGNO(bytes32 _GNOLockHash) public 
-    {
-        require(lockedGNO[_GNOLockHash].sender == msg.sender);
-        require(lockedGNO[_GNOLockHash].timeOfLocking + lockedGNO[_GNOLockHash].lockingPeriod < now);
+    function unlockGNO(
+        address sender,
+        uint nonce,
+        uint GNOLocked,
+        uint timeOfLocking,
+        uint lockingPeriod,
+        uint GNOIssueRate,
+        uint timeOfLastWithdraw) public 
+    {   
+        bytes32 GNOLockHash = keccak256(sender, nonce, GNOLocked, timeOfLocking, lockingPeriod, GNOIssueRate, timeOfLastWithdraw);
 
-        withdrawOWL(_GNOLockHash);
-        uint amount = lockedGNO[_GNOLockHash].GNOLocked;
+        require(lockedGNO[GNOLockHash]);
+        require(sender == msg.sender);
+        require(timeOfLocking + lockingPeriod < now);
+
+        withdrawOWL(
+        sender,
+        nonce,
+        GNOLocked,
+        timeOfLocking,
+        lockingPeriod,
+        GNOIssueRate,
+        timeOfLastWithdraw);
+        uint amount = GNOLocked;
         amountOfGNOLocked -= amount;
-        delete lockedGNO[_GNOLockHash];
+        delete lockedGNO[GNOLockHash];
 
         Token(GNOTokenAddress).transfer(msg.sender, amount);
     }
 
     //@dev: Allows GNO holders with locked GNO to withdraw OWL
     //@param: _GNOLockHash of their Locked GNO
-    function withdrawOWL(bytes32 _lockHash) public
+    function withdrawOWL(
+        address sender,
+        uint nonce,
+        uint GNOLocked,
+        uint timeOfLocking,
+        uint lockingPeriod,
+        uint GNOIssueRate,
+        uint timeOfLastWithdraw) public
     {
-        require(msg.sender == lockedGNO[_lockHash].sender);
+        bytes32 GNOLockHash = keccak256(sender, nonce, GNOLocked, timeOfLocking, lockingPeriod, GNOIssueRate, timeOfLastWithdraw);
+         require(lockedGNO[GNOLockHash]);
+        require(msg.sender == sender);
         
-        balances[msg.sender] += (now-lockedGNO[_lockHash].timeOfLastWithdraw)/((1 days))*lockedGNO[_lockHash].GNOIssueRate;
-        lockedGNO[_lockHash].timeOfLastWithdraw = now-(now%(1 days))+(1 days);
+        balances[msg.sender] += (now-timeOfLastWithdraw)/((1 days))*GNOIssueRate;
+        totalTokens +=(now-timeOfLastWithdraw)/((1 days))*GNOIssueRate;
+        lockedGNO[GNOLockHash] = false;
+        GNOLockHash = keccak256(sender, nonce, GNOLocked, timeOfLocking, lockingPeriod, GNOIssueRate, now-(now%(1 days))+(1 days));
+         
+        lockedGNO[GNOLockHash] = true;
     }
 
     //@dev: Allows GNO holders with locked GNO to relock their GNOTokens
     //@param: _GNOLockHash of their Locked GNO
     //@param: lockingPeriod for the next locking
-    function relockGNO(bytes32 _GNOLockHash) public
+    function relockGNO(
+        address sender,
+        uint nonce,
+        uint GNOLocked,
+        uint timeOfLocking,
+        uint lockingPeriod,
+        uint GNOIssueRate,
+        uint timeOfLastWithdraw) public
     {
-        require(lockedGNO[_GNOLockHash].sender == msg.sender);
-        require(lockedGNO[_GNOLockHash].timeOfLocking + lockedGNO[_GNOLockHash].lockingPeriod < now);
-        withdrawOWL(_GNOLockHash);
-        lockedGNO[_GNOLockHash].GNOIssueRate = calcIssueRate(lockedGNO[_GNOLockHash].GNOLocked);
-        balances[msg.sender] += lockedGNO[_GNOLockHash].GNOIssueRate*lockedGNO[_GNOLockHash].lockingPeriod/3;
-        lockedGNO[_GNOLockHash].timeOfLocking = now-(now%(1 days));
+        bytes32 GNOLockHash = keccak256(sender, nonce, GNOLocked, timeOfLocking, lockingPeriod, GNOIssueRate, timeOfLastWithdraw);
+         require(lockedGNO[GNOLockHash]);
+        require(sender == msg.sender);
+        require(timeOfLocking + lockingPeriod < now);
+        
+        withdrawOWL(
+        sender,
+        nonce,
+        GNOLocked,
+        timeOfLocking,
+        lockingPeriod,
+        GNOIssueRate,
+        timeOfLastWithdraw);
+        lockedGNO[GNOLockHash] = false;
+        uint GNOIssueRate2 = calcIssueRate(GNOLocked);
+        GNOLockHash = keccak256(sender, nonce, GNOLocked, timeOfLocking, lockingPeriod, GNOIssueRate2*2/3, now-(now%(1 days)));
+        balances[msg.sender] += GNOIssueRate2*lockingPeriod/3;
+        totalTokens += GNOIssueRate2*lockingPeriod/3;
+        lockedGNO[GNOLockHash] = true;
     }
 
     // mapping Last30(1 days)s <-> BurnedOWL
@@ -131,12 +176,15 @@ contract OWL is StandardToken {
 
     /// @dev To be called from the Prediction markets and DutchX contracts to burn OWL for paying fees.
     /// Depending on the allowance, different amounts will acutally be burned
-    /// @param maxAmount of OWL to be burned
+    /// @param amount of OWL to be burned
     /// @return acutal amount of burned OWL
-    function burnOWL(uint maxAmount) public returns (uint) {
-        uint amount=Math.min(allowances[msg.sender][this], maxAmount); // Here delegate calls need to be used
+    function burnOWL(uint amount) public returns (uint) {
+        //uint amount=Math.min(allowances[msg.sender][this], maxAmount); // Here delegate calls need to be used
         require(balances[msg.sender] >= amount);
-        transferFrom(msg.sender, this, amount);
+        balances[msg.sender] -= amount;
+        totalTokens -= amount;
+        // transferFrom is to expensive.
+        //transferFrom(msg.sender, this, amount);
         if ((now/(1 days))%(30) == lastdayOfBurningDocumentation) {
             burnedOWL[(now/((1 days)))%(30)] += amount;
         } else {
@@ -153,7 +201,7 @@ contract OWL is StandardToken {
     function burnedGNO(uint amount) public
     {
         require(Token(GNOTokenAddress).transferFrom(msg.sender, this, amount));
-        uint b=PriceOracle(oracleContract).getTokensValueInCENTS(GNOTokenAddress,amount) / 100;
+        uint b=PriceOracle(oracleContract).getTokensValueInCENTS(GNOTokenAddress, amount) / 100;
         if ((now/(1 days))%30 == lastdayOfBurningDocumentationGNO) {
             burnedGNOValuedInUSD[(now/(1 days))%30] += b;
         } else {

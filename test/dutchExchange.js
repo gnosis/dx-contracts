@@ -1,6 +1,7 @@
 
 
-const utils = require('./utils');
+const utils = require('./utils')
+
 const MathSol = artifacts.require('Math')
 const DutchExchange = artifacts.require('DutchExchange')
 const EtherToken = artifacts.require('EtherToken')
@@ -10,313 +11,268 @@ const TokenGNO = artifacts.require('TokenGNO')
 const OWL = artifacts.require('OWL')
 const { wait, waitUntilBlock } = require('@digix/tempo')(web3)
 
-const MaxRoundingError=100
+const MaxRoundingError = 100
 // Since it is a pain to get the tempo package to work,
 // I have done a workaround. If you wish to run tests,
 // please go to DutchExchange.sol and uncomment everything
 // below "For Testing only!"
 
-const Token = artifacts.require('./Token.sol');
+const Token = artifacts.require('./Token.sol')
 
-contract('DutchExchange', function (accounts) {
+contract('DutchExchange', (accounts) => {
+  let sellToken
+  let buyToken
+  let TUL
+  let dx
+  let dxa
 
-  let sellToken;
-  let buyToken;
-  let TUL;
-  let dx;
+  const [initialiser, seller1, seller2, buyer1, buyer2] = accounts
 
-  let dxa;
-  const [initialiser, seller1, seller2, buyer1, buyer2] = accounts;
-
-  beforeEach(async function () {
+  beforeEach(async () => {
+    // get current instances
+    sellToken = await EtherToken.deployed()
+    buyToken = await TokenGNO.deployed()
+    dx = await DutchExchange.deployed()
+    dxa = dx.address
+    oracle = await PriceOracle.deployed()
     
-    // await dx.balances.call(sellToken.address, acct);
-    // get sellers set up and running  
-    sellToken = await EtherToken.deployed();
-
-    // get buyer set up
-    buyToken = await TokenGNO.deployed();
-    for(acct=1;acct<9;acct++){
-        await buyToken.transfer(accounts[acct], 10**18, { from: initialiser});
-    }
-
-    // create dx
-    dx = await DutchExchange.deployed();
-    dxa = dx.address;
-
-    for(acct=1;acct<9;acct++){
-        // depoit into etherToken contract
-        await sellToken.deposit( {from: accounts[acct], value: 10**9});
-
-        // depositing into the exchange
-        await sellToken.approve(dx.address,10**9, { from: accounts[acct] });
-        await dx.deposit(sellToken.address, 10**9, { from: accounts[acct] });  
-        
-        await buyToken.approve(dx.address,10**18,{from:accounts[acct]});
-        await dx.deposit(buyToken.address, 10**18,{from: accounts[acct]});
-    }
-    
-
-    // add token Pair
-    oracle = await PriceOracle.deployed();
-    // updating the oracle Price. Needs to be changed later to another mechanism
-    await oracle.updateETHUSDPrice(60000);
-    //add tokenPair ETH GNO
+    // add tokenPair ETH GNO
     await dx.addTokenPair(
       sellToken.address,
       buyToken.address,
-        10**9,
-        0,
-        2,
-        1,
-        { from: seller1 }
-    );
-
-
+      10 ** 9,
+      0,
+      2,
+      1,
+      { from: seller1 }
+    )
   })
 
-   it('Buys tokens at the 2:1 price', async function() {
-   
-        startingTimeOfAuction=await dx.auctionStarts.call(sellToken.address,buyToken.address);
-        var blockNumber = web3.eth.blockNumber;
-        var timestamp = web3.eth.getBlock(blockNumber).timestamp;
-        // wait for the right time to send buyOrder
-        await wait(startingTimeOfAuction-timestamp+6*3600);
-        blockNumber = web3.eth.blockNumber;
-        timestamp = web3.eth.getBlock(blockNumber).timestamp;
-        assert.equal(timestamp>startingTimeOfAuction,true);
+  it('Buys tokens at the 2:1 price', async () => {
+    startingTimeOfAuction = await dx.auctionStarts.call(sellToken.address, buyToken.address)
+    let blockNumber = web3.eth.blockNumber
+    let timestamp = web3.eth.getBlock(blockNumber).timestamp
+    // wait for the right time to send buyOrder
+    await wait(startingTimeOfAuction - timestamp + 6 * 3600)
+    blockNumber = web3.eth.blockNumber
+    timestamp = web3.eth.getBlock(blockNumber).timestamp
+    assert.equal(timestamp > startingTimeOfAuction, true)
 
-        pOracle= await PriceOracle.deployed();
-        // buy
-        var auctionIndex=(await dx.latestAuctionIndices.call(sellToken.address,buyToken.address)).toNumber();
-        await dx.postBuyOrder(sellToken.address,buyToken.address,auctionIndex, 10**9*2,{from: buyer1});
-        
-        // claim Buyerfunds
-        var balanceBeforeClaim= (await dx.balances.call(sellToken.address, buyer1)).toNumber();
-        await dx.claimBuyerFunds(sellToken.address, buyToken.address,buyer1,auctionIndex);
- 
-        
-        assert.equal(balanceBeforeClaim+10**9-(await dx.balances.call(sellToken.address,buyer1)).toNumber()<MaxRoundingError,true);
+    pOracle = await PriceOracle.deployed()
+    // buy
+    const auctionIndex = (await dx.latestAuctionIndices.call(sellToken.address, buyToken.address)).toNumber()
+    await dx.postBuyOrder(sellToken.address, buyToken.address, auctionIndex, 10 ** 9 * 2, { from: buyer1 })
 
-        //claim Sellerfunds
-         balanceBeforeClaim= (await dx.balances.call(buyToken.address, seller1)).toNumber();
-        await dx.claimSellerFunds(sellToken.address, buyToken.address,seller1,auctionIndex);
-        assert.equal(balanceBeforeClaim+10**9/2-(await dx.balances.call(buyToken.address,seller1)).toNumber()<MaxRoundingError,true);
+    // claim Buyerfunds
+    let balanceBeforeClaim = (await dx.balances.call(sellToken.address, buyer1)).toNumber()
+    await dx.claimBuyerFunds(sellToken.address, buyToken.address, buyer1, auctionIndex)
 
-        //post new sell order to start next auction
-        // var auctionIndex=(await dx.latestAuctionIndices.call(sellToken.address,buyToken.address)).toNumber();
-        // console.log(auctionIndex)
-        // await dx.postSellOrder(sellToken.address,buyToken.address,auctionIndex, 10**9*2, {from: seller2});
 
-    });
+    assert.equal(balanceBeforeClaim + 10 ** 9 - (await dx.balances.call(sellToken.address, buyer1)).toNumber() < MaxRoundingError, true)
 
- })
- contract('DutchExchange', function (accounts) {
+    // claim Sellerfunds
+    balanceBeforeClaim = (await dx.balances.call(buyToken.address, seller1)).toNumber()
+    await dx.claimSellerFunds(sellToken.address, buyToken.address, seller1, auctionIndex)
+    assert.equal(balanceBeforeClaim + 10 ** 9 / 2 - (await dx.balances.call(buyToken.address, seller1)).toNumber() < MaxRoundingError, true)
 
-  let sellToken;
-  let buyToken;
-  let TUL;
-  let dx;
+    // post new sell order to start next auction
+    // var auctionIndex=(await dx.latestAuctionIndices.call(sellToken.address,buyToken.address)).toNumber();
+    // console.log(auctionIndex)
+    // await dx.postSellOrder(sellToken.address,buyToken.address,auctionIndex, 10**9*2, {from: seller2});
+  })
+})
+contract('DutchExchange', (accounts) => {
+  let sellToken
+  let buyToken
+  let TUL
+  let dx
 
-  let dxa;
-  const [initialiser, seller1, seller2, buyer1, buyer2] = accounts;
+  let dxa
+  const [initialiser, seller1, seller2, buyer1, buyer2] = accounts
 
-  beforeEach(async function () {
-    
+  beforeEach(async () => {
     // await dx.balances.call(sellToken.address, acct);
-    // get sellers set up and running  
-    sellToken = await EtherToken.deployed();
+    // get sellers set up and running
+    sellToken = await EtherToken.deployed()
 
     // get buyer set up
-    buyToken = await TokenGNO.deployed();
-    for(acct=1;acct<9;acct++){
-        await buyToken.transfer(accounts[acct], 10**18, { from: initialiser});
+    buyToken = await TokenGNO.deployed()
+    for (acct = 1; acct < 9; acct++) {
+      await buyToken.transfer(accounts[acct], 10 ** 18, { from: initialiser })
     }
 
     // create dx
-    dx = await DutchExchange.deployed();
-    dxa = dx.address;
+    dx = await DutchExchange.deployed()
+    dxa = dx.address
 
-    for(acct=1;acct<9;acct++){
-        // depoit into etherToken contract
-        await sellToken.deposit( {from: accounts[acct], value: 10**9});
+    for (acct = 1; acct < 9; acct++) {
+      // depoit into etherToken contract
+      await sellToken.deposit({ from: accounts[acct], value: 10 ** 9 })
 
-        // depositing into the exchange
-        await sellToken.approve(dx.address,10**9, { from: accounts[acct] });
-        await dx.deposit(sellToken.address, 10**9, { from: accounts[acct] });  
-        
-        await buyToken.approve(dx.address,10**18,{from:accounts[acct]});
-        await dx.deposit(buyToken.address, 10**18,{from: accounts[acct]});
+      // depositing into the exchange
+      await sellToken.approve(dx.address, 10 ** 9, { from: accounts[acct] })
+      await dx.deposit(sellToken.address, 10 ** 9, { from: accounts[acct] })
+
+      await buyToken.approve(dx.address, 10 ** 18, { from: accounts[acct] })
+      await dx.deposit(buyToken.address, 10 ** 18, { from: accounts[acct] })
     }
-    
+
 
     // add token Pair
-    oracle = await PriceOracle.deployed();
+    oracle = await PriceOracle.deployed()
     // updating the oracle Price. Needs to be changed later to another mechanism
-    await oracle.updateETHUSDPrice(60000);
+    await oracle.updateETHUSDPrice(60000)
 
-    //add tokenPair ETH GNO
+    // add tokenPair ETH GNO
     await dx.addTokenPair(
       sellToken.address,
       buyToken.address,
-        10**9,
-        0,
-        2,
-        1,
-        { from: seller1 }
-    );
-    
-
-
+      10 ** 9,
+      0,
+      2,
+      1,
+      { from: seller1 }
+    )
   })
 
-      it('process two auctions one after the other in one pair only', async function() {
-   
-        startingTimeOfAuction=await dx.auctionStarts.call(sellToken.address,buyToken.address);
-        var blockNumber = web3.eth.blockNumber;
-        var timestamp = web3.eth.getBlock(blockNumber).timestamp;
+  it('process two auctions one after the other in one pair only', async () => {
+    startingTimeOfAuction = await dx.auctionStarts.call(sellToken.address, buyToken.address)
+    var blockNumber = web3.eth.blockNumber
+    var timestamp = web3.eth.getBlock(blockNumber).timestamp
 
-        await wait(startingTimeOfAuction-timestamp+6*3600);
-        blockNumber = web3.eth.blockNumber;
-        timestamp = web3.eth.getBlock(blockNumber).timestamp;
-        assert.equal(timestamp>startingTimeOfAuction,true);
-        var auctionIndex=(await dx.latestAuctionIndices.call(sellToken.address,buyToken.address)).toNumber();
-        await dx.postBuyOrder(sellToken.address,buyToken.address,auctionIndex, 10**9*2,{from: buyer1});
+    await wait(startingTimeOfAuction - timestamp + 6 * 3600)
+    blockNumber = web3.eth.blockNumber
+    timestamp = web3.eth.getBlock(blockNumber).timestamp
+    assert.equal(timestamp > startingTimeOfAuction, true)
+    var auctionIndex = (await dx.latestAuctionIndices.call(sellToken.address, buyToken.address)).toNumber()
+    await dx.postBuyOrder(sellToken.address, buyToken.address, auctionIndex, 10 ** 9 * 2, { from: buyer1 })
 
-        var balanceBeforeClaim= (await dx.balances.call(sellToken.address, buyer1)).toNumber();
-        await dx.claimBuyerFunds(sellToken.address, buyToken.address,buyer1,auctionIndex);
-        assert.equal(balanceBeforeClaim+10**9-(await dx.balances.call(sellToken.address,buyer1)).toNumber()<MaxRoundingError,true);
+    var balanceBeforeClaim = (await dx.balances.call(sellToken.address, buyer1)).toNumber()
+    await dx.claimBuyerFunds(sellToken.address, buyToken.address, buyer1, auctionIndex)
+    assert.equal(balanceBeforeClaim + 10 ** 9 - (await dx.balances.call(sellToken.address, buyer1)).toNumber() < MaxRoundingError, true)
 
 
-        var balanceBeforeClaim= (await dx.balances.call(buyToken.address, seller1)).toNumber();
-        await dx.claimSellerFunds(sellToken.address, buyToken.address,seller1,auctionIndex);
-        assert.equal(balanceBeforeClaim+10**9/2-(await dx.balances.call(buyToken.address,seller1)).toNumber()<MaxRoundingError,true);
+    var balanceBeforeClaim = (await dx.balances.call(buyToken.address, seller1)).toNumber()
+    await dx.claimSellerFunds(sellToken.address, buyToken.address, seller1, auctionIndex)
+    assert.equal(balanceBeforeClaim + 10 ** 9 / 2 - (await dx.balances.call(buyToken.address, seller1)).toNumber() < MaxRoundingError, true)
 
-        //post new sell order to start next auction
-        var auctionIndex=(await dx.latestAuctionIndices.call(sellToken.address,buyToken.address)).toNumber();
-        var auctionStart=(await dx.auctionStarts.call(sellToken.address,buyToken.address)).toNumber();
-        await dx.postSellOrder(sellToken.address,buyToken.address,auctionIndex, 10**9, {from: seller2});
-        auctionIndex=(await dx.latestAuctionIndices.call(sellToken.address,buyToken.address)).toNumber();
-        
-        startingTimeOfAuction=await dx.auctionStarts.call(sellToken.address,buyToken.address);
-        
-        var blockNumber = web3.eth.blockNumber;
-        var timestamp = web3.eth.getBlock(blockNumber).timestamp;
-        // buy it up again
-        await wait(startingTimeOfAuction-timestamp+6*3600);
-        blockNumber = web3.eth.blockNumber;
-        timestamp = web3.eth.getBlock(blockNumber).timestamp;
-        assert.equal(timestamp>startingTimeOfAuction,true);
-        var auctionIndex=(await dx.latestAuctionIndices.call(sellToken.address,buyToken.address)).toNumber();
-        await dx.postBuyOrder(sellToken.address,buyToken.address,auctionIndex, 10**9*2,{from: buyer2});
+    // post new sell order to start next auction
+    var auctionIndex = (await dx.latestAuctionIndices.call(sellToken.address, buyToken.address)).toNumber()
+    const auctionStart = (await dx.auctionStarts.call(sellToken.address, buyToken.address)).toNumber()
+    await dx.postSellOrder(sellToken.address, buyToken.address, auctionIndex, 10 ** 9, { from: seller2 })
+    auctionIndex = (await dx.latestAuctionIndices.call(sellToken.address, buyToken.address)).toNumber()
 
-    });
+    startingTimeOfAuction = await dx.auctionStarts.call(sellToken.address, buyToken.address)
+
+    var blockNumber = web3.eth.blockNumber
+    var timestamp = web3.eth.getBlock(blockNumber).timestamp
+    // buy it up again
+    await wait(startingTimeOfAuction - timestamp + 6 * 3600)
+    blockNumber = web3.eth.blockNumber
+    timestamp = web3.eth.getBlock(blockNumber).timestamp
+    assert.equal(timestamp > startingTimeOfAuction, true)
+    var auctionIndex = (await dx.latestAuctionIndices.call(sellToken.address, buyToken.address)).toNumber()
+    await dx.postBuyOrder(sellToken.address, buyToken.address, auctionIndex, 10 ** 9 * 2, { from: buyer2 })
+  })
 })
 
-contract('DutchExchange', function (accounts) {
+contract('DutchExchange', (accounts) => {
+  let sellToken
+  let buyToken
+  let TUL
+  let dx
 
-  let sellToken;
-  let buyToken;
-  let TUL;
-  let dx;
+  let dxa
+  const [initialiser, seller1, seller2, buyer1, buyer2] = accounts
 
-  let dxa;
-  const [initialiser, seller1, seller2, buyer1, buyer2] = accounts;
-
-  beforeEach(async function () {
-    
+  beforeEach(async () => {
     // await dx.balances.call(sellToken.address, acct);
-    // get sellers set up and running  
-    sellToken = await EtherToken.deployed();
+    // get sellers set up and running
+    sellToken = await EtherToken.deployed()
 
     // get buyer set up
-    buyToken = await TokenGNO.deployed();
-    for(acct=1;acct<9;acct++){
-        await buyToken.transfer(accounts[acct], 10**18, { from: initialiser});
+    buyToken = await TokenGNO.deployed()
+    for (acct = 1; acct < 9; acct++) {
+      await buyToken.transfer(accounts[acct], 10 ** 18, { from: initialiser })
     }
 
     // create dx
-    dx = await DutchExchange.deployed();
-    dxa = dx.address;
+    dx = await DutchExchange.deployed()
+    dxa = dx.address
 
-    for(acct=1;acct<9;acct++){
-        // depoit into etherToken contract
-        await sellToken.deposit( {from: accounts[acct], value: 10**9});
+    for (acct = 1; acct < 9; acct++) {
+      // depoit into etherToken contract
+      await sellToken.deposit({ from: accounts[acct], value: 10 ** 9 })
 
-        // depositing into the exchange
-        await sellToken.approve(dx.address,10**9, { from: accounts[acct] });
-        await dx.deposit(sellToken.address, 10**9, { from: accounts[acct] });  
-        
-        await buyToken.approve(dx.address,10**18,{from:accounts[acct]});
-        await dx.deposit(buyToken.address, 10**18,{from: accounts[acct]});
+      // depositing into the exchange
+      await sellToken.approve(dx.address, 10 ** 9, { from: accounts[acct] })
+      await dx.deposit(sellToken.address, 10 ** 9, { from: accounts[acct] })
+
+      await buyToken.approve(dx.address, 10 ** 18, { from: accounts[acct] })
+      await dx.deposit(buyToken.address, 10 ** 18, { from: accounts[acct] })
     }
-    
+
 
     // add token Pair
-    oracle = await PriceOracle.deployed();
+    oracle = await PriceOracle.deployed()
     // updating the oracle Price. Needs to be changed later to another mechanism
-    await oracle.updateETHUSDPrice(60000);
+    await oracle.updateETHUSDPrice(60000)
 
-    //add tokenPair ETH GNO
+    // add tokenPair ETH GNO
     await dx.addTokenPair(
       sellToken.address,
       buyToken.address,
-        10**9,
-        10**8*5,
-        2,
-        1,
-        { from: seller1 }
-    );
-    
-
-
+      10 ** 9,
+      10 ** 8 * 5,
+      2,
+      1,
+      { from: seller1 }
+    )
   })
 
-      it('test a trade on the opposite pair', async function() {
-   
-        startingTimeOfAuction=await dx.auctionStarts.call(sellToken.address,buyToken.address);
-        var blockNumber = web3.eth.blockNumber;
-        var timestamp = web3.eth.getBlock(blockNumber).timestamp;
+  it('test a trade on the opposite pair', async () => {
+    startingTimeOfAuction = await dx.auctionStarts.call(sellToken.address, buyToken.address)
+    var blockNumber = web3.eth.blockNumber
+    var timestamp = web3.eth.getBlock(blockNumber).timestamp
 
-        await wait(startingTimeOfAuction-timestamp+6*3600);
-        blockNumber = web3.eth.blockNumber;
-        timestamp = web3.eth.getBlock(blockNumber).timestamp;
-        assert.equal(timestamp>startingTimeOfAuction,true);
-        var auctionIndex=(await dx.latestAuctionIndices.call(sellToken.address,buyToken.address)).toNumber();
-        await dx.postBuyOrder(sellToken.address,buyToken.address,auctionIndex, 10**9*2,{from: buyer1});
-        await dx.postBuyOrder(buyToken.address,sellToken.address,auctionIndex, 10**7*25,{from: seller2});
+    await wait(startingTimeOfAuction - timestamp + 6 * 3600)
+    blockNumber = web3.eth.blockNumber
+    timestamp = web3.eth.getBlock(blockNumber).timestamp
+    assert.equal(timestamp > startingTimeOfAuction, true)
+    var auctionIndex = (await dx.latestAuctionIndices.call(sellToken.address, buyToken.address)).toNumber()
+    await dx.postBuyOrder(sellToken.address, buyToken.address, auctionIndex, 10 ** 9 * 2, { from: buyer1 })
+    await dx.postBuyOrder(buyToken.address, sellToken.address, auctionIndex, 10 ** 7 * 25, { from: seller2 })
 
 
-        var balanceBeforeClaim= (await dx.balances.call(sellToken.address, buyer1)).toNumber();
-        await dx.claimBuyerFunds(sellToken.address, buyToken.address,buyer1,auctionIndex);
-        assert.equal(Math.abs(balanceBeforeClaim+10**9-(await dx.balances.call(sellToken.address,buyer1)).toNumber())<MaxRoundingError,true);
-        var balanceBeforeClaim= (await dx.balances.call(buyToken.address, seller2)).toNumber();
-        await dx.claimBuyerFunds(buyToken.address,sellToken.address, seller2,auctionIndex);
-        assert.equal(Math.abs(balanceBeforeClaim+10**8*5-(await dx.balances.call(buyToken.address,seller2)).toNumber())<MaxRoundingError,true);
+    var balanceBeforeClaim = (await dx.balances.call(sellToken.address, buyer1)).toNumber()
+    await dx.claimBuyerFunds(sellToken.address, buyToken.address, buyer1, auctionIndex)
+    assert.equal(Math.abs(balanceBeforeClaim + 10 ** 9 - (await dx.balances.call(sellToken.address, buyer1)).toNumber()) < MaxRoundingError, true)
+    var balanceBeforeClaim = (await dx.balances.call(buyToken.address, seller2)).toNumber()
+    await dx.claimBuyerFunds(buyToken.address, sellToken.address, seller2, auctionIndex)
+    assert.equal(Math.abs(balanceBeforeClaim + 10 ** 8 * 5 - (await dx.balances.call(buyToken.address, seller2)).toNumber()) < MaxRoundingError, true)
 
-        var balanceBeforeClaim= (await dx.balances.call(buyToken.address, seller1)).toNumber();
-        await dx.claimSellerFunds(sellToken.address, buyToken.address,seller1,auctionIndex);
-        assert.equal(balanceBeforeClaim+10**9/2-(await dx.balances.call(buyToken.address,seller1)).toNumber()<MaxRoundingError,true);
+    var balanceBeforeClaim = (await dx.balances.call(buyToken.address, seller1)).toNumber()
+    await dx.claimSellerFunds(sellToken.address, buyToken.address, seller1, auctionIndex)
+    assert.equal(balanceBeforeClaim + 10 ** 9 / 2 - (await dx.balances.call(buyToken.address, seller1)).toNumber() < MaxRoundingError, true)
 
-        //post new sell order to start next auction
-        var auctionIndex=(await dx.latestAuctionIndices.call(sellToken.address,buyToken.address)).toNumber();
-        var auctionStart=(await dx.auctionStarts.call(sellToken.address,buyToken.address)).toNumber();
-        await dx.postSellOrder(sellToken.address,buyToken.address,auctionIndex, 10**9, {from: seller2});
-        auctionIndex=(await dx.latestAuctionIndices.call(sellToken.address,buyToken.address)).toNumber();
-        
-        startingTimeOfAuction=await dx.auctionStarts.call(sellToken.address,buyToken.address);
-        
-        var blockNumber = web3.eth.blockNumber;
-        var timestamp = web3.eth.getBlock(blockNumber).timestamp;
-        // buy it up again
-        await wait(startingTimeOfAuction-timestamp+6*3600);
-        blockNumber = web3.eth.blockNumber;
-        timestamp = web3.eth.getBlock(blockNumber).timestamp;
-        assert.equal(timestamp>startingTimeOfAuction,true);
-        var auctionIndex=(await dx.latestAuctionIndices.call(sellToken.address,buyToken.address)).toNumber();
-        await dx.postBuyOrder(sellToken.address,buyToken.address,auctionIndex, 10**9*2,{from: buyer2});
+    // post new sell order to start next auction
+    var auctionIndex = (await dx.latestAuctionIndices.call(sellToken.address, buyToken.address)).toNumber()
+    const auctionStart = (await dx.auctionStarts.call(sellToken.address, buyToken.address)).toNumber()
+    await dx.postSellOrder(sellToken.address, buyToken.address, auctionIndex, 10 ** 9, { from: seller2 })
+    auctionIndex = (await dx.latestAuctionIndices.call(sellToken.address, buyToken.address)).toNumber()
 
-    });
+    startingTimeOfAuction = await dx.auctionStarts.call(sellToken.address, buyToken.address)
+
+    var blockNumber = web3.eth.blockNumber
+    var timestamp = web3.eth.getBlock(blockNumber).timestamp
+    // buy it up again
+    await wait(startingTimeOfAuction - timestamp + 6 * 3600)
+    blockNumber = web3.eth.blockNumber
+    timestamp = web3.eth.getBlock(blockNumber).timestamp
+    assert.equal(timestamp > startingTimeOfAuction, true)
+    var auctionIndex = (await dx.latestAuctionIndices.call(sellToken.address, buyToken.address)).toNumber()
+    await dx.postBuyOrder(sellToken.address, buyToken.address, auctionIndex, 10 ** 9 * 2, { from: buyer2 })
+  })
 })
 /*
   const checkConstruction = async function () {
@@ -556,4 +512,4 @@ contract('DutchExchange', function (accounts) {
 
     await claimBuyerFunds();
     await claimSellerFunds();
-  })*/
+  }) */
