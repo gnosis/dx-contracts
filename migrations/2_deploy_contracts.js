@@ -23,7 +23,7 @@ module.exports = function deploy(deployer, networks, accounts) {
     .then(() => PriceOracle.deployed())
     .then((p) => {
       PriceOracleInstance = p
-      return deployer.deploy(OWL, TokenGNO.address /* ,PriceOracle.adress */)
+      return deployer.deploy(OWL, TokenGNO.address /* ,PriceOracle.adress */, 0)
     })
     
     // @dev DX Constructor creates exchange
