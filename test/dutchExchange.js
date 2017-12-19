@@ -56,10 +56,9 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
   await wait(startingTimeOfAuction - timestamp() )
   assert.equal(timestamp() >= startingTimeOfAuction, true)
 }
-
-const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p, auctionIndex) => {
+// @param p is the percentage of the previous price 
+const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const startingTimeOfAuction = (await dx.auctionStarts.call(ST.address, BT.address)).toNumber()
-  const closingPrices = (await dx.closingPrices.call(ST.address, BT.address, auctionIndex-1))
   const timeToWaitFor = (86400-p*43200)/(1+p)+startingTimeOfAuction
   // wait until the price is good
   await wait(timeToWaitFor- timestamp())
@@ -125,7 +124,7 @@ contract('DutchExchange', (accounts) => {
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
     // wait until price is good
-    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1, auctionIndex)
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     // buy
     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer1 })
 
@@ -167,7 +166,7 @@ contract('DutchExchange', (accounts) => {
     await setAndCheckAuctionStarted(eth, gno)
 
     auctionIndex = await getAuctionIndex()
-    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1, auctionIndex)
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer1 })
 
     // check Buyer1 balance and claim
@@ -218,7 +217,7 @@ contract('DutchExchange', (accounts) => {
 
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, auctionIndex)
 
-    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1, auctionIndex)
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer1 })
     await dx.postBuyOrder(gno.address, eth.address, auctionIndex, 10 ** 7 * 25, { from: seller2 })
 
