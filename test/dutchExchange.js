@@ -33,13 +33,13 @@ const setupTest = async (accounts) => {
 
   for (let acct = 1; acct < accounts.length; acct++) {
     await Promise.all([
-      gno.transfer(accounts[acct], 10 ** 18, { from: accounts[0] }),
-      // depoit into etherToken contract
       eth.deposit({ from: accounts[acct], value: 10 ** 9 }),
-      // depositing into the exchange
       eth.approve(dx.address, 10 ** 9, { from: accounts[acct] }),
-      dx.deposit(eth.address, 10 ** 9, { from: accounts[acct] }),
+      gno.transfer(accounts[acct], 10 ** 18, { from: accounts[0] }),
       gno.approve(dx.address, 10 ** 18, { from: accounts[acct] }),
+    ])
+    await Promise.all([
+      dx.deposit(eth.address, 10 ** 9, { from: accounts[acct] }),
       dx.deposit(gno.address, 10 ** 18, { from: accounts[acct] }),
     ])
   }
