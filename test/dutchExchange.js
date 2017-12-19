@@ -31,18 +31,23 @@ const setupTest = async (accounts) => {
   // create price Oracle
   oracle = await PriceOracle.deployed()
 
-  for (let acct = 1; acct < accounts.length; acct++) {
-    await Promise.all([
-      eth.deposit({ from: accounts[acct], value: 10 ** 9 }),
-      eth.approve(dx.address, 10 ** 9, { from: accounts[acct] }),
-      gno.transfer(accounts[acct], 10 ** 18, { from: accounts[0] }),
-      gno.approve(dx.address, 10 ** 18, { from: accounts[acct] }),
-    ])
-    await Promise.all([
-      dx.deposit(eth.address, 10 ** 9, { from: accounts[acct] }),
-      dx.deposit(gno.address, 10 ** 18, { from: accounts[acct] }),
-    ])
-  }
+  // Await ALL Promises for each account setup
+  await Promise.all(accounts.map((acct) => {
+    if (acct === accounts[0]) return
+
+    eth.deposit({ from: acct, value: 10 ** 9 })
+    eth.approve(dx.address, 10 ** 9, { from: acct })
+    gno.transfer(acct, 10 ** 18, { from: accounts[0] })
+    gno.approve(dx.address, 10 ** 18, { from: acct })
+  }))
+
+  // Deposit depends on ABOVE finishing first... so run here
+  await Promise.all(accounts.map((acct) => {
+    if (acct === accounts[0]) return
+
+    dx.deposit(eth.address, 10 ** 9, { from: acct })
+    dx.deposit(gno.address, 10 ** 18, { from: acct })
+  }))
 
   // add token Pair
   // updating the oracle Price. Needs to be changed later to another mechanism
@@ -53,15 +58,21 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
   const startingTimeOfAuction = (await dx.auctionStarts.call(ST.address, BT.address)).toNumber()
 
   // wait for the right time to send buyOrder
-  await wait(startingTimeOfAuction - timestamp() )
+  await wait(startingTimeOfAuction - timestamp())
   assert.equal(timestamp() >= startingTimeOfAuction, true)
 }
-// @param p is the percentage of the previous price 
+
+/**
+ * waitUntilPriceIsXPercentOfPreviousPrice
+ * @param {*} ST  - sellToken
+ * @param {*} BT  - buyToken
+ * @param {*} p   - percentage of the previous price
+ */
 const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const startingTimeOfAuction = (await dx.auctionStarts.call(ST.address, BT.address)).toNumber()
-  const timeToWaitFor = (86400-p*43200)/(1+p)+startingTimeOfAuction
+  const timeToWaitFor = (86400 - p * 43200) / (1 + p) + startingTimeOfAuction
   // wait until the price is good
-  await wait(timeToWaitFor- timestamp())
+  await wait(timeToWaitFor - timestamp())
   assert.equal(timestamp() >= timeToWaitFor, true)
 }
 
@@ -82,7 +93,7 @@ const checkBalanceBeforeClaim = async (
   sellToken = eth,
   buyToken = gno,
   amt = (10 ** 9),
-  round = MaxRoundingError
+  round = MaxRoundingError,
 ) => {
   if (claiming === 'buyer') {
     // const auctionIndex = await getAuctionIndex()
@@ -114,7 +125,7 @@ contract('DutchExchange', (accounts) => {
       0,
       2,
       1,
-      { from: seller1 }
+      { from: seller1 },
     )
   })
 
@@ -155,7 +166,7 @@ contract('DutchExchange', (accounts) => {
       0,
       2,
       1,
-      { from: seller1 }
+      { from: seller1 },
     )
   })
 
@@ -182,12 +193,10 @@ contract('DutchExchange', (accounts) => {
 
     auctionIndex = await getAuctionIndex()
     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer2 })
-
   })
 })
 
 contract('DutchExchange', (accounts) => {
-
   const [, seller1, seller2, buyer1, buyer2] = accounts
 
   beforeEach(async () => {
@@ -202,12 +211,11 @@ contract('DutchExchange', (accounts) => {
       10 ** 8 * 5,
       2,
       1,
-      { from: seller1 }
+      { from: seller1 },
     )
   })
 
   it('test a trade on the opposite pair', async () => {
-
     let auctionIndex
 
     // ASSERT Auction has started
