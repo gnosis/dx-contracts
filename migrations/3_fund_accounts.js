@@ -1,10 +1,14 @@
 /* eslint no-console:0 */
+
+const DutchExchange = artifacts.require('DutchExchange')
 const EtherToken = artifacts.require('EtherToken')
-// use old TokenGNO contract for testing
+const PriceOracle = artifacts.require('PriceOracle')
+const StandardToken = artifacts.require('StandardToken')
 const TokenGNO = artifacts.require('TokenGNO')
 
 module.exports = (deployer, network, accounts) => {
-  // let DX
+  
+  /*// let DX
   let ETH
   let GNO
 
@@ -33,8 +37,7 @@ module.exports = (deployer, network, accounts) => {
   deployer.then(() => ETH.balanceOf(seller))
     .then(bal => console.log('Seller ETH balance', bal.toNumber()))
   deployer.then(() => GNO.balanceOf(seller))
-    .then(bal => console.log('Seller GNO balance', bal.toNumber()))
+    .then(bal => console.log('Seller GNO balance', bal.toNumber()))*/
 
-    // funding accounts in exchange
     
 }

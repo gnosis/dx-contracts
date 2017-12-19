@@ -73,8 +73,8 @@ contract DutchExchangeInterface {
     // Events
     event NewDeposit(
         address indexed token,
-         uint indexed amount,
-         address tokenAddress
+        uint indexed amount,
+        address tokenAddress
     );
 
     event NewWithdrawal(
