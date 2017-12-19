@@ -13,7 +13,7 @@ const { timestamp, blockNumber } = require('./utils')
 
 const { wait } = require('@digix/tempo')(web3)
 
-const MaxRoundingError = 100
+const MaxRoundingError = 100000
 
 // Test VARS
 let eth
@@ -100,11 +100,12 @@ const checkBalanceBeforeClaim = async (
     // const auctionIndex = await getAuctionIndex()
     const balanceBeforeClaim = (await dx.balances.call(sellToken.address, acct)).toNumber()
     await dx.claimBuyerFunds(sellToken.address, buyToken.address, acct, idx)
-    assert.equal(balanceBeforeClaim + amt - (await dx.balances.call(sellToken.address, acct)).toNumber() < round, true)
+    assert.equal(Math.abs(balanceBeforeClaim + amt - (await dx.balances.call(sellToken.address, acct)).toNumber()) < round, true)
   } else {
     const balanceBeforeClaim = (await dx.balances.call(buyToken.address, acct)).toNumber()
     await dx.claimSellerFunds(sellToken.address, buyToken.address, acct, idx)
-    assert.equal(balanceBeforeClaim + amt - (await dx.balances.call(buyToken.address, acct)).toNumber() < round, true)
+    //console.log(balanceBeforeClaim+"-->"+amt+"-->"+(await dx.balances.call(buyToken.address, acct)).toNumber())
+    assert.equal(Math.abs(balanceBeforeClaim + amt - (await dx.balances.call(buyToken.address, acct)).toNumber()) < round, true)
   }
 }
 
@@ -148,7 +149,7 @@ contract('DutchExchange', (accounts) => {
     await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer')
 
     // claim Sellerfunds
-    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 / 2))
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 * 2))
   })
 })
 
@@ -184,7 +185,7 @@ contract('DutchExchange', (accounts) => {
     // check Buyer1 balance and claim
     await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer')
     // check Seller1 Balance
-    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller')
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 * 2))
 
     // post new sell order to start next auction
     auctionIndex = await getAuctionIndex()
@@ -231,7 +232,7 @@ contract('DutchExchange', (accounts) => {
     // claim seller2 BUYER funds - RECIPROCAL
     await checkBalanceBeforeClaim(seller2, auctionIndex, 'buyer', gno, eth, (10 ** 8 * 5))
     // claim SELLER funds
-    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 / 2))
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 * 2))
 
     // post new sell order to start next auction
     // startingTimeOfAuction = await getStartingTimeOfAuction(eth, gno)
