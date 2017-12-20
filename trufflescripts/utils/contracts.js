@@ -7,6 +7,7 @@ module.exports = (artifacts) => {
   const DutchExchange = artifacts.require('./DutchExchange.sol')
   const PriceOracle = artifacts.require('./PriceOracle.sol')
 
+  // mapping (Contract name => not deployed contract)
   const contracts = {
     TokenETH,
     TokenGNO,
@@ -27,7 +28,10 @@ module.exports = (artifacts) => {
 
   const mapToNumber = arr => arr.map(n => n.toNumber())
 
-
+  /**
+   * returns deployed contract mapping
+   * @param {object} contrObj - mapping (Contract name => contract)
+   */
   const getDeployed = async (contrObj) => {
     const deployedMap = {}
 
@@ -43,8 +47,16 @@ module.exports = (artifacts) => {
     return deployedMap
   }
 
+  // Promise<{eth: deployedContract, ...}>
   const deployed = getDeployed(contracts)
 
+  /**
+   * helper function that iterates through given tokensMap
+   * and does something for token contracts corresponding to eth, gno, ... keys
+   * @param {object} tokensMap - mapping (token => balance) to deposit, {ETH: balance, ...}
+   * @param {function} cb - function to call for each {token: amount} mapping
+   * @cb: function({key: TokenCode, token: TokenContract, amount: number})
+   */
   const handleTokensMap = async (tokensMap, cb) => {
     const { dx, po, ...tokens } = await deployed
 
@@ -60,6 +72,10 @@ module.exports = (artifacts) => {
     return Promise.all(promisedDeposits)
   }
 
+  /**
+   * returns token balances {ETH: balance, ...}
+   * @param {string} acc - account to get balances for
+   */
   const getTokenBalances = async (acc) => {
     const { eth, gno, tul, owl } = await deployed
     const balances = await Promise.all([
@@ -74,6 +90,10 @@ module.exports = (artifacts) => {
     return { ETH, GNO, TUL, OWL }
   }
 
+  /**
+   * returns tokens deposited in DutchExchange {ETH: balance, ...}
+   * @param {string} acc - account to get token deposits for
+   */
   const getTokenDeposits = async (acc) => {
     const { dx, eth, gno } = await deployed
 
@@ -87,6 +107,12 @@ module.exports = (artifacts) => {
     return { ETH, GNO }
   }
 
+  /**
+   * gives tokens to the account, ETH through direct deposit, others from master's balance
+   * @param {string} acc - account to give tokens to
+   * @param {object} tokensMap - mapping (token => balance) to deposit, {ETH: balance, ...}
+   * @param {string} masterAcc - master account to transfer tokens (except for ETH) from
+   */
   const giveTokens = (acc, tokensMap, masterAcc) => handleTokensMap(tokensMap, ({ key, token, amount }) => {
     if (key === 'ETH') {
       return token.deposit({ from: acc, value: amount })
@@ -97,6 +123,11 @@ module.exports = (artifacts) => {
     return null
   })
 
+  /**
+   * approves transfers and subsequently transfers tokens to DutchExchange
+   * @param {string} acc - account in whose name to deposit tokens to DutchExchnage
+   * @param {object} tokensMap - mapping (token => balance) to deposit, {ETH: balance, ...}
+   */
   const depositToDX = async (acc, tokensMap) => {
     const { dx } = await deployed
 
