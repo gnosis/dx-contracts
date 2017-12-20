@@ -19,7 +19,7 @@ module.exports = async () => {
   const [sellerBal, buyerBal] = await getDepositsForAccounts(seller, buyer)
 
 
-  console.log(`Seller:\t${sellerBal.ETH}\tETH,\t${sellerBal.GNO}\tGNOL`)
+  console.log(`Seller:\t${sellerBal.ETH}\tETH,\t${sellerBal.GNO}\tGNO`)
   console.log(`Buyer:\t${buyerBal.ETH}\tETH,\t${buyerBal.GNO}\tGNO,`)
 
   if (argv.a) {
