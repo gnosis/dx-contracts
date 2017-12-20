@@ -71,10 +71,32 @@ module.exports = (artifacts) => {
     return { ETH, GNO }
   }
 
+  const giveTokens = async (acc, tokensMap, masterAcc) => {
+    const tokens = await deployed
+
+    const promisedTokens = Object.keys(tokensMap).map((key) => {
+      const token = tokens[key.toLowerCase()]
+      const amount = tokensMap[key]
+
+      if (!amount || !token) return null
+
+      if (key === 'ETH') {
+        return token.deposit({ from: acc, value: amount })
+      } else if (masterAcc) {
+        return token.transfer(acc, amount, { from: masterAcc })
+      }
+
+      return null
+    })
+
+    return Promise.all(promisedTokens)
+  }
+
   return {
     deployed,
     contracts,
     getTokenBalances,
     getTokenDeposits,
+    giveTokens,
   }
 }
