@@ -1,7 +1,4 @@
-const TokenETH = artifacts.require('./EtherToken.sol')
-const TokenGNO = artifacts.require('./TokenGNO.sol')
-const TokenTUL = artifacts.require('./StandardToken.sol')
-const TokenOWL = artifacts.require('./OWL.sol')
+const { getTokenBalances, giveTokens } = require('./utils/contracts')(artifacts)
 
 const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
 
@@ -29,40 +26,15 @@ module.exports = async () => {
   const account = argv.seller ? seller : argv.buyer ? buyer : argv.a
   const accountName = argv.seller ? 'Seller' : argv.buyer ? 'Buyer' : `Acc ${argv.a}`
 
-  const eth = await TokenETH.deployed()
-  const gno = await TokenGNO.deployed()
-  const tul = await TokenTUL.deployed()
-  const owl = await TokenOWL.deployed()
+  console.log(`${accountName}`)
 
-  const getBalances = acc => Promise.all([
-    eth.balanceOf(acc),
-    gno.balanceOf(acc),
-    tul.balanceOf(acc),
-    owl.balanceOf(acc),
-  ]).then(res => res.map(n => n.toNumber()))
+  let { ETH, GNO, TUL, OWL } = await getTokenBalances(account)
+  console.log(`Balance was:\t${ETH}\tETH,\t${GNO}\tGNO,\t${TUL}\tTUL,\t${OWL}\tOWL`)
 
-  console.log(`${accountName}\t\tETH\tGNO`)
+  const tokensToGive = { ETH: argv.eth, GNO: argv.gno, TUL: argv.tul, OWL: argv.owl }
 
-  let [accountETH, accountGNO, accountTUL, accountOWL] = await getBalances(account)
-  console.log(`Balance was:\t${accountETH}\tETH,\t${accountGNO}\tGNO,\t${accountTUL}\tTUL,\t${accountOWL}\tOWL`)
+  giveTokens(account, tokensToGive, master);
 
-  const transferToken = async (token, amount) => {
-    if (amount) {
-      try {
-        await token.transfer(account, amount, { from: master })
-      } catch (error) {
-        console.error(error.message || error)
-      }
-    }
-  }
-
-  await Promise.all([
-    transferToken(eth, argv.eth),
-    transferToken(gno, argv.gno),
-    transferToken(tul, argv.tul),
-    transferToken(owl, argv.owl),
-  ]);
-
-  [accountETH, accountGNO, accountTUL, accountOWL] = await getBalances(account)
-  console.log(`Balance is:\t${accountETH}\tETH,\t${accountGNO}\tGNO,\t${accountTUL}\tTUL,\t${accountOWL}\tOWL`)
+  ({ ETH, GNO, TUL, OWL } = await getTokenBalances(account))
+  console.log(`Balance is:\t${ETH}\tETH,\t${GNO}\tGNO,\t${TUL}\tTUL,\t${OWL}\tOWL`)
 }
