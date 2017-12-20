@@ -27,6 +27,7 @@ module.exports = (artifacts) => {
 
   const mapToNumber = arr => arr.map(n => n.toNumber())
 
+
   const getDeployed = async (contrObj) => {
     const deployedMap = {}
 
@@ -43,6 +44,21 @@ module.exports = (artifacts) => {
   }
 
   const deployed = getDeployed(contracts)
+
+  const handleTokensMap = async (tokensMap, cb) => {
+    const { dx, po, ...tokens } = await deployed
+
+    const promisedDeposits = Object.keys(tokensMap).map(async (key) => {
+      const token = tokens[key.toLowerCase()]
+      const amount = tokensMap[key]
+
+      if (!amount || !token) return null
+
+      return cb({ key, token, amount })
+    })
+
+    return Promise.all(promisedDeposits)
+  }
 
   const getTokenBalances = async (acc) => {
     const { eth, gno, tul, owl } = await deployed
@@ -71,36 +87,20 @@ module.exports = (artifacts) => {
     return { ETH, GNO }
   }
 
-  const giveTokens = async (acc, tokensMap, masterAcc) => {
-    const tokens = await deployed
+  const giveTokens = (acc, tokensMap, masterAcc) => handleTokensMap(tokensMap, ({ key, token, amount }) => {
+    if (key === 'ETH') {
+      return token.deposit({ from: acc, value: amount })
+    } else if (masterAcc) {
+      return token.transfer(acc, amount, { from: masterAcc })
+    }
 
-    const promisedTokens = Object.keys(tokensMap).map((key) => {
-      const token = tokens[key.toLowerCase()]
-      const amount = tokensMap[key]
-
-      if (!amount || !token) return null
-
-      if (key === 'ETH') {
-        return token.deposit({ from: acc, value: amount })
-      } else if (masterAcc) {
-        return token.transfer(acc, amount, { from: masterAcc })
-      }
-
-      return null
-    })
-
-    return Promise.all(promisedTokens)
-  }
+    return null
+  })
 
   const depositToDX = async (acc, tokensMap) => {
-    const { dx, ...tokens } = await deployed
+    const { dx } = await deployed
 
-    const promisedDeposits = Object.keys(tokensMap).map(async (key) => {
-      const token = tokens[key.toLowerCase()]
-      const amount = tokensMap[key]
-
-      if (!amount || !token) return null
-
+    return handleTokensMap(tokensMap, async ({ key, token, amount }) => {
       try {
         await token.approve(dx.address, amount, { from: acc })
         await dx.deposit(token.address, amount, { from: acc })
@@ -108,11 +108,7 @@ module.exports = (artifacts) => {
         console.warn(`Error depositing ${amount} ${key} from ${acc} to DX`)
         console.warn(error.message || error)
       }
-
-      return null
     })
-
-    return Promise.all(promisedDeposits)
   }
 
   return {
