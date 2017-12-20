@@ -7,7 +7,9 @@ const initBalances = {
 
 /**
  * truffle exec trufflescripts/topup_accounts.js
- * transfers seller 100 RTH and buyer 1000 GNO from master account
+ * deposits ETH tokens in accounts names
+ * and transfers other tokens from master account
+ * so that seller and buyer balances are no less than initBalances fro respective tokens
  */
 
 module.exports = async () => {
