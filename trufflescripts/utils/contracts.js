@@ -92,11 +92,35 @@ module.exports = (artifacts) => {
     return Promise.all(promisedTokens)
   }
 
+  const depositToDX = async (acc, tokensMap) => {
+    const { dx, ...tokens } = await deployed
+
+    const promisedDeposits = Object.keys(tokensMap).map(async (key) => {
+      const token = tokens[key.toLowerCase()]
+      const amount = tokensMap[key]
+
+      if (!amount || !token) return null
+
+      try {
+        await token.approve(dx.address, amount, { from: acc })
+        await dx.deposit(token.address, amount, { from: acc })
+      } catch (error) {
+        console.warn(`Error depositing ${amount} ${key} from ${acc} to DX`)
+        console.warn(error.message || error)
+      }
+
+      return null
+    })
+
+    return Promise.all(promisedDeposits)
+  }
+
   return {
     deployed,
     contracts,
     getTokenBalances,
     getTokenDeposits,
     giveTokens,
+    depositToDX,
   }
 }
