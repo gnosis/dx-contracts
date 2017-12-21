@@ -200,9 +200,9 @@ contract DutchExchange {
         require(getAuctionIndex(token1, token2) == 0);
 
         setAuctionIndex(token1, token2);
-
-        token1Funding = Math.min(token1Funding, balances[token1][msg.sender]);
-        token2Funding = Math.min(token2Funding, balances[token2][msg.sender]);
+        /*
+        token1Funding = min(token1Funding, balances[token1][msg.sender]);
+        token2Funding = min(token2Funding, balances[token2][msg.sender]);
 
         uint fundedValueUSD;
         uint ETHUSDPrice = PriceOracleInterface(ETHUSDOracle).getUSDETHPrice();
@@ -234,8 +234,9 @@ contract DutchExchange {
         // Save prices of opposite auctions
         closingPrices[token1][token2][0] = fraction(initialClosingPriceNum, initialClosingPriceDen);
         closingPrices[token2][token1][0] = fraction(initialClosingPriceDen, initialClosingPriceNum);
-        
-        addTokenPair2(token1, token2, token1Funding, token2Funding);
+        */
+        NewTokenPair(token1, token2);
+        //addTokenPair2(token1, token2, token1Funding, token2Funding);
     }
 
     function addTokenPair2 (
@@ -779,7 +780,7 @@ contract DutchExchange {
         }
         
         // R1
-        require(latestAuctionIndices[token1][token2] > 0);
+        // require(latestAuctionIndices[token1][token2] > 0);
 
         return (token1, token2);
     }
@@ -814,7 +815,7 @@ contract DutchExchange {
         internal
     {
         (token1, token2) = getTokenOrder(token1, token2);
-        latestAuctionIndices[token1][token2] += 1;
+        latestAuctionIndices[token1][token2] = 1;
     }
 
     function getAuctionIndex(

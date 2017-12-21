@@ -9,7 +9,7 @@ const TokenGNO = artifacts.require('TokenGNO')
 // const Token = artifacts.require('./Token.sol')
 // const OWL = artifacts.require('OWL')
 
-const { timestamp, blockNumber } = require('./utils')
+const { timestamp } = require('./utils')
 
 const { wait } = require('@digix/tempo')(web3)
 
@@ -40,7 +40,6 @@ const setupTest = async (accounts) => {
     gno.transfer(acct, 10 ** 18, { from: accounts[0] })
     gno.approve(dx.address, 10 ** 18, { from: acct })
   }))
-
   // Deposit depends on ABOVE finishing first... so run here
   await Promise.all(accounts.map((acct) => {
     if (acct === accounts[0]) return
@@ -48,10 +47,9 @@ const setupTest = async (accounts) => {
     dx.deposit(eth.address, 10 ** 9, { from: acct })
     dx.deposit(gno.address, 10 ** 18, { from: acct })
   }))
-
   // add token Pair
   // updating the oracle Price. Needs to be changed later to another mechanism
-  await oracle.updateETHUSDPrice(60000)
+  await oracle.updateETHUSDPrice(60000, { from: accounts[0] })
 }
 
 const setAndCheckAuctionStarted = async (ST, BT) => {
@@ -104,7 +102,7 @@ const checkBalanceBeforeClaim = async (
   } else {
     const balanceBeforeClaim = (await dx.balances.call(buyToken.address, acct)).toNumber()
     await dx.claimSellerFunds(sellToken.address, buyToken.address, acct, idx)
-    //console.log(balanceBeforeClaim+"-->"+amt+"-->"+(await dx.balances.call(buyToken.address, acct)).toNumber())
+    // console.log(balanceBeforeClaim+"-->"+amt+"-->"+(await dx.balances.call(buyToken.address, acct)).toNumber())
     assert.equal(Math.abs(balanceBeforeClaim + amt - (await dx.balances.call(buyToken.address, acct)).toNumber()) < round, true)
   }
 }
@@ -118,7 +116,6 @@ contract('DutchExchange', (accounts) => {
   beforeEach(async () => {
     // set up accounts and tokens
     await setupTest(accounts)
-
     // add tokenPair ETH GNO
     await dx.addTokenPair(
       eth.address,

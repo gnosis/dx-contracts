@@ -46,6 +46,5 @@ module.exports = function deploy(deployer, networks, accounts) {
       console.log(DutchExchangeAddress)
       return TokenTUL.deployed()
     })
-    .then((T)=> {console.log("hereitis")
-    	return T.updateMinter(DutchExchange.address)})
+    .then((T)=> T.updateMinter(DutchExchange.address))
 }
