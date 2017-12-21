@@ -166,7 +166,7 @@ module.exports = (artifacts) => {
 
     const { dx } = await deployed
 
-    const [token1Approved, token2Approved, ...stats] = await Promise.all([
+    const [sellTokenApproved, buyTokenApproved, ...stats] = await Promise.all([
       dx.approvedTokens(t1),
       dx.approvedTokens(t2),
       dx.latestAuctionIndices(t1, t2),
@@ -177,8 +177,8 @@ module.exports = (artifacts) => {
     const [latestAuctionIndex, auctionStarts, arbTokensAdded] = mapToNumber(stats)
 
     return {
-      token1Approved,
-      token2Approved,
+      sellTokenApproved,
+      buyTokenApproved,
       latestAuctionIndex,
       auctionStarts,
       arbTokensAdded,
@@ -191,9 +191,7 @@ module.exports = (artifacts) => {
 
     const { dx } = await deployed
 
-    const exchangeStats = await getExchangeStatsForTokenPair(t1, t2)
-
-    if (index === undefined) index = exchangeStats.latestAuctionIndex
+    if (index === undefined) index = await dx.latestAuctionIndices(t1, t2)
 
     const [closingPrice, ...stats] = await Promise.all([
       dx.closingPrices(t1, t2, index),
@@ -206,7 +204,7 @@ module.exports = (artifacts) => {
     const [sellVolume, buyVolume, extraSellTokens, extraBuyTokens] = mapToNumber(stats)
 
     return {
-      ...exchangeStats,
+      auctionIndex: index,
       closingPrice: mapToNumber(closingPrice),
       sellVolume,
       buyVolume,
@@ -215,7 +213,7 @@ module.exports = (artifacts) => {
     }
   }
 
-  const getAccountStatsForTokenPairAuction = async ({ sellToken, buyToken, index, acc }) => {
+  const getAccountStatsForTokenPairAuction = async ({ sellToken, buyToken, index, account }) => {
     const t1 = sellToken.address || sellToken
     const t2 = buyToken.address || buyToken
 
@@ -224,14 +222,41 @@ module.exports = (artifacts) => {
     if (index === undefined) index = await dx.latestAuctionIndices(t1, t2)
 
     const stats = await Promise.all([
-      dx.sellerBalances(t1, t2, index, acc),
-      dx.buyerBalances(t1, t2, index, acc),
-      dx.claimedAmounts(t1, t2, index, acc),
+      dx.sellerBalances(t1, t2, index, account),
+      dx.buyerBalances(t1, t2, index, account),
+      dx.claimedAmounts(t1, t2, index, account),
     ])
 
     const [sellerBalance, buyerBalance, claimedAmount] = mapToNumber(stats)
 
     return { sellerBalance, buyerBalance, claimedAmount }
+  }
+
+  const getAllStatsForTokenPair = async (options) => {
+    const { index, account } = options
+
+    const exchangeStats = await getExchangeStatsForTokenPair(options)
+    const { latestAuctionIndex } = exchangeStats
+
+    const auctionIndices = index !== undefined ? [index] : Array.from({ length: latestAuctionIndex + 1 }, (v, k) => k)
+
+    const promisedStats = auctionIndices.map(async (auctionIndex) => {
+      const [auctionStats, accountStats] = await Promise.all([
+        getAuctionStatsForTokenPair({ ...options, index: auctionIndex }),
+        account && getAccountStatsForTokenPairAuction({ ...options, index: auctionIndex }),
+      ])
+
+      return {
+        ...auctionStats,
+        ...accountStats,
+        latestAuction: auctionIndex === latestAuctionIndex,
+      }
+    })
+
+    return {
+      ...exchangeStats,
+      auctions: await Promise.all(promisedStats),
+    }
   }
 
   return {
@@ -245,5 +270,6 @@ module.exports = (artifacts) => {
     getExchangeStatsForTokenPair,
     getAuctionStatsForTokenPair,
     getAccountStatsForTokenPairAuction,
+    getAllStatsForTokenPair,
   }
 }
