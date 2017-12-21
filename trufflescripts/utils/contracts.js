@@ -160,6 +160,19 @@ module.exports = (artifacts) => {
     })
   }
 
+  /**
+   * gets state props for a token pair form DutchExchange
+   * @param {object} options
+   * @options {sellToken: TokenCode, buyToke: TokenCode}
+   * @sellToken, @buyToken - tokens to get stats for
+   * @returns {
+      sellTokenApproved: boolean,
+      buyTokenApproved: boolean,
+      latestAuctionIndex: number,
+      auctionStarts: number,
+      arbTokensAdded: number,
+    }
+   */
   const getExchangeStatsForTokenPair = async ({ sellToken, buyToken }) => {
     const t1 = sellToken.address || sellToken
     const t2 = buyToken.address || buyToken
@@ -185,6 +198,21 @@ module.exports = (artifacts) => {
     }
   }
 
+  /**
+   * gets state props for a token pair action at an index form DutchExchange
+   * @param {object} options
+   * @options {sellToken: TokenCode, buyToke: TokenCode, index: number}
+   * @sellToken, @buyToken - tokens to get stats for
+   * @index - index of auction, latestAuctionIndex by default
+   * @returns {
+      auctionIndex: number,
+      closingPrice: [num: number, den: number],
+      sellVolume: number,
+      buyVolume: number,
+      extraSellTokens: number,
+      extraBuyTokens: number,
+    }
+   */
   const getAuctionStatsForTokenPair = async ({ sellToken, buyToken, index }) => {
     const t1 = sellToken.address || sellToken
     const t2 = buyToken.address || buyToken
@@ -213,6 +241,18 @@ module.exports = (artifacts) => {
     }
   }
 
+  /**
+   * gets state props for a token pair action at an index form DutchExchange
+   * also for accounts
+   * @param {object} options
+   * @options {sellToken: TokenCode, buyToke: TokenCode, index: number, accounts: Account[]}
+   * @sellToken, @buyToken - tokens to get stats for
+   * @index - index of auction, latestAuctionIndex by default
+   * @accounts - array of accounts
+   * @returns {
+      [Key: '0xyt23yt24f...']: { sellerBalance: number, buyerBalance: number, claimedAmount: number }
+   * }
+   */
   const getAccountsStatsForTokenPairAuction = async ({ sellToken, buyToken, index, accounts }) => {
     const t1 = sellToken.address || sellToken
     const t2 = buyToken.address || buyToken
@@ -237,12 +277,46 @@ module.exports = (artifacts) => {
     }, {})
   }
 
+  /**
+   * gets state props for a token pair action at an index form DutchExchange
+   * also for accounts
+   * @param {object} options
+   * @options {sellToken: TokenCode, buyToke: TokenCode, index: number, accounts: Account[]}
+   * @sellToken, @buyToken - tokens to get stats for
+   * @index - index of auction, latestAuctionIndex by default
+   * @accounts - array of accounts
+   * @returns {
+
+      sellTokenApproved: boolean,
+      buyTokenApproved: boolean,
+      latestAuctionIndex: number,
+      auctionStarts: number,
+      arbTokensAdded: number,
+
+      auctions: [
+        {
+          auctionIndex: number,
+          closingPrice: [num: number, den: number],
+          sellVolume: number,
+          buyVolume: number,
+          extraSellTokens: number,
+          extraBuyTokens: number,
+          isLatestAuction: boolean,
+
+          accounts: {
+            [Key: '0xyt23yt24f...']: { sellerBalance: number, buyerBalance: number, claimedAmount: number }
+          }
+        }
+      ]
+   * }
+   */
   const getAllStatsForTokenPair = async (options) => {
     const { index, accounts } = options
 
     const exchangeStats = await getExchangeStatsForTokenPair(options)
     const { latestAuctionIndex } = exchangeStats
 
+    // either array of length 1 with the supplied index, or [3,2,1,0] array if latestIndex === 3
     const auctionIndices = index !== undefined ? [index]
       : Array.from({ length: latestAuctionIndex + 1 }, (v, k) => latestAuctionIndex - k)
 
@@ -257,7 +331,7 @@ module.exports = (artifacts) => {
       return {
         ...auctionStats,
         accounts: accountStats,
-        latestAuction: auctionIndex === latestAuctionIndex,
+        isLatestAuction: auctionIndex === latestAuctionIndex,
       }
     })
 
