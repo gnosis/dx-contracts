@@ -4,12 +4,14 @@ import "./../DutchExchange/DutchExchangeInterface.sol";
 import "./../Utils/Math.sol";
 
 contract PriceOracle {
-    using Math for *;
+    //using Math for *;
 
+    mapping (address => uint)lastPrices;
     uint public lastPriceETHUSD = 0;
     DutchExchangeInterface dutchExchange;
     address public etherToken;
-    address public owner;
+    address public owner2=0x0;
+    address public owner=0x0;
     
 
      // Modifiers
@@ -45,11 +47,10 @@ contract PriceOracle {
     /// @dev anyone can trigger the Update process for the USD ETH feed. 
     ///  possible solutions could be realityCheck with a big 
     ///  set of arbitrators: realityKey, Gnosis, Consensus, oralize or chainlink request
-    function updateETHUSDPrice(uint ETHPrice) 
+    function updateETHUSDPrice() 
         public
-        onlyOwner()
     {
-             lastPriceETHUSD = ETHPrice;//calculatePricesFromOracles();    
+            // lastPricesETHUSD = calculatePricesFromOracles();    
     }
     
     function getTokensValueInCENTS(
@@ -60,13 +61,7 @@ contract PriceOracle {
         view
         returns (uint)
     {
-        uint tokenValueInETH;
-        if(tokenAddress != etherToken) {
-            tokenValueInETH = getTokensValueInETH(tokenAddress, amount);
-        }
-        else {
-            tokenValueInETH = amount; /// (1 ether);
-        }
+        uint tokenValueInETH=getTokensValueInETH(tokenAddress, amount);
         return tokenValueInETH*lastPriceETHUSD;
     }
 
@@ -79,11 +74,9 @@ contract PriceOracle {
         returns (uint)
     {
         uint startIndex = dutchExchange.getLatestAuctionIndex(etherToken, tokenAddress);
-        
-         require(startIndex >= 1);
-         if (dutchExchange.getClosingPriceDen(etherToken, tokenAddress, startIndex) == 0) startIndex--;
-         return amount * dutchExchange.getClosingPriceNum(etherToken, tokenAddress, startIndex) / 
-                         dutchExchange.getClosingPriceDen(etherToken,tokenAddress,startIndex);
+        require(startIndex > 1);
+        if (dutchExchange.getClosingPriceDen(etherToken, tokenAddress, startIndex) == 0) startIndex--;
+        return amount * dutchExchange.getClosingPriceNum(etherToken, tokenAddress, startIndex) / dutchExchange.getClosingPriceDen(etherToken,tokenAddress,startIndex);
         //weighted volume from opposite auction would be better, but more expensive
     }
 

@@ -16,8 +16,8 @@ contract TokenTUL is StandardToken {
      *  Storage
      */
 
-    address owner;
-    address minter;
+    address public owner;
+    address public minter;
 
     // user => unlockedTUL
     mapping (address => unlockedTUL) public unlockedTULs;

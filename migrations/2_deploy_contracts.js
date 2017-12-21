@@ -17,7 +17,7 @@ module.exports = function deploy(deployer, networks, accounts) {
 
   deployer.deploy(EtherToken)
     .then(() => deployer.deploy(TokenGNO, 10**19))
-    .then(() => deployer.deploy(TokenTUL, accounts[0]))
+    .then(() => deployer.deploy(TokenTUL, accounts[0], accounts[0]))
     .then(() => deployer.deploy(StandardToken))
     .then(() => deployer.deploy(PriceOracle, accounts[0], EtherToken.address))
     .then(() => PriceOracle.deployed())
@@ -40,10 +40,12 @@ module.exports = function deploy(deployer, networks, accounts) {
     .then(() => {
       return PriceOracleInstance.updateDutchExchange(DutchExchange.address, { from: accounts[0] })
     })
+
     .then(() => PriceOracleInstance.getCurrentDutchExchange.call())
     .then((DutchExchangeAddress) => {
       console.log(DutchExchangeAddress)
       return TokenTUL.deployed()
     })
-    .then((T)=> T.updateExchange(DutchExchange.address))
+    .then((T)=> {console.log("hereitis")
+    	return T.updateMinter(DutchExchange.address)})
 }
