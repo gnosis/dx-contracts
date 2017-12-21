@@ -7,104 +7,112 @@ import "../Utils/Math.sol";
 contract TokenTUL is StandardToken {
     using Math for *;
 
+    struct unlockedTUL {
+        uint amountUnlocked;
+        uint withdrawalTime;
+    }
+
     /*
      *  Storage
      */
 
-
-    struct unlockedTUL {
-        uint amout;
-        uint withdrawalTime;
-    }
     address owner;
-    address dutchExchange;
+    address minter;
 
     // user => unlockedTUL
     mapping (address => unlockedTUL) public unlockedTULs;
+
     // user => amount
     mapping (address => uint) public lockedTULBalances;
-    /*
-     * Modifiers
-     */
-     modifier onlyOwner() {
-     	require(msg.sender == owner);
-     	_;
-     }
 
-     modifier onlyExchange() {
-        require(msg.sender == dutchExchange);
-        _;
-     }
     /*
      *  Public functions
      */
 
     function TokenTUL(
-     	address _owner
- 	)
- 		public
- 	{
- 		owner = _owner;
-        totalTokens=1;
- 	}
-
- 	function updateOwner(
- 		address _owner
-	)
-		public
-		onlyOwner()
-	{
-		owner = _owner;
-	}
-
-    function updateExchange(
-        address _exchange
+        address _owner,
+        address _minter
     )
         public
-        onlyOwner()
     {
-        dutchExchange = _exchange;
-    }
-    
-    function mintTokens(
-     	uint amount
- 	)
-    	public
-    	onlyExchange()
-    {
-    	balances[owner] += amount;
-    	totalTokens += amount;
+        owner = _owner;
+        minter = _minter;
     }
 
-    /// @dev Lock TUL
-    function lockTUL()
+    function updateOwner(
+        address _owner
+    )
         public
     {
-        //TObe goded
-        // Transfer maximum number
-        //allowances(msg.sender, this);
-        //balances[msg.sender]-=;
-
-        //lockedTULBalances[msg.sender] += allowance;
+        require(msg.sender == owner);
+        owner = _owner;
     }
 
-    function unlockTUL(
+    function updateMinter(
+        address _minter
+    )
+        public
+    {
+        require(msg.sender == owner);
+        minter = _minter;
+    }
+
+    function mintTokens(
+        address user,
         uint amount
     )
         public
     {
-        //Tobecoded
-        //amount = Math.min(amount, lockedTULBalances[msg.sender]);
-        //lockedTULBalances[msg.sender] -= amount;
-        //unlockedTULs[msg.sender].amount += amount;
-        //unlockedTULs[msg.sender].withdrawalTime = now + 24 hours;
+        require(msg.sender == minter);
+
+        lockedTULBalances[user] += amount;
+        totalTokens += amount;
     }
+
+    /// @dev Lock TUL
+    function lockTokens(
+        uint amount
+    )
+        public
+        returns (uint totalAmountLocked)
+    {
+        // Adjust amount by balance
+        amount = Math.min(amount, balances[msg.sender]);
+        
+        // Update state variables
+        balances[msg.sender] -= amount;
+        lockedTULBalances[msg.sender] += amount;
+
+        // Get return variable
+        totalAmountLocked = lockedTULBalances[msg.sender];
+    }
+
+    function unlockTokens(
+        uint amount
+    )
+        public
+        returns (uint totalAmountUnlocked, uint withdrawalTime)
+    {
+        // Adjust amount by locked balances
+        amount = Math.min(amount, lockedTULBalances[msg.sender]);
+
+        // Update state variables
+        lockedTULBalances[msg.sender] -= amount;
+        unlockedTULs[msg.sender].amountUnlocked += amount;
+        unlockedTULs[msg.sender].withdrawalTime = now + 24 hours;
+
+        // Get return variables
+        totalAmountUnlocked = unlockedTULs[msg.sender].amountUnlocked;
+        withdrawalTime = unlockedTULs[msg.sender].withdrawalTime;
+    }
+
     function getLockedAmount(
-        address owner
-    ) 
-        public 
-        returns (uint){
-            //Tobecoded
-        return 0;
+        address user
+    )
+        constant
+        public
+        returns (uint lockedTULs)
+    {
+        lockedTULs = lockedTULBalances[user];
     }
 }
