@@ -166,7 +166,7 @@ module.exports = (artifacts) => {
 
     const { dx } = await deployed
 
-    const [token1Approved, token2Approved, stats] = await Promise.all([
+    const [token1Approved, token2Approved, ...stats] = await Promise.all([
       dx.approvedTokens(t1),
       dx.approvedTokens(t2),
       dx.latestAuctionIndices(t1, t2),
@@ -185,6 +185,36 @@ module.exports = (artifacts) => {
     }
   }
 
+  const getAuctionStatsForTokenPair = async (token1, token2, index) => {
+    const t1 = token1.address || token1
+    const t2 = token2.address || token2
+
+    const { dx } = await deployed
+
+    const exchangeStats = await getExchangeStatsForTokenPair(t1, t2)
+
+    if (index === undefined) index = exchangeStats.latestAuctionIndex
+
+    const [closingPrice, ...stats] = await Promise.all([
+      dx.closingPrices(t1, t2, index),
+      dx.sellVolumes(t1, t2, index),
+      dx.buyVolumes(t1, t2, index),
+      dx.extraSellTokens(t1, t2, index),
+      dx.extraBuyTokens(t1, t2, index),
+    ])
+
+    const [sellVolume, buyVolume, extraSellTokens, extraBuyTokens] = mapToNumber(stats)
+
+    return {
+      ...exchangeStats,
+      closingPrice: mapToNumber(closingPrice),
+      sellVolume,
+      buyVolume,
+      extraSellTokens,
+      extraBuyTokens,
+    }
+  }
+
   return {
     deployed,
     contracts,
@@ -194,5 +224,6 @@ module.exports = (artifacts) => {
     depositToDX,
     withrawFromDX,
     getExchangeStatsForTokenPair,
+    getAuctionStatsForTokenPair,
   }
 }
