@@ -3,6 +3,7 @@
 const DutchExchange = artifacts.require('DutchExchange')
 const EtherToken = artifacts.require('EtherToken')
 const PriceOracle = artifacts.require('PriceOracle')
+const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 const TokenGNO = artifacts.require('TokenGNO')
 // const MathSol = artifacts.require('Math')
 // const StandardToken = artifacts.require('StandardToken')
@@ -107,7 +108,7 @@ const checkBalanceBeforeClaim = async (
   }
 }
 
-const getAuctionIndex = async (sell = eth, buy = gno) => (await dx.latestAuctionIndices.call(sell.address, buy.address)).toNumber()
+const getAuctionIndex = async (sell = eth, buy = gno) => (await dx.getAuctionIndex.call(buy.address, sell.address)).toNumber()
 const getStartingTimeOfAuction = async (sell = eth, buy = gno) => (await dx.auctionStarts.call(sell.address, buy.address)).toNumber()
 
 contract('DutchExchange', (accounts) => {
@@ -130,14 +131,27 @@ contract('DutchExchange', (accounts) => {
 
   it('Buys tokens at the 2:1 price', async () => {
     const auctionIndex = await getAuctionIndex()
-
+    console.log(auctionIndex)
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
+    console.log('setAndCheckAuctionStarted')
+    oracle = await PriceOracle.deployed()
+    console.log(await PriceOracleInterface.at(oracle.address).getUSDETHPrice.call())
     // wait until price is good
+    console.log(eth.address)
+    console.log(await dx.ETH.call())
+    console.log((await dx.testing.call(gno.address)))
+    console.log((await dx.testing.call(eth.address)))
+    console.log((await dx.testing2.call(eth.address, gno.address, auctionIndex)))
+
+    console.log((await dx.testing2.call(gno.address, eth.address, auctionIndex)))
+    // console.log("this was price oracle")
+    // console.log((await dx.getPrice.call(eth.address, gno.address, auctionIndex)))
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
+    console.log('waited until price is there')
     // buy
     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer1 })
-
+    console.log('order went through')
     /* -- claim Buyerfunds - function does this:
     * 1. balanceBeforeClaim = (await dx.balances.call(eth.address, buyer1)).toNumber()
     * 2. await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)

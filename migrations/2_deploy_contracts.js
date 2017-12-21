@@ -40,10 +40,7 @@ module.exports = function deploy(deployer, networks, accounts) {
     .then(() => {
       return PriceOracleInstance.updateDutchExchange(DutchExchange.address, { from: accounts[0] })
     })
-
-    .then(() => PriceOracleInstance.getCurrentDutchExchange.call())
-    .then((DutchExchangeAddress) => {
-      console.log(DutchExchangeAddress)
+    .then(() => {
       return TokenTUL.deployed()
     })
     .then((T)=> T.updateMinter(DutchExchange.address))
