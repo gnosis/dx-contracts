@@ -142,6 +142,24 @@ module.exports = (artifacts) => {
     })
   }
 
+  /**
+   * withdraws tokens from DutchExchange and puts them into account balances
+   * @param {string} acc - account in whose name to deposit tokens to DutchExchnage
+   * @param {object} tokensMap - mapping (token => balance) to withdraw, {ETH: balance, ...}
+   */
+  const withrawFromDX = async (acc, tokensMap) => {
+    const { dx } = await deployed
+
+    return handleTokensMap(tokensMap, async ({ key, token, amount }) => {
+      try {
+        await dx.withdraw(token.address, amount, { from: acc })
+      } catch (error) {
+        console.warn(`Error withrawing ${amount} ${key} from DX to ${acc}`)
+        console.warn(error.message || error)
+      }
+    })
+  }
+
   return {
     deployed,
     contracts,
@@ -149,5 +167,6 @@ module.exports = (artifacts) => {
     getTokenDeposits,
     giveTokens,
     depositToDX,
+    withrawFromDX,
   }
 }
