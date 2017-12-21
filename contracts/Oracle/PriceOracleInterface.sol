@@ -28,10 +28,7 @@ contract PriceOracleInterface {
    
     function updateDutchExchange(DutchExchangeInterface _dutchExchange)
         public
-        onlyOwner()
-    {
-        dutchExchange = _dutchExchange;
-    }
+        onlyOwner();
 
     /// @dev returns the USDETH price in Cents, ie current value would be 45034 == 450 USD and 34 Cents
     function getUSDETHPrice() 
