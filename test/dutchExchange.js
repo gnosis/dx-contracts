@@ -42,7 +42,6 @@ const setupTest = async (accounts) => {
       gno.approve(dx.address, 10 ** 18, { from: acct }),
     ])
   }))
-
   // Deposit depends on ABOVE finishing first... so run here
   await Promise.all(accounts.map((acct) => {
     if (acct === accounts[0]) return null
@@ -52,10 +51,9 @@ const setupTest = async (accounts) => {
       dx.deposit(gno.address, 10 ** 18, { from: acct }),
     ])
   }))
-
   // add token Pair
   // updating the oracle Price. Needs to be changed later to another mechanism
-  await oracle.updateETHUSDPrice(60000)
+  await oracle.updateETHUSDPrice(60000, { from: accounts[0] })
 }
 
 const setAndCheckAuctionStarted = async (ST, BT) => {
@@ -122,7 +120,6 @@ contract('DutchExchange', (accounts) => {
   beforeEach(async () => {
     // set up accounts and tokens
     await setupTest(accounts)
-
     // add tokenPair ETH GNO
     await dx.addTokenPair(
       eth.address,

@@ -44,13 +44,14 @@ contract PriceOracle {
         return lastPriceETHUSD;
     }
 
-    /// @dev anyone can trigger the Update process for the USD ETH feed. 
+       /// @dev anyone can trigger the Update process for the USD ETH feed. 
     ///  possible solutions could be realityCheck with a big 
     ///  set of arbitrators: realityKey, Gnosis, Consensus, oralize or chainlink request
-    function updateETHUSDPrice() 
+    function updateETHUSDPrice(uint ETHPrice) 
         public
+        onlyOwner()
     {
-            // lastPricesETHUSD = calculatePricesFromOracles();    
+             lastPriceETHUSD = ETHPrice;//calculatePricesFromOracles();    
     }
     
     function getTokensValueInCENTS(
