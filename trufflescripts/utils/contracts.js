@@ -160,9 +160,9 @@ module.exports = (artifacts) => {
     })
   }
 
-  const getExchangeStatsForTokenPair = async (token1, token2) => {
-    const t1 = token1.address || token1
-    const t2 = token2.address || token2
+  const getExchangeStatsForTokenPair = async ({ sellToken, buyToken }) => {
+    const t1 = sellToken.address || sellToken
+    const t2 = buyToken.address || buyToken
 
     const { dx } = await deployed
 
@@ -185,9 +185,9 @@ module.exports = (artifacts) => {
     }
   }
 
-  const getAuctionStatsForTokenPair = async (token1, token2, index) => {
-    const t1 = token1.address || token1
-    const t2 = token2.address || token2
+  const getAuctionStatsForTokenPair = async ({ sellToken, buyToken, index }) => {
+    const t1 = sellToken.address || sellToken
+    const t2 = buyToken.address || buyToken
 
     const { dx } = await deployed
 
