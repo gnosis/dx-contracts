@@ -215,6 +215,25 @@ module.exports = (artifacts) => {
     }
   }
 
+  const getAccountStatsForTokenPairAuction = async ({ sellToken, buyToken, index, acc }) => {
+    const t1 = sellToken.address || sellToken
+    const t2 = buyToken.address || buyToken
+
+    const { dx } = await deployed
+
+    if (index === undefined) index = await dx.latestAuctionIndices(t1, t2)
+
+    const stats = await Promise.all([
+      dx.sellerBalances(t1, t2, index, acc),
+      dx.buyerBalances(t1, t2, index, acc),
+      dx.claimedAmounts(t1, t2, index, acc),
+    ])
+
+    const [sellerBalance, buyerBalance, claimedAmount] = mapToNumber(stats)
+
+    return { sellerBalance, buyerBalance, claimedAmount }
+  }
+
   return {
     deployed,
     contracts,
@@ -225,5 +244,6 @@ module.exports = (artifacts) => {
     withrawFromDX,
     getExchangeStatsForTokenPair,
     getAuctionStatsForTokenPair,
+    getAccountStatsForTokenPairAuction,
   }
 }
