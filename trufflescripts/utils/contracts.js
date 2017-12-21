@@ -213,7 +213,7 @@ module.exports = (artifacts) => {
     }
   }
 
-  const getAccountStatsForTokenPairAuction = async ({ sellToken, buyToken, index, account }) => {
+  const getAccountsStatsForTokenPairAuction = async ({ sellToken, buyToken, index, accounts }) => {
     const t1 = sellToken.address || sellToken
     const t2 = buyToken.address || buyToken
 
@@ -221,34 +221,42 @@ module.exports = (artifacts) => {
 
     if (index === undefined) index = await dx.latestAuctionIndices(t1, t2)
 
-    const stats = await Promise.all([
+    const promisedStatsArray = accounts.map(account => Promise.all([
       dx.sellerBalances(t1, t2, index, account),
       dx.buyerBalances(t1, t2, index, account),
       dx.claimedAmounts(t1, t2, index, account),
-    ])
+    ]))
 
-    const [sellerBalance, buyerBalance, claimedAmount] = mapToNumber(stats)
+    const statsArray = await Promise.all(promisedStatsArray)
 
-    return { sellerBalance, buyerBalance, claimedAmount }
+    return statsArray.reduce((accum, stats, i) => {
+      const [sellerBalance, buyerBalance, claimedAmount] = mapToNumber(stats)
+      accum[accounts[i]] = { sellerBalance, buyerBalance, claimedAmount }
+
+      return accum
+    }, {})
   }
 
   const getAllStatsForTokenPair = async (options) => {
-    const { index, account } = options
+    const { index, accounts } = options
 
     const exchangeStats = await getExchangeStatsForTokenPair(options)
     const { latestAuctionIndex } = exchangeStats
 
-    const auctionIndices = index !== undefined ? [index] : Array.from({ length: latestAuctionIndex + 1 }, (v, k) => k)
+    const auctionIndices = index !== undefined ? [index]
+      : Array.from({ length: latestAuctionIndex + 1 }, (v, k) => latestAuctionIndex - k)
+
+    const getAccountStats = accounts && accounts.length
 
     const promisedStats = auctionIndices.map(async (auctionIndex) => {
       const [auctionStats, accountStats] = await Promise.all([
         getAuctionStatsForTokenPair({ ...options, index: auctionIndex }),
-        account && getAccountStatsForTokenPairAuction({ ...options, index: auctionIndex }),
+        getAccountStats && getAccountsStatsForTokenPairAuction({ ...options, index: auctionIndex }),
       ])
 
       return {
         ...auctionStats,
-        ...accountStats,
+        accounts: accountStats,
         latestAuction: auctionIndex === latestAuctionIndex,
       }
     })
@@ -269,7 +277,7 @@ module.exports = (artifacts) => {
     withrawFromDX,
     getExchangeStatsForTokenPair,
     getAuctionStatsForTokenPair,
-    getAccountStatsForTokenPairAuction,
+    getAccountsStatsForTokenPairAuction,
     getAllStatsForTokenPair,
   }
 }
