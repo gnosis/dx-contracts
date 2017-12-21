@@ -26,7 +26,7 @@ module.exports = (artifacts) => {
     PriceOracle: 'po',
   }
 
-  const mapToNumber = arr => arr.map(n => n.toNumber())
+  const mapToNumber = arr => arr.map(n => (n.toNumber ? n.toNumber() : n))
 
   /**
    * returns deployed contract mapping
@@ -160,6 +160,31 @@ module.exports = (artifacts) => {
     })
   }
 
+  const getExchangeStatsForTokenPair = async (token1, token2) => {
+    const t1 = token1.address || token1
+    const t2 = token2.address || token2
+
+    const { dx } = await deployed
+
+    const [token1Approved, token2Approved, stats] = await Promise.all([
+      dx.approvedTokens(t1),
+      dx.approvedTokens(t2),
+      dx.latestAuctionIndices(t1, t2),
+      dx.auctionStarts(t1, t2),
+      dx.arbTokensAdded(t1, t2),
+    ])
+
+    const [latestAuctionIndex, auctionStarts, arbTokensAdded] = mapToNumber(stats)
+
+    return {
+      token1Approved,
+      token2Approved,
+      latestAuctionIndex,
+      auctionStarts,
+      arbTokensAdded,
+    }
+  }
+
   return {
     deployed,
     contracts,
@@ -168,5 +193,6 @@ module.exports = (artifacts) => {
     giveTokens,
     depositToDX,
     withrawFromDX,
+    getExchangeStatsForTokenPair,
   }
 }
