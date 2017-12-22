@@ -152,6 +152,11 @@ contract('DutchExchange', (accounts) => {
     // buy
     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer1 })
     console.log('order went through')
+    console.log(await getAuctionIndex())
+
+    console.log((await dx.testing2.call(eth.address, gno.address, auctionIndex)))
+
+    console.log((await dx.testing2.call(gno.address, eth.address, auctionIndex)))
     /* -- claim Buyerfunds - function does this:
     * 1. balanceBeforeClaim = (await dx.balances.call(eth.address, buyer1)).toNumber()
     * 2. await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)
@@ -200,6 +205,9 @@ contract('DutchExchange', (accounts) => {
 
     // post new sell order to start next auction
     auctionIndex = await getAuctionIndex()
+    console.log(auctionIndex)
+    console.log((await dx.getAuctionStart(eth.address, gno.address)).toNumber())
+    console.log(-timestamp())
     await dx.postSellOrder(eth.address, gno.address, auctionIndex, 10 ** 9, { from: seller2 })
 
     await setAndCheckAuctionStarted(eth, gno)

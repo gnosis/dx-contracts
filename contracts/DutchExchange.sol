@@ -115,9 +115,11 @@ contract DutchExchange {
     );
 
     event AuctionCleared(
-        address indexed sellToken,
-        address indexed buyToken,
-        uint indexed auctionIndex
+        address sellToken,
+        address buyToken,
+        uint sellVoluem,
+        uint buyVolume,
+        uint auctionIndex
     );
 
     // Modifiers
@@ -317,6 +319,7 @@ contract DutchExchange {
             // R2.1: sell orders must go to next auction
             require(auctionIndex == latestAuctionIndex + 1);
         }
+        
 
         // Fee mechanism, fees are added to extraTokens
         uint fee = settleFee(sellToken, msg.sender, amount);
@@ -535,30 +538,32 @@ contract DutchExchange {
         uint tulipsToIssue;
         (returned, tulipsToIssue) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
 
-        // R1
+        //R1
         require(returned > 0);
 
         if (auctionIndex == getAuctionIndex(sellToken, buyToken)) {
-            // Auction is running
+            // AuctionClearedction is running
             claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
         } else {
-            // Auction has closed
-            // Reset buyerBalances and claimedAmounts
-            buyerBalances[sellToken][buyToken][auctionIndex][user] = 0;
-            claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0;
+           
+        //    if (buyVolumes[sellToken][buyToken] !=0 ){
+        //         // Assign extra sell tokens (this is possible only after auction has cleared,
+        //         // because buyVolume could still increase before that)
+        //         uint extraTokensTotal = extraTokens[sellToken][buyToken][auctionIndex];
+        //         uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
+        //         uint tokensExtra = buyerBalance * extraTokensTotal / clos[sellToken][buyToken];
+        //         returned += tokensExtra;
+        //          // Auction has closed
+        //         // Reset buyerBalances and claimedAmounts
+        //         buyerBalances[sellToken][buyToken][auctionIndex][user] = 0;
+        //         claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0;
+        //     }
+            }
 
-            // Assign extra sell tokens (this is possible only after auction has cleared,
-            // because buyVolume could still increase before that)
-            uint extraTokensTotal = extraTokens[sellToken][buyToken][auctionIndex];
-            uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
-            uint tokensExtra = buyerBalance * extraTokensTotal / buyVolumes[sellToken][buyToken];
-            returned += tokensExtra;
-        }
-
-        if (tulipsToIssue > 0) {
-            // Issue TUL
-            TokenTUL(TUL).mintTokens(user, tulipsIssued);
-        }
+        // if (tulipsToIssue > 0) {
+        //     // Issue TUL
+        //     TokenTUL(TUL).mintTokens(user, tulipsIssued);
+        // }
 
         // Claim tokens
         balances[sellToken][user] += returned;
@@ -654,12 +659,14 @@ contract DutchExchange {
     {
         // Update closing prices
         uint buyVolume = buyVolumes[sellToken][buyToken];
-        closingPrices[sellToken][buyToken][auctionIndex] = fraction(buyVolume, sellVolume);
+        if (buyVolume == 0) closingPrices[sellToken][buyToken][auctionIndex] = fraction(0, 1);
+        else closingPrices[sellToken][buyToken][auctionIndex] = fraction(buyVolume, sellVolume);
+
 
         fraction memory opp = closingPrices[buyToken][sellToken][auctionIndex];
 
         // Closing price denominator is initialised as 0
-        if (opp.den > 0) {
+        if (opp.den > 0 ) {
             // Denominator cannot be 0 once auction has cleared, so this means opposite auction has cleared
 
             // Get amount of tokens that were added through arbitration
@@ -673,7 +680,9 @@ contract DutchExchange {
                 // It contains at least one buy order
                 // Hence clearing price != 0
                 // So dividing by clearingPriceNum doesn't break
-                uint extraFromArb2 = (buyVolume - arbitrationTokensAdded) * sellVolume / buyVolume;
+                uint extraFromArb2;
+                if(buyVolume != 0)extraFromArb2 = (buyVolume - arbitrationTokensAdded) * sellVolume / buyVolume;
+                else extraFromArb2 = 0;
                 extraTokens[sellToken][buyToken][auctionIndex] += extraFromArb1 - opp.num - extraFromArb2;
                 resetArbTokens(sellToken, buyToken);
             }
@@ -683,11 +692,15 @@ contract DutchExchange {
             scheduleNextAuction(sellToken, buyToken);
         }
 
+
+        if (sellVolumesCurrent[buyToken][sellToken] == 0) {
+                clearAuction(buyToken, sellToken, auctionIndex, 0);
+         }
         // Update state variables
         sellVolumesCurrent[sellToken][buyToken] = sellVolumesNext[sellToken][buyToken];
         sellVolumesNext[sellToken][buyToken] = 0;
         buyVolumes[sellToken][buyToken] = 0;
-        AuctionCleared(sellToken, buyToken, auctionIndex);
+        AuctionCleared(sellToken, buyToken, sellVolume, buyVolume, auctionIndex);
     }
 
     function settleFee(

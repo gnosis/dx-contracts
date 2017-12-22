@@ -201,7 +201,7 @@ contract OWL is StandardToken {
     function burnedGNO(uint amount) public
     {
         require(Token(GNOTokenAddress).transferFrom(msg.sender, this, amount));
-        uint b=PriceOracle(oracleContract).getTokensValueInCENTS(GNOTokenAddress, amount) / 100;
+        uint b=600;//PriceOracle(oracleContract).getTokensValueInCENTS(GNOTokenAddress, amount) / 100;
         if ((now/(1 days))%30 == lastdayOfBurningDocumentationGNO) {
             burnedGNOValuedInUSD[(now/(1 days))%30] += b;
         } else {
