@@ -224,7 +224,7 @@ contract('DutchExchange', (accounts) => {
     )
   })
 
-  xit('process two auctions one after the other in one pair only', async () => {
+  it('process two auctions one after the other in one pair only', async () => {
     let auctionIndex
 
     // ASSERT Auction has started
@@ -232,6 +232,7 @@ contract('DutchExchange', (accounts) => {
 
     auctionIndex = await getAuctionIndex()
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
+    
     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer1 })
 
     // check Buyer1 balance and claim
