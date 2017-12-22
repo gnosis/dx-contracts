@@ -169,7 +169,7 @@ module.exports = (artifacts) => {
       sellTokenApproved: boolean,
       buyTokenApproved: boolean,
       latestAuctionIndex: number,
-      auctionStarts: number,
+      auctionStart: number,
       arbTokensAdded: number,
     }
    */
@@ -187,15 +187,34 @@ module.exports = (artifacts) => {
       dx.arbTokensAdded(t1, t2),
     ])
 
-    const [latestAuctionIndex, auctionStarts, arbTokensAdded] = mapToNumber(stats)
+    const [latestAuctionIndex, auctionStart, arbTokensAdded] = mapToNumber(stats)
 
     return {
       sellTokenApproved,
       buyTokenApproved,
       latestAuctionIndex,
-      auctionStarts,
+      auctionStart,
       arbTokensAdded,
     }
+  }
+
+  const getPriceForTokenPairAuction = async ({ sellToken, buyToken, index }) => {
+    const t1 = sellToken.address || sellToken
+    const t2 = buyToken.address || buyToken
+
+    const { dx } = await deployed
+
+    if (index === undefined) index = await dx.latestAuctionIndices(t1, t2)
+
+    try {
+      const price = await dx.getPrice(t1, t2, index)
+      return mapToNumber(price)
+    } catch (error) {
+      console.warn('Error getting price')
+      console.warn(error.message || error)
+    }
+
+    return undefined
   }
 
   /**
@@ -207,6 +226,7 @@ module.exports = (artifacts) => {
    * @returns {
       auctionIndex: number,
       closingPrice: [num: number, den: number],
+      price?: [num: number, den: number],
       sellVolume: number,
       buyVolume: number,
       extraSellTokens: number,
@@ -221,8 +241,9 @@ module.exports = (artifacts) => {
 
     if (index === undefined) index = await dx.latestAuctionIndices(t1, t2)
 
-    const [closingPrice, ...stats] = await Promise.all([
+    const [closingPrice, price, ...stats] = await Promise.all([
       dx.closingPrices(t1, t2, index),
+      getPriceForTokenPairAuction({ sellToken, buyToken, index }),
       dx.sellVolumes(t1, t2, index),
       dx.buyVolumes(t1, t2, index),
       dx.extraSellTokens(t1, t2, index),
@@ -238,6 +259,7 @@ module.exports = (artifacts) => {
       buyVolume,
       extraSellTokens,
       extraBuyTokens,
+      price,
     }
   }
 
@@ -290,13 +312,14 @@ module.exports = (artifacts) => {
       sellTokenApproved: boolean,
       buyTokenApproved: boolean,
       latestAuctionIndex: number,
-      auctionStarts: number,
+      auctionStart: number,
       arbTokensAdded: number,
 
       auctions: [
         {
-          auctionIndex: number,
+          auctionIndex: number, // from latest index to 0
           closingPrice: [num: number, den: number],
+          price?: [num: number, den: number],
           sellVolume: number,
           buyVolume: number,
           extraSellTokens: number,
@@ -353,5 +376,6 @@ module.exports = (artifacts) => {
     getAuctionStatsForTokenPair,
     getAccountsStatsForTokenPairAuction,
     getAllStatsForTokenPair,
+    getPriceForTokenPairAuction,
   }
 }
