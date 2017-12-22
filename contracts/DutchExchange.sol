@@ -309,28 +309,38 @@ contract DutchExchange {
         uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
         uint auctionStart = getAuctionStart(sellToken, buyToken);
 
+
+        uint closingPriceDen = closingPrices[sellToken][buyToken][auctionIndex - 1].den;
+        uint closingPriceDenOpp = closingPrices[buyToken][sellToken][auctionIndex - 1].den;
+
         if (now < auctionStart) {
             // C1: We are in the 10 minute buffer period
             // Auction has already cleared, and index has been incremented
             // R1.1: sell order must use that auction index
             require(auctionIndex == latestAuctionIndex);
         } else {
+
+
             // C2
             // R2.1: sell orders must go to next auction
-            require(auctionIndex == latestAuctionIndex + 1);
+            if (getAuctionStart(sellToken, buyToken) < now && closingPriceDen > 0 && closingPriceDenOpp > 0){
+                require(auctionIndex == latestAuctionIndex);
+            } else {
+                require(auctionIndex == latestAuctionIndex + 1);
+            }
         }
         
 
-        // Fee mechanism, fees are added to extraTokens
-        uint fee = settleFee(sellToken, msg.sender, amount);
-        extraTokens[sellToken][buyToken][auctionIndex + 1] += fee;
+        // // Fee mechanism, fees are added to extraTokens
+        // uint fee = settleFee(sellToken, msg.sender, amount);
+        // extraTokens[sellToken][buyToken][auctionIndex + 1] += fee;
 
-        uint amountAfterFee = amount - fee;
+        uint amountAfterFee = amount;// - fee;
 
         // Update variables
         balances[sellToken][msg.sender] -= amount;
         sellerBalances[sellToken][buyToken][auctionIndex][msg.sender] += amountAfterFee;
-        if (now < auctionStart) {
+        if (now < auctionStart || (getAuctionStart(sellToken, buyToken) < now && closingPriceDen > 0 && closingPriceDenOpp > 0)) {
             // C1
             sellVolumesCurrent[sellToken][buyToken] += amountAfterFee;
         } else {
@@ -340,8 +350,6 @@ contract DutchExchange {
 
         // If there exist closing prices for both last auctions that means
         // an insfuficient sell volume was received in both auctions and trading has halted
-        uint closingPriceDen = closingPrices[sellToken][buyToken][auctionIndex - 1].den;
-        uint closingPriceDenOpp = closingPrices[buyToken][sellToken][auctionIndex - 1].den;
         if (getAuctionStart(sellToken, buyToken) < now && closingPriceDen > 0 && closingPriceDenOpp > 0) {
             scheduleNextAuction(sellToken, buyToken);
         }
@@ -695,7 +703,7 @@ contract DutchExchange {
 
         if (sellVolumesCurrent[buyToken][sellToken] == 0) {
                 clearAuction(buyToken, sellToken, auctionIndex, 0);
-         }
+        }
         // Update state variables
         sellVolumesCurrent[sellToken][buyToken] = sellVolumesNext[sellToken][buyToken];
         sellVolumesNext[sellToken][buyToken] = 0;
@@ -735,7 +743,9 @@ contract DutchExchange {
             // OWL.delegatecall(bytes4(sha3("burnOWL(uint256)")), amount);
 
             // Adjust fee
-            fee -= amountOfOWLBurned * fee / feeInUSD;
+            if (feeInUSD != 0) {
+                fee -= amountOfOWLBurned * fee / feeInUSD;
+            }
         }
     }
 
@@ -752,7 +762,7 @@ contract DutchExchange {
         if (sellVolumeNext >= thresholdNewAuction || sellVolumeNextOpp >= thresholdNewAuction) {
             // Schedule next auction
             setAuctionStart(sellToken, buyToken, 10 minutes);
-        }
+        } 
     }
 
     /// @dev Gives best estimate for market price of a token in ETH of any price oracle on the Ethereum network
@@ -783,6 +793,14 @@ contract DutchExchange {
                 // This represents the sell volume of token-ETH
                 // Due to thresholdNewAuction, it will never be 0
                 price.den = closingPriceToken.den;
+            } else if (closingPriceToken.num == 0) {
+                // Happens when 0 tokens were received as buy volume for ETH-token auction
+                // While this makes the token price ∞, for our purposes we ignore that auction
+                price.num = closingPriceETH.num;
+                // This represents the sell volume of token-ETH
+                // Due to thresholdNewAuction, it will never be 0
+                price.den = closingPriceETH.den;
+            
             } else {
                 // Compute weighted average
                 price.num = closingPriceETH.den ** 2 * closingPriceToken.den + closingPriceToken.num ** 2 * closingPriceETH.num;
