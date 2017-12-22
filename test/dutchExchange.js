@@ -1,4 +1,4 @@
-/* eslint no-console:0, max-len:0, no-plusplus:0, no-mixed-operators:0 */
+/* eslint no-console:0, max-len:0, no-plusplus:0, no-mixed-operators:0, no-trailing-spaces:0 */
 
 const DutchExchange = artifacts.require('DutchExchange')
 const EtherToken = artifacts.require('EtherToken')
@@ -10,7 +10,11 @@ const TokenGNO = artifacts.require('TokenGNO')
 // const Token = artifacts.require('./Token.sol')
 // const OWL = artifacts.require('OWL')
 
-const { timestamp } = require('./utils')
+const { 
+  eventWatcher,
+  logger,
+  timestamp,
+} = require('./utils')
 
 const { wait } = require('@digix/tempo')(web3)
 
@@ -34,6 +38,7 @@ const setupTest = async (accounts) => {
 
   // Await ALL Promises for each account setup
   await Promise.all(accounts.map((acct) => {
+<<<<<<< HEAD
     if (acct === accounts[0]) return null
 
     return Promise.all([
@@ -42,6 +47,15 @@ const setupTest = async (accounts) => {
       gno.transfer(acct, 10 ** 18, { from: accounts[0] }),
       gno.approve(dx.address, 10 ** 18, { from: acct }),
     ])
+=======
+    /* eslint array-callback-return:0 */
+    if (acct === accounts[0]) return
+
+    eth.deposit({ from: acct, value: 10 ** 9 })
+    eth.approve(dx.address, 10 ** 9, { from: acct })
+    gno.transfer(acct, 10 ** 18, { from: accounts[0] })
+    gno.approve(dx.address, 10 ** 18, { from: acct })
+>>>>>>> changed some c.logs to logger and formatting
   }))
   // Deposit depends on ABOVE finishing first... so run here
   await Promise.all(accounts.map((acct) => {
@@ -117,8 +131,12 @@ const getAuctionIndex = async (sell = eth, buy = gno) => (await dx.latestAuction
 // const getStartingTimeOfAuction = async (sell = eth, buy = gno) => (await dx.auctionStarts.call(sell.address, buy.address)).toNumber()
 =======
 const getAuctionIndex = async (sell = eth, buy = gno) => (await dx.getAuctionIndex.call(buy.address, sell.address)).toNumber()
+<<<<<<< HEAD
 const getStartingTimeOfAuction = async (sell = eth, buy = gno) => (await dx.auctionStarts.call(sell.address, buy.address)).toNumber()
 >>>>>>> oracle issue resolved. first test passes
+=======
+// const getStartingTimeOfAuction = async (sell = eth, buy = gno) => (await dx.auctionStarts.call(sell.address, buy.address)).toNumber()
+>>>>>>> changed some c.logs to logger and formatting
 
 contract('DutchExchange', (accounts) => {
   const [, seller1, , buyer1] = accounts
@@ -139,33 +157,42 @@ contract('DutchExchange', (accounts) => {
   })
 
   it('Buys tokens at the 2:1 price', async () => {
+    eventWatcher(dx, 'NewTokenPair', {})
+    
     const auctionIndex = await getAuctionIndex()
-    console.log(auctionIndex)
+
+    logger('curr AuctionIndex', auctionIndex)
+    
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
-    console.log('setAndCheckAuctionStarted')
+    
+    logger('setAndCheckAuctionStarted')
+    
     oracle = await PriceOracle.deployed()
-    console.log(await PriceOracleInterface.at(oracle.address).getUSDETHPrice.call())
+    
+    logger('PRICE ORACLE', await PriceOracleInterface.at(oracle.address).getUSDETHPrice.call())    
     // wait until price is good
-    console.log(eth.address)
-    console.log(await dx.ETH.call())
-    console.log((await dx.testing.call(gno.address)))
-    console.log((await dx.testing.call(eth.address)))
-    console.log((await dx.testing2.call(eth.address, gno.address, auctionIndex)))
-
-    console.log((await dx.testing2.call(gno.address, eth.address, auctionIndex)))
+    logger('ETH Addr', eth.address)
+    logger('dx.ETH', await dx.ETH.call())
+    logger('dx.testing GNO price num', await dx.testing.call(gno.address))
+    logger('dx.testing ETH price num', await dx.testing.call(eth.address))
+    logger('dx.testing2 ETH/GNO', await dx.testing2.call(eth.address, gno.address, auctionIndex))
+    logger('dx.testing2 GNO/ETH', await dx.testing2.call(gno.address, eth.address, auctionIndex))
+    
     // console.log("this was price oracle")
     // console.log((await dx.getPrice.call(eth.address, gno.address, auctionIndex)))
+    
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
-    console.log('waited until price is there')
+    
+    logger('Waited until price is there')    
+    
     // buy
     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer1 })
-    console.log('order went through')
-    console.log(await getAuctionIndex())
-
-    console.log((await dx.testing2.call(eth.address, gno.address, auctionIndex)))
-
-    console.log((await dx.testing2.call(gno.address, eth.address, auctionIndex)))
+    
+    logger('postBuyOrder went through')
+    logger('Current AuctionIdx', await getAuctionIndex())
+    logger('dx.testing2 eth gno', await dx.testing2.call(eth.address, gno.address, auctionIndex))
+    logger('dx.testing2 gno/eth', await dx.testing2.call(gno.address, eth.address, auctionIndex))
     /* -- claim Buyerfunds - function does this:
     * 1. balanceBeforeClaim = (await dx.balances.call(eth.address, buyer1)).toNumber()
     * 2. await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)
@@ -197,7 +224,7 @@ contract('DutchExchange', (accounts) => {
     )
   })
 
-  it('process two auctions one after the other in one pair only', async () => {
+  xit('process two auctions one after the other in one pair only', async () => {
     let auctionIndex
 
     // ASSERT Auction has started
@@ -245,7 +272,7 @@ contract('DutchExchange', (accounts) => {
     )
   })
 
-  it('test a trade on the opposite pair', async () => {
+  xit('test a trade on the opposite pair', async () => {
     let auctionIndex
 
     // ASSERT Auction has started
