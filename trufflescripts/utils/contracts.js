@@ -160,6 +160,20 @@ module.exports = (artifacts) => {
     })
   }
 
+  const priceOracle = async (token) => {
+    const { dx } = await deployed
+
+    try {
+      const oraclePrice = await dx.priceOracle(token.address || token)
+      return mapToNumber(oraclePrice)
+    } catch (error) {
+      console.warn('Error getting oracle price')
+      console.warn(error.message || error)
+    }
+
+    return undefined
+  }
+
   /**
    * gets state props for a token pair form DutchExchange
    * @param {object} options
@@ -168,6 +182,8 @@ module.exports = (artifacts) => {
    * @returns {
       sellTokenApproved: boolean,
       buyTokenApproved: boolean,
+      sellTokenOraclePrice?: [num: number, den: number],
+      buyTokenOraclePrice?: [num: number, den: number],
       latestAuctionIndex: number,
       auctionStart: number,
       arbTokensAdded: number,
@@ -179,9 +195,17 @@ module.exports = (artifacts) => {
 
     const { dx } = await deployed
 
-    const [sellTokenApproved, buyTokenApproved, ...stats] = await Promise.all([
+    const [
+      sellTokenApproved,
+      buyTokenApproved,
+      sellTokenOraclePrice,
+      buyTokenOraclePrice,
+      ...stats
+    ] = await Promise.all([
       dx.approvedTokens(t1),
       dx.approvedTokens(t2),
+      priceOracle(t1),
+      priceOracle(t2),
       dx.latestAuctionIndices(t1, t2),
       dx.auctionStarts(t1, t2),
       dx.arbTokensAdded(t1, t2),
@@ -192,6 +216,8 @@ module.exports = (artifacts) => {
     return {
       sellTokenApproved,
       buyTokenApproved,
+      sellTokenOraclePrice,
+      buyTokenOraclePrice,
       latestAuctionIndex,
       auctionStart,
       arbTokensAdded,
@@ -311,6 +337,8 @@ module.exports = (artifacts) => {
 
       sellTokenApproved: boolean,
       buyTokenApproved: boolean,
+      sellTokenOraclePrice?: [num: number, den: number],
+      buyTokenOraclePrice?: [num: number, den: number],
       latestAuctionIndex: number,
       auctionStart: number,
       arbTokensAdded: number,
@@ -377,5 +405,6 @@ module.exports = (artifacts) => {
     getAccountsStatsForTokenPairAuction,
     getAllStatsForTokenPair,
     getPriceForTokenPairAuction,
+    priceOracle,
   }
 }
