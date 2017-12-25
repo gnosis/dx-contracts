@@ -16,7 +16,7 @@ const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
  */
 
 module.exports = async () => {
-  if (!(argv.eth || argv.gno || argv.tul || argv.owl) || !(argv.seller || argv.buyer || argv.a)) {
+  if (!(argv.eth > 0 || argv.gno > 0 || argv.tul > 0 || argv.owl > 0) || !(argv.seller || argv.buyer || argv.a)) {
     console.warn('No tokens or accounts specified')
     return
   }
