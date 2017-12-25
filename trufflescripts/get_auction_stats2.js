@@ -46,7 +46,8 @@ module.exports = async () => {
   const stats = await getAllStatsForTokenPair({ sellToken: eth, buyToken: gno, accounts: [seller, buyer] })
 
   const {
-    sellTokenOraclePrice,
+    // TODO: remove = [1, 1] workaround for ETH token when dx.priceOracle() changes
+    sellTokenOraclePrice = [1, 1],
     buyTokenOraclePrice,
     latestAuctionIndex,
     auctionStart,
@@ -54,7 +55,7 @@ module.exports = async () => {
     auctions,
   } = stats
 
-  console.log('Auction pair ETH -> GNO')
+  console.log('\nAuction pair ETH -> GNO')
 
   if (sellTokenOraclePrice && buyTokenOraclePrice) {
     console.log(`Oracle prices:
@@ -119,7 +120,7 @@ module.exports = async () => {
 
     console.log(`    closingPrice: ${closingPriceStr}`)
 
-    if (isLatestAuction && price) {
+    if (isLatestAuction && price && sellTokenOraclePrice && buyTokenOraclePrice) {
       const [num, den] = price
       const [sellTokenNum] = sellTokenOraclePrice
       const [, buyTokenDen] = buyTokenOraclePrice
