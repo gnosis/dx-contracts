@@ -457,6 +457,36 @@ module.exports = (artifacts) => {
     )
   }
 
+  const addTokenPair = async ({
+    account,
+    sellToken,
+    buyToken,
+    sellTokenFunding,
+    buyTokenFunding,
+    initialClosingPriceNum,
+    initialClosingPriceDen,
+  }) => {
+    const t1 = sellToken.address || sellToken
+    const t2 = buyToken.address || buyToken
+
+    const { dx } = await deployed
+
+    try {
+      await dx.addTokenPair(
+        t1,
+        t2,
+        sellTokenFunding,
+        buyTokenFunding,
+        initialClosingPriceNum,
+        initialClosingPriceDen,
+        { from: account },
+      )
+    } catch (error) {
+      console.warn('Error adding token pair')
+      console.warn(error.message || error)
+    }
+  }
+
   return {
     deployed,
     contracts,
@@ -473,5 +503,6 @@ module.exports = (artifacts) => {
     priceOracle,
     getExchangeParams,
     updateExchangeParams,
+    addTokenPair,
   }
 }
