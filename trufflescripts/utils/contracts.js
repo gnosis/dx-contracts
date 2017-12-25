@@ -433,28 +433,38 @@ module.exports = (artifacts) => {
     }
   }
 
-  const updateExchangeParams = async (account, {
-    owner,
-    ETHUSDOracle,
-    sellFundingNewTokenPair,
-    thresholdForNewAuctionstart,
-  }) => {
+  const updateExchangeParams = async (options) => {
     const { dx } = await deployed
+    let {
+      owner,
+      ETHUSDOracle,
+      sellFundingNewTokenPair,
+      thresholdForNewAuctionstart,
+    } = options
+
     let params
 
     if (owner === undefined
       || ETHUSDOracle === undefined
       || sellFundingNewTokenPair === undefined
       || thresholdForNewAuctionstart === undefined) {
-      params = await getExchangeParams()
+      params = await getExchangeParams();
+
+      ({
+        owner,
+        ETHUSDOracle,
+        sellFundingNewTokenPair,
+        thresholdForNewAuctionstart,
+      } = { ...params, ...options })
     }
 
+
     await dx.updateExchangeParams(
-      owner || params.owner,
-      ETHUSDOracle || params.ETHUSDOracle,
-      sellFundingNewTokenPair || params.sellFundingNewTokenPair,
-      thresholdForNewAuctionstart || params.thresholdForNewAuctionstart,
-      { from: account },
+      owner,
+      ETHUSDOracle,
+      sellFundingNewTokenPair,
+      thresholdForNewAuctionstart,
+      { from: params.owner },
     )
   }
 
