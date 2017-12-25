@@ -126,14 +126,15 @@ module.exports = async () => {
       const [, buyTokenDen] = buyTokenOraclePrice
 
       const amountToClearAuction = Math.floor((sellVolume * num) / den) - buyVolume
+      console.log(`\n  currentPrice: 1 ETH = ${getNumDenStr(price)} GNO`)
 
-      if (amountToClearAuction > 0) console.log(`to clear auction buy\t${amountToClearAuction} GNO`)
+      if (amountToClearAuction > 0) console.log(`  to clear auction buy\t${amountToClearAuction} GNO`)
 
       // const timeWhenAuctionClears = Math.ceil(72000 * sellVolumeCurrent / buyVolume - 18000 + auctionStart)
       const timeWhenAuctionClears = Math.ceil((86400 / sellTokenNum / buyTokenDen) + auctionStart)
       const timeUntilAuctionClears = getTimeStr((now - timeWhenAuctionClears) * 1000)
 
-      console.log(`will clear with time in ${timeUntilAuctionClears}`)
+      console.log(`  will clear with time in ${timeUntilAuctionClears}`)
     }
 
     if (accounts && Object.keys(accounts).length) {
