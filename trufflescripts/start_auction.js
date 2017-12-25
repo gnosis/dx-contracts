@@ -97,6 +97,7 @@ module.exports = async () => {
     // no negative deposits
     const tokensToDeposit = { [SELL]: Math.max(0, neededSellDeposit), [BUY]: Math.max(0, neededBuyDeposit) }
     console.log('tokensToDeposit', tokensToDeposit)
+    await depositToDX(account, tokensToDeposit)
   }
 
   const { sellFundingNewTokenPair } = await getExchangeParams()
