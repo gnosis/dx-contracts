@@ -419,7 +419,7 @@ module.exports = (artifacts) => {
       dx.treshholdForNewAuctionstart(),
     ])
 
-    const [sellFundingNewTokenPair, threshholdForNewAuctionstart] = mapToNumber(prices)
+    const [sellFundingNewTokenPair, thresholdForNewAuctionstart] = mapToNumber(prices)
 
     return {
       owner,
@@ -429,11 +429,11 @@ module.exports = (artifacts) => {
       OWL,
       priceOracleAddress,
       sellFundingNewTokenPair,
-      threshholdForNewAuctionstart,
+      thresholdForNewAuctionstart,
     }
   }
 
-  const updateExchangeParams = async ({
+  const updateExchangeParams = async (account, {
     owner,
     ETHUSDOracle,
     sellFundingNewTokenPair,
@@ -453,7 +453,8 @@ module.exports = (artifacts) => {
       owner || params.owner,
       ETHUSDOracle || params.ETHUSDOracle,
       sellFundingNewTokenPair || params.sellFundingNewTokenPair,
-      thresholdForNewAuctionstart || params.threshholdForNewAuctionstart,
+      thresholdForNewAuctionstart || params.thresholdForNewAuctionstart,
+      { from: account },
     )
   }
 
