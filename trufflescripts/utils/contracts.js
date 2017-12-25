@@ -165,13 +165,14 @@ module.exports = (artifacts) => {
    * @param {TokenCode | address} token - to get price estimate for
    * @returns [num: number, den: number] | undefined
    */
-  const priceOracle = async (token) => {
+  const priceOracle = async (token, silent) => {
     const { dx } = await deployed
 
     try {
       const oraclePrice = await dx.priceOracle(token.address || token)
       return mapToNumber(oraclePrice)
     } catch (error) {
+      if (silent) return undefined
       console.warn('Error getting oracle price')
       console.warn(error.message || error)
     }
@@ -209,8 +210,8 @@ module.exports = (artifacts) => {
     ] = await Promise.all([
       dx.approvedTokens(t1),
       dx.approvedTokens(t2),
-      priceOracle(t1),
-      priceOracle(t2),
+      priceOracle(t1, true),
+      priceOracle(t2, true),
       dx.latestAuctionIndices(t1, t2),
       dx.auctionStarts(t1, t2),
       dx.arbTokensAdded(t1, t2),
@@ -235,7 +236,7 @@ module.exports = (artifacts) => {
    * @options {sellToken: TokenCode | address, buyToke: TokenCode | address, index: number}
    * @returns [] | undefined
    */
-  const getPriceForTokenPairAuction = async ({ sellToken, buyToken, index }) => {
+  const getPriceForTokenPairAuction = async ({ sellToken, buyToken, index }, silent) => {
     const t1 = sellToken.address || sellToken
     const t2 = buyToken.address || buyToken
 
@@ -247,6 +248,7 @@ module.exports = (artifacts) => {
       const price = await dx.getPrice(t1, t2, index)
       return mapToNumber(price)
     } catch (error) {
+      if (silent) return undefined
       console.warn('Error getting price')
       console.warn(error.message || error)
     }
@@ -280,7 +282,7 @@ module.exports = (artifacts) => {
 
     const [closingPrice, price, ...stats] = await Promise.all([
       dx.closingPrices(t1, t2, index),
-      getPriceForTokenPairAuction({ sellToken, buyToken, index }),
+      getPriceForTokenPairAuction({ sellToken, buyToken, index }, true),
       dx.sellVolumes(t1, t2, index),
       dx.buyVolumes(t1, t2, index),
       dx.extraSellTokens(t1, t2, index),
