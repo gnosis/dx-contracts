@@ -58,13 +58,14 @@ module.exports = async () => {
     return
   }
 
+  const [master, ...accounts] = web3.eth.accounts
   let account
   if (argv.a) account = argv.a
   else if (argv.buyer) {
-    [,, account] = web3.eth.accounts
+    [, account] = accounts
   } else {
     // set Seller as default account
-    [, account] = web3.eth.accounts
+    [account] = accounts
   }
 
   const SELL = sell.toUpperCase()
@@ -89,6 +90,7 @@ module.exports = async () => {
       // no negative balances
       const tokensToGive = { [SELL]: Math.max(0, neededSellBalance), [BUY]: Math.max(0, neededBuyBalance) }
       console.log('tokensToGive', tokensToGive)
+      await giveTokens(account, tokensToGive, master)
     }
 
     console.log(`Depositing ${neededSellDeposit} ${SELL}, ${neededBuyDeposit} ${BUY}`)
