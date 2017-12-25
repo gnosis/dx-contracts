@@ -53,7 +53,7 @@ module.exports = (artifacts) => {
   /**
    * helper function that iterates through given tokensMap
    * and does something for token contracts corresponding to eth, gno, ... keys
-   * @param {object} tokensMap - mapping (token => balance) to deposit, {ETH: balance, ...}
+   * @param {object} tokensMap - mapping (token name lowercase => balance) to deposit, {ETH: balance, ...}
    * @param {function} cb - function to call for each {token: amount} mapping
    * @cb: function({key: TokenCode, token: TokenContract, amount: number})
    */
@@ -110,7 +110,7 @@ module.exports = (artifacts) => {
   /**
    * gives tokens to the account, ETH through direct deposit, others from master's balance
    * @param {string} acc - account to give tokens to
-   * @param {object} tokensMap - mapping (token => balance) to deposit, {ETH: balance, ...}
+   * @param {object} tokensMap - mapping (token name lowercase => balance) to deposit, {ETH: balance, ...}
    * @param {string} masterAcc - master account to transfer tokens (except for ETH) from
    */
   const giveTokens = (acc, tokensMap, masterAcc) => handleTokensMap(tokensMap, ({ key, token, amount }) => {
@@ -126,7 +126,7 @@ module.exports = (artifacts) => {
   /**
    * approves transfers and subsequently transfers tokens to DutchExchange
    * @param {string} acc - account in whose name to deposit tokens to DutchExchnage
-   * @param {object} tokensMap - mapping (token => balance) to deposit, {ETH: balance, ...}
+   * @param {object} tokensMap - mapping (token name lowercase => balance) to deposit, {ETH: balance, ...}
    */
   const depositToDX = async (acc, tokensMap) => {
     const { dx } = await deployed
@@ -145,7 +145,7 @@ module.exports = (artifacts) => {
   /**
    * withdraws tokens from DutchExchange and puts them into account balances
    * @param {string} acc - account in whose name to deposit tokens to DutchExchnage
-   * @param {object} tokensMap - mapping (token => balance) to withdraw, {ETH: balance, ...}
+   * @param {object} tokensMap - mapping (token name lowercase => balance) to withdraw, {ETH: balance, ...}
    */
   const withrawFromDX = async (acc, tokensMap) => {
     const { dx } = await deployed
@@ -160,6 +160,11 @@ module.exports = (artifacts) => {
     })
   }
 
+  /**
+   * gets best estimate for market price of a token in ETH
+   * @param {TokenCode | address} token - to get price estimate for
+   * @returns [num: number, den: number] | undefined
+   */
   const priceOracle = async (token) => {
     const { dx } = await deployed
 
@@ -177,7 +182,7 @@ module.exports = (artifacts) => {
   /**
    * gets state props for a token pair form DutchExchange
    * @param {object} options
-   * @options {sellToken: TokenCode, buyToke: TokenCode}
+   * @options {sellToken: TokenCode | address, buyToke: TokenCode | address}
    * @sellToken, @buyToken - tokens to get stats for
    * @returns {
       sellTokenApproved: boolean,
@@ -224,6 +229,12 @@ module.exports = (artifacts) => {
     }
   }
 
+  /**
+   * gets price for a token pair auction at an index from DutchExchange
+   * @param {object} options
+   * @options {sellToken: TokenCode | address, buyToke: TokenCode | address, index: number}
+   * @returns [] | undefined
+   */
   const getPriceForTokenPairAuction = async ({ sellToken, buyToken, index }) => {
     const t1 = sellToken.address || sellToken
     const t2 = buyToken.address || buyToken
@@ -246,7 +257,7 @@ module.exports = (artifacts) => {
   /**
    * gets state props for a token pair action at an index form DutchExchange
    * @param {object} options
-   * @options {sellToken: TokenCode, buyToke: TokenCode, index: number}
+   * @options {sellToken: TokenCode | address, buyToke: TokenCode | address, index: number}
    * @sellToken, @buyToken - tokens to get stats for
    * @index - index of auction, latestAuctionIndex by default
    * @returns {
@@ -293,7 +304,7 @@ module.exports = (artifacts) => {
    * gets state props for a token pair action at an index form DutchExchange
    * also for accounts
    * @param {object} options
-   * @options {sellToken: TokenCode, buyToke: TokenCode, index: number, accounts: Account[]}
+   * @options {sellToken: TokenCode | address, buyToke: TokenCode | address, index: number, accounts: Account[]}
    * @sellToken, @buyToken - tokens to get stats for
    * @index - index of auction, latestAuctionIndex by default
    * @accounts - array of accounts
@@ -329,7 +340,7 @@ module.exports = (artifacts) => {
    * gets state props for a token pair action at an index form DutchExchange
    * also for accounts
    * @param {object} options
-   * @options {sellToken: TokenCode, buyToke: TokenCode, index: number, accounts: Account[]}
+   * @options {sellToken: TokenCode | address, buyToke: TokenCode | address, index: number, accounts: Account[]}
    * @sellToken, @buyToken - tokens to get stats for
    * @index - index of auction, latestAuctionIndex by default
    * @accounts - array of accounts
