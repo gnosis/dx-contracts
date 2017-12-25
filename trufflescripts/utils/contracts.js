@@ -63,7 +63,7 @@ module.exports = (artifacts) => {
     const promisedDeposits = Object.keys(tokensMap).map(async (key) => {
       const token = tokens[key.toLowerCase()]
       const amount = tokensMap[key]
-
+      // skip for 0 amounts or falsy tokens
       if (!amount || !token) return null
 
       return cb({ key, token, amount })
@@ -403,6 +403,58 @@ module.exports = (artifacts) => {
     }
   }
 
+  const getExchangeParams = async () => {
+    const { dx } = await deployed
+
+    const [owner, ETH, ETHUSDOracle, TUL, OWL, priceOracleAddress, ...prices] = await Promise.all([
+      dx.owner(),
+      dx.ETH(),
+      dx.ETHUSDOracle(),
+      dx.TUL(),
+      dx.OWL(),
+      dx.priceOracleAddress(),
+      dx.sellFundingNewTokenPair(),
+      dx.treshholdForNewAuctionstart(),
+    ])
+
+    const [sellFundingNewTokenPair, threshholdForNewAuctionstart] = mapToNumber(prices)
+
+    return {
+      owner,
+      ETH,
+      ETHUSDOracle,
+      TUL,
+      OWL,
+      priceOracleAddress,
+      sellFundingNewTokenPair,
+      threshholdForNewAuctionstart,
+    }
+  }
+
+  const updateExchangeParams = async ({
+    owner,
+    ETHUSDOracle,
+    sellFundingNewTokenPair,
+    thresholdForNewAuctionstart,
+  }) => {
+    const { dx } = await deployed
+    let params
+
+    if (owner === undefined
+      || ETHUSDOracle === undefined
+      || sellFundingNewTokenPair === undefined
+      || thresholdForNewAuctionstart === undefined) {
+      params = await getExchangeParams()
+    }
+
+    await dx.updateExchangeParams(
+      owner || params.owner,
+      ETHUSDOracle || params.ETHUSDOracle,
+      sellFundingNewTokenPair || params.sellFundingNewTokenPair,
+      thresholdForNewAuctionstart || params.threshholdForNewAuctionstart,
+    )
+  }
+
   return {
     deployed,
     contracts,
@@ -417,5 +469,7 @@ module.exports = (artifacts) => {
     getAllStatsForTokenPair,
     getPriceForTokenPairAuction,
     priceOracle,
+    getExchangeParams,
+    updateExchangeParams,
   }
 }
