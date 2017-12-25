@@ -7,6 +7,8 @@ const {
   giveTokens,
   depositToDX,
   getExchangeStatsForTokenPair,
+  addTokenPair,
+  updateExchangeParams,
 } = require('./utils/contracts')(artifacts)
 
 const { getTime, increaseTimeBy } = require('./utils')(web3)
@@ -74,7 +76,7 @@ module.exports = async () => {
   const { [SELL]: sellTokenDeposit, [BUY]: buyTokenDeposit } = await getTokenDeposits(account)
 
   if (sellTokenDeposit < sellTokenFunding || buyTokenDeposit < buyTokenFunding) {
-    console.log('Not enough tokens deposited to fund the pair')
+    console.log('\nNot enough tokens deposited to fund the pair')
 
     const neededSellDeposit = sellTokenFunding - sellTokenDeposit
     const neededBuyDeposit = buyTokenFunding - buyTokenDeposit
@@ -84,7 +86,7 @@ module.exports = async () => {
     const neededBuyBalance = neededBuyDeposit - buyBalance
 
     if (neededSellBalance > 0 || neededBuyBalance > 0) {
-      console.log('Not enough token balances to cover the deposits necessary')
+      console.log('\nNot enough token balances to cover the deposits necessary')
       console.log(`Supplying account with ${neededSellBalance} ${SELL}, ${neededBuyBalance} ${BUY}`)
 
       // no negative balances
@@ -93,7 +95,7 @@ module.exports = async () => {
       await giveTokens(account, tokensToGive, master)
     }
 
-    console.log(`Depositing ${neededSellDeposit} ${SELL}, ${neededBuyDeposit} ${BUY}`)
+    console.log(`Depositing ${neededSellDeposit} ${SELL}, ${neededBuyDeposit} ${BUY}\n`)
     // no negative deposits
     const tokensToDeposit = { [SELL]: Math.max(0, neededSellDeposit), [BUY]: Math.max(0, neededBuyDeposit) }
     console.log('tokensToDeposit', tokensToDeposit)
@@ -123,16 +125,29 @@ module.exports = async () => {
   console.log('fundedValueUSD', fundedValueUSD)
   const underfunded = fundedValueUSD < sellFundingNewTokenPair
   if (underfunded) {
-    console.log('funded value < sellFundingNewTokenPair')
+    console.log('\nfunded value < sellFundingNewTokenPair')
     console.log('To add the token pair, temporarily setting sellFundingNewTokenPair = 0')
+    await updateExchangeParams({ sellFundingNewTokenPair: 0 })
+    console.log('sellFundingNewTokenPair:', (await getExchangeParams()).sellFundingNewTokenPair)
   }
 
   console.log(`Adding a new token pair ${SELL} -> ${BUY}`)
   console.log(`${SELL} funding ${sellTokenFunding}\t${BUY} funding ${buyTokenFunding}`)
   console.log(`InitialclosingPrice: ${closingNum}/${closingDen} = ${closingNum / closingDen}`)
 
+  await addTokenPair({
+    account,
+    sellToken,
+    buyToken,
+    sellTokenFunding,
+    buyTokenFunding,
+    initialClosingPriceNum: closingNum,
+    initialClosingPriceDen: closingDen,
+  })
+
   if (underfunded) {
     console.log('Setting sellFundingNewTokenPair back to', sellFundingNewTokenPair)
+    await updateExchangeParams({ sellFundingNewTokenPair })
   }
 
 
