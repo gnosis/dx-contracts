@@ -134,7 +134,11 @@ module.exports = async () => {
       const timeWhenAuctionClears = Math.ceil((86400 / sellTokenNum / buyTokenDen) + auctionStart)
       const timeUntilAuctionClears = getTimeStr((now - timeWhenAuctionClears) * 1000)
 
-      console.log(`  will clear with time in ${timeUntilAuctionClears}`)
+      if (now - timeWhenAuctionClears >= 0)  {
+        console.log(`  will clear with time in ${timeUntilAuctionClears}`)
+      } else {
+        console.log(`  cleared ${timeWhenAuctionClears} ago`)
+      }
     }
 
     if (accounts && Object.keys(accounts).length) {
