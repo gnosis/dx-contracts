@@ -2,6 +2,13 @@
 module.exports = (web3) => {
   const getTime = (blockNumber = 'latest') => web3.eth.getBlock(blockNumber).timestamp
 
+  const mineCurrentBlock = () => web3.currentProvider.send({
+    jsonrpc: '2.0',
+    method: 'evm_mine',
+    params: [],
+    id: 0,
+  })
+
   const increaseTimeBy = (seconds, dontMine) => {
     if (seconds < 0) {
       throw new Error('Can\'t decrease time in testrpc')
@@ -17,12 +24,7 @@ module.exports = (web3) => {
     })
 
     if (!dontMine) {
-      web3.currentProvider.send({
-        jsonrpc: '2.0',
-        method: 'evm_mine',
-        params: [],
-        id: 0,
-      })
+      mineCurrentBlock()
     }
   }
 
@@ -51,5 +53,6 @@ module.exports = (web3) => {
     setTime,
     makeSnapshot,
     revertSnapshot,
+    mineCurrentBlock,
   }
 }
