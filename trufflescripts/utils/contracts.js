@@ -134,11 +134,12 @@ module.exports = (artifacts) => {
     return handleTokensMap(tokensMap, async ({ key, token, amount }) => {
       try {
         await token.approve(dx.address, amount, { from: acc })
-        await dx.deposit(token.address, amount, { from: acc })
+        return await dx.deposit(token.address, amount, { from: acc })
       } catch (error) {
         console.warn(`Error depositing ${amount} ${key} from ${acc} to DX`)
         console.warn(error.message || error)
       }
+      return undefined
     })
   }
 
@@ -152,11 +153,12 @@ module.exports = (artifacts) => {
 
     return handleTokensMap(tokensMap, async ({ key, token, amount }) => {
       try {
-        await dx.withdraw(token.address, amount, { from: acc })
+        return await dx.withdraw(token.address, amount, { from: acc })
       } catch (error) {
         console.warn(`Error withrawing ${amount} ${key} from DX to ${acc}`)
         console.warn(error.message || error)
       }
+      return undefined
     })
   }
 
@@ -459,7 +461,7 @@ module.exports = (artifacts) => {
     }
 
 
-    await dx.updateExchangeParams(
+    return dx.updateExchangeParams(
       owner,
       ETHUSDOracle,
       sellFundingNewTokenPair,
@@ -483,7 +485,7 @@ module.exports = (artifacts) => {
     const { dx } = await deployed
 
     try {
-      await dx.addTokenPair(
+      return await dx.addTokenPair(
         t1,
         t2,
         sellTokenFunding,
@@ -495,6 +497,7 @@ module.exports = (artifacts) => {
     } catch (error) {
       console.warn('Error adding token pair')
       console.warn(error.message || error)
+      return undefined
     }
   }
 
