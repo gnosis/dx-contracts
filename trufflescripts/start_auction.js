@@ -13,7 +13,6 @@ const {
 
 const { getTime, increaseTimeBy } = require('./utils')(web3)
 const argv = require('minimist')(process.argv.slice(4), { string: 'a' })
-console.log(argv)
 
 /**
  * truffle exec trufflescripts/start_auction.js
@@ -150,59 +149,15 @@ module.exports = async () => {
     await updateExchangeParams({ sellFundingNewTokenPair })
   }
 
+  const { auctionStart, latestAuctionIndex } = await getExchangeStatsForTokenPair({ sellToken, buyToken })
+  const now = getTime()
+  const timeUntilStart = auctionStart - now
 
-  // Grab Deposited Token Balances in Auction (if any)
-  // const balances = acct => Promise.all([
-  //   dx.balances(eth.address, acct),
-  //   dx.balances(gno.address, acct),
-  // ]).then(res => res.map(bal => bal.toNumber()))
-
-  // const [ethBalance, gnoBalance] = await balances(account)
-  // console.log(`
-  //   --> DX Ether Balance = ${ethBalance}
-  //   --> DX GNO Balance   = ${gnoBalance}
-  // `)
-
-  // try {
-  //   await sellToken.approve.call(dx.address, 10000, { from: account })
-  //   await buyToken.approve.call(dx.address, 10000, { from: account })
-    
-  //   console.log(`
-  //   --> Approved sellToken + buyToken movement by DX
-  //   `)
-
-  //   const { sellFundingNewTokenPair } = await getExchangeParams()
-  //   console.log('sellFuncingNewTokenPair:', sellFundingNewTokenPair)
-    
-  //   await dx.addTokenPair(
-  //     sellToken.address,
-  //     buyToken.address,
-  //     (argv._[2] || 500),
-  //     (argv._[3] || 500),
-  //     2,
-  //     1,
-  //     { from: account },
-  //   )
-  // } catch (e) {
-  //   console.log(`
-  //   ERROR
-  //   ---------------------------  
-  //   ${e}
-  //   ---------------------------
-  //   `)
-  // }
-
-  // const auctionStart = (await dx.auctionStarts.call(sellToken.address, buyToken.address)).toNumber()
-  // const now = getTime()
-  // const timeUntilStart = auctionStart - now
-
-  // const auctionIndex = (await dx.latestAuctionIndices.call(sellToken.address, buyToken.address)).toNumber()
-
-  // // auctionStart is in the future
-  // if (timeUntilStart > 0) {
-  //   increaseTimeBy(timeUntilStart + hour)
-  //   console.log(`ETH -> GNO auction ${auctionIndex} started`)
-  // } else {
-  //   console.log(`ETH -> GNO auction ${auctionIndex} is already running`)
-  // }
+  // auctionStart is in the future
+  if (timeUntilStart > 0) {
+    increaseTimeBy(timeUntilStart + hour)
+    console.log(`ETH -> GNO auction ${latestAuctionIndex} started`)
+  } else {
+    console.log(`ETH -> GNO auction ${latestAuctionIndex} is already running`)
+  }
 }
