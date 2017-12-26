@@ -90,22 +90,20 @@ module.exports = async () => {
 
       // no negative balances
       const tokensToGive = { [SELL]: Math.max(0, neededSellBalance), [BUY]: Math.max(0, neededBuyBalance) }
-      console.log('tokensToGive', tokensToGive)
       await giveTokens(account, tokensToGive, master)
     }
 
     console.log(`Depositing ${neededSellDeposit} ${SELL}, ${neededBuyDeposit} ${BUY}\n`)
     // no negative deposits
     const tokensToDeposit = { [SELL]: Math.max(0, neededSellDeposit), [BUY]: Math.max(0, neededBuyDeposit) }
-    console.log('tokensToDeposit', tokensToDeposit)
     await depositToDX(account, tokensToDeposit)
   }
 
   const { sellFundingNewTokenPair } = await getExchangeParams()
-  console.log('sellFundingNewTokenPair:', sellFundingNewTokenPair)
 
   const ETHUSDPrice = (await po.getUSDETHPrice()).toNumber()
 
+  // calculating funded value, depends on oracle price
   let fundedValueUSD
   if (SELL === 'ETH') {
     fundedValueUSD = sellTokenFunding * ETHUSDPrice
@@ -121,10 +119,10 @@ module.exports = async () => {
     fundedValueUSD = (((sellTokenFunding * sNum) / sDen) + ((buyTokenFunding * bNum) / bDen)) * ETHUSDPrice
   }
 
-  console.log('fundedValueUSD', fundedValueUSD)
+  console.log('fundedValueUSD was calculated as', fundedValueUSD)
   const underfunded = fundedValueUSD < sellFundingNewTokenPair
   if (underfunded) {
-    console.log('\nfunded value < sellFundingNewTokenPair')
+    console.log(`\nfunded value (${fundedValueUSD}) < sellFundingNewTokenPair (${sellFundingNewTokenPair})`)
     console.log('To add the token pair, temporarily setting sellFundingNewTokenPair = 0')
     await updateExchangeParams({ sellFundingNewTokenPair: 0 })
     console.log('sellFundingNewTokenPair:', (await getExchangeParams()).sellFundingNewTokenPair)
@@ -134,7 +132,7 @@ module.exports = async () => {
   console.log(`${SELL} funding ${sellTokenFunding}\t${BUY} funding ${buyTokenFunding}`)
   console.log(`InitialclosingPrice: ${closingNum}/${closingDen} = ${closingNum / closingDen}`)
 
-  await addTokenPair({
+  const tx = await addTokenPair({
     account,
     sellToken,
     buyToken,
@@ -150,14 +148,18 @@ module.exports = async () => {
   }
 
   const { auctionStart, latestAuctionIndex } = await getExchangeStatsForTokenPair({ sellToken, buyToken })
-  const now = getTime()
-  const timeUntilStart = auctionStart - now
 
-  // auctionStart is in the future
-  if (timeUntilStart > 0) {
-    increaseTimeBy(timeUntilStart + hour)
+  if (tx) {
     console.log(`ETH -> GNO auction ${latestAuctionIndex} started`)
   } else {
-    console.log(`ETH -> GNO auction ${latestAuctionIndex} is already running`)
+    const now = getTime()
+    const timeUntilStart = auctionStart - now
+
+    // auctionStart is in the future
+    if (timeUntilStart > 0) {
+      console.log('auctionStart is set in the future. Skipping to it + 1 hour')
+      increaseTimeBy(timeUntilStart + hour)
+      console.log(`ETH -> GNO auction ${latestAuctionIndex} started`)
+    }
   }
 }
