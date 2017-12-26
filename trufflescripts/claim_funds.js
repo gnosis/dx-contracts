@@ -1,3 +1,4 @@
+/* eslint no-console:0 */
 const DutchExchangeETHGNO = artifacts.require('./DutchExchangeETHGNO.sol')
 
 const argv = require('minimist')(process.argv.slice(2), { string: 'a' })

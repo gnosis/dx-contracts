@@ -1,3 +1,4 @@
+/* eslint no-console:0 */
 const { getTokenBalances, getTokenDeposits, deployed, getAllStatsForTokenPair } = require('./utils/contracts')(artifacts)
 const { getTime } = require('./utils')(web3)
 
@@ -134,7 +135,7 @@ module.exports = async () => {
       const timeWhenAuctionClears = Math.ceil((86400 / sellTokenNum / buyTokenDen) + auctionStart)
       const timeUntilAuctionClears = getTimeStr((now - timeWhenAuctionClears) * 1000)
 
-      if (now - timeWhenAuctionClears >= 0)  {
+      if (now - timeWhenAuctionClears >= 0) {
         console.log(`  will clear with time in ${timeUntilAuctionClears}`)
       } else {
         console.log(`  cleared ${timeWhenAuctionClears} ago`)

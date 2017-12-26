@@ -1,3 +1,4 @@
+/* eslint no-console:0 */
 module.exports = (artifacts) => {
   const TokenETH = artifacts.require('./EtherToken.sol')
   const TokenGNO = artifacts.require('./TokenGNO.sol')

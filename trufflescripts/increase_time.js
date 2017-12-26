@@ -1,3 +1,4 @@
+/* eslint no-console:0 */
 const { deployed, getExchangeStatsForTokenPair, getAuctionStatsForTokenPair } = require('./utils/contracts')(artifacts)
 const { getTime, increaseTimeBy, setTime } = require('./utils')(web3)
 
