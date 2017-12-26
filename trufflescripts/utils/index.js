@@ -3,6 +3,12 @@ module.exports = (web3) => {
   const getTime = (blockNumber = 'latest') => web3.eth.getBlock(blockNumber).timestamp
 
   const increaseTimeBy = (seconds, dontMine) => {
+    if (seconds < 0) {
+      throw new Error('Can\'t decrease time in testrpc')
+    }
+
+    if (seconds === 0) return
+
     web3.currentProvider.send({
       jsonrpc: '2.0',
       method: 'evm_increaseTime',
@@ -22,9 +28,6 @@ module.exports = (web3) => {
 
   const setTime = (seconds, dontMine) => {
     const increaseBy = seconds - getTime()
-    if (increaseBy < 0) {
-      throw new Error('Can\'t decrease time in testrpc')
-    }
 
     increaseTimeBy(increaseBy, dontMine)
   }
