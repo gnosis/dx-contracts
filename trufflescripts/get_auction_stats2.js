@@ -76,7 +76,7 @@ module.exports = async () => {
     const timeStr = getTimeStr(timeUntilStart * 1000)
 
     if (timeUntilStart > 0) {
-      console.log(`auction starts in\t\t${timeStr}`)
+      console.log(`next auction starts in\t\t${timeStr}`)
     } else if (timeUntilStart < 0) {
       console.log(`auction started\t\t${timeStr}ago`)
     } else {
