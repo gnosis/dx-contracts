@@ -544,6 +544,36 @@ module.exports = (artifacts) => {
     }
   }
 
+  const postSellOrder = async (account, { sellToken, buyToken, auctionIndex, amount }) => {
+    const t1 = sellToken.address || sellToken
+    const t2 = buyToken.address || buyToken
+
+    const { dx } = await deployed
+
+    try {
+      return await dx.postSellOrder(t1, t2, auctionIndex, amount, { from: account })
+    } catch (error) {
+      console.warn('Error posting sell order')
+      console.warn(error.message || error)
+      return undefined
+    }
+  }
+
+  const postBuyOrder = async (account, { sellToken, buyToken, auctionIndex, amount }) => {
+    const t1 = sellToken.address || sellToken
+    const t2 = buyToken.address || buyToken
+
+    const { dx } = await deployed
+
+    try {
+      return await dx.postSBuyOrder(t1, t2, auctionIndex, amount, { from: account })
+    } catch (error) {
+      console.warn('Error posting buy order')
+      console.warn(error.message || error)
+      return undefined
+    }
+  }
+
   return {
     deployed,
     contracts,
@@ -561,5 +591,7 @@ module.exports = (artifacts) => {
     getExchangeParams,
     updateExchangeParams,
     addTokenPair,
+    postSellOrder,
+    postBuyOrder,
   }
 }
