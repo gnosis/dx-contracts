@@ -583,7 +583,7 @@ module.exports = (artifacts) => {
     try {
       return await dx.claimSellerFunds(t1, t2, user, auctionIndex)
     } catch (error) {
-      console.warn('Error posting buy order')
+      console.warn('Error claiming seller funds')
       console.warn(error.message || error)
       return undefined
     }
@@ -598,11 +598,43 @@ module.exports = (artifacts) => {
     try {
       return await dx.claimBuyerFunds(t1, t2, user, auctionIndex)
     } catch (error) {
-      console.warn('Error posting buy order')
+      console.warn('Error claiming buyer funds')
       console.warn(error.message || error)
       return undefined
     }
   }
+
+  const getUnclaimedBuyerFunds = async ({ sellToken, buyToken, user, auctionIndex }) => {
+    const t1 = sellToken.address || sellToken
+    const t2 = buyToken.address || buyToken
+
+    const { dx } = await deployed
+
+    try {
+      const unclaimedFunds = await dx.getUnclaimedBuyerFunds(t1, t2, user, auctionIndex)
+      return unclaimedFunds.toNumber()
+    } catch (error) {
+      console.warn('Error getting unclaimed buyer funds')
+      console.warn(error.message || error)
+      return undefined
+    }
+  }
+
+  // const getUnclaimedSellerFunds = async ({ sellToken, buyToken, user, auctionIndex }) => {
+  //   const t1 = sellToken.address || sellToken
+  //   const t2 = buyToken.address || buyToken
+
+  //   const { dx } = await deployed
+
+  //   try {
+  //     const unclaimedFunds = await dx.getUnclaimedSellerFunds(t1, t2, user, auctionIndex)
+  //     return unclaimedFunds.toNumber()
+  //   } catch (error) {
+  //     console.warn('Error getting unclaimed seller funds')
+  //     console.warn(error.message || error)
+  //     return undefined
+  //   }
+  // }
 
   return {
     deployed,
@@ -625,5 +657,7 @@ module.exports = (artifacts) => {
     postBuyOrder,
     claimSellerFunds,
     claimBuyerFunds,
+    getUnclaimedBuyerFunds,
+    // getUnclaimedSellerFunds
   }
 }
