@@ -590,7 +590,7 @@ module.exports = (artifacts) => {
     const { dx } = await deployed
 
     try {
-      return await dx.postSBuyOrder(t1, t2, index, amount, { from: account })
+      return await dx.postBuyOrder(t1, t2, index, amount, { from: account })
     } catch (error) {
       console.warn('Error posting buy order')
       console.warn(error.message || error)
