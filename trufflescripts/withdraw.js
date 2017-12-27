@@ -1,3 +1,4 @@
+/* eslint no-console:0 */
 const { getTokenDeposits, withrawFromDX } = require('./utils/contracts')(artifacts)
 
 const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
