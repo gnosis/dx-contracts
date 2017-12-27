@@ -47,8 +47,8 @@ module.exports = async () => {
 
   const [sellTokenFunding, buyTokenFunding] = argv.fund ? argv.fund.split(',') : [500, 500]
 
-  if (sellTokenFunding <= 0 || buyTokenFunding <= 0) {
-    console.warn('Funding must be a positive number')
+  if (sellTokenFunding < 0 || buyTokenFunding < 0) {
+    console.warn('Funding must be a positive number or 0')
     return
   }
 
