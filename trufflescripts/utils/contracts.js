@@ -690,21 +690,21 @@ module.exports = (artifacts) => {
     }
     @returns number | undefined
    */
-  // const getUnclaimedSellerFunds = async ({ sellToken, buyToken, user, index }) => {
-  //   const t1 = sellToken.address || sellToken
-  //   const t2 = buyToken.address || buyToken
+  const getUnclaimedSellerFunds = async ({ sellToken, buyToken, user, index }) => {
+    const t1 = sellToken.address || sellToken
+    const t2 = buyToken.address || buyToken
 
-  //   const { dx } = await deployed
+    const { dx } = await deployed
 
-  //   try {
-  //     const unclaimedFunds = await dx.getUnclaimedSellerFunds(t1, t2, user, index)
-  //     return unclaimedFunds.toNumber()
-  //   } catch (error) {
-  //     console.warn('Error getting unclaimed seller funds')
-  //     console.warn(error.message || error)
-  //     return undefined
-  //   }
-  // }
+    try {
+      const unclaimedFunds = await dx.getUnclaimedSellerFunds(t1, t2, user, index)
+      return unclaimedFunds.toNumber()
+    } catch (error) {
+      console.warn('Error getting unclaimed seller funds')
+      console.warn(error.message || error)
+      return undefined
+    }
+  }
 
   return {
     deployed,
@@ -728,6 +728,6 @@ module.exports = (artifacts) => {
     claimSellerFunds,
     claimBuyerFunds,
     getUnclaimedBuyerFunds,
-    // getUnclaimedSellerFunds
+    getUnclaimedSellerFunds,
   }
 }
