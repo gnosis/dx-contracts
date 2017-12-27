@@ -574,6 +574,36 @@ module.exports = (artifacts) => {
     }
   }
 
+  const claimSellerFunds = async ({ sellToken, buyToken, user, auctionIndex }) => {
+    const t1 = sellToken.address || sellToken
+    const t2 = buyToken.address || buyToken
+
+    const { dx } = await deployed
+
+    try {
+      return await dx.claimSellerFunds(t1, t2, user, auctionIndex)
+    } catch (error) {
+      console.warn('Error posting buy order')
+      console.warn(error.message || error)
+      return undefined
+    }
+  }
+
+  const claimBuyerFunds = async ({ sellToken, buyToken, user, auctionIndex }) => {
+    const t1 = sellToken.address || sellToken
+    const t2 = buyToken.address || buyToken
+
+    const { dx } = await deployed
+
+    try {
+      return await dx.claimBuyerFunds(t1, t2, user, auctionIndex)
+    } catch (error) {
+      console.warn('Error posting buy order')
+      console.warn(error.message || error)
+      return undefined
+    }
+  }
+
   return {
     deployed,
     contracts,
@@ -593,5 +623,7 @@ module.exports = (artifacts) => {
     addTokenPair,
     postSellOrder,
     postBuyOrder,
+    claimSellerFunds,
+    claimBuyerFunds,
   }
 }
