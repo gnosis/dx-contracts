@@ -544,14 +544,26 @@ module.exports = (artifacts) => {
     }
   }
 
-  const postSellOrder = async (account, { sellToken, buyToken, auctionIndex, amount }) => {
+  /**
+   * posts a sell order to a specific token pair auction
+   * @param {address} account - account to post sell order from
+   * @param {object} options
+   * @options {
+      sellToken: Token | address,
+      buyToken: Token | address,
+      index: number,
+      amount: number,
+    }
+    @returns postSellOrder transaction | undefined
+   */
+  const postSellOrder = async (account, { sellToken, buyToken, index, amount }) => {
     const t1 = sellToken.address || sellToken
     const t2 = buyToken.address || buyToken
 
     const { dx } = await deployed
 
     try {
-      return await dx.postSellOrder(t1, t2, auctionIndex, amount, { from: account })
+      return await dx.postSellOrder(t1, t2, index, amount, { from: account })
     } catch (error) {
       console.warn('Error posting sell order')
       console.warn(error.message || error)
@@ -559,14 +571,26 @@ module.exports = (artifacts) => {
     }
   }
 
-  const postBuyOrder = async (account, { sellToken, buyToken, auctionIndex, amount }) => {
+  /**
+   * posts a buy order to a specific token pair auction
+   * @param {address} account - account to post buy order from
+   * @param {object} options
+   * @options {
+      sellToken: Token | address,
+      buyToken: Token | address,
+      index: number,
+      amount: number,
+    }
+    @returns postBuyOrder transaction | undefined
+   */
+  const postBuyOrder = async (account, { sellToken, buyToken, index, amount }) => {
     const t1 = sellToken.address || sellToken
     const t2 = buyToken.address || buyToken
 
     const { dx } = await deployed
 
     try {
-      return await dx.postSBuyOrder(t1, t2, auctionIndex, amount, { from: account })
+      return await dx.postSBuyOrder(t1, t2, index, amount, { from: account })
     } catch (error) {
       console.warn('Error posting buy order')
       console.warn(error.message || error)
@@ -574,14 +598,26 @@ module.exports = (artifacts) => {
     }
   }
 
-  const claimSellerFunds = async ({ sellToken, buyToken, user, auctionIndex }) => {
+  /**
+   * claims seller funds from a specific token pair auction for a specific user account
+   * claimed funds get added to the given account's deposit
+   * @param {object} options
+   * @options {
+      sellToken: Token | address,
+      buyToken: Token | address,
+      user: address,
+      index: number,
+    }
+    @returns claimSellerFunds transaction | undefined
+   */
+  const claimSellerFunds = async ({ sellToken, buyToken, user, index }) => {
     const t1 = sellToken.address || sellToken
     const t2 = buyToken.address || buyToken
 
     const { dx } = await deployed
 
     try {
-      return await dx.claimSellerFunds(t1, t2, user, auctionIndex)
+      return await dx.claimSellerFunds(t1, t2, user, index)
     } catch (error) {
       console.warn('Error claiming seller funds')
       console.warn(error.message || error)
@@ -589,14 +625,26 @@ module.exports = (artifacts) => {
     }
   }
 
-  const claimBuyerFunds = async ({ sellToken, buyToken, user, auctionIndex }) => {
+  /**
+   * claims buyer funds from a specific token pair auction for a specific user account
+   * claimed funds get added to the given account's deposit
+   * @param {object} options
+   * @options {
+      sellToken: Token | address,
+      buyToken: Token | address,
+      user: address,
+      index: number,
+    }
+    @returns claimBuyerrFunds transaction | undefined
+   */
+  const claimBuyerFunds = async ({ sellToken, buyToken, user, index }) => {
     const t1 = sellToken.address || sellToken
     const t2 = buyToken.address || buyToken
 
     const { dx } = await deployed
 
     try {
-      return await dx.claimBuyerFunds(t1, t2, user, auctionIndex)
+      return await dx.claimBuyerFunds(t1, t2, user, index)
     } catch (error) {
       console.warn('Error claiming buyer funds')
       console.warn(error.message || error)
@@ -604,14 +652,25 @@ module.exports = (artifacts) => {
     }
   }
 
-  const getUnclaimedBuyerFunds = async ({ sellToken, buyToken, user, auctionIndex }) => {
+  /**
+   * gets unclaimed buyer funds from a specific token pair auction for a specific account
+   * @param {object} options
+   * @options {
+      sellToken: Token | address,
+      buyToken: Token | address,
+      user: address,
+      index: number,
+    }
+    @returns number | undefined
+   */
+  const getUnclaimedBuyerFunds = async ({ sellToken, buyToken, user, index }) => {
     const t1 = sellToken.address || sellToken
     const t2 = buyToken.address || buyToken
 
     const { dx } = await deployed
 
     try {
-      const unclaimedFunds = await dx.getUnclaimedBuyerFunds(t1, t2, user, auctionIndex)
+      const unclaimedFunds = await dx.getUnclaimedBuyerFunds(t1, t2, user, index)
       return unclaimedFunds.toNumber()
     } catch (error) {
       console.warn('Error getting unclaimed buyer funds')
@@ -620,14 +679,25 @@ module.exports = (artifacts) => {
     }
   }
 
-  // const getUnclaimedSellerFunds = async ({ sellToken, buyToken, user, auctionIndex }) => {
+  /**
+   * gets unclaimed seller funds from a specific token pair auction for a specific account
+   * @param {object} options
+   * @options {
+      sellToken: Token | address,
+      buyToken: Token | address,
+      user: address,
+      index: number,
+    }
+    @returns number | undefined
+   */
+  // const getUnclaimedSellerFunds = async ({ sellToken, buyToken, user, index }) => {
   //   const t1 = sellToken.address || sellToken
   //   const t2 = buyToken.address || buyToken
 
   //   const { dx } = await deployed
 
   //   try {
-  //     const unclaimedFunds = await dx.getUnclaimedSellerFunds(t1, t2, user, auctionIndex)
+  //     const unclaimedFunds = await dx.getUnclaimedSellerFunds(t1, t2, user, index)
   //     return unclaimedFunds.toNumber()
   //   } catch (error) {
   //     console.warn('Error getting unclaimed seller funds')
