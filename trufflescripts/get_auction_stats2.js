@@ -40,8 +40,8 @@ module.exports = async () => {
   ])
 
   console.log('Deposits in the Exchange')
-  console.log(`Seller:\t${sellerDeposits.ETH}\tETH,\t${sellerDeposits.GNO}\tGNO`)
-  console.log(`Buyer:\t${buyerDeposits.ETH}\tETH,\t${buyerDeposits.GNO}\tGNO,`)
+  console.log(`  Seller:\t${sellerDeposits.ETH}\tETH,\t${sellerDeposits.GNO}\tGNO`)
+  console.log(`  Buyer:\t${buyerDeposits.ETH}\tETH,\t${buyerDeposits.GNO}\tGNO,`)
 
   const now = getTime()
   const stats = await getAllStatsForTokenPair({ sellToken: eth, buyToken: gno, accounts: [seller, buyer] })
@@ -52,7 +52,10 @@ module.exports = async () => {
     buyTokenOraclePrice,
     latestAuctionIndex,
     auctionStart,
-    arbTokensAdded,
+    arbTokens,
+    sellVolumeCurrent,
+    sellVolumeNext,
+    buyVolume,
     auctions,
   } = stats
 
@@ -65,7 +68,13 @@ module.exports = async () => {
     `)
   }
 
-  console.log(`Arbitrage tokens:\t${arbTokensAdded}`)
+  console.log(`
+    sellVolumeCurrent:\t${sellVolumeCurrent}
+    sellVolumeNext:\t${sellVolumeNext}
+    buyVolume:\t${buyVolume}
+  `)
+
+  console.log(`Arbitrage tokens:\t${arbTokens}`)
   console.log(`latestAuctionIndex:\t${latestAuctionIndex}`)
 
   console.log(`now:\t\t\t${new Date(now * 1000).toTimeString()}`)
@@ -91,10 +100,9 @@ module.exports = async () => {
     const {
       auctionIndex,
       closingPrice,
-      sellVolume,
-      buyVolume,
-      extraSellTokens,
-      extraBuyTokens,
+      // sellVolume,
+      // buyVolume,
+      extraTokens,
       isLatestAuction,
       accounts,
       price,
@@ -104,11 +112,7 @@ module.exports = async () => {
     Auction index ${auctionIndex} ${isLatestAuction ? '(latest)' : ''}
     ______________________________________
     
-    sellVolume:\t${sellVolume}
-    buyVolume:\t${buyVolume}
-    
-    extraSellTokens:\t${extraSellTokens}
-    extraBuyTokens:\t${extraBuyTokens}
+    extraTokens:\t${extraTokens}
   `)
 
     let closingPriceStr
@@ -126,7 +130,7 @@ module.exports = async () => {
       const [sellTokenNum] = sellTokenOraclePrice
       const [, buyTokenDen] = buyTokenOraclePrice
 
-      const amountToClearAuction = Math.floor((sellVolume * num) / den) - buyVolume
+      const amountToClearAuction = Math.floor((sellVolumeCurrent * num) / den) - buyVolume
       console.log(`\n  currentPrice: 1 ETH = ${getNumDenStr(price)} GNO`)
 
       if (amountToClearAuction > 0) console.log(`  to clear auction buy\t${amountToClearAuction} GNO`)
