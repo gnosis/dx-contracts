@@ -125,13 +125,14 @@ module.exports = async () => {
 
     console.log(`    closingPrice: ${closingPriceStr}`)
 
+    if (price) console.log(`\n  currentPrice: 1 ETH = ${getNumDenStr(price)} GNO`)
+
     if (isLatestAuction && price && sellTokenOraclePrice && buyTokenOraclePrice) {
       const [num, den] = price
       const [sellTokenNum] = sellTokenOraclePrice
       const [, buyTokenDen] = buyTokenOraclePrice
 
       const amountToClearAuction = Math.floor((sellVolumeCurrent * num) / den) - buyVolume
-      console.log(`\n  currentPrice: 1 ETH = ${getNumDenStr(price)} GNO`)
 
       if (amountToClearAuction > 0) console.log(`  to clear auction buy\t${amountToClearAuction} GNO`)
 
