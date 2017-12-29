@@ -663,7 +663,7 @@ module.exports = (artifacts) => {
       user: address,
       index: number,
     }
-    @returns number | undefined
+    @returns [unclaimedFunds: number, tulipsToIssue: number] | undefined
    */
   const getUnclaimedBuyerFunds = async ({ sellToken, buyToken, user, index }) => {
     const t1 = sellToken.address || sellToken
@@ -672,8 +672,8 @@ module.exports = (artifacts) => {
     const { dx } = await deployed
 
     try {
-      const unclaimedFunds = await dx.getUnclaimedBuyerFunds(t1, t2, user, index)
-      return unclaimedFunds.toNumber()
+      const unclaimedAndTulips = await dx.getUnclaimedBuyerFunds(t1, t2, user, index)
+      return mapToNumber(unclaimedAndTulips)
     } catch (error) {
       console.warn('Error getting unclaimed buyer funds')
       console.warn(error.message || error)
