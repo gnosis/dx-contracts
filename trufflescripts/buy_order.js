@@ -4,7 +4,6 @@ const {
   getTokenDeposits,
   getAccountsStatsForTokenPairAuction,
   getExchangeStatsForTokenPair,
-  getAuctionStatsForTokenPair,
   postBuyOrder,
 } = require('./utils/contracts')(artifacts)
 const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
@@ -64,7 +63,7 @@ module.exports = async () => {
   const index = argv.next ? latestAuctionIndex + 1 : latestAuctionIndex
 
   let [{ buyVolume }, { [account]: { buyerBalance } }] = await Promise.all([
-    getAuctionStatsForTokenPair({ sellToken, buyToken, index }),
+    getExchangeStatsForTokenPair({ sellToken, buyToken }),
     getAccountsStatsForTokenPairAuction({ sellToken, buyToken, index, accounts: [account] }),
   ])
 
@@ -89,7 +88,7 @@ module.exports = async () => {
     { [account]: { buyerBalance } },
   ] = await Promise.all([
     getTokenDeposits(account),
-    getAuctionStatsForTokenPair({ sellToken, buyToken, index }),
+    getExchangeStatsForTokenPair({ sellToken, buyToken }),
     getAccountsStatsForTokenPairAuction({ sellToken, buyToken, index, accounts: [account] }),
   ])
 
