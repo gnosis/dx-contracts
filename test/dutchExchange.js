@@ -38,7 +38,6 @@ const setupTest = async (accounts) => {
 
   // Await ALL Promises for each account setup
   await Promise.all(accounts.map((acct) => {
-<<<<<<< HEAD
     if (acct === accounts[0]) return null
 
     return Promise.all([
@@ -47,15 +46,6 @@ const setupTest = async (accounts) => {
       gno.transfer(acct, 10 ** 18, { from: accounts[0] }),
       gno.approve(dx.address, 10 ** 18, { from: acct }),
     ])
-=======
-    /* eslint array-callback-return:0 */
-    if (acct === accounts[0]) return
-
-    eth.deposit({ from: acct, value: 10 ** 9 })
-    eth.approve(dx.address, 10 ** 9, { from: acct })
-    gno.transfer(acct, 10 ** 18, { from: accounts[0] })
-    gno.approve(dx.address, 10 ** 18, { from: acct })
->>>>>>> changed some c.logs to logger and formatting
   }))
   // Deposit depends on ABOVE finishing first... so run here
   await Promise.all(accounts.map((acct) => {
@@ -126,17 +116,8 @@ const checkBalanceBeforeClaim = async (
   }
 }
 
-<<<<<<< HEAD
-const getAuctionIndex = async (sell = eth, buy = gno) => (await dx.latestAuctionIndices.call(sell.address, buy.address)).toNumber()
-// const getStartingTimeOfAuction = async (sell = eth, buy = gno) => (await dx.auctionStarts.call(sell.address, buy.address)).toNumber()
-=======
 const getAuctionIndex = async (sell = eth, buy = gno) => (await dx.getAuctionIndex.call(buy.address, sell.address)).toNumber()
-<<<<<<< HEAD
-const getStartingTimeOfAuction = async (sell = eth, buy = gno) => (await dx.auctionStarts.call(sell.address, buy.address)).toNumber()
->>>>>>> oracle issue resolved. first test passes
-=======
 // const getStartingTimeOfAuction = async (sell = eth, buy = gno) => (await dx.auctionStarts.call(sell.address, buy.address)).toNumber()
->>>>>>> changed some c.logs to logger and formatting
 
 contract('DutchExchange', (accounts) => {
   const [, seller1, , buyer1] = accounts
