@@ -46,7 +46,7 @@ module.exports = async () => {
     ] = await Promise.all([
       getAccountsStatsForTokenPairAuction({ sellToken, buyToken, index, accounts: [account] }),
       getTokenDeposits(account),
-      (role === 'seller' ? getUnclaimedBuyerFunds : getUnclaimedSellerFunds)({ sellToken, buyToken, user: account, index }),
+      (role === 'seller' ? getUnclaimedSellerFunds : getUnclaimedBuyerFunds)({ sellToken, buyToken, user: account, index }),
     ])
 
     return { sellerBalance, buyerBalance, claimedAmount, sellTokenDeposit, buyTokenDeposit, unclaimedAmount }
