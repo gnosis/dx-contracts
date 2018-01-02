@@ -117,7 +117,7 @@ contract DutchExchange {
     event AuctionCleared(
         address sellToken,
         address buyToken,
-        uint sellVoluem,
+        uint sellVolume,
         uint buyVolume,
         uint auctionIndex
     );
@@ -320,12 +320,12 @@ contract DutchExchange {
             require(auctionIndex == latestAuctionIndex);
         } else {
 
-
-            // C2
-            // R2.1: sell orders must go to next auction
-            if (getAuctionStart(sellToken, buyToken) < now && closingPriceDen > 0 && closingPriceDenOpp > 0){
+            // C2 if Auction is still waiting for funds to pass threshold
+            if (getAuctionStart(sellToken, buyToken) == 1) {
                 require(auctionIndex == latestAuctionIndex);
             } else {
+
+            // R2.1: sell orders must go to next auction
                 require(auctionIndex == latestAuctionIndex + 1);
             }
         }
@@ -350,7 +350,7 @@ contract DutchExchange {
 
         // If there exist closing prices for both last auctions that means
         // an insfuficient sell volume was received in both auctions and trading has halted
-        if (getAuctionStart(sellToken, buyToken) < now && closingPriceDen > 0 && closingPriceDenOpp > 0) {
+        if (getAuctionStart(sellToken, buyToken) == 1) {
             scheduleNextAuction(sellToken, buyToken);
         }
 
@@ -763,6 +763,13 @@ contract DutchExchange {
             // Schedule next auction
             setAuctionStart(sellToken, buyToken, 10 minutes);
         } 
+        else{
+
+            address token1;
+            address token2;
+            (token1, token2) = getTokenOrder(sellToken, buyToken);
+            auctionStarts[token1][token2] = 1;
+        }
     }
 
     /// @dev Gives best estimate for market price of a token in ETH of any price oracle on the Ethereum network
