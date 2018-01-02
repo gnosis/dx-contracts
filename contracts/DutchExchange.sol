@@ -251,20 +251,20 @@ contract DutchExchange {
         balances[token1][msg.sender] -= token1Funding;
         balances[token2][msg.sender] -= token2Funding;
 
-        // Fee mechanism, fees are added to extraTokens
-         //uint feeToken1 = settleFee(token1, msg.sender, token1Funding);
-         //uint feeToken2 = settleFee(token2, msg.sender, token2Funding);
-        // extraTokens[token1][token2][1] = feeToken1;
-        // extraTokens[token2][token1][1] = feeToken2;
+        //Fee mechanism, fees are added to extraTokens
+        uint feeToken1 = settleFee(token1, msg.sender, token1Funding);
+        uint feeToken2 = settleFee(token2, msg.sender, token2Funding);
+        extraTokens[token1][token2][2] = feeToken1;
+        extraTokens[token2][token1][2] = feeToken2;
 
-        // uint token1FundingAfterFee = token1Funding - feeToken1;
-        // uint token2FundingAfterFee = token2Funding - feeToken2;
+        uint token1FundingAfterFee = token1Funding - feeToken1;
+        uint token2FundingAfterFee = token2Funding - feeToken2;
 
         // // Update other variables
-        sellVolumesCurrent[token1][token2] = token1Funding;
-        sellVolumesCurrent[token2][token1] = token2Funding;
-        sellerBalances[token1][token2][1][msg.sender] = token1Funding;
-        sellerBalances[token2][token1][1][msg.sender] = token2Funding;
+        sellVolumesCurrent[token1][token2] = token1FundingAfterFee;
+        sellVolumesCurrent[token2][token1] = token2FundingAfterFee;
+        sellerBalances[token1][token2][1][msg.sender] = token1FundingAfterFee;
+        sellerBalances[token2][token1][1][msg.sender] = token2FundingAfterFee;
         
         setAuctionStart(token1, token2, 6 hours);
         NewTokenPair(token1, token2);
@@ -332,10 +332,10 @@ contract DutchExchange {
         
 
         // // Fee mechanism, fees are added to extraTokens
-        // uint fee = settleFee(sellToken, msg.sender, amount);
-        // extraTokens[sellToken][buyToken][auctionIndex + 1] += fee;
+        uint fee = settleFee(sellToken, msg.sender, amount);
+        extraTokens[sellToken][buyToken][auctionIndex + 1] += fee;
 
-        uint amountAfterFee = amount;// - fee;
+        uint amountAfterFee = amount - fee;
 
         // Update variables
         balances[sellToken][msg.sender] -= amount;
@@ -385,40 +385,33 @@ contract DutchExchange {
 
         uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
         uint buyVolume = buyVolumes[sellToken][buyToken];
-        int overbuy = int(buyVolume + amount - sellVolume * price.num / price.den);
+        // Fee mechanism
+        fraction memory feePercentage = feeInPercentage(buyToken, msg.sender);
         
-        if (int(amount) > overbuy) {
-            // We must process the buy order
-            if (overbuy > 0) {
-                // We have to adjust the amount
-                amount -= uint(overbuy);
-            }
-
-            // Fee mechanism
-            uint fee = 1;//settleFee(buyToken, msg.sender, amount);
+        uint amountWithoutOverbuy = Math.min(amount, sellVolume * price.num / price.den * feePercentage.den / (feePercentage.den-feePercentage.num));
+        uint fee = settleFee(buyToken, msg.sender, amountWithoutOverbuy);
             // Fees are always added to next auction
-            extraTokens[buyToken][sellToken][auctionIndex + 1] += fee;
-            uint amountAfterFee = amount - fee;
-
-            // Update variables
-            balances[buyToken][msg.sender] -= amount;
-            buyerBalances[sellToken][buyToken][auctionIndex][msg.sender] += amountAfterFee;
-            buyVolumes[sellToken][buyToken] += amountAfterFee;
-            NewBuyOrder(sellToken, buyToken, msg.sender, auctionIndex, amount);
-        } 
-        if (overbuy >= 0) {
+        extraTokens[buyToken][sellToken][auctionIndex + 1] += fee;
+        uint amountAfterFee = amount - fee;
+             // Update variables
+        balances[buyToken][msg.sender] -= amountWithoutOverbuy;
+        buyerBalances[sellToken][buyToken][auctionIndex][msg.sender] += amountAfterFee;
+        buyVolumes[sellToken][buyToken] += amountAfterFee;
+        NewBuyOrder(sellToken, buyToken, msg.sender, auctionIndex, amount);
+        int outstandingVolume = int(sellVolume * price.num / price.den) - int(buyVolume + amountAfterFee);
+        if (outstandingVolume <= 0) {
             // Clear auction
             clearAuction(sellToken, buyToken, auctionIndex, sellVolume);
         }
 
-        if (now >= getAuctionStart(sellToken, buyToken) + 6 hours && overbuy < 0) {
+        if (now >= getAuctionStart(sellToken, buyToken) + 6 hours && outstandingVolume > 0) {
             // Prices have crossed
             // We need to clear current or opposite auction
             closeCurrentOrOppositeAuction(
                 sellToken,
                 buyToken,
                 auctionIndex,
-                uint(-1 * overbuy),
+                uint(outstandingVolume),
                 sellVolume
             );
         } 
@@ -554,7 +547,7 @@ contract DutchExchange {
             claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
         } else {
            
-           if ( closingPrices[sellToken][buyToken][auctionIndex].num != 0 ) {
+           if( closingPrices[sellToken][buyToken][auctionIndex].num != 0 ) {
                 // Assign extra sell tokens (this is possible only after auction has cleared,
                 // because buyVolume could still increase before that)
                 uint extraTokensTotal = extraTokens[sellToken][buyToken][auctionIndex];
@@ -708,7 +701,7 @@ contract DutchExchange {
         sellVolumesCurrent[sellToken][buyToken] = sellVolumesNext[sellToken][buyToken];
         sellVolumesNext[sellToken][buyToken] = 0;
         buyVolumes[sellToken][buyToken] = 0;
-        AuctionCleared(sellToken, buyToken, sellVolume, buyVolume, auctionIndex);
+        AuctionCleared(sellToken, buyToken, closingPrices[sellToken][buyToken][auctionIndex].den, buyVolume, auctionIndex);
     }
 
     function settleFee(
@@ -727,7 +720,11 @@ contract DutchExchange {
         // F(0) = 0.5%, F(1%) = 0.25%, F(>=10%) = 0
         // (Takes in a amount of user's TUL tokens as ration of all TUL tokens, outputs fee ratio)
         // We premultiply by amount to get fee:
-        fee = Math.max(0, amount * (totalTUL - 10 * balanceOfTUL) / (16000 * balanceOfTUL + 200 * totalTUL));
+        if (totalTUL != 0) {
+            fee = Math.max(0, amount * (totalTUL - 10 * balanceOfTUL) / (16000 * balanceOfTUL + 200 * totalTUL));
+        } else {
+            fee = amount/200;
+        }
 
         if (fee > 0) {
             // Allow user to reduce up to half of the fee with OWL
@@ -749,6 +746,28 @@ contract DutchExchange {
         }
     }
 
+    function feeInPercentage(
+        address token,
+        address user
+    )
+        internal 
+        returns(fraction percentage)
+    {
+        uint totalTUL = TokenTUL(TUL).totalTokens();
+        uint balanceOfTUL = TokenTUL(TUL).lockedTULBalances(user);
+
+        // The fee function is chosen such that
+        // F(0) = 0.5%, F(1%) = 0.25%, F(>=10%) = 0
+        // (Takes in a amount of user's TUL tokens as ration of all TUL tokens, outputs fee ratio)
+        // We premultiply by amount to get fee:
+        if (totalTUL != 0) {
+            percentage.num = Math.max(0, (totalTUL - 10 * balanceOfTUL));
+            percentage.den = Math.max(1, (16000 * balanceOfTUL + 200 * totalTUL));
+        } else {
+            percentage.num = 1;
+            percentage.den = 200;
+        }
+    }
     function scheduleNextAuction(
         address sellToken,
         address buyToken
@@ -840,9 +859,6 @@ contract DutchExchange {
         if (token2 < token1) {
             (token1, token2) = (token2, token1);
         }
-        
-        // R1
-        // require(latestAuctionIndices[token1][token2] > 0);
 
         return (token1, token2);
     }
