@@ -320,7 +320,7 @@ contract DutchExchange {
             require(auctionIndex == latestAuctionIndex);
         } else {
 
-            // C2 if Auction is still waiting for funds to pass threshold
+            // C2   if Auction is still waiting for funds to pass threshold
             if (getAuctionStart(sellToken, buyToken) == 1) {
                 require(auctionIndex == latestAuctionIndex);
             } else {
@@ -652,7 +652,7 @@ contract DutchExchange {
             price.den = (timeElapsed + 43200) * sellTokenPrice.den * buyTokenPrice.num;
         }
     }
-
+    
     /// @dev clears an Auction
     /// @param sellToken sellToken of the auction
     /// @param buyToken  buyToken of the auction
@@ -779,6 +779,7 @@ contract DutchExchange {
         address token
     )
         public
+        constant
         returns (fraction price)
     {
         if (token == ETH) {
