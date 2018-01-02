@@ -554,24 +554,24 @@ contract DutchExchange {
             claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
         } else {
            
-        //    if (buyVolumes[sellToken][buyToken] !=0 ){
-        //         // Assign extra sell tokens (this is possible only after auction has cleared,
-        //         // because buyVolume could still increase before that)
-        //         uint extraTokensTotal = extraTokens[sellToken][buyToken][auctionIndex];
-        //         uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
-        //         uint tokensExtra = buyerBalance * extraTokensTotal / clos[sellToken][buyToken];
-        //         returned += tokensExtra;
-        //          // Auction has closed
-        //         // Reset buyerBalances and claimedAmounts
-        //         buyerBalances[sellToken][buyToken][auctionIndex][user] = 0;
-        //         claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0;
-        //     }
+           if ( closingPrices[sellToken][buyToken][auctionIndex].num != 0 ) {
+                // Assign extra sell tokens (this is possible only after auction has cleared,
+                // because buyVolume could still increase before that)
+                uint extraTokensTotal = extraTokens[sellToken][buyToken][auctionIndex];
+                uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
+                uint tokensExtra = buyerBalance * extraTokensTotal / closingPrices[sellToken][buyToken][auctionIndex].num;
+                returned += tokensExtra;
+                 // Auction has closed
+                // Reset buyerBalances and claimedAmounts
+                buyerBalances[sellToken][buyToken][auctionIndex][user] = 0;
+                claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0;
             }
+        }
 
-        // if (tulipsToIssue > 0) {
-        //     // Issue TUL
-        //     TokenTUL(TUL).mintTokens(user, tulipsIssued);
-        // }
+        if (tulipsToIssue > 0) {
+            // Issue TUL
+            TokenTUL(TUL).mintTokens(user, tulipsIssued);
+        }
 
         // Claim tokens
         balances[sellToken][user] += returned;
@@ -822,6 +822,7 @@ contract DutchExchange {
         fraction memory b=priceOracle(token);
         return b.num;
     }
+
     function testing2(address token1, address token2, uint index)
     public
     returns(uint){
