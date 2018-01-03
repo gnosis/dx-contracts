@@ -548,20 +548,17 @@ contract DutchExchange {
         if (auctionIndex == getAuctionIndex(sellToken, buyToken)) {
             // Auction is running
             claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
-        } else {
-           
-           if( closingPrices[sellToken][buyToken][auctionIndex].num != 0 ) {
-                // Assign extra sell tokens (this is possible only after auction has cleared,
-                // because buyVolume could still increase before that)
-                uint extraTokensTotal = extraTokens[sellToken][buyToken][auctionIndex];
-                uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
-                uint tokensExtra = buyerBalance * extraTokensTotal / closingPrices[sellToken][buyToken][auctionIndex].num;
-                returned += tokensExtra;
-                 // Auction has closed
-                // Reset buyerBalances and claimedAmounts
-                buyerBalances[sellToken][buyToken][auctionIndex][user] = 0;
-                claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0;
-            }
+        } else {        
+            // Assign extra sell tokens (this is possible only after auction has cleared,
+            // because buyVolume could still increase before that)
+            uint extraTokensTotal = extraTokens[sellToken][buyToken][auctionIndex];
+            uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
+            uint tokensExtra = buyerBalance * extraTokensTotal / closingPrices[sellToken][buyToken][auctionIndex].num;
+            returned += tokensExtra;
+            // Auction has closed
+            // Reset buyerBalances and claimedAmounts
+            buyerBalances[sellToken][buyToken][auctionIndex][user] = 0;
+            claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0; 
         }
 
         if (tulipsToIssue > 0) {
