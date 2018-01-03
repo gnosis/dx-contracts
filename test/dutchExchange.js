@@ -258,7 +258,7 @@ contract('DutchExchange', (accounts) => {
     )
   })
 
-  xit('test a trade on the opposite pair', async () => {
+  it('test a trade on the opposite pair', async () => {
     let auctionIndex
 
     // ASSERT Auction has started
@@ -267,17 +267,24 @@ contract('DutchExchange', (accounts) => {
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer1 })
     await dx.postBuyOrder(gno.address, eth.address, auctionIndex, 10 ** 7 * 25, { from: seller2 })
-
+    logger('startingReclaiming')
+    logger('dx.getPrice.num eth gno', await dx.testing2.call(eth.address, gno.address, auctionIndex))
+    logger('dx.getPrice.num gno/eth', await dx.testing2.call(gno.address, eth.address, auctionIndex))
+    logger('dx.oralcePrice.num gno/eth ', await dx.testing.call(gno.address))
+    logger('dx.oralcePrice.num gno/eth ', await dx.testing.call(eth.address))
     // claim buyer1 BUYER funds
-    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer')
+    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 ** 9 - 10 ** 9 / 200))
     // claim seller2 BUYER funds - RECIPROCAL
-    await checkBalanceBeforeClaim(seller2, auctionIndex, 'buyer', gno, eth, (10 ** 8 * 5))
+    await checkBalanceBeforeClaim(seller2, auctionIndex, 'buyer', gno, eth, (10 ** 8 * 5 - 10 ** 8 * 5 / 200))
     // claim SELLER funds
-    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 * 2))
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 * 2 - 10 ** 9 * 2 / 200))
 
     // post new sell order to start next auction
     // startingTimeOfAuction = await getStartingTimeOfAuction(eth, gno)
     auctionIndex = await getAuctionIndex()
+    logger('new auction index:', auctionIndex)
+    logger('auctionStartDate', (await dx.getAuctionStart(eth.address, gno.address)).toNumber())
+
     await dx.postSellOrder(eth.address, gno.address, auctionIndex, 10 ** 9, { from: seller2 })
 
     // check Auction has started

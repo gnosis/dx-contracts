@@ -695,7 +695,7 @@ contract DutchExchange {
         }
 
 
-        if (sellVolumesCurrent[buyToken][sellToken] == 0) {
+        if (sellVolumesCurrent[buyToken][sellToken] == 0 && opp.den == 0) {
                 clearAuction(buyToken, sellToken, auctionIndex, 0);
         }
         // Update state variables
