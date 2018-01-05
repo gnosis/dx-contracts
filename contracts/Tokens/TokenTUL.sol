@@ -106,6 +106,7 @@ contract TokenTUL is StandardToken {
         withdrawalTime = unlockedTULs[msg.sender].withdrawalTime;
     }
 
+    
     function getLockedAmount(
         address user
     )
