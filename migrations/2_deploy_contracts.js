@@ -18,7 +18,7 @@ module.exports = function deploy(deployer, networks, accounts) {
   deployer.deploy(EtherToken)
     .then(() => deployer.deploy(TokenGNO, 10**19))
     .then(() => deployer.deploy(TokenTUL, accounts[0], accounts[0]))
-    
+    .then(() => deployer.deploy(StandardToken))
     .then(() => deployer.deploy(PriceOracle, accounts[0], EtherToken.address))
     .then(() => PriceOracle.deployed())
     .then((p) => {
