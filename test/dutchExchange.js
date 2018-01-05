@@ -1,16 +1,6 @@
 /* eslint no-console:0, max-len:0, no-plusplus:0, no-mixed-operators:0, no-trailing-spaces:0 */
 
-const DutchExchange = artifacts.require('DutchExchange')
-const EtherToken = artifacts.require('EtherToken')
-const PriceOracle = artifacts.require('PriceOracle')
 const PriceOracleInterface = artifacts.require('PriceOracleInterface')
-const TokenGNO = artifacts.require('TokenGNO')
-const TokenTUL = artifacts.require('TokenTUL')
-
-// const MathSol = artifacts.require('Math')
-// const StandardToken = artifacts.require('StandardToken')
-// const Token = artifacts.require('./Token.sol')
-// const OWL = artifacts.require('OWL')
 
 const { 
   eventWatcher,
@@ -18,9 +8,14 @@ const {
   timestamp,
 } = require('./utils')
 
-const { wait } = require('@digix/tempo')(web3)
-
-const MaxRoundingError = 100000
+const {
+  setupTest,
+  getContracts,
+  getAuctionIndex,
+  checkBalanceBeforeClaim,
+  waitUntilPriceIsXPercentOfPreviousPrice,
+  setAndCheckAuctionStarted,
+} = require('./testFunctions')
 
 // Test VARS
 let eth
@@ -28,104 +23,30 @@ let gno
 let dx
 let oracle
 let tokenTUL
-// testing Auction Functions
-const setupTest = async (accounts) => {
-  // get buyers, sellers set up and running
-  gno = await TokenGNO.deployed()
-  eth = await EtherToken.deployed()
-  tokenTUL = await TokenTUL.deployed() 
-  // create dx
-  dx = await DutchExchange.deployed()
-  // create price Oracle
-  oracle = await PriceOracle.deployed()
+let contracts
 
-  // Await ALL Promises for each account setup
-  await Promise.all(accounts.map((acct) => {
-    /* eslint array-callback-return:0 */
-    if (acct === accounts[0]) return
-
-    eth.deposit({ from: acct, value: 10 ** 9 })
-    eth.approve(dx.address, 10 ** 9, { from: acct })
-    gno.transfer(acct, 10 ** 18, { from: accounts[0] })
-    gno.approve(dx.address, 10 ** 18, { from: acct })
-  }))
-  // Deposit depends on ABOVE finishing first... so run here
-  await Promise.all(accounts.map((acct) => {
-    if (acct === accounts[0]) return
-
-    dx.deposit(eth.address, 10 ** 9, { from: acct })
-    dx.deposit(gno.address, 10 ** 18, { from: acct })
-  }))
-  // add token Pair
-  // updating the oracle Price. Needs to be changed later to another mechanism
-  await oracle.updateETHUSDPrice(60000, { from: accounts[0] })
+const setupContracts = async () => {
+  contracts = await getContracts();
+  // destructure contracts into upper state
+  ({
+    DutchExchange: dx,
+    EtherToken: eth,
+    TokenGNO: gno,
+    TokenTUL: tokenTUL,
+    PriceOracle: oracle,
+  } = contracts)
 }
-
-const setAndCheckAuctionStarted = async (ST, BT) => {
-  const startingTimeOfAuction = (await dx.auctionStarts.call(ST.address, BT.address)).toNumber()
-
-  // wait for the right time to send buyOrder
-
-  await wait(startingTimeOfAuction - timestamp())
-  assert.equal(timestamp() >= startingTimeOfAuction, true)
-}
-
-/**
- * waitUntilPriceIsXPercentOfPreviousPrice
- * @param {*} ST  - sellToken
- * @param {*} BT  - buyToken
- * @param {*} p   - percentage of the previous price
- */
-const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
-  const startingTimeOfAuction = (await dx.auctionStarts.call(ST.address, BT.address)).toNumber()
-  const timeToWaitFor = (86400 - p * 43200) / (1 + p) + startingTimeOfAuction
-  // wait until the price is good
-  await wait(timeToWaitFor - timestamp())
-  assert.equal(timestamp() >= timeToWaitFor, true)
-}
-
-/**
- * checkBalanceBeforeClaim
- * @param {string} acct       => acct to check Balance of
- * @param {number} idx        => auctionIndex to check
- * @param {string} claiming   => 'seller' || 'buyer'
- * @param {string} sellToken  => gno || eth
- * @param {string} buyToken   => gno || eth
- * @param {number} amt        => amt to check
- * @param {number} round      => rounding error threshold
- */
-const checkBalanceBeforeClaim = async (
-  acct,
-  idx,
-  claiming,
-  sellToken = eth,
-  buyToken = gno,
-  amt = (10 ** 9),
-  round = MaxRoundingError,
-) => {
-  if (claiming === 'buyer') {
-    // const auctionIndex = await getAuctionIndex()
-    const balanceBeforeClaim = (await dx.balances.call(sellToken.address, acct)).toNumber()
-    await dx.claimBuyerFunds(sellToken.address, buyToken.address, acct, idx)
-    console.log(`${balanceBeforeClaim}-->${amt}-->-->${(await dx.balances.call(sellToken.address, acct)).toNumber()}`)
-    assert.equal(Math.abs(balanceBeforeClaim + amt - (await dx.balances.call(sellToken.address, acct)).toNumber()) < round, true)
-  } else {
-    const balanceBeforeClaim = (await dx.balances.call(buyToken.address, acct)).toNumber()
-    await dx.claimSellerFunds(sellToken.address, buyToken.address, acct, idx)
-    console.log(`${balanceBeforeClaim}-->${amt}-->-->${(await dx.balances.call(buyToken.address, acct)).toNumber()}`)
-    assert.equal(Math.abs(balanceBeforeClaim + amt - (await dx.balances.call(buyToken.address, acct)).toNumber()) < round, true)
-  }
-}
-
-const getAuctionIndex = async (sell = eth, buy = gno) => (await dx.getAuctionIndex.call(buy.address, sell.address)).toNumber()
-// const getStartingTimeOfAuction = async (sell = eth, buy = gno) => (await dx.auctionStarts.call(sell.address, buy.address)).toNumber()
 
 contract('DutchExchange', (accounts) => {
   const [, seller1, , buyer1] = accounts
 
   beforeEach(async () => {
-    // set up accounts and tokens
-    await setupTest(accounts)
+    // get contracts
+    await setupContracts()
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts)
+
     // add tokenPair ETH GNO
     await dx.addTokenPair(
       eth.address,
@@ -150,7 +71,7 @@ contract('DutchExchange', (accounts) => {
     
     logger('setAndCheckAuctionStarted')
     
-    oracle = await PriceOracle.deployed()
+    // oracle = await PriceOracle.deployed()
     
     logger('PRICE ORACLE', await PriceOracleInterface.at(oracle.address).getUSDETHPrice.call())    
     // wait until price is good
@@ -193,8 +114,19 @@ contract('DutchExchange', (accounts) => {
   const [, seller1, seller2, buyer1, buyer2] = accounts
 
   beforeEach(async () => {
-    // set up accounts and tokens
-    await setupTest(accounts)
+    // get contracts
+    const contracts = await getContracts();
+    // destructure contracts into upper state
+    ({
+      DutchExchange: dx,
+      EtherToken: eth,
+      TokenGNO: gno,
+      TokenTUL: tul,
+      PriceOracle: oracle,
+    } = contracts)
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts)
 
     // add tokenPair ETH GNO
     await dx.addTokenPair(
@@ -243,8 +175,19 @@ contract('DutchExchange', (accounts) => {
   const [, seller1, seller2, buyer1, buyer2] = accounts
 
   beforeEach(async () => {
-    // set up accounts and tokens
-    await setupTest(accounts)
+    // get contracts
+    const contracts = await getContracts();
+    // destructure contracts into upper state
+    ({
+      DutchExchange: dx,
+      EtherToken: eth,
+      TokenGNO: gno,
+      TokenTUL: tul,
+      PriceOracle: oracle,
+    } = contracts)
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts)
 
     // add tokenPair ETH GNO
     await dx.addTokenPair(
