@@ -1,5 +1,5 @@
 pragma solidity 0.4.18;
-import "../Tokens/StandardToken.sol";
+import "./StandardToken.sol";
 
 
 /// @title Token contract - Token exchanging Ether 1:1

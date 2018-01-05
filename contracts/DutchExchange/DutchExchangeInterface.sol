@@ -1,7 +1,7 @@
 pragma solidity 0.4.18;
 
-import "./../Utils/Math.sol";
-import "./../Tokens/Token.sol";  
+import "../Utils/Math.sol";
+import "../Tokens/Token.sol";  
 
 /// @title Dutch Exchange - exchange token pairs with the clever mechanism of the dutch auction
 /// @author Dominik Teiml - <dominik@gnosis.pm>
