@@ -5,7 +5,7 @@ import "./../Utils/Math.sol";
 import "./../Oracle/PriceOracle.sol";
 
 
-contract OWL is StandardToken {
+contract TokenOWL is StandardToken {
     using Math for *;
 
 

@@ -3,6 +3,7 @@ pragma solidity ^0.4.18;
 import "./Utils/Math.sol";
 import "./Tokens/Token.sol";
 import "./Tokens/TokenTUL.sol";
+import "./Tokens/TokenOWL.sol";
 import "./Oracle/PriceOracleInterface.sol";  
 
 /// @title Dutch Exchange - exchange token pairs with the clever mechanism of the dutch auction
@@ -735,13 +736,16 @@ contract DutchExchange {
             // Convert fee to ETH, then USD
             uint feeInETH = fee * price.num / price.den;
             uint feeInUSD = feeInETH * ETHUSDPrice;
-            uint amountOfOWLBurned = Math.min(Token(OWL).allowance(msg.sender, this), feeInUSD / 2);
+            uint amountOfOWLBurned = Math.min(balances[OWL][msg.sender], feeInUSD / 2);
 
-            //burning OWL tokens with delegatecall is risky, because this allows OWL token to modify the storage of this contract.
-            // OWL.delegatecall(bytes4(sha3("burnOWL(uint256)")), amount);
+            if (amountOfOWLBurned > 0) {
+                balances[OWL][msg.sender] -= amountOfOWLBurned;
+                // require(Stan)
+                TokenOWL(OWL).burnOWL(amountOfOWLBurned);
 
-            // Adjust fee
-            fee -= amountOfOWLBurned * fee / feeInUSD;
+                // Adjust fee
+                fee -= amountOfOWLBurned * fee / feeInUSD;
+            }
             
         }
     }
