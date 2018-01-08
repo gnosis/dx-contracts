@@ -53,6 +53,11 @@ eventWatcher.stopWatching = (event) => {
     stopWatching[key]()
     delete stopWatching[key]
   }
+
+  // allow to be used as a direct input to mocha hooks (event === done callback)
+  if (typeof event === 'function') {
+    event()
+  }
 }
 
 module.exports = {
