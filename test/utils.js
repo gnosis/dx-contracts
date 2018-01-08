@@ -29,15 +29,41 @@ const stopWatching = {}
  */
 const eventWatcher = (contract, event, args) => {
   const eventObject = contract[event](args).watch((err, result) => err ? console.log(err) : console.log('Found', result))
-  const unwatch = stopWatching[event] = eventObject.stopWatching.bind(eventObject)
+  const contractEvents = stopWatching[contract] || (stopWatching[contract] = {})
+  const unwatch = contractEvents[event] = eventObject.stopWatching.bind(eventObject)
 
   return unwatch
 }
 
-eventWatcher.stopWatching = (event) => {
+/**
+ * eventWatcher.stopWatching    - stops watching an event
+ * @param {contract} contract?  - dx, ususally,
+ *                                if none specified stops watching all contracts
+ * @param {string} event?       - name of event to stop watching,
+ *                                if none specified stops watching all events for this contract
+ */
+eventWatcher.stopWatching = (contract, event) => {
   // if given particular event name, stop watching it
-  if (event && typeof event === 'string') {
-    const unwatch = stopWatching[event]
+  if (contract && typeof contract === 'object') {
+    const contractEvents = stopWatching[contract]
+
+    if (!contractEvents) {
+      console.log('contract was never watched')
+      return
+    }
+
+    // if event isn't specified
+    // stop watching all for this contract
+    if (!event) {
+      for (const ev of Object.keys(contractEvents)) {
+        contractEvents[ev]()
+      }
+      delete stopWatching[contract]
+      return
+    }
+
+    // stop watching a single event
+    const unwatch = contractEvents[event]
     if (unwatch) {
       unwatch()
       delete stopWatching[event]
@@ -50,13 +76,16 @@ eventWatcher.stopWatching = (event) => {
 
   // otherwise stop watching all events
   for (const key of Object.keys(stopWatching)) {
-    stopWatching[key]()
+    const contractEvents = stopWatching[key]
+    for (const ev of Object.keys(contractEvents)) {
+      contractEvents[ev]()
+    }
     delete stopWatching[key]
   }
 
-  // allow to be used as a direct input to mocha hooks (event === done callback)
-  if (typeof event === 'function') {
-    event()
+  // allow to be used as a direct input to mocha hooks (contract === done callback)
+  if (typeof contract === 'function') {
+    contract()
   }
 }
 
