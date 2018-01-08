@@ -64,7 +64,7 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno } = await getContracts()
   ST = ST || eth; BT = BT || gno
 
-  const startingTimeOfAuction = (await dx.auctionStarts.call(ST.address, BT.address)).toNumber()
+  const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
 
   // wait for the right time to send buyOrder
 
@@ -80,7 +80,7 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
  */
 const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const { DutchExchange: dx } = await getContracts()
-  const startingTimeOfAuction = (await dx.auctionStarts.call(ST.address, BT.address)).toNumber()
+  const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
   const timeToWaitFor = (86400 - p * 43200) / (1 + p) + startingTimeOfAuction
   // wait until the price is good
   await wait(timeToWaitFor - timestamp())
@@ -129,7 +129,7 @@ const getAuctionIndex = async (sell, buy) => {
 
   return (await dx.getAuctionIndex.call(buy.address, sell.address)).toNumber()
 }
-// const getStartingTimeOfAuction = async (sell = eth, buy = gno) => (await dx.auctionStarts.call(sell.address, buy.address)).toNumber()
+// const getStartingTimeOfAuction = async (sell = eth, buy = gno) => (await dx.getAuctionStart.call(sell.address, buy.address)).toNumber()
 
 module.exports = {
   setupTest,
