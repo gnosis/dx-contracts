@@ -1,4 +1,5 @@
-const DutchExchangeETHGNO = artifacts.require('./DutchExchangeETHGNO.sol')
+/* eslint no-console:0 */
+const { deployed, getExchangeStatsForTokenPair, getAuctionStatsForTokenPair } = require('./utils/contracts')(artifacts)
 const { getTime, increaseTimeBy, setTime } = require('./utils')(web3)
 
 const argv = require('minimist')(process.argv.slice(2))
@@ -14,6 +15,8 @@ const getTimeStr = (timestamp) => {
 
 const getSeconds = ({ h = 0, m = 0, s = 0 }) => (h * 60 * 60) + (m * 60) + s
 
+const getNumDenStr = ([num, den]) => `${num}/${den} = ${(num / den).toFixed(8)}`
+
 /**
  * truffle exec trufflescripts/increase_timer.js
  * increases auction time
@@ -27,38 +30,69 @@ const getSeconds = ({ h = 0, m = 0, s = 0 }) => (h * 60 * 60) + (m * 60) + s
  */
 
 module.exports = async () => {
-  const dx = await DutchExchangeETHGNO.deployed()
+  const { eth, gno } = await deployed
 
   const printAuctionTimes = async () => {
-    const auctionStart = (await dx.auctionStart()).toNumber()
     const now = getTime()
+    const {
+      auctionStart,
+      latestAuctionIndex,
+      // TODO: remove = [1, 1] workaround for ETH token when dx.priceOracle() changes
+      sellTokenOraclePrice = [1, 1],
+      buyTokenOraclePrice,
+    } = await getExchangeStatsForTokenPair({ sellToken: eth, buyToken: gno })
 
-    const timeUntilStart = auctionStart - now
-    const timeStr = getTimeStr(timeUntilStart * 1000)
+    // const timeUntilStart = auctionStart - now
+    // const timeStr = getTimeStr(timeUntilStart * 1000)
 
-    const auctionIndex = (await dx.auctionIndex()).toNumber()
 
     console.log(`
-  Current auction index ${auctionIndex}
+    Auction index ${latestAuctionIndex}
     ______________________________________
     now:\t\t\t${new Date(now * 1000).toTimeString()}
-    auctionStart:\t\t${new Date(auctionStart * 1000).toTimeString()}
-    ${timeUntilStart > 0 ? `starts in\t\t${timeStr}` : timeUntilStart < 0 ? `started\t\t${timeStr}ago` : 'just started'}
-  
+    auctionStart:\t\t\t${new Date(auctionStart * 1000).toTimeString()}
     `)
+
+    if (auctionStart === 0) {
+      console.log('auction has never run before')
+    } else {
+      const timeUntilStart = auctionStart - now
+      const timeStr = getTimeStr(timeUntilStart * 1000)
+
+      if (timeUntilStart > 0) {
+        console.log(`next auction starts in\t\t${timeStr}`)
+      } else if (timeUntilStart < 0) {
+        console.log(`auction started\t\t${timeStr}ago`)
+      } else {
+        console.log('auction just started')
+      }
+    }
+
+    const {
+      price,
+      sellVolume,
+      buyVolume,
+    } = await getAuctionStatsForTokenPair({ sellToken: eth, buyToken: gno, index: latestAuctionIndex })
 
     let timeWhenAuctionClears
 
-    if (timeUntilStart <= 0) {
-      const buyVolume = (await dx.buyVolumes(auctionIndex)).toNumber()
-      const sellVolume = (await dx.sellVolumeCurrent()).toNumber()
+    if (price && sellTokenOraclePrice && buyTokenOraclePrice) {
+      const [num, den] = price
+      const [sellTokenNum] = sellTokenOraclePrice
+      const [, buyTokenDen] = buyTokenOraclePrice
 
-      // Auction clears when sellVolume * price = buyVolume
-      // eslint-disable-next-line no-mixed-operators
-      timeWhenAuctionClears = Math.ceil(72000 * sellVolume / buyVolume - 18000 + auctionStart)
-      if (timeWhenAuctionClears !== Infinity) {
-        const timeUntilAuctionClears = now - timeWhenAuctionClears
-        console.log(`will clear with time in ${getTimeStr(timeUntilAuctionClears * 1000)}`)
+      const amountToClearAuction = Math.floor((sellVolume * num) / den) - buyVolume
+      console.log(`\n  currentPrice: 1 ETH = ${getNumDenStr(price)} GNO`)
+
+      if (amountToClearAuction > 0) console.log(`  to clear auction buy\t${amountToClearAuction} GNO`)
+
+      timeWhenAuctionClears = Math.ceil((86400 / sellTokenNum / buyTokenDen) + auctionStart)
+      const timeUntilAuctionClears = getTimeStr((now - timeWhenAuctionClears) * 1000)
+
+      if (now - timeWhenAuctionClears >= 0) {
+        console.log(`  will clear with time in ${timeUntilAuctionClears}`)
+      } else {
+        console.log(`  cleared ${timeWhenAuctionClears} ago`)
       }
     }
 
@@ -72,9 +106,9 @@ module.exports = async () => {
   console.log(`Setting time to ${argv.start ? 'AUCTION_START' : argv.clear ? 'AUCTION_END' : ''} ${incTimeBy ? `+ ${getTimeStr(incTimeBy * 1000)}` : ''}`)
 
   if (argv.start) {
-    setTime(auctionStart)
-  } else if (argv.clear && timeWhenAuctionClears !== Infinity) {
-    setTime(timeWhenAuctionClears)
+    setTime(auctionStart, incTimeBy)
+  } else if (argv.clear && timeWhenAuctionClears !== undefined && timeWhenAuctionClears !== Infinity) {
+    setTime(timeWhenAuctionClears, incTimeBy)
   }
 
   if (incTimeBy) {

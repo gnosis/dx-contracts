@@ -41,20 +41,23 @@ const setupTest = async (accounts) => {
 
   // Await ALL Promises for each account setup
   await Promise.all(accounts.map((acct) => {
-    /* eslint array-callback-return:0 */
-    if (acct === accounts[0]) return
+    if (acct === accounts[0]) return null
 
-    eth.deposit({ from: acct, value: 10 ** 9 })
-    eth.approve(dx.address, 10 ** 9, { from: acct })
-    gno.transfer(acct, 10 ** 18, { from: accounts[0] })
-    gno.approve(dx.address, 10 ** 18, { from: acct })
+    return Promise.all([
+      eth.deposit({ from: acct, value: 10 ** 9 }),
+      eth.approve(dx.address, 10 ** 9, { from: acct }),
+      gno.transfer(acct, 10 ** 18, { from: accounts[0] }),
+      gno.approve(dx.address, 10 ** 18, { from: acct }),
+    ])
   }))
   // Deposit depends on ABOVE finishing first... so run here
   await Promise.all(accounts.map((acct) => {
-    if (acct === accounts[0]) return
+    if (acct === accounts[0]) return null
 
-    dx.deposit(eth.address, 10 ** 9, { from: acct })
-    dx.deposit(gno.address, 10 ** 18, { from: acct })
+    return Promise.all([
+      dx.deposit(eth.address, 10 ** 9, { from: acct }),
+      dx.deposit(gno.address, 10 ** 18, { from: acct }),
+    ])
   }))
   // add token Pair
   // updating the oracle Price. Needs to be changed later to another mechanism

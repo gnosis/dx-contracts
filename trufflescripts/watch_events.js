@@ -1,3 +1,4 @@
+/* eslint no-console:0 */
 const DutchExchange = artifacts.require('./DutchExchange.sol')
 const TokenETH = artifacts.require('./EtherToken.sol')
 const TokenGNO = artifacts.require('./TokenGNO.sol')

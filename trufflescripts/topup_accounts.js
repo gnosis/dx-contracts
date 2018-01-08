@@ -1,39 +1,42 @@
-const TokenETH = artifacts.require('./EtherToken.sol')
-const TokenGNO = artifacts.require('./TokenGNO.sol')
+/* eslint no-console:0 */
+const { getTokenBalances, giveTokens } = require('./utils/contracts')(artifacts)
 
-const sellerETH = 100
-const buyerGNO = 1000
+const initBalances = {
+  seller: { ETH: 1000, GNO: 100, TUL: 0, OWL: 100 },
+  buyer: { ETH: 100, GNO: 1000, TUL: 0, OWL: 100 },
+}
 
 /**
  * truffle exec trufflescripts/topup_accounts.js
- * transfers seller 100 RTH and buyer 1000 GNO from master account
+ * deposits ETH tokens in accounts names
+ * and transfers other tokens from master account
+ * so that seller and buyer balances are no less than initBalances fro respective tokens
  */
 
 module.exports = async () => {
   // web3 is available in the global context
   const [master, seller, buyer] = web3.eth.accounts
 
-  const eth = await TokenETH.deployed()
-  const gno = await TokenGNO.deployed()
+  let sellerBal = await getTokenBalances(seller)
+  let buyerBal = await getTokenBalances(buyer)
 
-  let sellerETHBalance = (await eth.balanceOf(seller)).toNumber()
-  let buyerGNOBalance = (await gno.balanceOf(buyer)).toNumber()
+  const topupIfNeeded = (acc, currentBal, neededBal) => {
+    const diffBal = Object.keys(neededBal).reduce((accum, key) => {
+      const left = neededBal[key] - (currentBal[key] || 0)
+      if (left > 0) accum[key] = left
 
-  if (sellerETHBalance < sellerETH) {
-    const remainder = sellerETH - sellerETHBalance
-    await eth.approve(seller, remainder, { from: master })
-    await eth.transferFrom(master, seller, sellerETH, { from: seller })
+      return accum
+    }, {})
+
+    return giveTokens(acc, diffBal, master)
   }
 
-  if (buyerGNOBalance < buyerGNO) {
-    // allowance with a big margin
-    await gno.approve(buyer, buyerGNO * 10, { from: master })
-    await gno.transferFrom(master, buyer, buyerGNO - buyerGNOBalance, { from: buyer })
-  }
+  await topupIfNeeded(seller, sellerBal, initBalances.seller)
+  await topupIfNeeded(buyer, buyerBal, initBalances.buyer)
 
-  sellerETHBalance = (await eth.balanceOf(seller)).toNumber()
-  buyerGNOBalance = (await gno.balanceOf(buyer)).toNumber()
+  sellerBal = await getTokenBalances(seller)
+  buyerBal = await getTokenBalances(buyer)
 
-  console.log('Seller ETH:', sellerETHBalance)
-  console.log('Buyer GNO:', buyerGNOBalance)
+  console.log(`Seller:\t${sellerBal.ETH}\tETH,\t${sellerBal.GNO}\tGNO,\t${sellerBal.TUL}\tTUL,\t${sellerBal.OWL}\tOWL`)
+  console.log(`Buyer:\t${buyerBal.ETH}\tETH,\t${buyerBal.GNO}\tGNO,\t${buyerBal.TUL}\tTUL,\t${buyerBal.OWL}\tOWL`)
 }

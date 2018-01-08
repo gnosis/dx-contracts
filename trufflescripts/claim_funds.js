@@ -1,5 +1,14 @@
-const DutchExchangeETHGNO = artifacts.require('./DutchExchangeETHGNO.sol')
-
+/* eslint no-console:0 */
+const {
+  deployed,
+  getTokenDeposits,
+  getAccountsStatsForTokenPairAuction,
+  getExchangeStatsForTokenPair,
+  claimBuyerFunds,
+  claimSellerFunds,
+  getUnclaimedBuyerFunds,
+  getUnclaimedSellerFunds,
+} = require('./utils/contracts')(artifacts)
 const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
 
 /**
@@ -15,10 +24,13 @@ const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
  */
 
 module.exports = async () => {
-  const dx = await DutchExchangeETHGNO.deployed()
+  const { eth: sellToken, gno: buyToken } = await deployed
+  const sellTokenName = 'ETH'
+  const buyTokenName = 'GNO'
 
-  let auctionIndex = argv.i !== undefined ? argv.i : (await dx.auctionIndex()).toNumber()
-  if (argv.i === undefined && argv.last) auctionIndex -= 1
+  let index = argv.i !== undefined ? argv.i
+    : (await getExchangeStatsForTokenPair({ sellToken, buyToken })).latestAuctionIndex
+  if (argv.i === undefined && argv.last) index -= 1
 
   let [, seller, buyer] = web3.eth.accounts
 
@@ -26,53 +38,50 @@ module.exports = async () => {
   else if (argv.a === 'buyer') seller = buyer
   else if (argv.a) seller = buyer = argv.a
 
-  const sellerStats = () => Promise.all([
-    dx.sellerBalances(auctionIndex, seller),
-    dx.claimedAmounts(auctionIndex, seller),
-  ]).then(res => res.map(n => n.toNumber()))
+  const getStats = async (account, role) => {
+    const [
+      { [account]: { sellerBalance, buyerBalance, claimedAmount } },
+      { [sellTokenName]: sellTokenDeposit = 0, [buyTokenName]: buyTokenDeposit = 0 },
+      [unclaimedAmount] = [],
+    ] = await Promise.all([
+      getAccountsStatsForTokenPairAuction({ sellToken, buyToken, index, accounts: [account] }),
+      getTokenDeposits(account),
+      (role === 'seller' ? getUnclaimedSellerFunds : getUnclaimedBuyerFunds)({ sellToken, buyToken, user: account, index }),
+    ])
 
-  const buyerStats = () => Promise.all([
-    dx.buyerBalances(auctionIndex, buyer),
-    dx.claimedAmounts(auctionIndex, buyer),
-  ]).then(res => res.map(n => n.toNumber()))
+    return { sellerBalance, buyerBalance, claimedAmount, sellTokenDeposit, buyTokenDeposit, unclaimedAmount }
+  }
 
   const printSeller = async () => {
-    let [sellerBalance, sellerClaimed] = await sellerStats()
+    let { sellerBalance, claimedAmount, unclaimedAmount, sellTokenDeposit } = await getStats(seller, 'seller')
 
     console.log(`
-    Seller\tbalance\tclaimed
-    was:\t${sellerBalance}\t${sellerClaimed}`)
+    Seller\tbalance\tunclaimed  \tclaimed\tdeposit
+    was:\t${sellerBalance}\t${unclaimedAmount}\t\t${claimedAmount}\t${sellTokenDeposit}`)
 
-    try {
-      await dx.claimSellerFunds(auctionIndex, { from: seller });
+    await claimSellerFunds({ sellToken, buyToken, user: seller, index });
 
-      [sellerBalance, sellerClaimed] = await sellerStats()
+    ({ sellerBalance, claimedAmount, unclaimedAmount, sellTokenDeposit } = await getStats(seller, 'seller'))
 
-      console.log(`    is:\t\t${sellerBalance}\t${sellerClaimed}`)
-    } catch (error) {
-      console.error(error.message || error)
-    }
+    console.log(`    is:\t\t${sellerBalance}\t${unclaimedAmount}\t\t${claimedAmount}\t${sellTokenDeposit}`)
   }
 
   const printBuyer = async () => {
-    let [buyerBalance, buyerClaimed] = await buyerStats()
+    let { buyerBalance, claimedAmount, unclaimedAmount, buyTokenDeposit } = await getStats(buyer, 'buyer')
 
     console.log(`
-    Buyer\tbalance\tclaimed
-    was:\t${buyerBalance}\t${buyerClaimed}
+    Buyer\tbalance\tunclaimed  \tclaimed\tdeposit
+    was:\t${buyerBalance}\t${unclaimedAmount}\t\t${claimedAmount}\t${buyTokenDeposit}
     `)
 
-    try {
-      await dx.claimBuyerFunds(auctionIndex, { from: buyer });
+    await claimBuyerFunds({ sellToken, buyToken, user: buyer, index });
 
-      [buyerBalance, buyerClaimed] = await buyerStats()
-      console.log(`    is:\t\t${buyerBalance}\t${buyerClaimed}`)
-    } catch (error) {
-      console.error(error.message || error)
-    }
+    ({ buyerBalance, claimedAmount, unclaimedAmount, buyTokenDeposit } = await getStats(buyer, 'buyer'))
+
+    console.log(`    is:\t\t${buyerBalance}\t${unclaimedAmount}\t\t${claimedAmount}\t${buyTokenDeposit}`)
   }
 
-  console.log(`in auction ${auctionIndex}`)
+  console.log(`in auction ${index}`)
 
   if (argv.seller) {
     await printSeller()
