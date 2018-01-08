@@ -116,13 +116,13 @@ contract('DutchExchange', (accounts) => {
 
   beforeEach(async () => {
     // get contracts
-    const contracts = await getContracts();
+    contracts = await getContracts();
     // destructure contracts into upper state
     ({
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenTUL: tul,
+      TokenTUL: tokenTUL,
       PriceOracle: oracle,
     } = contracts)
 
@@ -177,13 +177,13 @@ contract('DutchExchange', (accounts) => {
 
   beforeEach(async () => {
     // get contracts
-    const contracts = await getContracts();
+    contracts = await getContracts();
     // destructure contracts into upper state
     ({
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenTUL: tul,
+      TokenTUL: tokenTUL,
       PriceOracle: oracle,
     } = contracts)
 
