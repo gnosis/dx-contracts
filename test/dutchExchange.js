@@ -23,6 +23,7 @@ let gno
 let dx
 let oracle
 let tokenTUL
+
 let contracts
 
 const setupContracts = async () => {

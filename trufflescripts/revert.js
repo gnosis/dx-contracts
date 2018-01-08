@@ -1,4 +1,4 @@
-/* eslint no-console:0 prefer-const:1 */
+/* eslint no-console:0 */
 const { revertSnapshot } = require('./utils')(web3)
 
 const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
@@ -16,9 +16,7 @@ const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
  */
 
 module.exports = async () => {
-  let snapshotID
-
-  snapshotID = argv.b || '0x01'
+  const snapshotID = argv.b || '0x01'
 
   const timeout = new Promise((resolve, reject) => setTimeout(() => reject(new Error('TIMED-OUT')), 1500))
   const race = Promise.race([timeout, revertSnapshot(snapshotID)])
