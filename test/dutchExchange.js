@@ -28,6 +28,7 @@ let gno
 let dx
 let oracle
 let tokenTUL
+
 // testing Auction Functions
 const setupTest = async (accounts) => {
   // get buyers, sellers set up and running
@@ -62,11 +63,25 @@ const setupTest = async (accounts) => {
 }
 
 const setAndCheckAuctionStarted = async (ST, BT) => {
-  const startingTimeOfAuction = (await dx.auctionStarts.call(ST.address, BT.address)).toNumber()
+  const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
 
   // wait for the right time to send buyOrder
+  console.log(`
+======================
+  ==> StartingTimeOfAuction ---> ${new Date(startingTimeOfAuction * 1000)}
 
+  ==> currentTime           ---> ${new Date(timestamp() * 1000)}
+======================
+  `)
   await wait(startingTimeOfAuction - timestamp())
+
+  console.log(`
+======================
+  ==> newTime               ---> ${new Date((timestamp() * 1000))}
+  ==> Time Awaited          ---> ${startingTimeOfAuction - timestamp()}
+======================
+  `)  
+  
   assert.equal(timestamp() >= startingTimeOfAuction, true)
 }
 

@@ -27,8 +27,8 @@ const eventWatcher = (contract, event, args) => contract[event](args).watch((err
 
 module.exports = {
   assertRejects,
-  timestamp,
   blockNumber,
-  logger,
   eventWatcher,
+  logger,
+  timestamp,
 }
