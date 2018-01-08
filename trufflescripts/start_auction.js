@@ -1,116 +1,165 @@
 /* eslint no-console:0 */
-const DutchExchange = artifacts.require('DutchExchange')
-const TokenETH = artifacts.require('EtherToken')
-const TokenGNO = artifacts.require('TokenGNO')
-// const TokenTUL = artifacts.require('StandardToken')
-// const TokenOWL = artifacts.require('OWL')
+const {
+  deployed,
+  getExchangeParams,
+  getTokenDeposits,
+  getTokenBalances,
+  giveTokens,
+  depositToDX,
+  getExchangeStatsForTokenPair,
+  addTokenPair,
+  updateExchangeParams,
+} = require('./utils/contracts')(artifacts)
 
 const { getTime, increaseTimeBy } = require('./utils')(web3)
 const argv = require('minimist')(process.argv.slice(4), { string: 'a' })
 
 /**
  * truffle exec trufflescripts/start_auction.js
- * give tokens from master
+ * add a token pair and sets time to auction start + 1 hour
  * @flags:
- * sellToken          || 'eth'
- * buyToken           || 'gno'
- * sellAmount         ||  500
- * buyAmount          ||  500
- * -a <address>       to the given address
- * --seller           to seller
- * --buyer            to buyer
- */
-
-/**
- * truffle exec trufflescripts/start_auction.js
- * if auction isn't running,
- * sets time to auction start + 1 hour
+ * --pair <sellToken,buyToken>                 add token pair, eth, gno by default
+ * --fund <sellTokenFunding,buyTokenFunding>   prefund auction, 500, 500 by default
+ * --price <num/den>                           initial closing price, 2/1 by default
+ * --seller           as the seller
+ * --buyer            as the buyer
+ * -a <address>       as the given address
  */
 
 const hour = 3600
 
 module.exports = async () => {
-  console.warn(`
-    WARNING:
-    --------------------------------------------------------------------------
-    TESTS WILL NOT WORK IF PRICE_ORACLE DOES NOT YET SET A USD VALUE FOR ETHER!
-    --------------------------------------------------------------------------
-  `)
+  if ((!argv.seller && !argv.buyer && !argv.a)
+    || ((argv.pair && argv.pair.length < 2) || (argv.fund && argv.fund < 2) || (argv.price && argv.price < 2))) {
+    console.warn('No valid token pair, fund or accounts specified')
+    return
+  }
 
-  const dx = await DutchExchange.deployed()
-  const eth = await TokenETH.deployed()
-  const gno = await TokenGNO.deployed()
-  // const tul = await TokenTUL.deployed()
-  // const owl = await TokenOWL.deployed()
+  const { dx, po, ...tokens } = await deployed
 
+  const [sell, buy] = argv.pair ? argv.pair.split(',') : ['eth', 'gno']
+  const { [sell]: sellToken, [buy]: buyToken } = tokens
+
+  if (!sellToken || !buyToken) {
+    console.warn(`Unknown tokens (${sell}, ${buy}) specified. Aborting`)
+    return
+  }
+
+  const [sellTokenFunding, buyTokenFunding] = argv.fund ? argv.fund.split(',') : [500, 500]
+
+  if (sellTokenFunding < 0 || buyTokenFunding < 0) {
+    console.warn('Funding must be a positive number or 0')
+    return
+  }
+
+  const [closingNum, closingDen] = argv.price ? argv.price.split('/') : [2, 1]
+
+  if (closingNum <= 0 || closingDen <= 0) {
+    console.warn('Price must be a positive number')
+    return
+  }
+
+  const [master, ...accounts] = web3.eth.accounts
   let account
   if (argv.a) account = argv.a
   else if (argv.buyer) {
-    [, , account] = web3.eth.accounts
+    [, account] = accounts
   } else {
     // set Seller as default account
-    [, account] = web3.eth.accounts
+    [account] = accounts
   }
 
-  // Modify argv if necessary
-  const sellToken = argv._[0] === 'eth' ? eth : argv._[0] === 'gno' ? gno : eth
-  const buyToken = argv._[1] === 'gno' ? gno : argv._[1] === 'eth' ? eth : gno
+  const SELL = sell.toUpperCase()
+  const BUY = buy.toUpperCase()
 
-  console.log(`
-    ------------------------------------
-    REQUESTED AUCTION START: ${await sellToken.symbol.call()} // ${await buyToken.symbol.call()}
-    ------------------------------------
-  `)
+  const { [SELL]: sellTokenDeposit, [BUY]: buyTokenDeposit } = await getTokenDeposits(account)
 
-  // Grab Deposited Token Balances in Auction (if any)
-  const balances = acct => Promise.all([
-    dx.balances(eth.address, acct),
-    dx.balances(gno.address, acct),
-  ]).then(res => res.map(bal => bal.toNumber()))
+  if (sellTokenDeposit < sellTokenFunding || buyTokenDeposit < buyTokenFunding) {
+    console.log('\nNot enough tokens deposited to fund the pair')
 
-  const [ethBalance, gnoBalance] = await balances(account)
-  console.log(`
-    --> DX Ether Balance = ${ethBalance}
-    --> DX GNO Balance   = ${gnoBalance}
-  `)
+    const neededSellDeposit = sellTokenFunding - sellTokenDeposit
+    const neededBuyDeposit = buyTokenFunding - buyTokenDeposit
 
-  try {
-    await sellToken.approve.call(dx.address, 10000, { from: account })
-    await buyToken.approve.call(dx.address, 10000, { from: account })
-    
-    console.log(`
-    --> Approved sellToken + buyToken movement by DX
-    `)
-    
-    await dx.addTokenPair.call(
-      sellToken.address,
-      buyToken.address,
-      (argv._[2] || 500),
-      (argv._[3] || 500),
-      2,
-      1,
-      { from: account },
-    )
-  } catch (e) {
-    console.log(`
-    ERROR
-    ---------------------------  
-    ${e}
-    ---------------------------
-    `)
+    const { [SELL]: sellBalance, [BUY]: buyBalance } = await getTokenBalances(account)
+    const neededSellBalance = neededSellDeposit - sellBalance
+    const neededBuyBalance = neededBuyDeposit - buyBalance
+
+    if (neededSellBalance > 0 || neededBuyBalance > 0) {
+      console.log('\nNot enough token balances to cover the deposits necessary')
+      console.log(`Supplying account with ${neededSellBalance} ${SELL}, ${neededBuyBalance} ${BUY}`)
+
+      // no negative balances
+      const tokensToGive = { [SELL]: Math.max(0, neededSellBalance), [BUY]: Math.max(0, neededBuyBalance) }
+      await giveTokens(account, tokensToGive, master)
+    }
+
+    console.log(`Depositing ${neededSellDeposit} ${SELL}, ${neededBuyDeposit} ${BUY}\n`)
+    // no negative deposits
+    const tokensToDeposit = { [SELL]: Math.max(0, neededSellDeposit), [BUY]: Math.max(0, neededBuyDeposit) }
+    await depositToDX(account, tokensToDeposit)
   }
 
-  const auctionStart = (await dx.auctionStarts.call(sellToken.address, buyToken.address)).toNumber()
-  const now = getTime()
-  const timeUntilStart = auctionStart - now
+  const { sellFundingNewTokenPair } = await getExchangeParams()
 
-  const auctionIndex = (await dx.latestAuctionIndices.call(sellToken.address, buyToken.address)).toNumber()
+  const ETHUSDPrice = (await po.getUSDETHPrice()).toNumber()
 
-  // auctionStart is in the future
-  if (timeUntilStart > 0) {
-    increaseTimeBy(timeUntilStart + hour)
-    console.log(`ETH -> GNO auction ${auctionIndex} started`)
+  // calculating funded value, depends on oracle price
+  let fundedValueUSD
+  if (SELL === 'ETH') {
+    fundedValueUSD = sellTokenFunding * ETHUSDPrice
+  } else if (BUY === 'ETH') {
+    fundedValueUSD = buyTokenFunding * ETHUSDPrice
   } else {
-    console.log(`ETH -> GNO auction ${auctionIndex} is already running`)
+    // Neither token is ETH
+    const { sellTokenOraclePrice, buyTokenOraclePrice } = await getExchangeStatsForTokenPair({ sellToken, buyToken })
+
+    const [sNum, sDen] = sellTokenOraclePrice
+    const [bNum, bDen] = buyTokenOraclePrice
+
+    fundedValueUSD = (((sellTokenFunding * sNum) / sDen) + ((buyTokenFunding * bNum) / bDen)) * ETHUSDPrice
+  }
+
+  console.log('fundedValueUSD was calculated as', fundedValueUSD)
+  const underfunded = fundedValueUSD < sellFundingNewTokenPair
+  if (underfunded) {
+    console.log(`\nfunded value (${fundedValueUSD}) < sellFundingNewTokenPair (${sellFundingNewTokenPair})`)
+    console.log('To add the token pair, temporarily setting sellFundingNewTokenPair = 0')
+    await updateExchangeParams({ sellFundingNewTokenPair: 0 })
+    console.log('sellFundingNewTokenPair:', (await getExchangeParams()).sellFundingNewTokenPair)
+  }
+
+  console.log(`Adding a new token pair ${SELL} -> ${BUY}`)
+  console.log(`${SELL} funding ${sellTokenFunding}\t${BUY} funding ${buyTokenFunding}`)
+  console.log(`InitialclosingPrice: ${closingNum}/${closingDen} = ${closingNum / closingDen}`)
+
+  const tx = await addTokenPair({
+    account,
+    sellToken,
+    buyToken,
+    sellTokenFunding,
+    buyTokenFunding,
+    initialClosingPriceNum: closingNum,
+    initialClosingPriceDen: closingDen,
+  })
+
+  if (underfunded) {
+    console.log('Setting sellFundingNewTokenPair back to', sellFundingNewTokenPair)
+    await updateExchangeParams({ sellFundingNewTokenPair })
+  }
+
+  const { auctionStart, latestAuctionIndex } = await getExchangeStatsForTokenPair({ sellToken, buyToken })
+
+  if (tx) {
+    console.log(`ETH -> GNO auction ${latestAuctionIndex} started`)
+  } else {
+    const now = getTime()
+    const timeUntilStart = auctionStart - now
+
+    // auctionStart is in the future
+    if (timeUntilStart > 0) {
+      console.log('auctionStart is set in the future. Skipping to it + 1 hour')
+      increaseTimeBy(timeUntilStart + hour)
+      console.log(`ETH -> GNO auction ${latestAuctionIndex} started`)
+    }
   }
 }
