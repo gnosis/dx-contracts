@@ -17,7 +17,7 @@ const contractNames = [
  * deploys all contracts in build/contracts
  */
 const getContracts = async () => {
-  const depContracts = contractNames.map(c => artifacts.require(c)).map(async cc => cc.deployed())
+  const depContracts = contractNames.map(c => artifacts.require(c)).map(cc => cc.deployed())
   const contractInstances = await Promise.all(depContracts)
 
   const deployedContracts = contractNames.reduce((acc, name, i) => {
