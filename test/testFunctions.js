@@ -33,7 +33,9 @@ const getContracts = async () => {
  * @param {Array}  = accounts passed in globally
  * @param {Object} = Contract object obtained via: const contract = await getContracts() (see above)
  */
-const setupTest = async (accounts, { DutchExchange: dx, EtherToken: eth, TokenGNO: gno, PriceOracle: oracle }) => {
+const setupTest = async (accounts, {
+  DutchExchange: dx, EtherToken: eth, TokenGNO: gno, PriceOracle: oracle,
+}) => {
   // Await ALL Promises for each account setup
   await Promise.all(accounts.map((acct) => {
     /* eslint array-callback-return:0 */
@@ -142,7 +144,7 @@ module.exports = {
 //   // get buyers, sellers set up and running
 //   gno = await TokenGNO.deployed()
 //   eth = await EtherToken.deployed()
-//   tokenTUL = await TokenTUL.deployed() 
+//   tokenTUL = await TokenTUL.deployed()
 //   // create dx
 //   dx = await DutchExchange.deployed()
 //   // create price Oracle
