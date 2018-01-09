@@ -369,9 +369,11 @@ contract DutchExchange {
     )
         public
     {
+        uint auctionStart = getAuctionStart(sellToken, buyToken);
+
         // R1
         // require(getAuctionStart(sellToken, buyToken) <= now);
-        if (getAuctionStart(sellToken, buyToken) > now) {
+        if (auctionStart > now) {
             Log('postBuyOrder R1');
             return;
         }
@@ -394,11 +396,14 @@ contract DutchExchange {
             return;
         }
 
-        LogNumber('amount', amount);
+        // R5: auction must not be in waiting period
+        // require(auctionStart > 1);
+        if (auctionStart <= 1) {
+            Log('postBuyOrder R5');
+            return;
+        }
 
         amount = Math.min(amount, balances[buyToken][msg.sender]);
-
-        LogNumber('amount', amount);
         
         // Overbuy is when a part of a buy order clears an auction
         // In that case we only process the part before the overbuy
@@ -418,22 +423,18 @@ contract DutchExchange {
 
         if (amount > 0) {
             uint amountAfterFee = settleFee(buyToken, sellToken, auctionIndex, msg.sender, amount);
-            LogNumber('amountAfterFee', amountAfterFee);
             // Update variables
             balances[buyToken][msg.sender] -= amount;
             buyerBalances[sellToken][buyToken][auctionIndex][msg.sender] += amountAfterFee;
             buyVolumes[sellToken][buyToken] += amountAfterFee;
-            LogNumber('buyVolumes', buyVolumes[sellToken][buyToken]);
-            // TODO
             outstandingVolume = Math.atleastZero(int(outstandingVolume - amountAfterFee));
-            LogNumber('outstandingVolume', outstandingVolume);
             NewBuyOrder(sellToken, buyToken, msg.sender, auctionIndex, amount);
         }
 
         if (outstandingVolume == 0) {
             // Clear auction
             clearAuction(sellToken, buyToken, auctionIndex, sellVolume);
-        } else if (now >= getAuctionStart(sellToken, buyToken) + 6 hours) {
+        } else if (now >= auctionStart + 6 hours) {
             // Prices have crossed
             // We need to clear current or opposite auction
             closeCurrentOrOppositeAuction(
@@ -628,8 +629,6 @@ contract DutchExchange {
         }
 
         uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
-
-        LogNumber('buyerBalance', buyerBalance);
 
         fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
 
