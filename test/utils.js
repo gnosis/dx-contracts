@@ -3,6 +3,7 @@ const assertRejects = async (q, msg) => {
   let res, catchFlag = false
   try {
     res = await q
+    catchFlag = res.logs && !!res.logs.find(log => log.event === 'Log')
   } catch (e) {
     catchFlag = true
   } finally {
