@@ -1,3 +1,4 @@
+/* eslint no-console:0 */
 const { makeSnapshot } = require('./utils')(web3)
 
 /**

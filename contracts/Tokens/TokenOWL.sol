@@ -1,11 +1,11 @@
 pragma solidity ^0.4.18;
 
 import "./StandardToken.sol";
-import "./../Utils/Math.sol";
-import "./../Oracle/PriceOracle.sol";
+import "../Utils/Math.sol";
+import "../Oracle/PriceOracle.sol";
 
 
-contract OWL is StandardToken {
+contract TokenOWL is StandardToken {
     using Math for *;
 
 
@@ -36,7 +36,7 @@ contract OWL is StandardToken {
     //@dev: Constructor of the contract OWL, which sets variables and constructs FeeDutchAuction
     //@param: _GNOTokenAddress address of the GNO ERC20 tokens
     //@param: _oracleContract contract where all oracle feeds can be read out
-    function OWL(
+    function TokenOWL(
         address _GNOTokenAddress
         ,address _oracle
     )

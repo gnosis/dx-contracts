@@ -1,16 +1,6 @@
 /* eslint no-console:0, max-len:0, no-plusplus:0, no-mixed-operators:0, no-trailing-spaces:0 */
 
-const DutchExchange = artifacts.require('DutchExchange')
-const EtherToken = artifacts.require('EtherToken')
-const PriceOracle = artifacts.require('PriceOracle')
 const PriceOracleInterface = artifacts.require('PriceOracleInterface')
-const TokenGNO = artifacts.require('TokenGNO')
-const TokenTUL = artifacts.require('TokenTUL')
-
-// const MathSol = artifacts.require('Math')
-// const StandardToken = artifacts.require('StandardToken')
-// const Token = artifacts.require('./Token.sol')
-// const OWL = artifacts.require('OWL')
 
 const { 
   eventWatcher,
@@ -18,9 +8,14 @@ const {
   timestamp,
 } = require('./utils')
 
-const { wait } = require('@digix/tempo')(web3)
-
-const MaxRoundingError = 100000
+const {
+  setupTest,
+  getContracts,
+  getAuctionIndex,
+  checkBalanceBeforeClaim,
+  waitUntilPriceIsXPercentOfPreviousPrice,
+  setAndCheckAuctionStarted,
+} = require('./testFunctions')
 
 // Test VARS
 let eth
@@ -29,122 +24,31 @@ let dx
 let oracle
 let tokenTUL
 
-// testing Auction Functions
-const setupTest = async (accounts) => {
-  // get buyers, sellers set up and running
-  gno = await TokenGNO.deployed()
-  eth = await EtherToken.deployed()
-  tokenTUL = await TokenTUL.deployed() 
-  // create dx
-  dx = await DutchExchange.deployed()
-  // create price Oracle
-  oracle = await PriceOracle.deployed()
 
-  // Await ALL Promises for each account setup
-  await Promise.all(accounts.map((acct) => {
-    /* eslint array-callback-return:0 */
-    if (acct === accounts[0]) return
+let contracts
 
-    eth.deposit({ from: acct, value: 10 ** 9 })
-    eth.approve(dx.address, 10 ** 9, { from: acct })
-    gno.transfer(acct, 10 ** 18, { from: accounts[0] })
-    gno.approve(dx.address, 10 ** 18, { from: acct })
-  }))
-  // Deposit depends on ABOVE finishing first... so run here
-  await Promise.all(accounts.map((acct) => {
-    if (acct === accounts[0]) return
-
-    dx.deposit(eth.address, 10 ** 9, { from: acct })
-    dx.deposit(gno.address, 10 ** 18, { from: acct })
-  }))
-  // add token Pair
-  // updating the oracle Price. Needs to be changed later to another mechanism
-  await oracle.updateETHUSDPrice(60000, { from: accounts[0] })
+const setupContracts = async () => {
+  contracts = await getContracts();
+  // destructure contracts into upper state
+  ({
+    DutchExchange: dx,
+    EtherToken: eth,
+    TokenGNO: gno,
+    TokenTUL: tokenTUL,
+    PriceOracle: oracle,
+  } = contracts)
 }
-
-const setAndCheckAuctionStarted = async (ST, BT) => {
-  const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
-
-  // wait for the right time to send buyOrder
-  console.log(`
-======================
-  ==> StartingTimeOfAuction ---> ${new Date(startingTimeOfAuction * 1000)}
-
-  ==> currentTime           ---> ${new Date(timestamp() * 1000)}
-======================
-  `)
-  await wait(startingTimeOfAuction - timestamp())
-
-  console.log(`
-======================
-  ==> newTime               ---> ${new Date((timestamp() * 1000))}
-  ==> Time Awaited          ---> ${startingTimeOfAuction - timestamp()}
-======================
-  `)  
-  
-  assert.equal(timestamp() >= startingTimeOfAuction, true)
-}
-
-/**
- * waitUntilPriceIsXPercentOfPreviousPrice
- * @param {*} ST  - sellToken
- * @param {*} BT  - buyToken
- * @param {*} p   - percentage of the previous price
- */
-const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
-  const startingTimeOfAuction = (await dx.auctionStarts.call(ST.address, BT.address)).toNumber()
-  const timeToWaitFor = (86400 - p * 43200) / (1 + p) + startingTimeOfAuction
-  // wait until the price is good
-  await wait(timeToWaitFor - timestamp())
-  assert.equal(timestamp() >= timeToWaitFor, true)
-}
-
-/**
- * checkBalanceBeforeClaim
- * @param {string} acct       => acct to check Balance of
- * @param {number} idx        => auctionIndex to check
- * @param {string} claiming   => 'seller' || 'buyer'
- * @param {string} sellToken  => gno || eth
- * @param {string} buyToken   => gno || eth
- * @param {number} amt        => amt to check
- * @param {number} round      => rounding error threshold
- */
-const checkBalanceBeforeClaim = async (
-  acct,
-  idx,
-  claiming,
-  sellToken = eth,
-  buyToken = gno,
-  amt = (10 ** 9),
-  round = MaxRoundingError,
-) => {
-  console.log('checkBalanceBeforeClaim, claiming', claiming)
-  if (claiming === 'buyer') {
-    // const auctionIndex = await getAuctionIndex()
-
-
-    const balanceBeforeClaim = (await dx.balances.call(sellToken.address, acct)).toNumber()
-    await dx.claimBuyerFunds(sellToken.address, buyToken.address, acct, idx)
-    console.log(`${balanceBeforeClaim}-->${amt}-->-->${(await dx.balances.call(sellToken.address, acct)).toNumber()}`)
-    assert.equal(Math.abs(balanceBeforeClaim + amt - (await dx.balances.call(sellToken.address, acct)).toNumber()) < round, true)
-
-  } else {
-    const balanceBeforeClaim = (await dx.balances.call(buyToken.address, acct)).toNumber()
-    await dx.claimSellerFunds(sellToken.address, buyToken.address, acct, idx)
-    console.log(`${balanceBeforeClaim}-->${amt}-->-->${(await dx.balances.call(buyToken.address, acct)).toNumber()}`)
-    assert.equal(Math.abs(balanceBeforeClaim + amt - (await dx.balances.call(buyToken.address, acct)).toNumber()) < round, true)
-  }
-}
-
-const getAuctionIndex = async (sell = eth, buy = gno) => (await dx.getAuctionIndex.call(buy.address, sell.address)).toNumber()
-// const getStartingTimeOfAuction = async (sell = eth, buy = gno) => (await dx.auctionStarts.call(sell.address, buy.address)).toNumber()
 
 contract('DutchExchange', (accounts) => {
   const [, seller1, , buyer1] = accounts
 
   beforeEach(async () => {
-    // set up accounts and tokens
-    await setupTest(accounts)
+    // get contracts
+    await setupContracts()
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts)
+
     // add tokenPair ETH GNO
     await dx.addTokenPair(
       eth.address,
@@ -156,6 +60,8 @@ contract('DutchExchange', (accounts) => {
       { from: seller1 },
     )
   })
+
+  after(eventWatcher.stopWatching)
 
   it('Buys tokens at the 2:1 price', async () => {
     eventWatcher(dx, 'NewTokenPair', {})
@@ -169,7 +75,7 @@ contract('DutchExchange', (accounts) => {
     
     logger('setAndCheckAuctionStarted')
     
-    oracle = await PriceOracle.deployed()
+    // oracle = await PriceOracle.deployed()
     
     logger('PRICE ORACLE', await PriceOracleInterface.at(oracle.address).getUSDETHPrice.call())    
     // wait until price is good
@@ -208,111 +114,138 @@ contract('DutchExchange', (accounts) => {
   })
 })
 
-// contract('DutchExchange', (accounts) => {
-//   const [, seller1, seller2, buyer1, buyer2] = accounts
 
-//   beforeEach(async () => {
-//     // set up accounts and tokens
-//     await setupTest(accounts)
+contract('DutchExchange', (accounts) => {
+  const [, seller1, seller2, buyer1, buyer2] = accounts
 
-//     // add tokenPair ETH GNO
-//     await dx.addTokenPair(
-//       eth.address,
-//       gno.address,
-//       10 ** 9,
-//       0,
-//       2,
-//       1,
-//       { from: seller1 },
-//     )
-//   })
+  beforeEach(async () => {
+    // get contracts
+    contracts = await getContracts();
+    // destructure contracts into upper state
+    ({
+      DutchExchange: dx,
+      EtherToken: eth,
+      TokenGNO: gno,
+      TokenTUL: tokenTUL,
+      PriceOracle: oracle,
+    } = contracts)
 
-//   it('process two auctions one after the other in one pair only', async () => {
-//     let auctionIndex
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts)
 
-//     // ASSERT Auction has started
-//     await setAndCheckAuctionStarted(eth, gno)
+    // add tokenPair ETH GNO
+    await dx.addTokenPair(
+      eth.address,
+      gno.address,
+      10 ** 9,
+      0,
+      2,
+      1,
+      { from: seller1 },
+    )
+  })
 
-//     auctionIndex = await getAuctionIndex()
-//     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
+  after(eventWatcher.stopWatching)
+
+  it('process two auctions one after the other in one pair only', async () => {
+    let auctionIndex
+
+    // ASSERT Auction has started
+    await setAndCheckAuctionStarted(eth, gno)
+
+    auctionIndex = await getAuctionIndex()
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     
-//     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer1 })
+    await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer1 })
 
-//     // check Buyer1 balance and claim
-//     await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 ** 9 - 10 ** 9 / 200))
-//     // check Seller1 Balance
-//     await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 * 2 - 10 ** 9 / 100 * 2 / 2))
+    // check Buyer1 balance and claim
+    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 ** 9 - 10 ** 9 / 200))
+    // check Seller1 Balance
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 * 2 - 10 ** 9 / 100 * 2 / 2))
 
-//     // post new sell order to start next auction
-//     auctionIndex = await getAuctionIndex()
-//     logger('new auction index:', auctionIndex)
-//     logger('auctionStartDate', (await dx.getAuctionStart(eth.address, gno.address)).toNumber())
-//     logger('current time', timestamp())
-//     logger('tuliptoken', await tokenTUL.totalTokens())
-//     await dx.postSellOrder(eth.address, gno.address, auctionIndex, 10 ** 9, { from: seller2 })
-//     logger('sell order went through')
-//     logger('setandCheck returns:', await setAndCheckAuctionStarted(eth, gno))
+    // post new sell order to start next auction
+    auctionIndex = await getAuctionIndex()
+    logger('new auction index:', auctionIndex)
+    logger('auctionStartDate', (await dx.getAuctionStart(eth.address, gno.address)).toNumber())
+    logger('current time', timestamp())
+    logger('tuliptoken', await tokenTUL.totalTokens())
+    await dx.postSellOrder(eth.address, gno.address, auctionIndex, 10 ** 9, { from: seller2 })
+    logger('sell order went through')
+    logger('setandCheck returns:', await setAndCheckAuctionStarted(eth, gno))
 
-//     auctionIndex = await getAuctionIndex()
-//     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer2 })
-//   })
-// })
+    auctionIndex = await getAuctionIndex()
+    await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer2 })
+  })
+})
 
-// contract('DutchExchange', (accounts) => {
-//   const [, seller1, seller2, buyer1, buyer2] = accounts
+contract('DutchExchange', (accounts) => {
+  const [, seller1, seller2, buyer1, buyer2] = accounts
 
-//   beforeEach(async () => {
-//     // set up accounts and tokens
-//     await setupTest(accounts)
+  beforeEach(async () => {
+    // get contracts
+    contracts = await getContracts();
+    // destructure contracts into upper state
+    ({
+      DutchExchange: dx,
+      EtherToken: eth,
+      TokenGNO: gno,
+      TokenTUL: tokenTUL,
+      PriceOracle: oracle,
+    } = contracts)
 
-//     // add tokenPair ETH GNO
-//     await dx.addTokenPair(
-//       eth.address,
-//       gno.address,
-//       10 ** 9,
-//       10 ** 8 * 5,
-//       2,
-//       1,
-//       { from: seller1 },
-//     )
-//   })
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts)
 
-//   it('test a trade on the opposite pair', async () => {
-//     let auctionIndex
+    // add tokenPair ETH GNO
+    await dx.addTokenPair(
+      eth.address,
+      gno.address,
+      10 ** 9,
+      10 ** 8 * 5,
+      2,
+      1,
+      { from: seller1 },
+    )
+  })
 
-//     // ASSERT Auction has started
-//     await setAndCheckAuctionStarted(eth, gno)
-//     auctionIndex = await getAuctionIndex()
-//     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
-//     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer1 })
-//     await dx.postBuyOrder(gno.address, eth.address, auctionIndex, 10 ** 7 * 25, { from: seller2 })
-//     logger('startingReclaiming')
-//     logger('dx.getPrice.num eth gno', await dx.testing2.call(eth.address, gno.address, auctionIndex))
-//     logger('dx.getPrice.num gno/eth', await dx.testing2.call(gno.address, eth.address, auctionIndex))
-//     logger('dx.oralcePrice.num gno/eth ', await dx.testing.call(gno.address))
-//     logger('dx.oralcePrice.num gno/eth ', await dx.testing.call(eth.address))
-//     // claim buyer1 BUYER funds
-//     await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 ** 9 - 10 ** 9 / 200))
-//     // claim seller2 BUYER funds - RECIPROCAL
-//     await checkBalanceBeforeClaim(seller2, auctionIndex, 'buyer', gno, eth, (10 ** 8 * 5 - 10 ** 8 * 5 / 200))
-//     // claim SELLER funds
-//     await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 * 2 - 10 ** 9 * 2 / 200))
+  after(eventWatcher.stopWatching)
 
-//     // post new sell order to start next auction
-//     // startingTimeOfAuction = await getStartingTimeOfAuction(eth, gno)
-//     auctionIndex = await getAuctionIndex()
-//     logger('new auction index:', auctionIndex)
-//     logger('auctionStartDate', (await dx.getAuctionStart(eth.address, gno.address)).toNumber())
+  it('test a trade on the opposite pair', async () => {
+    let auctionIndex
 
-//     await dx.postSellOrder(eth.address, gno.address, auctionIndex, 10 ** 9, { from: seller2 })
+    // ASSERT Auction has started
+    await setAndCheckAuctionStarted(eth, gno)
+    auctionIndex = await getAuctionIndex()
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
+    await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer1 })
+    await dx.postBuyOrder(gno.address, eth.address, auctionIndex, 10 ** 7 * 25, { from: seller2 })
+    logger('startingReclaiming')
+    logger('dx.getPrice.num eth gno', await dx.testing2.call(eth.address, gno.address, auctionIndex))
+    logger('dx.getPrice.num gno/eth', await dx.testing2.call(gno.address, eth.address, auctionIndex))
+    logger('dx.oralcePrice.num gno/eth ', await dx.testing.call(gno.address))
+    logger('dx.oralcePrice.num gno/eth ', await dx.testing.call(eth.address))
+    // claim buyer1 BUYER funds
+    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 ** 9 - 10 ** 9 / 200))
+    // claim seller2 BUYER funds - RECIPROCAL
+    await checkBalanceBeforeClaim(seller2, auctionIndex, 'buyer', gno, eth, (10 ** 8 * 5 - 10 ** 8 * 5 / 200))
+    // claim SELLER funds
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 * 2 - 10 ** 9 * 2 / 200))
 
-//     // check Auction has started
-//     await setAndCheckAuctionStarted(eth, gno)
+    // post new sell order to start next auction
+    // startingTimeOfAuction = await getStartingTimeOfAuction(eth, gno)
+    auctionIndex = await getAuctionIndex()
+    logger('new auction index:', auctionIndex)
+    logger('auctionStartDate', (await dx.getAuctionStart(eth.address, gno.address)).toNumber())
 
-//     auctionIndex = await getAuctionIndex()
-//     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer2 })
-//   })
-// })
+    await dx.postSellOrder(eth.address, gno.address, auctionIndex, 10 ** 9, { from: seller2 })
+
+    // check Auction has started
+    await setAndCheckAuctionStarted(eth, gno)
+
+    auctionIndex = await getAuctionIndex()
+    await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer2 })
+  })
+})
 
 
 /*

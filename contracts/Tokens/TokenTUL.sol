@@ -1,5 +1,5 @@
 pragma solidity 0.4.18;
-import "../Tokens/StandardToken.sol";
+import "./StandardToken.sol";
 import "../Utils/Math.sol";
 
 
@@ -106,6 +106,14 @@ contract TokenTUL is StandardToken {
         withdrawalTime = unlockedTULs[msg.sender].withdrawalTime;
     }
 
+    function withdrawUnlockedTokens()
+    public
+    {
+        require(unlockedTULs[msg.sender].withdrawalTime < now);
+        balances[msg.sender] += unlockedTULs[msg.sender].amountUnlocked;
+        unlockedTULs[msg.sender].amountUnlocked = 0;
+    }
+    
     function getLockedAmount(
         address user
     )

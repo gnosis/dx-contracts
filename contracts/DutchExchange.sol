@@ -3,6 +3,7 @@ pragma solidity ^0.4.18;
 import "./Utils/Math.sol";
 import "./Tokens/Token.sol";
 import "./Tokens/TokenTUL.sol";
+import "./Tokens/TokenOWL.sol";
 import "./Oracle/PriceOracleInterface.sol";  
 
 /// @title Dutch Exchange - exchange token pairs with the clever mechanism of the dutch auction
@@ -578,7 +579,20 @@ contract DutchExchange {
             price.den = (timeElapsed + 43200) * sellTokenPrice.den * buyTokenPrice.num;
         }
     }
-    
+
+    // > getPriceForJs()
+    function getPriceForJS(
+        address sellToken,
+        address buyToken,
+        uint auctionIndex
+    )
+    public
+    constant
+    returns (uint, uint) 
+    {
+        fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
+        return (price.num, price.den);
+    }
     // > clearAuction()
     /// @dev clears an Auction
     /// @param sellToken sellToken of the auction
@@ -773,6 +787,19 @@ contract DutchExchange {
     }
 
     // > testing fns
+
+    // > getPriceOracleForJs()
+    function getPriceOracleForJS(
+        address token
+    )
+    public
+    constant
+    returns (uint, uint) 
+    {
+        fraction memory price = priceOracle(token);
+        return (price.num, price.den);
+    }
+
     function testing(address token)
     public
     returns(uint){

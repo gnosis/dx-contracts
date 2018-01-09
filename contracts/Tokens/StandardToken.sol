@@ -1,5 +1,5 @@
 pragma solidity 0.4.18;
-import "../Tokens/Token.sol";
+import "./Token.sol";
 import "../Utils/Math.sol";
 
 

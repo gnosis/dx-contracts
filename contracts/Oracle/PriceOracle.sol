@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
 
-import "./../DutchExchange/DutchExchangeInterface.sol";
-import "./../Utils/Math.sol";
+import "../DutchExchange/DutchExchangeInterface.sol";
+import "../Utils/Math.sol";
 
 contract PriceOracle {
     using Math for *;
