@@ -60,6 +60,8 @@ contract('DutchExchange', (accounts) => {
     )
   })
 
+  after(eventWatcher.stopWatching)
+
   it('Buys tokens at the 2:1 price', async () => {
     eventWatcher(dx, 'NewTokenPair', {})
     
@@ -141,6 +143,8 @@ contract('DutchExchange', (accounts) => {
     )
   })
 
+  after(eventWatcher.stopWatching)
+
   it('process two auctions one after the other in one pair only', async () => {
     let auctionIndex
 
@@ -201,6 +205,8 @@ contract('DutchExchange', (accounts) => {
       { from: seller1 },
     )
   })
+
+  after(eventWatcher.stopWatching)
 
   it('test a trade on the opposite pair', async () => {
     let auctionIndex
