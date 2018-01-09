@@ -84,10 +84,12 @@ contract('DutchExchange', (accounts) => {
     RETURNED  = ${returned}
     TULIPS    = ${tulips}
     `)
+
+    assert.equal(returned, tulips, 'for ETH -> * pair returned tokens should equal tulips minted')
     
-    // const { receipt: { logs } } = await claimBuyerFunds(eth, gno, false, false, seller1)
-    // console.log(logs ? '\tCLAIMING FUNDS SUCCESSFUL' : 'CLAIM FUNDS FAILED')
-    // console.log(logs)
+    const { receipt: { logs } } = await claimBuyerFunds(eth, gno, false, false, seller1)
+    console.log(logs ? '\tCLAIMING FUNDS SUCCESSFUL' : 'CLAIM FUNDS FAILED')
+    console.log(logs)
 
     const buyVolumes = (await dx.buyVolumes.call(eth.address, gno.address)).toNumber()
     console.log(`
@@ -95,8 +97,18 @@ contract('DutchExchange', (accounts) => {
     `)
 
     const tulFunds = (await tokenTUL.balanceOf.call(seller1)).toNumber()
+    const lockedTulFunds = (await tokenTUL.getLockedAmount.call(seller1)).toNumber()
+    const newBalance = (await dx.balances.call(eth.address, seller1)).toNumber()
     console.log(`
     USER'S TUL AMT = ${tulFunds}
+    USER'S LOCKED TUL AMT = ${lockedTulFunds}
+
+    USER'S ETH AMT = ${newBalance}
     `)
+
+    // due to passage of time(stamp)
+    assert.isAtLeast(lockedTulFunds, tulips, 'final tulip tokens are slightly > than calculated from dx.claimBuyerFunds.call')
+
+    assert.equal(newBalance, lockedTulFunds, 'for ETH -> * pair returned tokens should equal tulips minted')
   })
 })
