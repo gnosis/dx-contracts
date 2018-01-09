@@ -394,7 +394,11 @@ contract DutchExchange {
             return;
         }
 
+        LogNumber('amount', amount);
+
         amount = Math.min(amount, balances[buyToken][msg.sender]);
+
+        LogNumber('amount', amount);
         
         // Overbuy is when a part of a buy order clears an auction
         // In that case we only process the part before the overbuy
@@ -402,7 +406,7 @@ contract DutchExchange {
         fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
         uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
         uint buyVolume = buyVolumes[sellToken][buyToken];
-        uint outstandingVolume = Math.max(0, sellVolume * price.num / price.den - buyVolume);
+        uint outstandingVolume = Math.atleastZero(int(sellVolume * price.num / price.den - buyVolume));
 
         fraction memory feeRatio = calculateFeeRatio(msg.sender);
 
@@ -414,11 +418,15 @@ contract DutchExchange {
 
         if (amount > 0) {
             uint amountAfterFee = settleFee(buyToken, sellToken, auctionIndex, msg.sender, amount);
+            LogNumber('amountAfterFee', amountAfterFee);
             // Update variables
             balances[buyToken][msg.sender] -= amount;
             buyerBalances[sellToken][buyToken][auctionIndex][msg.sender] += amountAfterFee;
             buyVolumes[sellToken][buyToken] += amountAfterFee;
-            outstandingVolume -= amountAfterFee;
+            LogNumber('buyVolumes', buyVolumes[sellToken][buyToken]);
+            // TODO
+            outstandingVolume = Math.atleastZero(int(outstandingVolume - amountAfterFee));
+            LogNumber('outstandingVolume', outstandingVolume);
             NewBuyOrder(sellToken, buyToken, msg.sender, auctionIndex, amount);
         }
 
@@ -621,6 +629,8 @@ contract DutchExchange {
 
         uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
 
+        LogNumber('buyerBalance', buyerBalance);
+
         fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
 
         if (price.num == 0) {
@@ -671,11 +681,11 @@ contract DutchExchange {
 
             // If we're calling the function into an unstarted auction,
             // it will return the starting price of that auction
-            uint timeElapsed = Math.max(0, now - getAuctionStart(sellToken, buyToken));
+            uint timeElapsed = Math.atleastZero(int(now - getAuctionStart(sellToken, buyToken)));
 
             // The numbers below are chosen such that
             // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
-            price.num = Math.max(0, (86400 - timeElapsed) * sellTokenPrice.num * buyTokenPrice.den);
+            price.num = Math.atleastZero(int((86400 - timeElapsed) * sellTokenPrice.num * buyTokenPrice.den));
             price.den = (timeElapsed + 43200) * sellTokenPrice.den * buyTokenPrice.num;
         }
     }
@@ -708,6 +718,7 @@ contract DutchExchange {
     {
         // Update closing prices
         uint buyVolume = buyVolumes[sellToken][buyToken];
+        LogNumber('buyVolume', buyVolume);
         closingPrices[sellToken][buyToken][auctionIndex] = fraction(buyVolume, sellVolume);
 
         fraction memory opp = closingPrices[buyToken][sellToken][auctionIndex];
@@ -1081,6 +1092,11 @@ contract DutchExchange {
     );
 
     event Log(
-        string logString
+        string l
+    );
+
+    event LogNumber(
+        string l,
+        uint n
     );
 }

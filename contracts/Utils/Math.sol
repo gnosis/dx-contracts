@@ -349,14 +349,14 @@ library Math {
         }
     }
 
-    function max(uint a, uint b)
+    function atleastZero(int a)
         public
         returns (uint)
     {
-        if (a < b) {
-            return b;
+        if (a < 0) {
+            return 0;
         } else {
-            return a;
+            return uint(a);
         }
     }
 }

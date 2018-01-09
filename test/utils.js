@@ -18,6 +18,10 @@ const timestamp = (block = 'latest') => web3.eth.getBlock(block).timestamp
 
 const logger = async (desc, fn) => console.log(`---- \n => ${desc} ${fn ? `|| - - - - - - - - - -  - > ${fn}` : ''}`)
 
+const varLogger = (varName, varValue) => {
+  console.log(varName, '--->', varValue)
+}
+
 // keeps track of watched events
 let stopWatching = {}
 /**
@@ -89,10 +93,19 @@ eventWatcher.stopWatching = (contract, event) => {
   }
 }
 
+const wait = seconds => web3.currentProvider.send({
+  jsonrpc: '2.0',
+  method: 'evm_increaseTime',
+  params: [seconds] || [],
+  id: new Date().getTime(),
+})
+
 module.exports = {
   assertRejects,
   blockNumber,
   eventWatcher,
   logger,
+  varLogger,
+  wait,
   timestamp,
 }

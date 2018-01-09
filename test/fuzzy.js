@@ -107,7 +107,7 @@ async function updateApprovalOfToken() {
 async function postSellOrder(Ts, Tb, u, aI, am) {
   let expectToPass = true
   let i = 0
-  while (expectToPass && i < 2) {
+  while (expectToPass && i < 3) {
     expectToPass = await postSellOrderConditions(i, Ts, Tb, u, aI, am)
     i++
   }
@@ -158,10 +158,21 @@ async function anotherTransaction(accounts, t, j) {
 async function postSellOrderConditions(i, Ts, Tb, u, aI, am) {
   if (i == 0) {
     const bal = (await dx.balances(Ts, u)).toNumber()
-    if (am > bal) { console.log('failed at 1st case'); return false }
+    if (am > bal) { log(i); return false }
   } else if (i == 1) {
     const lAI = (await dx.getAuctionIndex(Ts, Tb)).toNumber()
-    if (aI !== lAI) { console.log('failed at 2nd case'); return false }
+    if (aI !== lAI) { log(i); return false }
+  } else if (i == 2) {
+    const aS = (await dx.getAuctionStart(Ts, Tb)).toNumber()
+    const time = web3.eth.getBlock('latest').timestamp
+
+    const lAI = (await dx.getAuctionIndex(Ts, Tb)).toNumber()
+
+    if (time < aS || aS === 1) {
+      if (aI !== lAI) { log(i); return false }
+    } else {
+      if (aI !== lAI + 1) { log(i); return false }
+    }
   }
 
   return true

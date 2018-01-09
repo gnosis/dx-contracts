@@ -1,6 +1,6 @@
 /* eslint prefer-const:0, max-len:0, object-curly-newline:1, no-param-reassign:0, no-console:0 */
 const { wait } = require('@digix/tempo')(web3)
-const { timestamp } = require('./utils')
+const { timestamp, varLogger } = require('./utils')
 
 const MaxRoundingError = 100000
 
@@ -115,18 +115,27 @@ const checkBalanceBeforeClaim = async (
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno } = await getContracts()
   sellToken = sellToken || eth; buyToken = buyToken || gno
 
-  if (claiming === 'buyer') {
-    // const auctionIndex = await getAuctionIndex()
-    const balanceBeforeClaim = (await dx.balances.call(sellToken.address, acct)).toNumber()
-    await dx.claimBuyerFunds(sellToken.address, buyToken.address, acct, idx)
-    console.log(`${balanceBeforeClaim}-->${amt}-->-->${(await dx.balances.call(sellToken.address, acct)).toNumber()}`)
-    assert.equal(Math.abs(balanceBeforeClaim + amt - (await dx.balances.call(sellToken.address, acct)).toNumber()) < round, true)
-  } else {
-    const balanceBeforeClaim = (await dx.balances.call(buyToken.address, acct)).toNumber()
-    await dx.claimSellerFunds(sellToken.address, buyToken.address, acct, idx)
-    console.log(`${balanceBeforeClaim}-->${amt}-->-->${(await dx.balances.call(buyToken.address, acct)).toNumber()}`)
-    assert.equal(Math.abs(balanceBeforeClaim + amt - (await dx.balances.call(buyToken.address, acct)).toNumber()) < round, true)
+  let token = sellToken
+  if (claiming === 'seller') {
+    token = buyToken
   }
+
+  const balanceBeforeClaim = (await dx.balances.call(token.address, acct)).toNumber()
+
+  if (claiming == 'buyer') {
+    await dx.claimBuyerFunds(sellToken.address, buyToken.address, acct, idx)
+  } else {
+    await dx.claimSellerFunds(sellToken.address, buyToken.address, acct, idx)
+  }
+  
+  const balanceAfterClaim = (await dx.balances.call(token.address, acct)).toNumber()
+  const difference = Math.abs(balanceBeforeClaim + amt - balanceAfterClaim)
+  varLogger('claiming for', claiming)
+  varLogger('balanceBeforeClaim', balanceBeforeClaim);
+  varLogger('amount', amt)
+  varLogger('balanceAfterClaim', balanceAfterClaim)
+  varLogger('difference', difference)
+  assert.equal(difference < round, true)
 }
 
 const getAuctionIndex = async (sell, buy) => {
