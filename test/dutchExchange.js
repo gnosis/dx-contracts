@@ -218,9 +218,9 @@ contract('DutchExchange', (accounts) => {
     auctionIndex = await getAuctionIndex()
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer1 })
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
-    console.log('this one isnt working right?',);
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    console.log('this one isnt working right?')
+    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
     await dx.postBuyOrder(gno.address, eth.address, auctionIndex, 10 ** 7 * 25, { from: seller2 })
     logger('startingReclaiming')
     logger('dx.getPrice.num eth gno', await dx.testing2.call(eth.address, gno.address, auctionIndex))
