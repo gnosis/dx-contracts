@@ -538,9 +538,8 @@ contract DutchExchange {
         uint auctionIndex
     )
         public
-        returns (uint returned, uint tulipsIssued)
+        returns (uint returned, uint tulipsToIssue)
     {
-        uint tulipsToIssue;
         (returned, tulipsToIssue) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
 
         //R1
@@ -564,7 +563,7 @@ contract DutchExchange {
 
         if (tulipsToIssue > 0) {
             // Issue TUL
-            TokenTUL(TUL).mintTokens(user, tulipsIssued);
+            TokenTUL(TUL).mintTokens(user, tulipsToIssue);
         }
 
         // Claim tokens
