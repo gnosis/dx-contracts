@@ -91,8 +91,8 @@ eventWatcher.stopWatching = (contract, event) => {
 
 module.exports = {
   assertRejects,
-  timestamp,
   blockNumber,
-  logger,
   eventWatcher,
+  logger,
+  timestamp,
 }

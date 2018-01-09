@@ -24,6 +24,7 @@ let dx
 let oracle
 let tokenTUL
 
+
 let contracts
 
 const setupContracts = async () => {
@@ -109,9 +110,10 @@ contract('DutchExchange', (accounts) => {
     await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 ** 9 - 10 ** 9 / 200))
 
     // claim Sellerfunds
-    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 * 2 - 10 ** 9 / 100 * 2 / 2))
+    // await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 * 2 - 10 ** 9 / 100 * 2 / 2))
   })
 })
+
 
 contract('DutchExchange', (accounts) => {
   const [, seller1, seller2, buyer1, buyer2] = accounts
