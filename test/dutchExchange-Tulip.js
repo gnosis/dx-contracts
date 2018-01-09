@@ -115,7 +115,7 @@ contract('DutchExchange', (accounts) => {
     assert.equal(newBalance, lockedTulFunds, 'for ETH -> * pair returned tokens should equal tulips minted')
   })
   it('user can lock tokens and only unlock them 24 hours later', async () => {
-    const [unlockedFunds, withdrawTime] = (await tokenTUL.unlockedTULs.call(user)).map(n => n.toNumber())    
+    let [unlockedFunds, withdrawTime] = (await tokenTUL.unlockedTULs.call(user)).map(n => n.toNumber())    
     console.log(`
     AMT OF UNLOCKED FUNDS  = ${unlockedFunds}
     TIME OF WITHDRAWAL     = ${withdrawTime}
@@ -125,12 +125,22 @@ contract('DutchExchange', (accounts) => {
     assert.equal(withdrawTime, 0, 'Withdraw time should be 0 ')
 
     // lock tokens - arbitarily high amt to force Math.min
-    await tokenTUL.lockTokens(50000000, { from: user })
-    const totalAmtLocked = (await tokenTUL.lockTokens.call(50000000, { from: user })).toNumber()
+    await tokenTUL.lockTokens(userTulips, { from: user })
+    const totalAmtLocked = (await tokenTUL.lockTokens.call(userTulips, { from: user })).toNumber()
     console.log(`
     TOKENS LOCKED           = ${totalAmtLocked}
     `)
-
     assert.equal(totalAmtLocked, userTulips, 'Total locked tulips should equal total user balance of tulips')
+
+    // unlock Tokens
+    await tokenTUL.unlockTokens(userTulips, { from: user });
+    ([unlockedFunds, withdrawTime] = (await tokenTUL.unlockTokens.call(userTulips, { from: user })).map(t => t.toNumber()))
+    console.log(`
+    AMT OF UNLOCKED FUNDS  = ${unlockedFunds}
+    TIME OF WITHDRAWAL     = ${withdrawTime}
+    `)
+    assert.equal(unlockedFunds, userTulips, 'unlockedFunds should be = userTulips')
+    // assert withdrawTime === now (in seconds) + 24 hours (in seconds) 
+    assert.equal(withdrawTime, timestamp() + (24 * 3600), 'Withdraw time should be 0 ')
   })
 })
