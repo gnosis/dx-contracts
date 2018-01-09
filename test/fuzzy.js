@@ -51,25 +51,37 @@ async function updateApprovalOfToken() { //eslint-disable-line
 }
 
 async function postSellOrderConditions(i, Ts, Tb, u, aI, am) {
-  if (i === 0) {
-    const bal = (await dx.balances(Ts, u)).toNumber()
-    if (am > bal) { log(i); return false }
-  } else if (i === 1) {
-    const lAI = (await dx.getAuctionIndex(Ts, Tb)).toNumber()
-    if (aI !== lAI) { log(i); return false }
-  } else if (i === 2) {
-    const aS = (await dx.getAuctionStart(Ts, Tb)).toNumber()
-    const time = web3.eth.getBlock('latest').timestamp
-
-    const lAI = (await dx.getAuctionIndex(Ts, Tb)).toNumber()
-
-    if (time < aS || aS === 1) {
+  switch (i) {
+    case 0:
+    {
+      const bal = (await dx.balances(Ts, u)).toNumber()
+      if (am > bal) { log(i); return false }
+      break
+    }
+    case 1:
+    {
+      const lAI = (await dx.getAuctionIndex(Ts, Tb)).toNumber()
       if (aI !== lAI) { log(i); return false }
-    } else if (aI !== lAI + 1) { log(i); return false }
+      break
+    }
+    case 2:
+    {
+      const aS = (await dx.getAuctionStart(Ts, Tb)).toNumber()
+      const time = web3.eth.getBlock('latest').timestamp
+
+      const lAI = (await dx.getAuctionIndex(Ts, Tb)).toNumber()
+
+      if (time < aS || aS === 1) {
+        if (aI !== lAI) { log(i); return false }
+      } else if (aI !== lAI + 1) { log(i); return false }
+      break
+    }
+    default:
   }
 
   return true
 }
+
 /**
  * async postBuyOrderConditions
  * @param {*} i   = index
@@ -80,28 +92,39 @@ async function postSellOrderConditions(i, Ts, Tb, u, aI, am) {
  * @param {*} am  = ???
  */
 async function postBuyOrderConditions(i, Ts, Tb, u, aI, am) { //eslint-disable-line
-  // await doesn't work with switch()...
-  if (i === 0) {
-    const aS = (await dx.getAuctionStart(Ts, Tb)).toNumber()
-    const time = web3.eth.getBlock('latest').timestamp
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-    console.log('aS, time', aS, time)
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-    if (aS > time) { log(i); return false }
-  } else if (i === 1) {
-    if (aI <= 0) { log(i); return false }
-  } else if (i === 2) {
-    const lAI = (await dx.getAuctionIndex(Ts, Tb)).toNumber()
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-    console.log('lAI', lAI)
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-    if (aI !== lAI) { log(i); return false }
-  } else if (i === 3) {
-    const cP = (await dx.closingPrices(Ts, Tb, aI)).map(x => x.toNumber())
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-    console.log('cP', cP)
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-    if (cP[0] !== 0) { log(i); return false }
+  switch (i) {
+    case 0:
+    {
+      const aS = (await dx.getAuctionStart(Ts, Tb)).toNumber()
+      const time = web3.eth.getBlock('latest').timestamp
+      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+      console.log('aS, time', aS, time)
+      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+      if (aS > time) { log(i); return false }
+      break
+    }
+    case 1:
+      if (aI <= 0) { log(i); return false }
+      break
+    case 2:
+    {
+      const lAI = (await dx.getAuctionIndex(Ts, Tb)).toNumber()
+      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+      console.log('lAI', lAI)
+      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+      if (aI !== lAI) { log(i); return false }
+      break
+    }
+    case 3:
+    {
+      const cP = (await dx.closingPrices(Ts, Tb, aI)).map(x => x.toNumber())
+      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+      console.log('cP', cP)
+      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+      if (cP[0] !== 0) { log(i); return false }
+      break
+    }
+    default:
   }
 
   return true
