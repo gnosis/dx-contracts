@@ -42,8 +42,10 @@ const setupContracts = async () => {
 
 contract('DutchExchange', (accounts) => {
   const [master, seller1, , buyer1] = accounts
+  const user = seller1
+  let userTulips
 
-  beforeEach(async () => {
+  before(async () => {
     // get contracts
     await setupContracts()
 
@@ -71,23 +73,24 @@ contract('DutchExchange', (accounts) => {
   })
 
   it('testing Tulip Token', async () => {
-    // eventWatcher(dx, 'NewTokenPair', {})
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
 
     // post buy order
-    await postBuyOrder(eth, gno, false, 10 ** 9, seller1)
+    await postBuyOrder(eth, gno, false, 10 ** 9, user)
 
     const aucIdx = await getAuctionIndex()
-    const [returned, tulips] = (await dx.claimBuyerFunds.call(eth.address, gno.address, seller1, aucIdx)).map(amt => amt.toNumber())
+    const [returned, tulips] = (await dx.claimBuyerFunds.call(eth.address, gno.address, user, aucIdx)).map(amt => amt.toNumber())
+    // set global tulips state
+    userTulips = tulips
     console.log(`
     RETURNED  = ${returned}
-    TULIPS    = ${tulips}
+    TULIPS    = ${userTulips}
     `)
 
     assert.equal(returned, tulips, 'for ETH -> * pair returned tokens should equal tulips minted')
     
-    const { receipt: { logs } } = await claimBuyerFunds(eth, gno, false, false, seller1)
+    const { receipt: { logs } } = await claimBuyerFunds(eth, gno, false, false, user)
     console.log(logs ? '\tCLAIMING FUNDS SUCCESSFUL' : 'CLAIM FUNDS FAILED')
     console.log(logs)
 
@@ -96,9 +99,9 @@ contract('DutchExchange', (accounts) => {
     CURRENT ETH//GNO bVolume = ${buyVolumes}
     `)
 
-    const tulFunds = (await tokenTUL.balanceOf.call(seller1)).toNumber()
-    const lockedTulFunds = (await tokenTUL.getLockedAmount.call(seller1)).toNumber()
-    const newBalance = (await dx.balances.call(eth.address, seller1)).toNumber()
+    const tulFunds = (await tokenTUL.balanceOf.call(user)).toNumber()
+    const lockedTulFunds = (await tokenTUL.getLockedAmount.call(user)).toNumber()
+    const newBalance = (await dx.balances.call(eth.address, user)).toNumber()
     console.log(`
     USER'S TUL AMT = ${tulFunds}
     USER'S LOCKED TUL AMT = ${lockedTulFunds}
@@ -110,5 +113,24 @@ contract('DutchExchange', (accounts) => {
     assert.isAtLeast(lockedTulFunds, tulips, 'final tulip tokens are slightly > than calculated from dx.claimBuyerFunds.call')
 
     assert.equal(newBalance, lockedTulFunds, 'for ETH -> * pair returned tokens should equal tulips minted')
+  })
+  it('user can lock tokens and only unlock them 24 hours later', async () => {
+    const [unlockedFunds, withdrawTime] = (await tokenTUL.unlockedTULs.call(user)).map(n => n.toNumber())    
+    console.log(`
+    AMT OF UNLOCKED FUNDS  = ${unlockedFunds}
+    TIME OF WITHDRAWAL     = ${withdrawTime}
+    `)
+
+    assert.equal(unlockedFunds, 0, 'unlockedFunds should be 0')
+    assert.equal(withdrawTime, 0, 'Withdraw time should be 0 ')
+
+    // lock tokens - arbitarily high amt to force Math.min
+    await tokenTUL.lockTokens(50000000, { from: user })
+    const totalAmtLocked = (await tokenTUL.lockTokens.call(50000000, { from: user })).toNumber()
+    console.log(`
+    TOKENS LOCKED           = ${totalAmtLocked}
+    `)
+
+    assert.equal(totalAmtLocked, userTulips, 'Total locked tulips should equal total user balance of tulips')
   })
 })
