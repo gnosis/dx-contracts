@@ -371,6 +371,13 @@ contract DutchExchange {
     {
         uint auctionStart = getAuctionStart(sellToken, buyToken);
 
+
+        // R4: auction must not have cleared
+        // require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
+        if (closingPrices[sellToken][buyToken][auctionIndex].den > 0) {
+            Log('postBuyOrder R4');
+            return;
+        }
         // R1
         // require(getAuctionStart(sellToken, buyToken) <= now);
         if (auctionStart > now) {
@@ -389,12 +396,7 @@ contract DutchExchange {
             Log('postBuyOrder R3');
             return;
         }
-        // R4: auction must not have cleared
-        // require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
-        if (closingPrices[sellToken][buyToken][auctionIndex].den > 0) {
-            Log('postBuyOrder R4');
-            return;
-        }
+        
 
         // R5: auction must not be in waiting period
         // require(auctionStart > 1);
