@@ -181,9 +181,6 @@ contract DutchExchange {
         closingPrices[token1][token2][0] = fraction(initialClosingPriceNum, initialClosingPriceDen);
         closingPrices[token2][token1][0] = fraction(initialClosingPriceDen, initialClosingPriceNum);
 
-        // clearAuction(token2, token1, 1, 0);
-        // closingPrices[token2][token1][1] = fraction(0, 0);
-
         addTokenPair2(token1, token2, token1Funding, token2Funding);
     }
 
@@ -200,17 +197,14 @@ contract DutchExchange {
         balances[token2][msg.sender] -= token2Funding;
 
         //Fee mechanism, fees are added to extraTokens
-        uint token1FundingAfterFee = settleFee(token1, token2, 0, msg.sender, token1Funding);
-        uint token2FundingAfterFee = settleFee(token2, token1, 0, msg.sender, token2Funding);
+        uint token1FundingAfterFee = settleFee(token1, token2, 1, msg.sender, token1Funding);
+        uint token2FundingAfterFee = settleFee(token2, token1, 1, msg.sender, token2Funding);
 
         // // Update other variables
         sellVolumesCurrent[token1][token2] = token1FundingAfterFee;
         sellVolumesCurrent[token2][token1] = token2FundingAfterFee;
         sellerBalances[token1][token2][1][msg.sender] = token1FundingAfterFee;
         sellerBalances[token2][token1][1][msg.sender] = token2FundingAfterFee;
-
-        fraction memory a;
-        LogNumber(a.num, a.den);
         
         setAuctionStart(token1, token2, 6 hours);
         NewTokenPair(token1, token2);
@@ -262,6 +256,7 @@ contract DutchExchange {
         uint auctionStart = getAuctionStart(sellToken, buyToken);
         if (now < auctionStart || auctionStart == 1) {
             // C1: We are in the 10 minute buffer period
+            // OR waiting for an auction to receive sufficient sellVolume
             // Auction has already cleared, and index has been incremented
             // sell order must use that auction index
             require(auctionIndex == latestAuctionIndex);
@@ -662,8 +657,7 @@ contract DutchExchange {
 
             if (amountOfOWLBurned > 0) {
                 balances[OWL][msg.sender] -= amountOfOWLBurned;
-                // TODO: uncomment line below ;)
-                // TokenOWL(OWL).burnOWL(amountOfOWLBurned);
+                TokenOWL(OWL).burnOWL(amountOfOWLBurned);
 
                 // Adjust fee
                 fee -= amountOfOWLBurned * fee / feeInUSD;
@@ -955,10 +949,5 @@ contract DutchExchange {
 
     event Log(
         string logString
-    );
-
-    event LogNumber(
-        uint a,
-        uint b
     );
 }
