@@ -19,7 +19,7 @@ const timestamp = (block = 'latest') => web3.eth.getBlock(block).timestamp
 const logger = async (desc, fn) => console.log(`---- \n => ${desc} ${fn ? `|| - - - - - - - - - -  - > ${fn}` : ''}`)
 
 // keeps track of watched events
-const stopWatching = {}
+let stopWatching = {}
 /**
  * eventWatcher                - ...watches events
  * @param {contract} contract  - dx, usually
@@ -29,7 +29,7 @@ const stopWatching = {}
  */
 const eventWatcher = (contract, event, args) => {
   const eventObject = contract[event](args).watch((err, result) => err ? console.log(err) : console.log('Found', result))
-  const contractEvents = stopWatching[contract] || (stopWatching[contract] = {})
+  const contractEvents = stopWatching[contract.address] || (stopWatching[contract.address] = {})
   const unwatch = contractEvents[event] = eventObject.stopWatching.bind(eventObject)
 
   return unwatch
@@ -44,8 +44,8 @@ const eventWatcher = (contract, event, args) => {
  */
 eventWatcher.stopWatching = (contract, event) => {
   // if given particular event name, stop watching it
-  if (contract && typeof contract === 'object') {
-    const contractEvents = stopWatching[contract]
+  if (contract && typeof contract === 'object' && contract.address) {
+    const contractEvents = stopWatching[contract.address]
 
     if (!contractEvents) {
       console.log('contract was never watched')
@@ -58,7 +58,7 @@ eventWatcher.stopWatching = (contract, event) => {
       for (const ev of Object.keys(contractEvents)) {
         contractEvents[ev]()
       }
-      delete stopWatching[contract]
+      delete stopWatching[contract.address]
       return
     }
 
@@ -80,8 +80,8 @@ eventWatcher.stopWatching = (contract, event) => {
     for (const ev of Object.keys(contractEvents)) {
       contractEvents[ev]()
     }
-    delete stopWatching[key]
   }
+  stopWatching = {}
 
   // allow to be used as a direct input to mocha hooks (contract === done callback)
   if (typeof contract === 'function') {
