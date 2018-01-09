@@ -94,12 +94,22 @@ eventWatcher.stopWatching = (contract, event) => {
   }
 }
 
-const wait = seconds => web3.currentProvider.send({
-  jsonrpc: '2.0',
-  method: 'evm_increaseTime',
-  params: [seconds] || [],
-  id: new Date().getTime(),
-})
+const wait = (seconds) => {
+  const id = Date.now()
+  web3.currentProvider.send({
+    jsonrpc: '2.0',
+    method: 'evm_increaseTime',
+    params: [seconds] || [],
+    id,
+  })
+
+  web3.currentProvider.send({
+    jsonrpc: '2.0',
+    method: 'evm_mine',
+    params: [],
+    id: id + 1,
+  })
+}
 
 module.exports = {
   assertRejects,
