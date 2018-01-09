@@ -357,7 +357,7 @@ contract DutchExchange {
             scheduleNextAuction(sellToken, buyToken);
         }
 
-        NewSellOrder(sellToken, buyToken, msg.sender, auctionIndex, amount);
+        NewSellOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
     }
 
     // > postBuyOrder()
@@ -689,8 +689,8 @@ contract DutchExchange {
             price.num = Math.atleastZero(int((86400 - timeElapsed) * sellTokenPrice.num * buyTokenPrice.den));
             price.den = (timeElapsed + 43200) * sellTokenPrice.den * buyTokenPrice.num;
 
-            if (price.num*sellVolumesCurrent[sellToken][buyToken] <= price.den * buyVolume[sellToken][buyToken]) {
-                price.num = buyVolume[sellToken][buyToken];
+            if (price.num*sellVolumesCurrent[sellToken][buyToken] <= price.den * buyVolumes[sellToken][buyToken]) {
+                price.num = buyVolumes[sellToken][buyToken];
                 price.den = sellVolumesCurrent[sellToken][buyToken];
             }
         }
@@ -757,6 +757,8 @@ contract DutchExchange {
             setAuctionIndex(sellToken, buyToken);
             // Check if next auction can be scheduled
             scheduleNextAuction(sellToken, buyToken);
+            AuctionCleared(buyToken, sellToken, 0, 0, auctionIndex);
+
         }
 
         AuctionCleared(sellToken, buyToken, sellVolume, buyVolume, auctionIndex);
