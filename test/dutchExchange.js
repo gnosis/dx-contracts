@@ -310,31 +310,32 @@ contract('DutchExchange', (accounts) => {
     })
   })
 
-  it('can deposit the right amout ', async () => {
-    testingAccs.forEach(async (acc) => {
-      const depositETH = 100
-      const depositGNO = 200
+  it('can deposit the right amout ', async () => Promise.all(testingAccs.map(async (acc) => {
+    const depositETH = 100
+    const depositGNO = 200
 
-      // make sure we don't deposit more than available
-      assert.isBelow(depositETH, ETHBalance, 'trying to deposit more ETH than available')
-      assert.isBelow(depositGNO, GNOBalance, 'trying to deposit more GNO than available')
+    // make sure we don't deposit more than available
+    assert.isBelow(depositETH, ETHBalance, 'trying to deposit more ETH than available')
+    assert.isBelow(depositGNO, GNOBalance, 'trying to deposit more GNO than available')
 
-      logger(`${acc} depositing\t${depositETH} ETH,\t${depositGNO} GNO`)
+    logger(`${acc} depositing\t${depositETH} ETH,\t${depositGNO} GNO`)
 
-      await dx.deposit(eth.address, depositETH, { from: acc })
-      await dx.deposit(gno.address, depositGNO, { from: acc })
+    await dx.deposit(eth.address, depositETH, { from: acc })
+    await dx.deposit(gno.address, depositGNO, { from: acc })
 
-      const { ETH: ETHDep, GNO: GNODep } = await getAccDeposits(acc)
+    const { ETH: ETHDep, GNO: GNODep } = await getAccDeposits(acc)
 
-      logger(`${acc} deposits:\t${ETHDep} ETH,\t${GNODep} GNO`)
-      // all deposits got accepted
-      assert.strictEqual(ETHDep, depositETH, 'new ETH balance in auction should be equal to deposited amount')
-      assert.strictEqual(GNODep, depositGNO, 'new GNO balance in auction should be equal to deposited amount')
+    logger(`${acc} deposits:\t${ETHDep} ETH,\t${GNODep} GNO`)
+    // all deposits got accepted
+    assert.strictEqual(ETHDep, depositETH, 'new ETH balance in auction should be equal to deposited amount')
+    assert.strictEqual(GNODep, depositGNO, 'new GNO balance in auction should be equal to deposited amount')
 
-      const { ETH: ETHBal, GNO: GNOBal } = await getAccBalances(acc)
-      // deposit amounts got correctly subtracted from account balances
-      assert.strictEqual(ETHDep, ETHBalance - ETHBal, `${acc}'s ETH balance should decrease by the amount deposited`)
-      assert.strictEqual(GNODep, GNOBalance - GNOBal, `${acc}'s GNO balance should decrease by the amount deposited`)
+    const { ETH: ETHBal, GNO: GNOBal } = await getAccBalances(acc)
+    // deposit amounts got correctly subtracted from account balances
+    assert.strictEqual(ETHDep, ETHBalance - ETHBal, `${acc}'s ETH balance should decrease by the amount deposited`)
+    assert.strictEqual(GNODep, GNOBalance - GNOBal, `${acc}'s GNO balance should decrease by the amount deposited`)
+  })))
+
   it('can withdraw the right amout ', async () => {
     testingAccs.forEach(async (acc) => {
       const withdrawETH = 90
