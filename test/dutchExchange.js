@@ -258,7 +258,7 @@ contract('DutchExchange', (accounts) => {
   
   const GNOBalance = 10 ** 18
 
-  beforeEach(async () => {
+  before(async () => {
     // get contracts
     contracts = await getContracts();
     // destructure contracts into upper state
@@ -277,9 +277,6 @@ contract('DutchExchange', (accounts) => {
       gno.transfer(acct, GNOBalance, { from: master }),
       gno.approve(dx.address, GNOBalance, { from: acct }),
     ])))
-  })
-
-  before(() => {
     eventWatcher(dx, 'NewDeposit')
     eventWatcher(dx, 'NewWithdrawal')
   })
