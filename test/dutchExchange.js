@@ -318,11 +318,34 @@ contract('DutchExchange', (accounts) => {
       await dx.deposit(eth.address, depositETH, { from: acc })
       await dx.deposit(gno.address, depositGNO, { from: acc })
 
+  it('can withdraw the right amout ', async () => {
+    testingAccs.forEach(async (acc) => {
+      const withdrawETH = 90
+      const withdrawGNO = 150
+
       const { ETH, GNO } = await getAccDeposits(acc)
 
-      logger(`${acc} deposits:\t${ETH} ETH,\t${GNO} GNO`)
-      assert.strictEqual(ETH, depositETH)
-      assert.strictEqual(GNO, depositGNO)
+      // make sure we don't withdraw more than available
+      assert.isBelow(withdrawETH, ETH, 'trying to withdraw more ETH than available')
+      assert.isBelow(withdrawGNO, GNO, 'trying to withdraw more ETH than available')
+
+      const { ETH: ETHDep1, GNO: GNODep1 } = await getAccDeposits(acc)
+      const { ETH: ETHBal1, GNO: GNOBal1 } = await getAccBalances(acc)
+
+      logger(`${acc} withdrawing\t${withdrawETH} ETH,\t${withdrawGNO} GNO`)
+
+      await dx.withdraw(eth.address, withdrawETH, { from: acc })
+      await dx.withdraw(gno.address, withdrawGNO, { from: acc })
+
+      const { ETH: ETHDep2, GNO: GNODep2 } = await getAccDeposits(acc)
+      const { ETH: ETHBal2, GNO: GNOBal2 } = await getAccBalances(acc)
+
+      logger(`${acc} deposits:\t${ETHDep2} ETH,\t${GNODep2} GNO`)
+      assert.strictEqual(ETHDep1 - ETHDep2, withdrawETH, 'ETH deposit should decrease by the amount withdrawn')
+      assert.strictEqual(GNODep1 - GNODep2, withdrawGNO, 'GNO deposit should decrease by the amount withdrawn')
+
+      assert.strictEqual(ETHBal2 - ETHBal1, withdrawETH, 'ETH balance should increase by the amount withdrawn')
+      assert.strictEqual(GNOBal2 - GNOBal1, withdrawGNO, 'GNO balance should increase by the amount withdrawn')
     })
   })
 
