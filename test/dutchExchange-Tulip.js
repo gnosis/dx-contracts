@@ -1,4 +1,4 @@
-/* eslint no-console:0, max-len:0, no-plusplus:0, no-mixed-operators:0, no-trailing-spaces:0 */
+/* eslint no-console:0, max-len:0, no-plusplus:0, no-mixed-operators:0, no-trailing-spaces:0, camelcase:0, no-multi-spaces:0 */
 
 const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 
@@ -10,12 +10,14 @@ const {
 
 const {
   checkBalanceBeforeClaim,
+  checkUserReceivesTulipTokens,
   claimBuyerFunds,
   getAuctionIndex,
   getContracts,
   postBuyOrder,
   setupTest,
   setAndCheckAuctionStarted,
+  unlockTulipTokens,
   waitUntilPriceIsXPercentOfPreviousPrice,
 } = require('./testFunctions')
 
@@ -40,18 +42,37 @@ const setupContracts = async () => {
   } = contracts)
 }
 
+const getBalance = async (acct, token) => ((await dx.balances.call(token.address, acct)).toNumber())
+
 contract('DutchExchange', (accounts) => {
-  const [master, seller1, , buyer1] = accounts
-  const user = seller1
-  let userTulips
+  const [master, seller1, seller2, buyer1, buyer2] = accounts
+  const initialBalancesAmount = 10 ** 9
+  // const user = seller1
+  // let userTulips
+  let seller1Balance, initialSellVolume 
 
   before(async () => {
     // get contracts
     await setupContracts()
 
+    /*
+     * SUB TEST 1: Check passed in ACCT has NO balances in DX for token passed in
+     */
+    seller1Balance = await getBalance(seller1, eth)
+    assert.equal(seller1Balance, 0, 'Seller1 should have 0 balance')
+
     // set up accounts and tokens[contracts]
     await setupTest(accounts, contracts)
-    
+
+    /*
+     * SUB TEST 2: Check passed in ACCT has NO balances in DX for token passed in
+     */
+    seller1Balance = await getBalance(seller1, eth)
+    assert.equal(seller1Balance, 10 ** 9, 'Seller1 should have 10 ** 9')
+
+    /*
+     * SUB TEST 3: assert both eth and gno get approved by DX
+     */
     // approve ETH
     await dx.updateApprovalOfToken(eth.address, true, { from: master })
     // approve GNO
@@ -60,87 +81,57 @@ contract('DutchExchange', (accounts) => {
     assert.equal(await dx.approvedTokens.call(eth.address), true, 'ETH is approved by DX')
     assert.equal(await dx.approvedTokens.call(gno.address), true, 'GNO is approved by DX')
 
+    /*
+     * SUB TEST 4: create new token pair and assert Seller1Balance = 0 after depositing more than Balance
+     */
     // add tokenPair ETH GNO
     await dx.addTokenPair(
       eth.address,
       gno.address,
-      10 ** 9,
-      0,
+      (10 ** 9 * 2),  // sellVolume for ETH - takes Math.min of amt passed in OR seller balance
+      0,              // buyVolume for GNO
       2,
       1,
       { from: seller1 },
     )
+    seller1Balance = await getBalance(seller1, eth)
+    assert.equal(seller1Balance, 0, 'Seller1 should have 0 balance after new Token Pair add')
   })
-
-  it('testing Tulip Token', async () => {
-    // ASSERT Auction has started
+  it('Check sellVolume', async () => {
+    const sellVolumes = (await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber()
+    const svFee = initialBalancesAmount * 0.005
+    console.log(`
+    SELLVOLUMES === ${sellVolumes}
+    FEE         === ${svFee}
+    `)
+    assert.equal(sellVolumes, initialBalancesAmount - svFee, 'sellVolumes === seller1Balance')
+  })
+  it('Buyer2 postBuyOrder + claim', async () => {
+    /*
+     * SUB TEST 1: MOVE TIME AFTER SCHEDULED AUCTION START TIME && ASSERT AUCTION-START =TRUE
+     */
     await setAndCheckAuctionStarted(eth, gno)
 
+    /*
+     * SUB TEST 2: POSTBUYORDER - CHECK RETURNED = TULIPS VIA CLAIMBUYERFUNDS.CALL()
+     */
     // post buy order
-    await postBuyOrder(eth, gno, false, 10 ** 9, user)
-
-    const aucIdx = await getAuctionIndex()
-    const [returned, tulips] = (await dx.claimBuyerFunds.call(eth.address, gno.address, user, aucIdx)).map(amt => amt.toNumber())
-    // set global tulips state
-    userTulips = tulips
-    console.log(`
-    RETURNED  = ${returned}
-    TULIPS    = ${userTulips}
-    `)
-
-    assert.equal(returned, tulips, 'for ETH -> * pair returned tokens should equal tulips minted')
-    
-    const { receipt: { logs } } = await claimBuyerFunds(eth, gno, false, false, user)
-    console.log(logs ? '\tCLAIMING FUNDS SUCCESSFUL' : 'CLAIM FUNDS FAILED')
-    console.log(logs)
-
-    const buyVolumes = (await dx.buyVolumes.call(eth.address, gno.address)).toNumber()
-    console.log(`
-    CURRENT ETH//GNO bVolume = ${buyVolumes}
-    `)
-
-    const tulFunds = (await tokenTUL.balanceOf.call(user)).toNumber()
-    const lockedTulFunds = (await tokenTUL.getLockedAmount.call(user)).toNumber()
-    const newBalance = (await dx.balances.call(eth.address, user)).toNumber()
-    console.log(`
-    USER'S TUL AMT = ${tulFunds}
-    USER'S LOCKED TUL AMT = ${lockedTulFunds}
-
-    USER'S ETH AMT = ${newBalance}
-    `)
-
-    // due to passage of time(stamp)
-    assert.isAtLeast(lockedTulFunds, tulips, 'final tulip tokens are slightly > than calculated from dx.claimBuyerFunds.call')
-
-    assert.equal(newBalance, lockedTulFunds, 'for ETH -> * pair returned tokens should equal tulips minted')
+    await postBuyOrder(eth, gno, false, (10 ** 9 / 3), buyer2)
+    // wait for price to drop
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
+    // claimFunds and generate Tulips
+    await checkUserReceivesTulipTokens(buyer2, eth, gno)
   })
-  it('user can lock tokens and only unlock them 24 hours later', async () => {
-    let [unlockedFunds, withdrawTime] = (await tokenTUL.unlockedTULs.call(user)).map(n => n.toNumber())    
-    console.log(`
-    AMT OF UNLOCKED FUNDS  = ${unlockedFunds}
-    TIME OF WITHDRAWAL     = ${withdrawTime}
-    `)
 
-    assert.equal(unlockedFunds, 0, 'unlockedFunds should be 0')
-    assert.equal(withdrawTime, 0, 'Withdraw time should be 0 ')
+  it('Buyer1 postBuyOrder + claim', async () => {
+    eventWatcher(dx, 'NewBuyOrder', {})
+    // post buy order
+    await postBuyOrder(eth, gno, false, (10 ** 9 / 3), buyer1)
+    // wait for price to drop
+    await checkUserReceivesTulipTokens(buyer1, eth, gno)
+  })
 
-    // lock tokens - arbitarily high amt to force Math.min
-    await tokenTUL.lockTokens(userTulips, { from: user })
-    const totalAmtLocked = (await tokenTUL.lockTokens.call(userTulips, { from: user })).toNumber()
-    console.log(`
-    TOKENS LOCKED           = ${totalAmtLocked}
-    `)
-    assert.equal(totalAmtLocked, userTulips, 'Total locked tulips should equal total user balance of tulips')
-
-    // unlock Tokens
-    await tokenTUL.unlockTokens(userTulips, { from: user });
-    ([unlockedFunds, withdrawTime] = (await tokenTUL.unlockTokens.call(userTulips, { from: user })).map(t => t.toNumber()))
-    console.log(`
-    AMT OF UNLOCKED FUNDS  = ${unlockedFunds}
-    TIME OF WITHDRAWAL     = ${withdrawTime}
-    `)
-    assert.equal(unlockedFunds, userTulips, 'unlockedFunds should be = userTulips')
-    // assert withdrawTime === now (in seconds) + 24 hours (in seconds) 
-    assert.equal(withdrawTime, timestamp() + (24 * 3600), 'Withdraw time should be 0 ')
+  it('BUYER1: ETH --> GNO: user can lock tokens and only unlock them 24 hours later', async () => {
+    await unlockTulipTokens(buyer1)
   })
 })
