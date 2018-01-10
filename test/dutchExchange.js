@@ -304,6 +304,28 @@ contract('DutchExchange', (accounts) => {
     })
   })
 
+  it('can deposit the right amout ', async () => {
+    testingAccs.forEach(async (acc) => {
+      const depositETH = 100
+      const depositGNO = 200
+
+      // make sure we don't deposit more than available
+      assert.isBelow(depositETH, ETHBalance)
+      assert.isBelow(depositGNO, GNOBalance)
+
+      logger(`${acc} depositing\t${depositETH} ETH,\t${depositGNO} GNO`)
+
+      await dx.deposit(eth.address, depositETH, { from: acc })
+      await dx.deposit(gno.address, depositGNO, { from: acc })
+
+      const { ETH, GNO } = await getAccDeposits(acc)
+
+      logger(`${acc} deposits:\t${ETH} ETH,\t${GNO} GNO`)
+      assert.strictEqual(ETH, depositETH)
+      assert.strictEqual(GNO, depositGNO)
+    })
+  })
+
   it.skip('test a trade on the opposite pair', async () => {
     let auctionIndex
 
