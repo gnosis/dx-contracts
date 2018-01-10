@@ -256,7 +256,7 @@ contract('DutchExchange', (accounts) => {
 
   const ETHBalance = 10 ** 9
   
-  const GNOBalance = 10 ** 18
+  const GNOBalance = 10 ** 15
 
   before(async () => {
     // get contracts
