@@ -201,6 +201,7 @@ const claimBuyerFunds = async (ST, BT, user, aucIdx, acct) => {
    */
 const checkUserReceivesTulipTokens = async (ST, BT, user) => {
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno, TokenTUL: tokenTUL } = await getContracts()
+
   ST = ST || eth; BT = BT || gno
 
   const aucIdx = await getAuctionIndex()
@@ -252,7 +253,7 @@ const unlockTulipTokens = async (user) => {
    * SUB TEST 1: CHECK UNLOCKED AMT + WITHDRAWAL TIME
    * [should be 0,0 as none unlocked yet]
    */
-  let [unlockedFunds, withdrawTime] = (await tokenTUL.unlockedTULs.call(user)).map(n => n.toNumber())    
+  let [unlockedFunds, withdrawTime] = (await tokenTUL.unlockedTULs.call(user)).map(n => n.toNumber())
   console.log(`
   AMT OF UNLOCKED FUNDS  = ${unlockedFunds}
   TIME OF WITHDRAWAL     = ${withdrawTime} [0 means no withdraw time as there are 0 locked tokens]
@@ -281,7 +282,7 @@ const unlockTulipTokens = async (user) => {
   TIME OF WITHDRAWAL     = ${withdrawTime} --> ${new Date(withdrawTime * 1000)}
   `)
   assert.equal(unlockedFunds, userTulips, 'unlockedFunds should be = userTulips')
-  // assert withdrawTime === now (in seconds) + 24 hours (in seconds) 
+  // assert withdrawTime === now (in seconds) + 24 hours (in seconds)
   assert.equal(withdrawTime, timestamp() + (24 * 3600), 'Withdraw time should be equal to [(24 hours in seconds) + (current Block timestamp in seconds)]')
 }
 
