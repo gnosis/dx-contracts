@@ -308,7 +308,7 @@ contract('DutchExchange', (accounts) => {
       assert.strictEqual(GNO, 0, `${acc} GNO deposit should be 0`)
   })))
 
-  it('can deposit the right amout ', () => Promise.all(testingAccs.map(async (acc) => {
+  it('can deposit the right amount ', () => Promise.all(testingAccs.map(async (acc) => {
     const depositETH = 100
     const depositGNO = 200
 
@@ -334,7 +334,7 @@ contract('DutchExchange', (accounts) => {
     assert.strictEqual(GNODep, GNOBalance - GNOBal, `${acc}'s GNO balance should decrease by the amount deposited`)
   })))
 
-  it('can withdraw the right amout ', () => Promise.all(testingAccs.map(async (acc) => {
+  it('can withdraw the right amount ', () => Promise.all(testingAccs.map(async (acc) => {
       const withdrawETH = 90
       const withdrawGNO = 150
 
@@ -342,7 +342,7 @@ contract('DutchExchange', (accounts) => {
 
       // make sure we don't withdraw more than available
       assert.isBelow(withdrawETH, ETH, 'trying to withdraw more ETH than available')
-      assert.isBelow(withdrawGNO, GNO, 'trying to withdraw more ETH than available')
+    assert.isBelow(withdrawGNO, GNO, 'trying to withdraw more GNO than available')
 
       const { ETH: ETHDep1, GNO: GNODep1 } = await getAccDeposits(acc)
       const { ETH: ETHBal1, GNO: GNOBal1 } = await getAccBalances(acc)
