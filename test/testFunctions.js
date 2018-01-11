@@ -201,6 +201,7 @@ const claimBuyerFunds = async (ST, BT, user, aucIdx, acct) => {
    */
 const checkUserReceivesTulipTokens = async (ST, BT, user) => {
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno, TokenTUL: tokenTUL } = await getContracts()
+
   ST = ST || eth; BT = BT || gno
 
   const aucIdx = await getAuctionIndex()
@@ -281,7 +282,7 @@ const unlockTulipTokens = async (user) => {
   TIME OF WITHDRAWAL     = ${withdrawTime} --> ${new Date(withdrawTime * 1000)}
   `)
   assert.equal(unlockedFunds, userTulips, 'unlockedFunds should be = userTulips')
-  // assert withdrawTime === now (in seconds) + 24 hours (in seconds) 
+  // assert withdrawTime === now (in seconds) + 24 hours (in seconds)
   assert.equal(withdrawTime, timestamp() + (24 * 3600), 'Withdraw time should be equal to [(24 hours in seconds) + (current Block timestamp in seconds)]')
 }
 
