@@ -251,7 +251,7 @@ contract('DutchExchange', (accounts) => {
   })
 })
 
-contract('DutchExchange', (accounts) => {
+contract('DutchExchange deposit/withdraw tests', (accounts) => {
   const [master] = accounts
   const testingAccs = accounts.slice(1, 5)
 
