@@ -3,6 +3,8 @@ const assertRejects = async (q, msg) => {
   let res, catchFlag = false
   try {
     res = await q
+    // checks if there was a Log event and its argument l contains string "R<number>"
+    catchFlag = res.logs && !!res.logs.find(log => log.event === 'Log' && /\bR(\d+\.?)+/.test(log.args.l))
   } catch (e) {
     catchFlag = true
   } finally {
@@ -93,12 +95,22 @@ eventWatcher.stopWatching = (contract, event) => {
   }
 }
 
-const wait = seconds => web3.currentProvider.send({
-  jsonrpc: '2.0',
-  method: 'evm_increaseTime',
-  params: [seconds] || [],
-  id: new Date().getTime(),
-})
+const wait = (seconds) => {
+  const id = Date.now()
+  web3.currentProvider.send({
+    jsonrpc: '2.0',
+    method: 'evm_increaseTime',
+    params: [seconds] || [],
+    id,
+  })
+
+  web3.currentProvider.send({
+    jsonrpc: '2.0',
+    method: 'evm_mine',
+    params: [],
+    id: id + 1,
+  })
+}
 
 module.exports = {
   assertRejects,

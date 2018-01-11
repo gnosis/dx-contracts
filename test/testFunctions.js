@@ -1,8 +1,8 @@
-/* eslint prefer-const:0, max-len:0, object-curly-newline:1, no-param-reassign:0, no-console:0 */
+/* eslint prefer-const:0, max-len:0, object-curly-newline:1, no-param-reassign:0, no-console:0, no-mixed-operators:0 */
 const { wait } = require('@digix/tempo')(web3)
 const { timestamp, varLogger } = require('./utils')
 
-const MaxRoundingError = 100000
+const MaxRoundingError = 100
 
 const contractNames = [
   'DutchExchange',
@@ -87,7 +87,7 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
 const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno } = await getContracts()
   const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
-  const timeToWaitFor = (86400 - p * 43200) / (1 + p) + startingTimeOfAuction
+  const timeToWaitFor = Math.ceil((86400 - p * 43200) / (1 + p)) + startingTimeOfAuction
   // wait until the price is good
   await wait(timeToWaitFor - timestamp())
   const [num, den] = (await dx.getPriceForJS(eth.address, gno.address, 1)).map(n => n.toNumber())
@@ -124,16 +124,16 @@ const checkBalanceBeforeClaim = async (
 
   const balanceBeforeClaim = (await dx.balances.call(token.address, acct)).toNumber()
 
-  if (claiming == 'buyer') {
+  if (claiming === 'buyer') {
     await dx.claimBuyerFunds(sellToken.address, buyToken.address, acct, idx)
   } else {
     await dx.claimSellerFunds(sellToken.address, buyToken.address, acct, idx)
   }
-  
+
   const balanceAfterClaim = (await dx.balances.call(token.address, acct)).toNumber()
   const difference = Math.abs(balanceBeforeClaim + amt - balanceAfterClaim)
   varLogger('claiming for', claiming)
-  varLogger('balanceBeforeClaim', balanceBeforeClaim);
+  varLogger('balanceBeforeClaim', balanceBeforeClaim)
   varLogger('amount', amt)
   varLogger('balanceAfterClaim', balanceAfterClaim)
   varLogger('difference', difference)
@@ -146,7 +146,8 @@ const getAuctionIndex = async (sell, buy) => {
 
   return (await dx.getAuctionIndex.call(buy.address, sell.address)).toNumber()
 }
-const getStartingTimeOfAuction = async (sell, buy) => (await dx.getAuctionStart.call(sell.address, buy.address)).toNumber()
+
+// const getStartingTimeOfAuction = async (sell = eth, buy = gno) => (await dx.getAuctionStart.call(sell.address, buy.address)).toNumber()
 
 /**
  * address sellToken,
