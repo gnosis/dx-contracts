@@ -408,9 +408,26 @@ contract('DutchExchange', (accounts) => {
 
     logger(`${acc} trying to withdraw\t${withdrawETH} ETH,\t${withdrawGNO} GNO`)
 
-    // transaction returned at Log('withdraw R1')
+    // transaction returned early at Log('withdraw R1')
     await assertRejects(dx.withdraw(eth.address, withdrawETH, { from: acc }), 'can\'t withdraw from 0 ETH deposit')
     await assertRejects(dx.withdraw(gno.address, withdrawGNO, { from: acc }), 'can\'t withdraw from 0 GNO deposit')
+
+    const { ETH: ETHDep2, GNO: GNODep2 } = await getAccDeposits(acc)
+
+    logger(`${acc} deposits:\t${ETHDep2} ETH,\t${GNODep2} GNO`)
+  })))
+  
+  it('rejects when trying to deposit more than balance available', () => Promise.all(testingAccs.map(async (acc) => {
+    const { ETH: ETHBal1, GNO: GNOBal1 } = await getAccBalances(acc)
+
+    const depositETH = ETHBal1 + 10
+    const depositGNO = GNOBal1 + 10
+
+    logger(`${acc} trying to deposit\t${depositETH} ETH,\t${depositGNO} GNO`)
+
+    // transaction returned early at Log('deposit R1')
+    await assertRejects(dx.deposit(eth.address, depositETH, { from: acc }), 'can\'t deposit more than ETH balance')
+    await assertRejects(dx.deposit(gno.address, depositGNO, { from: acc }), 'can\'t deposit more than GNO balance')
 
     const { ETH: ETHDep2, GNO: GNODep2 } = await getAccDeposits(acc)
 
