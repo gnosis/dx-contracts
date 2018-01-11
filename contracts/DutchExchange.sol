@@ -357,7 +357,7 @@ contract DutchExchange {
             scheduleNextAuction(sellToken, buyToken);
         }
 
-        NewSellOrder(sellToken, buyToken, msg.sender, auctionIndex, amount);
+        NewSellOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
     }
 
     // > postBuyOrder()
@@ -371,6 +371,13 @@ contract DutchExchange {
     {
         uint auctionStart = getAuctionStart(sellToken, buyToken);
 
+
+        // R4: auction must not have cleared
+        // require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
+        if (closingPrices[sellToken][buyToken][auctionIndex].den > 0) {
+            Log('postBuyOrder R4');
+            return;
+        }
         // R1
         // require(getAuctionStart(sellToken, buyToken) <= now);
         if (auctionStart > now) {
@@ -389,12 +396,7 @@ contract DutchExchange {
             Log('postBuyOrder R3');
             return;
         }
-        // R4: auction must not have cleared
-        // require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
-        if (closingPrices[sellToken][buyToken][auctionIndex].den > 0) {
-            Log('postBuyOrder R4');
-            return;
-        }
+        
 
         // R5: auction must not be in waiting period
         // require(auctionStart > 1);
@@ -686,6 +688,11 @@ contract DutchExchange {
             // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
             price.num = Math.atleastZero(int((86400 - timeElapsed) * sellTokenPrice.num * buyTokenPrice.den));
             price.den = (timeElapsed + 43200) * sellTokenPrice.den * buyTokenPrice.num;
+
+            if (price.num*sellVolumesCurrent[sellToken][buyToken] <= price.den * buyVolumes[sellToken][buyToken]) {
+                price.num = buyVolumes[sellToken][buyToken];
+                price.den = sellVolumesCurrent[sellToken][buyToken];
+            }
         }
     }
 
@@ -750,6 +757,8 @@ contract DutchExchange {
             setAuctionIndex(sellToken, buyToken);
             // Check if next auction can be scheduled
             scheduleNextAuction(sellToken, buyToken);
+            AuctionCleared(buyToken, sellToken, 0, 0, auctionIndex);
+
         }
 
         AuctionCleared(sellToken, buyToken, sellVolume, buyVolume, auctionIndex);
