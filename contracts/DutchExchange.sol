@@ -42,9 +42,6 @@ contract DutchExchange {
     // Token => Token => time
     mapping (address => mapping (address => uint)) public auctionStarts;
 
-    // Token => Token => amount
-    mapping (address => mapping (address => uint)) public arbTokensAdded;
-
     // Token => Token => auctionIndex => price
     mapping (address => mapping (address => mapping (uint => fraction))) public closingPrices;
 
@@ -207,7 +204,7 @@ contract DutchExchange {
             fraction memory priceToken2 = priceOracle(token2);
 
             // Compute funded value in ETH and USD
-            uint fundedValueETH = token1Funding * priceToken1.num / priceToken1.den + token2Funding * priceToken2.num / priceToken2.den;
+            uint fundedValueETH = token1Funding * priceToken1.num / priceToken1.den; + token2Funding * priceToken2.num / priceToken2.den;
             fundedValueUSD = fundedValueETH * ETHUSDPrice;
         }
 
@@ -237,11 +234,11 @@ contract DutchExchange {
         balances[token1][msg.sender] -= token1Funding;
         balances[token2][msg.sender] -= token2Funding;
 
-        //Fee mechanism, fees are added to extraTokens
+        // Fee mechanism, fees are added to extraTokens
         uint token1FundingAfterFee = settleFee(token1, token2, 1, msg.sender, token1Funding);
         uint token2FundingAfterFee = settleFee(token2, token1, 1, msg.sender, token2Funding);
 
-        // // Update other variables
+        // Update other variables
         sellVolumesCurrent[token1][token2] = token1FundingAfterFee;
         sellVolumesCurrent[token2][token1] = token2FundingAfterFee;
         sellerBalances[token1][token2][1][msg.sender] = token1FundingAfterFee;
@@ -414,112 +411,29 @@ contract DutchExchange {
         uint buyVolume = buyVolumes[sellToken][buyToken];
         uint outstandingVolume = Math.atleastZero(int(sellVolume * price.num / price.den - buyVolume));
 
-        fraction memory feeRatio = calculateFeeRatio(msg.sender);
-
-        // if (amount * fee > outstandingVolume) {
-        if (amount * feeRatio.num / feeRatio.den > outstandingVolume) {
-            // amount * fee = outstandingVolume
-            amount = outstandingVolume * feeRatio.den / feeRatio.num;
+        uint amountAfterFee;
+        if (amount < outstandingVolume) {
+            if (amount > 0) {
+                amountAfterFee = settleFee(buyToken, sellToken, auctionIndex, msg.sender, amount);
+            }
+        } else {
+            amount = outstandingVolume;
+            amountAfterFee = outstandingVolume;
         }
 
+        // Here we could also use outstandingVolume or amount, it doesn't matter
         if (amount > 0) {
-            uint amountAfterFee = settleFee(buyToken, sellToken, auctionIndex, msg.sender, amount);
             // Update variables
             balances[buyToken][msg.sender] -= amount;
             buyerBalances[sellToken][buyToken][auctionIndex][msg.sender] += amountAfterFee;
             buyVolumes[sellToken][buyToken] += amountAfterFee;
-            outstandingVolume = Math.atleastZero(int(outstandingVolume - amountAfterFee));
-            NewBuyOrder(sellToken, buyToken, msg.sender, auctionIndex, amount);
+            NewBuyOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
         }
 
-        if (outstandingVolume == 0) {
+        if (amount >= outstandingVolume) {
             // Clear auction
             clearAuction(sellToken, buyToken, auctionIndex, sellVolume);
-        } else if (now >= auctionStart + 6 hours) {
-            // Prices have crossed
-            // We need to clear current or opposite auction
-            closeCurrentOrOppositeAuction(
-                sellToken,
-                buyToken,
-                auctionIndex,
-                outstandingVolume,
-                sellVolume
-            );
-        } 
-    }
-
-    // > closeCurrentOrOppositeAuction()
-    function closeCurrentOrOppositeAuction(
-        address sellToken,
-        address buyToken,
-        uint auctionIndex,
-        uint outstandingVolume,
-        uint sellVolume
-    )
-        internal
-    {
-        // Get variables
-        uint sellVolumeOpp = sellVolumesCurrent[buyToken][sellToken];
-        uint buyVolumeOpp = buyVolumes[buyToken][sellToken];
-
-        // We have to compute the price at intersection time,
-        // which will be exactly half of initial price
-        fraction memory price = computeRatioOfHistoricalPriceOracles(sellToken, buyToken, auctionIndex);
-
-        uint outstandingVolumeOpp = sellVolumeOpp - buyVolumeOpp *  price.num / price.den;
-
-        if (outstandingVolume <= outstandingVolumeOpp) {     
-            // Current auction is smaller       
-            // Inflate buy volume of current & opposite auctions
-            buyVolumes[sellToken][buyToken] += outstandingVolume;
-            buyVolumes[buyToken][sellToken] += outstandingVolume * price.den / price.num;
-
-            // Record number of tokens added & close current auction
-            arbTokensAdded[buyToken][sellToken] = outstandingVolume * price.den / price.num;
-            clearAuction(sellToken, buyToken, auctionIndex, sellVolume);
-        } else {
-            // Current auction is larger
-            // Inflate buy volume of current & opposite auctions 
-            buyVolumes[sellToken][buyToken] += outstandingVolumeOpp;
-            buyVolumes[buyToken][sellToken] += outstandingVolumeOpp * price.den / price.num;
-
-            // Record number of tokens added & close opposite auction
-            arbTokensAdded[sellToken][buyToken] = outstandingVolumeOpp;
-            clearAuction(buyToken, sellToken, auctionIndex, sellVolume);
         }
-    }
-
-    function computeRatioOfHistoricalPriceOracles(
-        address sellToken,
-        address buyToken,
-        uint auctionIndex
-    )
-        public
-        constant
-        returns (fraction memory price)
-    {
-        fraction memory sellTokenPrice = historicalPriceOracle(sellToken, auctionIndex);
-        fraction memory buyTokenPrice = historicalPriceOracle(buyToken, auctionIndex);
-
-        price.num = sellTokenPrice.num * buyTokenPrice.den;
-        price.den = sellTokenPrice.den * buyTokenPrice.num;
-    }
-
-    function buy(
-        address buyToken,
-        address sellToken,
-        uint amount,
-        address from,
-        address to,
-        uint value,
-        bytes data
-    )
-        public
-    {
-        Token(buyToken).transfer(msg.sender, amount);
-        require(to.call.value(value)(data));
-        uint maxAmount = Token(sellToken).allowance(msg.sender, this);
-        require(Token(sellToken).transferFrom(msg.sender, this, maxAmount));
     }
 
     // > claimSellerFunds()
@@ -601,21 +515,9 @@ contract DutchExchange {
             // because buyVolume could still increase before that)
             uint extraTokensTotal = extraTokens[sellToken][buyToken][auctionIndex];
             uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
+
+            // num represents buyVolume
             uint num = closingPrices[sellToken][buyToken][auctionIndex].num;
-
-            // num represents buyVolume. But we have to subtract inflation of the buyVolume due to arbitration
-            uint arbitrationTokensAdded = arbTokensAdded[sellToken][buyToken];
-            if (arbitrationTokensAdded > 0) {
-                // opposite auction closed due to arbitration
-                num -= arbitrationTokensAdded;
-            } else {
-                uint arbitrationTokensAddedOpp = arbTokensAdded[buyToken][sellToken];
-                if (arbitrationTokensAddedOpp > 0) {
-                    // this auction closed due to arbitration
-                    num -= arbitrationTokensAddedOpp;
-                }
-            }
-
             uint tokensExtra = buyerBalance * extraTokensTotal / num;
             returned += tokensExtra;
 
@@ -678,6 +580,7 @@ contract DutchExchange {
             }
         }
     }
+
     // > getPrice()
     function getPrice(
         address sellToken,
@@ -723,6 +626,7 @@ contract DutchExchange {
         fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
         return (price.num, price.den);
     }
+
     // > clearAuction()
     /// @dev clears an Auction
     /// @param sellToken sellToken of the auction
@@ -740,18 +644,6 @@ contract DutchExchange {
         uint buyVolume = buyVolumes[sellToken][buyToken];
         closingPrices[sellToken][buyToken][auctionIndex] = fraction(buyVolume, sellVolume);
         fraction memory opp = closingPrices[buyToken][sellToken][auctionIndex];
-
-        uint arbitrationTokensAdded = arbTokensAdded[sellToken][buyToken];
-        if (arbitrationTokensAdded > 0) {
-            // Add extra tokens from arbitration to extra tokens
-            uint extraFromArb1 = sellVolume + buyVolumes[buyToken][sellToken];
-
-            // Since arbitration has ocurred, buyVolume of both auctions has been increased
-            // Hence buyVolume > 0, so dividing by it doesn't break
-            uint extraFromArb2 = (buyVolume - arbitrationTokensAdded) * sellVolume / buyVolume;
-            extraTokens[sellToken][buyToken][auctionIndex] += extraFromArb1 - opp.num - extraFromArb2;
-            arbTokensAdded[sellToken][buyToken] = 0;
-        }
 
         // Update state variables
         sellVolumesCurrent[sellToken][buyToken] = sellVolumesNext[sellToken][buyToken];
@@ -855,6 +747,23 @@ contract DutchExchange {
         } else {
             resetAuctionStart(sellToken, buyToken);
         }
+    }
+
+    // > computeRatioOfHistoricalPriceOracles()
+    function computeRatioOfHistoricalPriceOracles(
+        address sellToken,
+        address buyToken,
+        uint auctionIndex
+    )
+        public
+        constant
+        returns (fraction memory price)
+    {
+        fraction memory sellTokenPrice = historicalPriceOracle(sellToken, auctionIndex);
+        fraction memory buyTokenPrice = historicalPriceOracle(buyToken, auctionIndex);
+
+        price.num = sellTokenPrice.num * buyTokenPrice.den;
+        price.den = sellTokenPrice.den * buyTokenPrice.num;
     }
 
     function historicalPriceOracle(
