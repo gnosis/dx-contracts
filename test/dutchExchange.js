@@ -6,6 +6,7 @@ const {
   eventWatcher,
   logger,
   timestamp,
+  assertRejects,
 } = require('./utils')
 
 const {
@@ -377,7 +378,6 @@ contract('DutchExchange', (accounts) => {
 
     logger(`${acc} trying to withdraw\t${withdrawETH} ETH,\t${withdrawGNO} GNO`)
 
-    // console.log(JSON.stringify(await dx.withdraw(eth.address, withdrawETH, { from: acc }), null, 2))
     // DutchExchange::withdraw Math.min resulted in balances[tokenAddress][msg.sender]
     await dx.withdraw(eth.address, withdrawETH, { from: acc })
     await dx.withdraw(gno.address, withdrawGNO, { from: acc })
@@ -394,6 +394,27 @@ contract('DutchExchange', (accounts) => {
     // balance increased by the actual amount withdrawn, not how uch we tried to withdraw
     assert.strictEqual(ETHBal2 - ETHBal1, ETHDep1, 'ETH balance should increase by the amount withdrawn (whole deposit)')
     assert.strictEqual(GNOBal2 - GNOBal1, GNODep1, 'GNO balance should increase by the amount withdrawn (whole deposit)')
+  })))
+
+  it('rejects when trying to wihdraw when deposit is 0', () => Promise.all(testingAccs.map(async (acc) => {
+    const withdrawETH = 10
+    const withdrawGNO = 20
+
+    const { ETH: ETHDep1, GNO: GNODep1 } = await getAccDeposits(acc)
+
+    // make sure we try to withdraw more than available
+    assert.strictEqual(ETHDep1, 0, 'ETH deposit should be 0')
+    assert.strictEqual(GNODep1, 0, 'GNO deposit should be 0')
+
+    logger(`${acc} trying to withdraw\t${withdrawETH} ETH,\t${withdrawGNO} GNO`)
+
+    // transaction returned at Log('withdraw R1')
+    await assertRejects(dx.withdraw(eth.address, withdrawETH, { from: acc }), 'can\'t withdraw from 0 ETH deposit')
+    await assertRejects(dx.withdraw(gno.address, withdrawGNO, { from: acc }), 'can\'t withdraw from 0 GNO deposit')
+
+    const { ETH: ETHDep2, GNO: GNODep2 } = await getAccDeposits(acc)
+
+    logger(`${acc} deposits:\t${ETHDep2} ETH,\t${GNODep2} GNO`)
   })))
 })
 
