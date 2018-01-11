@@ -2,7 +2,7 @@
 const { wait } = require('@digix/tempo')(web3)
 const { timestamp, varLogger } = require('./utils')
 
-const MaxRoundingError = 100
+const MaxRoundingError = 1000000
 
 const contractNames = [
   'DutchExchange',
@@ -116,7 +116,7 @@ const checkBalanceBeforeClaim = async (
   ST,
   BT,
   amt = (10 ** 9),
-  round = MaxRoundingError,
+  round = (MaxRoundingError),
 ) => {
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno } = await getContracts()
   ST = ST || eth; BT = BT || gno
@@ -172,6 +172,8 @@ const postBuyOrder = async (ST, BT, aucIdx, amt, acct) => {
   Posting Buy Amt -------> ${amt} in ETH for GNO
   `)
 
+  // TODO check the balance changes of the postBuyOrder dependend on TUL, OWL etc.
+
   return dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct })
 }
 
@@ -200,7 +202,9 @@ const claimBuyerFunds = async (ST, BT, user, aucIdx, acct) => {
    * @param {address} user  => address of current user buying and owning tulips
    */
 const checkUserReceivesTulipTokens = async (ST, BT, user) => {
-  const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno, TokenTUL: tokenTUL } = await getContracts()
+  const {
+    DutchExchange: dx, EtherToken: eth, TokenGNO: gno, TokenTUL: tokenTUL,
+  } = await getContracts()
 
   ST = ST || eth; BT = BT || gno
 
