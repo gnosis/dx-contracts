@@ -120,7 +120,7 @@ contract('DutchExchange', (accounts) => {
     // wait for price to drop
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     // claimFunds and generate Tulips
-    await checkUserReceivesTulipTokens(buyer2, eth, gno)
+    await checkUserReceivesTulipTokens(eth, gno, buyer2)
   })
 
   it('Buyer1 postBuyOrder + claim', async () => {
@@ -128,10 +128,14 @@ contract('DutchExchange', (accounts) => {
     // post buy order
     await postBuyOrder(eth, gno, false, (10 ** 9 / 3), buyer1)
     // wait for price to drop
-    await checkUserReceivesTulipTokens(buyer1, eth, gno)
+    await checkUserReceivesTulipTokens(eth, gno, buyer1)
   })
 
   it('BUYER1: ETH --> GNO: user can lock tokens and only unlock them 24 hours later', async () => {
     await unlockTulipTokens(buyer1)
+  })
+
+  after(() => {
+    eventWatcher.stopWatching()
   })
 })
