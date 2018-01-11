@@ -1,5 +1,5 @@
 /* eslint no-console:0, max-len:0, no-plusplus:0, no-mixed-operators:0, no-trailing-spaces:0 */
-
+/*
 const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 
 const { 
@@ -102,11 +102,11 @@ contract('DutchExchange', (accounts) => {
     logger('dx.getPrice.num gno/eth', await dx.testing2.call(gno.address, eth.address, auctionIndex))
     logger('dx.oralcePrice.num gno/eth ', await dx.testing.call(gno.address))
     logger('dx.oralcePrice.num gno/eth ', await dx.testing.call(eth.address))
-    /* -- claim Buyerfunds - function does this:
-    * 1. balanceBeforeClaim = (await dx.balances.call(eth.address, buyer1)).toNumber()
-    * 2. await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)
-    * 3. assert.equal(balanceBeforeClaim + 10 ** 9 - (await dx.balances.call(eth.address, buyer1)).toNumber() < MaxRoundingError, true)
-    */
+    // -- claim Buyerfunds - function does this:
+    //* 1. balanceBeforeClaim = (await dx.balances.call(eth.address, buyer1)).toNumber()
+    //* 2. await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)
+    //* 3. assert.equal(balanceBeforeClaim + 10 ** 9 - (await dx.balances.call(eth.address, buyer1)).toNumber() < MaxRoundingError, true)
+    //
     await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 ** 9 - 10 ** 9 / 200))
 
     // claim Sellerfunds
@@ -427,7 +427,7 @@ contract('DutchExchange', (accounts) => {
     await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 8 - 10 ** 8 / 200))
   })
 })
-
+*/
 /*
   const checkConstruction = async function () {
     // initial price is set
