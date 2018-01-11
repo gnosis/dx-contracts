@@ -301,16 +301,14 @@ contract('DutchExchange', (accounts) => {
     return { ETH, GNO }
   }
 
-  it('intially deposits are 0', async () => {
-    testingAccs.forEach(async (acc) => {
+  it('intially deposits are 0', () => Promise.all(testingAccs.map(async (acc) => {
       const { ETH, GNO } = await getAccDeposits(acc)
 
       assert.strictEqual(ETH, 0, `${acc} ETH deposit should be 0`)
       assert.strictEqual(GNO, 0, `${acc} GNO deposit should be 0`)
-    })
-  })
+  })))
 
-  it('can deposit the right amout ', async () => Promise.all(testingAccs.map(async (acc) => {
+  it('can deposit the right amout ', () => Promise.all(testingAccs.map(async (acc) => {
     const depositETH = 100
     const depositGNO = 200
 
@@ -336,8 +334,7 @@ contract('DutchExchange', (accounts) => {
     assert.strictEqual(GNODep, GNOBalance - GNOBal, `${acc}'s GNO balance should decrease by the amount deposited`)
   })))
 
-  it('can withdraw the right amout ', async () => {
-    testingAccs.forEach(async (acc) => {
+  it('can withdraw the right amout ', () => Promise.all(testingAccs.map(async (acc) => {
       const withdrawETH = 90
       const withdrawGNO = 150
 
@@ -364,8 +361,7 @@ contract('DutchExchange', (accounts) => {
 
       assert.strictEqual(ETHBal2 - ETHBal1, withdrawETH, 'ETH balance should increase by the amount withdrawn')
       assert.strictEqual(GNOBal2 - GNOBal1, withdrawGNO, 'GNO balance should increase by the amount withdrawn')
-    })
-  })
+  })))
 
   it.skip('test a trade on the opposite pair', async () => {
     let auctionIndex
