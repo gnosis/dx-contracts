@@ -2,7 +2,7 @@
 const { wait } = require('@digix/tempo')(web3)
 const { timestamp, varLogger } = require('./utils')
 
-const MaxRoundingError = 100000
+const MaxRoundingError = 100
 
 const contractNames = [
   'DutchExchange',
@@ -87,7 +87,7 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
 const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const { DutchExchange: dx } = await getContracts()
   const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
-  const timeToWaitFor = (86400 - p * 43200) / (1 + p) + startingTimeOfAuction
+  const timeToWaitFor = Math.ceil((86400 - p * 43200) / (1 + p)) + startingTimeOfAuction
   // wait until the price is good
   await wait(timeToWaitFor - timestamp())
   assert.equal(timestamp() >= timeToWaitFor, true)
