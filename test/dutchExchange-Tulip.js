@@ -5,6 +5,7 @@ const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 const { 
   eventWatcher,
   logger,
+  log,
   timestamp,
 } = require('./utils')
 
@@ -100,7 +101,7 @@ contract('DutchExchange', (accounts) => {
   it('Check sellVolume', async () => {
     const sellVolumes = (await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber()
     const svFee = initialBalancesAmount * 0.005
-    console.log(`
+    log(`
     SELLVOLUMES === ${sellVolumes}
     FEE         === ${svFee}
     `)

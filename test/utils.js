@@ -1,4 +1,7 @@
 /* eslint no-console:0, no-confusing-arrow:0 */
+// `truffle test --silent` or `truffle test -s` to suppress logs
+const { silent } = require('minimist')(process.argv.slice(2), { alias: { silent: 's' } })
+
 const assertRejects = async (q, msg) => {
   let res, catchFlag = false
   try {
@@ -18,11 +21,10 @@ const blockNumber = () => web3.eth.blockNumber
 
 const timestamp = (block = 'latest') => web3.eth.getBlock(block).timestamp
 
-const logger = async (desc, fn) => console.log(`---- \n => ${desc} ${fn ? `|| - - - - - - - - - -  - > ${fn}` : ''}`)
+const log = silent ? () => {} : console.log.bind(console)
+const logger = async (desc, fn) => log(`---- \n => ${desc} ${fn ? `|| - - - - - - - - - -  - > ${fn}` : ''}`)
 
-const varLogger = (varName, varValue) => {
-  console.log(varName, '--->', varValue)
-}
+const varLogger = (varName, varValue) => log(varName, '--->', varValue)
 
 // keeps track of watched events
 let stopWatching = {}
@@ -34,7 +36,7 @@ let stopWatching = {}
  * @returns stopWatching function
  */
 const eventWatcher = (contract, event, args) => {
-  const eventObject = contract[event](args).watch((err, result) => err ? console.log(err) : console.log('Found', result))
+  const eventObject = contract[event](args).watch((err, result) => err ? log(err) : log('Found', result))
   const contractEvents = stopWatching[contract.address] || (stopWatching[contract.address] = {})
   const unwatch = contractEvents[event] = eventObject.stopWatching.bind(eventObject)
 
@@ -54,7 +56,7 @@ eventWatcher.stopWatching = (contract, event) => {
     const contractEvents = stopWatching[contract.address]
 
     if (!contractEvents) {
-      console.log('contract was never watched')
+      log('contract was never watched')
       return
     }
 
@@ -74,7 +76,7 @@ eventWatcher.stopWatching = (contract, event) => {
       unwatch()
       delete stopWatching[event]
     } else {
-      console.log(`${event} event was never watched`)
+      log(`${event} event was never watched`)
     }
 
     return
@@ -117,6 +119,7 @@ module.exports = {
   blockNumber,
   eventWatcher,
   logger,
+  log,
   varLogger,
   wait,
   timestamp,
