@@ -5,6 +5,7 @@ const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 const { 
   eventWatcher,
   logger,
+  log,
   timestamp,
 } = require('./utils')
 
@@ -86,8 +87,8 @@ contract('DutchExchange', (accounts) => {
     logger('dx.testing2 ETH/GNO', await dx.testing2.call(eth.address, gno.address, auctionIndex))
     logger('dx.testing2 GNO/ETH', await dx.testing2.call(gno.address, eth.address, auctionIndex))
     
-    // console.log("this was price oracle")
-    // console.log((await dx.getPrice.call(eth.address, gno.address, auctionIndex)))
+    // log("this was price oracle")
+    // log((await dx.getPrice.call(eth.address, gno.address, auctionIndex)))
     
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     
@@ -218,9 +219,9 @@ contract('DutchExchange', (accounts) => {
     auctionIndex = await getAuctionIndex()
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer1 })
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-    console.log('this one isnt working right?')
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    log('this one isnt working right?')
+    log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
     await dx.postBuyOrder(gno.address, eth.address, auctionIndex, 10 ** 7 * 25, { from: seller2 })
     logger('startingReclaiming')
     logger('dx.getPrice.num eth gno', await dx.testing2.call(eth.address, gno.address, auctionIndex))
@@ -424,7 +425,7 @@ contract('DutchExchange', (accounts) => {
     nextSellVolume = (await dx.sellVolumesNext.call(eth.address, gno.address)).toNumber()
     assert.equal(nextSellVolume, 10 ** 8 - 10 ** 8 / 200, 'sellVolumeNextNotCorrectAfterClearing')
     logger('nextSellVolume', nextSellVolume)
-    console.log(nextSellVolume)
+    log(nextSellVolume)
     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 8, { from: buyer1 })
     assert.equal(nextSellVolume, (await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber())
     assert.equal((await dx.sellVolumesNext.call(eth.address, gno.address)).toNumber(), 0, 'sellVOlumeNext is not reseted')

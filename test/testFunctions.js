@@ -1,6 +1,6 @@
 /* eslint prefer-const:0, max-len:0, object-curly-newline:1, no-param-reassign:0, no-console:0, no-mixed-operators:0 */
 const { wait } = require('@digix/tempo')(web3)
-const { timestamp, varLogger } = require('./utils')
+const { timestamp, varLogger, log } = require('./utils')
 
 const MaxRoundingError = 100
 
@@ -74,7 +74,7 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
   // implements isAtLeastZero (aka will not go BACK in time)
   await wait((startingTimeOfAuction - timestamp()) + 500)
 
-  console.log(`
+  log(`
   time now ----------> ${new Date(timestamp() * 1000)}
   auction starts ----> ${new Date(startingTimeOfAuction * 1000)}
   `)
@@ -95,7 +95,7 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   // wait until the price is good
   await wait(timeToWaitFor - timestamp())
   const [num, den] = (await dx.getPriceForJS(eth.address, gno.address, 1)).map(n => n.toNumber())
-  console.log(num, den, 'Price at this moment === ', num / den)
+  log(num, den, 'Price at this moment === ', num / den)
   assert.equal(timestamp() >= timeToWaitFor, true)
 }
 
@@ -167,7 +167,7 @@ const postBuyOrder = async (ST, BT, aucIdx, amt, acct) => {
   ST = ST || eth; BT = BT || gno
   let auctionIdx = aucIdx || await getAuctionIndex()
 
-  console.log(`
+  log(`
   Current Auction Index -> ${auctionIdx}
   Posting Buy Amt -------> ${amt} in ETH for GNO
   `)
@@ -206,7 +206,7 @@ const checkUserReceivesTulipTokens = async (ST, BT, user) => {
   const aucIdx = await getAuctionIndex()
   const [returned, tulips] = (await dx.claimBuyerFunds.call(ST.address, BT.address, user, aucIdx)).map(amt => amt.toNumber())
   // set global tulips state
-  console.log(`
+  log(`
     RETURNED  = ${returned}
     TULIPS    = ${tulips}
   `)
@@ -216,11 +216,11 @@ const checkUserReceivesTulipTokens = async (ST, BT, user) => {
      * SUB TEST 3: CLAIMBUYERFUNDS - CHECK BUYVOLUMES - CHECK LOCKEDTULIPS AMT = 1:1 FROM AMT IN POSTBUYORDER
      */
   const { receipt: { logs } } = await claimBuyerFunds(ST, BT, false, false, user)
-  console.log(logs ? '\tCLAIMING FUNDS SUCCESSFUL' : 'CLAIM FUNDS FAILED')
-  console.log(logs)
+  log(logs ? '\tCLAIMING FUNDS SUCCESSFUL' : 'CLAIM FUNDS FAILED')
+  log(logs)
 
   const buyVolumes = (await dx.buyVolumes.call(ST.address, BT.address)).toNumber()
-  console.log(`
+  log(`
     CURRENT ETH//GNO bVolume = ${buyVolumes}
   `)
 
@@ -229,7 +229,7 @@ const checkUserReceivesTulipTokens = async (ST, BT, user) => {
   // set global state
   // userTulips = lockedTulFunds
   const newBalance = (await dx.balances.call(ST.address, user)).toNumber()
-  console.log(`
+  log(`
     USER'S OWNED TUL AMT = ${tulFunds}
     USER'S LOCKED TUL AMT = ${lockedTulFunds}
 
@@ -253,7 +253,7 @@ const unlockTulipTokens = async (user) => {
    * [should be 0,0 as none unlocked yet]
    */
   let [unlockedFunds, withdrawTime] = (await tokenTUL.unlockedTULs.call(user)).map(n => n.toNumber())    
-  console.log(`
+  log(`
   AMT OF UNLOCKED FUNDS  = ${unlockedFunds}
   TIME OF WITHDRAWAL     = ${withdrawTime} [0 means no withdraw time as there are 0 locked tokens]
   `)
@@ -266,7 +266,7 @@ const unlockTulipTokens = async (user) => {
   // lock tokens - arbitarily high amt to force Math.min
   await tokenTUL.lockTokens(userTulips, { from: user })
   const totalAmtLocked = (await tokenTUL.lockTokens.call(userTulips, { from: user })).toNumber()
-  console.log(`
+  log(`
   TOKENS LOCKED           = ${totalAmtLocked}
   `)
   assert.equal(totalAmtLocked, userTulips, 'Total locked tulips should equal total user balance of tulips')
@@ -276,7 +276,7 @@ const unlockTulipTokens = async (user) => {
    */
   await tokenTUL.unlockTokens(userTulips, { from: user });
   ([unlockedFunds, withdrawTime] = (await tokenTUL.unlockTokens.call(userTulips, { from: user })).map(t => t.toNumber()))
-  console.log(`
+  log(`
   AMT OF UNLOCKED FUNDS  = ${unlockedFunds}
   TIME OF WITHDRAWAL     = ${withdrawTime} --> ${new Date(withdrawTime * 1000)}
   `)
