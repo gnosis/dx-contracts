@@ -265,6 +265,7 @@ contract DutchExchange {
         // NewDeposit(tokenAddress, amount);
     }
 
+    // > withdraw()
     function withdraw(
         address tokenAddress,
         uint amount
@@ -836,6 +837,33 @@ contract DutchExchange {
     {
         uint latestAuctionIndex = getAuctionIndex(token, ETH);
         price = historicalPriceOracle(token, latestAuctionIndex);
+    }
+
+    // > depositAndSell()
+    function depositAndSell(
+        address sellToken,
+        address buyToken,
+        uint auctionIndex,
+        uint amount
+    )
+        public
+    {
+        deposit(sellToken, amount);
+        postSellOrder(sellToken, buyToken, auctionIndex, amount);
+    }
+
+    // > claimAndWithdraw()
+    function claimAndWithdraw(
+        address sellToken,
+        address buyToken,
+        address user,
+        uint auctionIndex,
+        uint amount
+    )
+        public
+    {
+        claimSellerFunds(sellToken, buyToken, user, auctionIndex);
+        withdraw(buyToken, amount);
     }
 
     // > testing fns
