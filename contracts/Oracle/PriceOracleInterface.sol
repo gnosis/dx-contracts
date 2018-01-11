@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
 
-import "./../DutchExchange/DutchExchangeInterface.sol";
-import "./../Utils/Math.sol";
+import "../DutchExchange/DutchExchangeInterface.sol";
+import "../Utils/Math.sol";
 
 contract PriceOracleInterface {
     using Math for *;
@@ -46,33 +46,33 @@ contract PriceOracleInterface {
     function updateETHUSDPrice(uint ETHPrice) 
         public
         onlyOwner()
-    ;
-    function getTokensValueInCENTS(
-        address tokenAddress,
-        uint amount
-    ) 
-        public 
-        view
-        returns (uint)
-    ;
-    function getTokensValueInETH(
-        address tokenAddress,
-        uint amount
-    ) 
-        public 
-        view
-        returns (uint)
-    ;
-    function getTokensValueInETHwithMinVolume(address tokenAddress, uint amount, uint minVolumeInETH) 
-    public 
-    view
-    returns (uint)
-    ;
+     ;
+    // function getTokensValueInCENTS(
+    //     address tokenAddress,
+    //     uint amount
+    // ) 
+    //     public 
+    //     view
+    //     returns (uint)
+    // ;
+    // function getTokensValueInETH(
+    //     address tokenAddress,
+    //     uint amount
+    // ) 
+    //     public 
+    //     view
+    //     returns (uint)
+    // ;
+    // function getTokensValueInETHwithMinVolume(address tokenAddress, uint amount, uint minVolumeInETH) 
+    // public 
+    // view
+    // returns (uint)
+    // ;
 
-    function getTokensValueInToken(address token1, address token2, uint amount1, uint amount2) 
-    public 
-    view
-    returns (uint)
-    ;
-    function getCurrentDutchExchange() public view returns(address);
+    // function getTokensValueInToken(address token1, address token2, uint amount1, uint amount2) 
+    // public 
+    // view
+    // returns (uint)
+    // ;
+    // function getCurrentDutchExchange() public view returns(address);
 }

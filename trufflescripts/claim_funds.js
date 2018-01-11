@@ -42,7 +42,7 @@ module.exports = async () => {
     const [
       { [account]: { sellerBalance, buyerBalance, claimedAmount } },
       { [sellTokenName]: sellTokenDeposit = 0, [buyTokenName]: buyTokenDeposit = 0 },
-      unclaimedAmount,
+      [unclaimedAmount] = [],
     ] = await Promise.all([
       getAccountsStatsForTokenPairAuction({ sellToken, buyToken, index, accounts: [account] }),
       getTokenDeposits(account),

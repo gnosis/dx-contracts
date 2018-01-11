@@ -1,5 +1,5 @@
 pragma solidity 0.4.18;
-import "../Tokens/StandardToken.sol";
+import "./StandardToken.sol";
 
 
 /// @title Token contract - Token exchanging Ether 1:1
@@ -30,7 +30,7 @@ contract EtherToken is StandardToken {
     {
         balances[msg.sender] = balances[msg.sender].add(msg.value);
         totalTokens = totalTokens.add(msg.value);
-        Deposit(msg.sender, msg.value);
+        // Deposit(msg.sender, msg.value);
     }
 
     /// @dev Sells tokens in exchange for Ether, exchanging them 1:1
@@ -42,6 +42,6 @@ contract EtherToken is StandardToken {
         balances[msg.sender] = balances[msg.sender].sub(value);
         totalTokens = totalTokens.sub(value);
         msg.sender.transfer(value);
-        Withdrawal(msg.sender, value);
+        // Withdrawal(msg.sender, value);
     }
 }

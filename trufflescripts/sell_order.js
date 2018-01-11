@@ -4,7 +4,6 @@ const {
   getTokenDeposits,
   getAccountsStatsForTokenPairAuction,
   getExchangeStatsForTokenPair,
-  getAuctionStatsForTokenPair,
   postSellOrder,
 } = require('./utils/contracts')(artifacts)
 const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
@@ -63,14 +62,15 @@ module.exports = async () => {
 
   const index = argv.next ? latestAuctionIndex + 1 : latestAuctionIndex
 
-  let [{ sellVolume }, { [account]: { sellerBalance } }] = await Promise.all([
-    getAuctionStatsForTokenPair({ sellToken, buyToken, index }),
+  let [{ sellVolumeCurrent, sellVolumeNext }, { [account]: { sellerBalance } }] = await Promise.all([
+    getExchangeStatsForTokenPair({ sellToken, buyToken }),
     getAccountsStatsForTokenPairAuction({ sellToken, buyToken, index, accounts: [account] }),
   ])
 
   console.log(`Auction ${sellTokenName} -> ${buyTokenName} index ${index} (${argv.next ? 'next' : 'current'})
   was:
-    sellVolume:\t${sellVolume}
+    sellVolumeCurrent:\t${sellVolumeCurrent}
+    sellVolumeNext:\t${sellVolumeNext}
     sellerBalance:\t${sellerBalance} in auction
     sellerDeposit:\t${sellTokenDeposit} ${sellTokenName}
   `)
@@ -85,17 +85,18 @@ module.exports = async () => {
 
   [
     { [sellTokenName]: sellTokenDeposit = 0 },
-    { sellVolume },
+    { sellVolumeCurrent, sellVolumeNext },
     { [account]: { sellerBalance } },
   ] = await Promise.all([
     getTokenDeposits(account),
-    getAuctionStatsForTokenPair({ sellToken, buyToken, index }),
+    getExchangeStatsForTokenPair({ sellToken, buyToken }),
     getAccountsStatsForTokenPairAuction({ sellToken, buyToken, index, accounts: [account] }),
   ])
 
 
   console.log(`  now:
-    sellVolume:\t${sellVolume}
+    sellVolumeCurrent:\t${sellVolumeCurrent}
+    sellVolumeNext:\t${sellVolumeNext}
     sellerBalance:\t${sellerBalance} in auction
     sellerDeposit:\t${sellTokenDeposit} ${sellTokenName}
 `)

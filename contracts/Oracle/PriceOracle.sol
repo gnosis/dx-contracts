@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
 
-import "./../DutchExchange/DutchExchangeInterface.sol";
-import "./../Utils/Math.sol";
+import "../DutchExchange/DutchExchangeInterface.sol";
+import "../Utils/Math.sol";
 
 contract PriceOracle {
     using Math for *;
@@ -51,7 +51,7 @@ contract PriceOracle {
     {
              lastPriceETHUSD = ETHPrice;//calculatePricesFromOracles();    
     }
-    
+    /* 
     function getTokensValueInCENTS(
         address tokenAddress,
         uint amount
@@ -117,5 +117,5 @@ contract PriceOracle {
 
     function getCurrentDutchExchange() public view returns(address){
         return address(dutchExchange);
-    }
+    } */
 }

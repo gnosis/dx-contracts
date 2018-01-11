@@ -197,9 +197,12 @@ module.exports = (artifacts) => {
       buyTokenApproved: boolean,
       sellTokenOraclePrice?: [num: number, den: number],
       buyTokenOraclePrice?: [num: number, den: number],
+      buyVolume: number,
+      sellVolumeCurrent: number,
+      sellVolumeNext: number,
       latestAuctionIndex: number,
       auctionStart: number,
-      arbTokensAdded: number,
+      arbTokens: number,
     }
    */
   const getExchangeStatsForTokenPair = async ({ sellToken, buyToken }) => {
@@ -219,21 +222,34 @@ module.exports = (artifacts) => {
       dx.approvedTokens(t2),
       priceOracle(t1, true),
       priceOracle(t2, true),
-      dx.latestAuctionIndices(t1, t2),
-      dx.auctionStarts(t1, t2),
-      dx.arbTokensAdded(t1, t2),
+      dx.buyVolumes(t1, t2),
+      dx.sellVolumesCurrent(t1, t2),
+      dx.sellVolumesNext(t1, t2),
+      dx.getAuctionIndex(t1, t2),
+      dx.getAuctionStart(t1, t2),
+      dx.getArbTokens(t1, t2),
     ])
 
-    const [latestAuctionIndex, auctionStart, arbTokensAdded] = mapToNumber(stats)
+    const [
+      buyVolume,
+      sellVolumeCurrent,
+      sellVolumeNext,
+      latestAuctionIndex,
+      auctionStart,
+      arbTokens,
+    ] = mapToNumber(stats)
 
     return {
       sellTokenApproved,
       buyTokenApproved,
       sellTokenOraclePrice,
       buyTokenOraclePrice,
+      buyVolume,
+      sellVolumeCurrent,
+      sellVolumeNext,
       latestAuctionIndex,
       auctionStart,
-      arbTokensAdded,
+      arbTokens,
     }
   }
 
@@ -249,7 +265,7 @@ module.exports = (artifacts) => {
 
     const { dx } = await deployed
 
-    if (index === undefined) index = await dx.latestAuctionIndices(t1, t2)
+    if (index === undefined) index = await dx.getAuctionIndex(t1, t2)
 
     try {
       const price = await dx.getPrice(t1, t2, index)
@@ -273,10 +289,7 @@ module.exports = (artifacts) => {
       auctionIndex: number,
       closingPrice: [num: number, den: number],
       price?: [num: number, den: number],
-      sellVolume: number,
-      buyVolume: number,
-      extraSellTokens: number,
-      extraBuyTokens: number,
+      extraTokens: number,
     }
    */
   const getAuctionStatsForTokenPair = async ({ sellToken, buyToken, index }) => {
@@ -285,26 +298,18 @@ module.exports = (artifacts) => {
 
     const { dx } = await deployed
 
-    if (index === undefined) index = await dx.latestAuctionIndices(t1, t2)
+    if (index === undefined) index = await dx.getAuctionIndex(t1, t2)
 
-    const [closingPrice, price, ...stats] = await Promise.all([
+    const [closingPrice, price, extraTokens] = await Promise.all([
       dx.closingPrices(t1, t2, index),
       getPriceForTokenPairAuction({ sellToken, buyToken, index }, true),
-      dx.sellVolumes(t1, t2, index),
-      dx.buyVolumes(t1, t2, index),
-      dx.extraSellTokens(t1, t2, index),
-      dx.extraBuyTokens(t1, t2, index),
+      dx.extraTokens(t1, t2, index),
     ])
-
-    const [sellVolume, buyVolume, extraSellTokens, extraBuyTokens] = mapToNumber(stats)
 
     return {
       auctionIndex: index,
       closingPrice: mapToNumber(closingPrice),
-      sellVolume,
-      buyVolume,
-      extraSellTokens,
-      extraBuyTokens,
+      extraTokens: extraTokens.toNumber(),
       price,
     }
   }
@@ -327,7 +332,7 @@ module.exports = (artifacts) => {
 
     const { dx } = await deployed
 
-    if (index === undefined) index = await dx.latestAuctionIndices(t1, t2)
+    if (index === undefined) index = await dx.getAuctionIndex(t1, t2)
 
     const promisedStatsArray = accounts.map(account => Promise.all([
       dx.sellerBalances(t1, t2, index, account),
@@ -359,19 +364,19 @@ module.exports = (artifacts) => {
       buyTokenApproved: boolean,
       sellTokenOraclePrice?: [num: number, den: number],
       buyTokenOraclePrice?: [num: number, den: number],
+      buyVolume: number,
+      sellVolumeCurrent: number,
+      sellVolumeNext: number,
       latestAuctionIndex: number,
       auctionStart: number,
-      arbTokensAdded: number,
+      arbTokens: number,
 
       auctions: [
         {
           auctionIndex: number, // from latest index to 0
           closingPrice: [num: number, den: number],
           price?: [num: number, den: number],
-          sellVolume: number,
-          buyVolume: number,
-          extraSellTokens: number,
-          extraBuyTokens: number,
+          extraTokens: number,
           isLatestAuction: boolean,
 
           accounts: {
@@ -420,26 +425,24 @@ module.exports = (artifacts) => {
    * ETHUSDOracle: address,
    * TUL: address,
    * OWL: address,
-   * priceOracleAddress: address,
-   * sellFundingNwTokenPair: number,
-   * thresholdForNewAuctionstart: number,
+   * thresholdNewTokenPair: number,
+   * thresholdNewAuction: number,
    * }
    */
   const getExchangeParams = async () => {
     const { dx } = await deployed
 
-    const [owner, ETH, ETHUSDOracle, TUL, OWL, priceOracleAddress, ...prices] = await Promise.all([
+    const [owner, ETH, ETHUSDOracle, TUL, OWL, ...prices] = await Promise.all([
       dx.owner(),
       dx.ETH(),
       dx.ETHUSDOracle(),
       dx.TUL(),
       dx.OWL(),
-      dx.priceOracleAddress(),
-      dx.sellFundingNewTokenPair(),
-      dx.treshholdForNewAuctionstart(),
+      dx.thresholdNewTokenPair(),
+      dx.thresholdNewAuction(),
     ])
 
-    const [sellFundingNewTokenPair, thresholdForNewAuctionstart] = mapToNumber(prices)
+    const [thresholdNewTokenPair, thresholdNewAuction] = mapToNumber(prices)
 
     return {
       owner,
@@ -447,9 +450,8 @@ module.exports = (artifacts) => {
       ETHUSDOracle,
       TUL,
       OWL,
-      priceOracleAddress,
-      sellFundingNewTokenPair,
-      thresholdForNewAuctionstart,
+      thresholdNewTokenPair,
+      thresholdNewAuction,
     }
   }
 
@@ -459,8 +461,8 @@ module.exports = (artifacts) => {
    * @options {
      owner: address,
      ETHUSDOracle: address,
-     sellFundingNewTokenPair: number,
-     thresholdForNewAuctionstart: number
+     thresholdNewTokenPair: number,
+     thresholdNewAuction: number
     }
    * @returns updateExchangeParams transaction
    */
@@ -469,23 +471,23 @@ module.exports = (artifacts) => {
     let {
       owner,
       ETHUSDOracle,
-      sellFundingNewTokenPair,
-      thresholdForNewAuctionstart,
+      thresholdNewTokenPair,
+      thresholdNewAuction,
     } = options
 
     let params
 
     if (owner === undefined
       || ETHUSDOracle === undefined
-      || sellFundingNewTokenPair === undefined
-      || thresholdForNewAuctionstart === undefined) {
+      || thresholdNewTokenPair === undefined
+      || thresholdNewAuction === undefined) {
       params = await getExchangeParams();
 
       ({
         owner,
         ETHUSDOracle,
-        sellFundingNewTokenPair,
-        thresholdForNewAuctionstart,
+        thresholdNewTokenPair,
+        thresholdNewAuction,
       } = { ...params, ...options })
     }
 
@@ -493,8 +495,8 @@ module.exports = (artifacts) => {
     return dx.updateExchangeParams(
       owner,
       ETHUSDOracle,
-      sellFundingNewTokenPair,
-      thresholdForNewAuctionstart,
+      thresholdNewTokenPair,
+      thresholdNewAuction,
       { from: params.owner },
     )
   }
@@ -661,7 +663,7 @@ module.exports = (artifacts) => {
       user: address,
       index: number,
     }
-    @returns number | undefined
+    @returns [unclaimedFunds: number, tulipsToIssue: number] | undefined
    */
   const getUnclaimedBuyerFunds = async ({ sellToken, buyToken, user, index }) => {
     const t1 = sellToken.address || sellToken
@@ -670,8 +672,8 @@ module.exports = (artifacts) => {
     const { dx } = await deployed
 
     try {
-      const unclaimedFunds = await dx.getUnclaimedBuyerFunds(t1, t2, user, index)
-      return unclaimedFunds.toNumber()
+      const unclaimedAndTulips = await dx.getUnclaimedBuyerFunds(t1, t2, user, index)
+      return mapToNumber(unclaimedAndTulips)
     } catch (error) {
       console.warn('Error getting unclaimed buyer funds')
       console.warn(error.message || error)
@@ -688,7 +690,7 @@ module.exports = (artifacts) => {
       user: address,
       index: number,
     }
-    @returns number | undefined
+    @returns [unclaimedFunds: number, tulipsToIssue: number] | undefined
    */
   const getUnclaimedSellerFunds = async ({ sellToken, buyToken, user, index }) => {
     const t1 = sellToken.address || sellToken
@@ -697,8 +699,8 @@ module.exports = (artifacts) => {
     const { dx } = await deployed
 
     try {
-      const unclaimedFunds = await dx.getUnclaimedSellerFunds(t1, t2, user, index)
-      return unclaimedFunds.toNumber()
+      const unclaimedAndTulips = await dx.getUnclaimedSellerFunds(t1, t2, user, index)
+      return mapToNumber(unclaimedAndTulips)
     } catch (error) {
       console.warn('Error getting unclaimed seller funds')
       console.warn(error.message || error)

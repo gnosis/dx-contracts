@@ -99,7 +99,7 @@ module.exports = async () => {
     await depositToDX(account, tokensToDeposit)
   }
 
-  const { sellFundingNewTokenPair } = await getExchangeParams()
+  const { thresholdNewTokenPair } = await getExchangeParams()
 
   const ETHUSDPrice = (await po.getUSDETHPrice()).toNumber()
 
@@ -120,16 +120,16 @@ module.exports = async () => {
   }
 
   console.log('fundedValueUSD was calculated as', fundedValueUSD)
-  const underfunded = fundedValueUSD < sellFundingNewTokenPair
+  const underfunded = fundedValueUSD < thresholdNewTokenPair
   if (underfunded) {
-    console.log(`\nfunded value (${fundedValueUSD}) < sellFundingNewTokenPair (${sellFundingNewTokenPair})`)
-    console.log('To add the token pair, temporarily setting sellFundingNewTokenPair = 0')
-    await updateExchangeParams({ sellFundingNewTokenPair: 0 })
-    console.log('sellFundingNewTokenPair:', (await getExchangeParams()).sellFundingNewTokenPair)
+    console.log(`\nfunded value (${fundedValueUSD}) < thresholdNewTokenPair (${thresholdNewTokenPair})`)
+    console.log('To add the token pair, temporarily setting thresholdNewTokenPair = 0')
+    await updateExchangeParams({ thresholdNewTokenPair: 0 })
+    console.log('thresholdNewTokenPair:', (await getExchangeParams()).thresholdNewTokenPair)
   }
 
   console.log(`Adding a new token pair ${SELL} -> ${BUY}`)
-  console.log(`${SELL} funding ${sellTokenFunding}\t${BUY} funding ${buyTokenFunding}`)
+  console.log(`${SELL} funding ${sellTokenFunding},\t${BUY} funding ${buyTokenFunding}`)
   console.log(`InitialclosingPrice: ${closingNum}/${closingDen} = ${closingNum / closingDen}`)
 
   const tx = await addTokenPair({
@@ -143,8 +143,8 @@ module.exports = async () => {
   })
 
   if (underfunded) {
-    console.log('Setting sellFundingNewTokenPair back to', sellFundingNewTokenPair)
-    await updateExchangeParams({ sellFundingNewTokenPair })
+    console.log('Setting thresholdNewTokenPair back to', thresholdNewTokenPair)
+    await updateExchangeParams({ thresholdNewTokenPair })
   }
 
   const { auctionStart, latestAuctionIndex } = await getExchangeStatsForTokenPair({ sellToken, buyToken })
