@@ -298,8 +298,10 @@ contract DutchExchange {
     )
         public
     {
-        // R1: amount mmust be > 0
-        amount = Math.min(amount, balances[sellToken][msg.sender]);
+        // Note: if a user specifies auctionIndex of 0, it
+        // means he is agnostic which auction his sell order goes into
+
+        // R1
         // require(amount > 0);
         if (amount == 0) {
             Log('postSellOrder R1');
@@ -322,7 +324,10 @@ contract DutchExchange {
             // Auction has already cleared, and index has been incremented
             // sell order must use that auction index
             // R1.1
-            // require(auctionIndex == latestAuctionIndex);
+            if (auctionIndex == 0) {
+                auctionIndex = latestAuctionIndex;
+            }
+            // require(auctionIndex == latestAuctionIndex); 
             if (auctionIndex != latestAuctionIndex) {
                 Log('postSellOrder R1.1');
                 return;
@@ -330,6 +335,9 @@ contract DutchExchange {
         } else {
             // C2
             // R2.1: Sell orders must go to next auction
+            if (auctionIndex == 0) {
+                auctionIndex = latestAuctionIndex + 1;
+            }
             // require(auctionIndex == latestAuctionIndex + 1);
             if (auctionIndex != latestAuctionIndex + 1) {
                 Log('postSellOrder R2.1');
@@ -369,28 +377,23 @@ contract DutchExchange {
     {
         uint auctionStart = getAuctionStart(sellToken, buyToken);
 
+        // R4: auction must not have cleared
+        // require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
+        if (closingPrices[sellToken][buyToken][auctionIndex].den > 0) {
+            Log('postBuyOrder R4');
+            return;
+        }
+
         // R1
         // require(getAuctionStart(sellToken, buyToken) <= now);
         if (auctionStart > now) {
             Log('postBuyOrder R1');
             return;
         }
-        // R2
-        // require(auctionIndex > 0);
-        if (auctionIndex == 0) {
-            Log('postBuyOrder R2');
-            return;
-        }
         // R3
         // require(auctionIndex == getAuctionIndex(sellToken, buyToken));
         if (auctionIndex != getAuctionIndex(sellToken, buyToken)) {
             Log('postBuyOrder R3');
-            return;
-        }
-        // R4: auction must not have cleared
-        // require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
-        if (closingPrices[sellToken][buyToken][auctionIndex].den > 0) {
-            Log('postBuyOrder R4');
             return;
         }
 
@@ -494,6 +497,7 @@ contract DutchExchange {
         balances[buyToken][user] += returned;
         NewSellerFundsClaim(sellToken, buyToken, user, auctionIndex, returned);
     }
+
     // > claimBuyerFunds()
     function claimBuyerFunds(
         address sellToken,
