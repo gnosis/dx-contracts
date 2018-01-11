@@ -302,6 +302,15 @@ contract('DutchExchange', (accounts) => {
     return { ETH, GNO }
   }
 
+  const getAccAllowance = async (owner, spender) => {
+    const [ETH, GNO] = (await Promise.all([
+      eth.allowance(owner, spender),
+      gno.allowance(owner, spender),
+    ])).map(n => n.toNumber())
+
+    return { ETH, GNO }
+  }
+
   it('intially deposits are 0', () => Promise.all(testingAccs.map(async (acc) => {
     const { ETH, GNO } = await getAccDeposits(acc)
 
@@ -415,15 +424,19 @@ contract('DutchExchange', (accounts) => {
     const { ETH: ETHDep2, GNO: GNODep2 } = await getAccDeposits(acc)
 
     logger(`${acc} deposits:\t${ETHDep2} ETH,\t${GNODep2} GNO`)
+
+    assert.strictEqual(ETHDep1, ETHDep2, 'ETH deposit should not change')
+    assert.strictEqual(GNODep1, GNODep2, 'GNO deposit should not change')
   })))
   
   it('rejects when trying to deposit more than balance available', () => Promise.all(testingAccs.map(async (acc) => {
     const { ETH: ETHBal1, GNO: GNOBal1 } = await getAccBalances(acc)
+    const { ETH: ETHDep1, GNO: GNODep1 } = await getAccDeposits(acc)
 
     const depositETH = ETHBal1 + 10
     const depositGNO = GNOBal1 + 10
 
-    logger(`${acc} trying to deposit\t${depositETH} ETH,\t${depositGNO} GNO`)
+    logger(`${acc} trying to deposit\t${depositETH} ETH,\t${depositGNO} GNO\n\t10 more than balance available`)
 
     // transaction returned early at Log('deposit R1')
     await assertRejects(dx.deposit(eth.address, depositETH, { from: acc }), 'can\'t deposit more than ETH balance')
@@ -432,6 +445,28 @@ contract('DutchExchange', (accounts) => {
     const { ETH: ETHDep2, GNO: GNODep2 } = await getAccDeposits(acc)
 
     logger(`${acc} deposits:\t${ETHDep2} ETH,\t${GNODep2} GNO`)
+    assert.strictEqual(ETHDep1, ETHDep2, 'ETH deposit should not change')
+    assert.strictEqual(GNODep1, GNODep2, 'GNO deposit should not change')
+  })))
+
+  it('rejects when trying to deposit more than allowance', () => Promise.all(testingAccs.map(async (acc) => {
+    const { ETH: ETHAllow, GNO: GNOAllow } = await getAccAllowance(acc, dx.address)
+    const { ETH: ETHDep1, GNO: GNODep1 } = await getAccDeposits(acc)
+
+    const depositETH = ETHAllow + 10
+    const depositGNO = GNOAllow + 10
+
+    logger(`${acc} trying to deposit\t${depositETH} ETH,\t${depositGNO} GNO\n\t10 more than allowance`)
+
+    // transaction returned early at Log('deposit R1')
+    await assertRejects(dx.deposit(eth.address, depositETH, { from: acc }), 'can\'t deposit more than ETH allowance')
+    await assertRejects(dx.deposit(gno.address, depositGNO, { from: acc }), 'can\'t deposit more than GNO allowance')
+
+    const { ETH: ETHDep2, GNO: GNODep2 } = await getAccDeposits(acc)
+
+    logger(`${acc} deposits:\t${ETHDep2} ETH,\t${GNODep2} GNO`)
+    assert.strictEqual(ETHDep1, ETHDep2, 'ETH deposit should not change')
+    assert.strictEqual(GNODep1, GNODep2, 'GNO deposit should not change')
   })))
 })
 
