@@ -1,4 +1,4 @@
-/* eslint prefer-const:0, max-len:0, object-curly-newline:1, no-param-reassign:0, no-console:0 */
+/* eslint prefer-const:0, max-len:0, object-curly-newline:1, no-param-reassign:0, no-console:0, no-mixed-operators:0 */
 const { wait } = require('@digix/tempo')(web3)
 const { timestamp, varLogger } = require('./utils')
 
@@ -122,16 +122,16 @@ const checkBalanceBeforeClaim = async (
 
   const balanceBeforeClaim = (await dx.balances.call(token.address, acct)).toNumber()
 
-  if (claiming == 'buyer') {
+  if (claiming === 'buyer') {
     await dx.claimBuyerFunds(sellToken.address, buyToken.address, acct, idx)
   } else {
     await dx.claimSellerFunds(sellToken.address, buyToken.address, acct, idx)
   }
-  
+
   const balanceAfterClaim = (await dx.balances.call(token.address, acct)).toNumber()
   const difference = Math.abs(balanceBeforeClaim + amt - balanceAfterClaim)
   varLogger('claiming for', claiming)
-  varLogger('balanceBeforeClaim', balanceBeforeClaim);
+  varLogger('balanceBeforeClaim', balanceBeforeClaim)
   varLogger('amount', amt)
   varLogger('balanceAfterClaim', balanceAfterClaim)
   varLogger('difference', difference)
@@ -144,7 +144,7 @@ const getAuctionIndex = async (sell, buy) => {
 
   return (await dx.getAuctionIndex.call(buy.address, sell.address)).toNumber()
 }
-const getStartingTimeOfAuction = async (sell = eth, buy = gno) => (await dx.getAuctionStart.call(sell.address, buy.address)).toNumber()
+// const getStartingTimeOfAuction = async (sell = eth, buy = gno) => (await dx.getAuctionStart.call(sell.address, buy.address)).toNumber()
 
 /**
  * address sellToken,
