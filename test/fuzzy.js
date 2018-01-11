@@ -154,7 +154,7 @@ async function postBuyOrder(Ts, Tb, u, aI, am, j) {
   }
   log(expectToPass)
   if (expectToPass) await dx.postBuyOrder(Ts, Tb, aI, am, { from: u })
-  else assertRejects(dx.postBuyOrder(Ts, Tb, aI, am, { from: u }), `failing buyOrder(${Ts}, ${Tb}, ${aI}, ${am}) from ${u}`)
+  else await assertRejects(dx.postBuyOrder(Ts, Tb, aI, am, { from: u }), `failing buyOrder(${Ts}, ${Tb}, ${aI}, ${am}) from ${u}`)
 }
 
 async function claimSellerFunds(Ts, Tb, u, aI) {
