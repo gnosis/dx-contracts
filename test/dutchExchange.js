@@ -464,8 +464,8 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
 
   const getAccDeposits = async (acc) => {
     const [ETH, GNO] = (await Promise.all([
-      dx.balances(eth.address, acc),
-      dx.balances(gno.address, acc),
+      dx.balances.call(eth.address, acc),
+      dx.balances.call(gno.address, acc),
     ])).map(n => n.toNumber())
 
     return { ETH, GNO }
@@ -473,8 +473,8 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
 
   const getAccBalances = async (acc) => {
     const [ETH, GNO] = (await Promise.all([
-      eth.balanceOf(acc),
-      gno.balanceOf(acc),
+      eth.balanceOf.call(acc),
+      gno.balanceOf.call(acc),
     ])).map(n => n.toNumber())
 
     return { ETH, GNO }
@@ -482,8 +482,8 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
 
   const getAccAllowance = async (owner, spender) => {
     const [ETH, GNO] = (await Promise.all([
-      eth.allowance(owner, spender),
-      gno.allowance(owner, spender),
+      eth.allowance.call(owner, spender),
+      gno.allowance.call(owner, spender),
     ])).map(n => n.toNumber())
 
     return { ETH, GNO }
