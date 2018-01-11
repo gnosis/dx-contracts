@@ -410,9 +410,16 @@ contract DutchExchange {
         // Overbuy is when a part of a buy order clears an auction
         // In that case we only process the part before the overbuy
         // To calculate overbuy, we first get current price
-        fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
         uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
+        if (sellVolume == 0) {
+            extraTokens[sellToken][buyToken][auctionIndex + 1] = extraTokens[sellToken][buyToken][auctionIndex];
+            extraTokens[sellToken][buyToken][auctionIndex] = 0;
+            // Not necessary, just to save gas:
+            return;
+        }
+
         uint buyVolume = buyVolumes[sellToken][buyToken];
+        fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
         uint outstandingVolume = Math.atleastZero(int(sellVolume * price.num / price.den - buyVolume));
 
         uint amountAfterFee;
@@ -434,6 +441,7 @@ contract DutchExchange {
             NewBuyOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
         }
 
+        // Checking for equality would suffice here. nevertheless:
         if (amount >= outstandingVolume) {
             // Clear auction
             clearAuction(sellToken, buyToken, auctionIndex, sellVolume);
@@ -650,8 +658,17 @@ contract DutchExchange {
         closingPrices[sellToken][buyToken][auctionIndex] = fraction(buyVolume, sellVolume);
         fraction memory opp = closingPrices[buyToken][sellToken][auctionIndex];
 
+        // Logic so tokens don't get stuck in auctions where clearing price was 0
+        uint sellVolumeNext = sellVolumesNext[sellToken][buyToken];
+        if (buyVolume == 0) {
+            extraTokens[sellToken][buyToken][auctionIndex + 1] = extraTokens[sellToken][buyToken][auctionIndex];
+            extraTokens[sellToken][buyToken][auctionIndex] = 0;
+            if (sellVolume > 0) {
+                sellVolumeNext += sellVolume;
+            }
+        }
         // Update state variables
-        sellVolumesCurrent[sellToken][buyToken] = sellVolumesNext[sellToken][buyToken];
+        sellVolumesCurrent[sellToken][buyToken] = sellVolumeNext;
         sellVolumesNext[sellToken][buyToken] = 0;
         buyVolumes[sellToken][buyToken] = 0;
 
