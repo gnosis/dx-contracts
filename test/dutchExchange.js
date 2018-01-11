@@ -252,7 +252,7 @@ contract('DutchExchange', (accounts) => {
 })
 
 contract('DutchExchange', (accounts) => {
-  const [, seller1, seller2, buyer1, buyer2] = accounts
+  const [, seller1, , buyer1] = accounts
 
   beforeEach(async () => {
     // get contracts
@@ -284,24 +284,20 @@ contract('DutchExchange', (accounts) => {
   after(eventWatcher.stopWatching)
 
   it('clearing an auction with buyOrder, after it closed theoretical', async () => {
-    let auctionIndex
-
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
 
-    auctionIndex = await getAuctionIndex()
+    const auctionIndex = await getAuctionIndex()
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.99)
     
     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9, { from: buyer1 })
 
 
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.4)
-    previousBuyVolume = (await dx.buyVolumes(eth.address, gno.address)).toNumber()
+    const previousBuyVolume = (await dx.buyVolumes(eth.address, gno.address)).toNumber()
     logger('previousBuyVolume', previousBuyVolume)
     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9, { from: buyer1 })
-    let closingPriceNum
-    let closingPriceDen
-    [closingPriceNum, closingPriceDen] = await dx.closingPrices.call(eth.address, gno.address, auctionIndex)
+    const [closingPriceNum] = await dx.closingPrices.call(eth.address, gno.address, auctionIndex)
     assert.equal(previousBuyVolume, closingPriceNum)
 
     // check Buyer1 balance and claim
@@ -312,7 +308,7 @@ contract('DutchExchange', (accounts) => {
 })
 
 contract('DutchExchange', (accounts) => {
-  const [, seller1, seller2, buyer1, buyer2] = accounts
+  const [, seller1, , buyer1] = accounts
 
   beforeEach(async () => {
     // get contracts
@@ -356,12 +352,10 @@ contract('DutchExchange', (accounts) => {
 
 
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.4)
-    previousBuyVolume = (await dx.buyVolumes(eth.address, gno.address)).toNumber()
+    const previousBuyVolume = (await dx.buyVolumes(eth.address, gno.address)).toNumber()
     logger('previousBuyVolume', previousBuyVolume)
     await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9, { from: buyer1 })
-    let closingPriceNum
-    let closingPriceDen
-    [closingPriceNum, closingPriceDen] = await dx.closingPrices.call(eth.address, gno.address, auctionIndex)
+    const [closingPriceNum] = await dx.closingPrices.call(eth.address, gno.address, auctionIndex)
     assert.equal(previousBuyVolume, closingPriceNum)
     auctionIndex = await getAuctionIndex()
     assert.equal(auctionIndex, 2, 'one auction is still pending and was not closed')
@@ -372,7 +366,7 @@ contract('DutchExchange', (accounts) => {
   })
 })
 contract('DutchExchange', (accounts) => {
-  const [, seller1, seller2, buyer1, buyer2] = accounts
+  const [, seller1, , buyer1] = accounts
 
   beforeEach(async () => {
     // get contracts
@@ -404,12 +398,10 @@ contract('DutchExchange', (accounts) => {
   after(eventWatcher.stopWatching)
 
   it('clearing an 0 sellVolume opposite auction after 6 hours and check shift of NextSellVolume', async () => {
-    let auctionIndex
-
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
 
-    auctionIndex = await getAuctionIndex()
+    const auctionIndex = await getAuctionIndex()
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.99)
     
     await dx.postSellOrder(eth.address, gno.address, auctionIndex + 1, 10 ** 8, { from: seller1 })
