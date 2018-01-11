@@ -11,10 +11,10 @@ const contractNames = [
   'TokenTUL',
   'PriceOracle',
 ]
-
 /**
- * >getContract()
- * deploys all contracts in build/contracts
+ * getContracts - async loads contracts and instances
+ *
+ * @returns { Mapping(contractName => deployedContract) }
  */
 const getContracts = async () => {
   const depContracts = contractNames.map(c => artifacts.require(c)).map(cc => cc.deployed())
@@ -30,8 +30,8 @@ const getContracts = async () => {
 
 /**
  * >setupTest()
- * @param {Array}  = accounts passed in globally
- * @param {Object} = Contract object obtained via: const contract = await getContracts() (see above)
+ * @param {Array[address]} accounts => ganache-cli accounts passed in globally
+ * @param {Object}         contract => Contract object obtained via: const contract = await getContracts() (see above)
  */
 const setupTest = async (accounts, {
   DutchExchange: dx, EtherToken: eth, TokenGNO: gno, PriceOracle: oracle,
@@ -59,7 +59,11 @@ const setupTest = async (accounts, {
 }
 
 // testing Auction Functions
-
+/**
+ * setAndCheckAuctionStarted - gets Auction Idx for curr Token Pair and moves time to auction start if: start = false
+ * @param {address} ST - Sell Token
+ * @param {address} BT - Buy Token
+ */
 const setAndCheckAuctionStarted = async (ST, BT) => {
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno } = await getContracts()
   ST = ST || eth; BT = BT || gno
@@ -67,7 +71,7 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
   const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
 
   // wait for the right time to send buyOrder
-
+  // implements isAtLeastZero (aka will not go BACK in time)
   await wait((startingTimeOfAuction - timestamp()) + 500)
 
   console.log(`
@@ -80,9 +84,9 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
 
 /**
  * waitUntilPriceIsXPercentOfPreviousPrice
- * @param {*} ST  - sellToken
- * @param {*} BT  - buyToken
- * @param {*} p   - percentage of the previous price
+ * @param {address} ST  => Sell Token
+ * @param {address} BT  => Buy Token
+ * @param {unit}    p   => percentage of the previous price
  */
 const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno } = await getContracts()
@@ -100,8 +104,8 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
  * @param {string} acct       => acct to check Balance of
  * @param {number} idx        => auctionIndex to check
  * @param {string} claiming   => 'seller' || 'buyer'
- * @param {string} sellToken  => gno || eth
- * @param {string} buyToken   => gno || eth
+ * @param {address} ST        => Sell Token
+ * @param {address} BT        => Buy Token
  * @param {number} amt        => amt to check
  * @param {number} round      => rounding error threshold
  */
@@ -109,25 +113,25 @@ const checkBalanceBeforeClaim = async (
   acct,
   idx,
   claiming,
-  sellToken,
-  buyToken,
+  ST,
+  BT,
   amt = (10 ** 9),
   round = MaxRoundingError,
 ) => {
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno } = await getContracts()
-  sellToken = sellToken || eth; buyToken = buyToken || gno
+  ST = ST || eth; BT = BT || gno
 
-  let token = sellToken
+  let token = ST
   if (claiming === 'seller') {
-    token = buyToken
+    token = BT
   }
 
   const balanceBeforeClaim = (await dx.balances.call(token.address, acct)).toNumber()
 
   if (claiming === 'buyer') {
-    await dx.claimBuyerFunds(sellToken.address, buyToken.address, acct, idx)
+    await dx.claimBuyerFunds(ST.address, BT.address, acct, idx)
   } else {
-    await dx.claimSellerFunds(sellToken.address, buyToken.address, acct, idx)
+    await dx.claimSellerFunds(ST.address, BT.address, acct, idx)
   }
 
   const balanceAfterClaim = (await dx.balances.call(token.address, acct)).toNumber()
@@ -150,10 +154,13 @@ const getAuctionIndex = async (sell, buy) => {
 // const getStartingTimeOfAuction = async (sell = eth, buy = gno) => (await dx.getAuctionStart.call(sell.address, buy.address)).toNumber()
 
 /**
- * address sellToken,
- * address buyToken,
- * uint auctionIndex,
- * uint amount
+ * postBuyOrder
+ * @param {address} ST      => Sell Token
+ * @param {address} BT      => Buy Token
+ * @param {uint}    aucIdx  => auctionIndex
+ * @param {uint}    amt     => amount
+ *
+ * @returns { tx receipt }
  */
 const postBuyOrder = async (ST, BT, aucIdx, amt, acct) => {
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno } = await getContracts()
@@ -168,24 +175,33 @@ const postBuyOrder = async (ST, BT, aucIdx, amt, acct) => {
   return dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct })
 }
 
+/**
+ * claimBuyerFunds
+ * @param {address} ST      => Sell Token
+ * @param {address} BT      => Buy Token
+ * @param {address} user    => user address
+ * @param {uint}    aucIdx  => auction Index [@default => getAuctionindex()]
+ * @param {address} acct    => signer of tx if diff from user [@default = user]
+ *
+ * @returns { [uint returned, uint tulipsToIssue] }
+ */
 const claimBuyerFunds = async (ST, BT, user, aucIdx, acct) => {
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno } = await getContracts()
   ST = ST || eth; BT = BT || gno; user = user || acct
   let auctionIdx = aucIdx || await getAuctionIndex()
 
-  return dx.claimBuyerFunds(ST.address, BT.address, user, auctionIdx, { from: acct })
+  return dx.claimBuyerFunds(ST.address, BT.address, user, auctionIdx, { from: user })
 }
 
 /**
-   * postBuyOrder_And_CheckUserReceivesTulipTokens
-   * @param {*} user - address of current user buying and owning tulips
-   * @param {*} ST  - token using to buy buyToken (normally ETH)
-   * @param {*} BT - token to buy
+   * checkUserReceivesTulipTokens
+   * @param {address} ST    => Sell Token: token using to buy buyToken (normally ETH)
+   * @param {address} BT    => Buy Token: token to buy
+   * @param {address} user  => address of current user buying and owning tulips
    */
-const checkUserReceivesTulipTokens = async (user, ST, BT) => {
-  const {
-    DutchExchange: dx, EtherToken: eth, TokenGNO: gno, TokenTUL: tokenTUL,
-  } = await getContracts()
+const checkUserReceivesTulipTokens = async (ST, BT, user) => {
+  const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno, TokenTUL: tokenTUL } = await getContracts()
+
   ST = ST || eth; BT = BT || gno
 
   const aucIdx = await getAuctionIndex()
@@ -225,6 +241,10 @@ const checkUserReceivesTulipTokens = async (user, ST, BT) => {
   assert.isAtLeast(newBalance, lockedTulFunds, 'for ETH -> * pair returned tokens should equal tulips minted')
 }
 
+/**
+ * unlockTulipTokens
+ * @param {address} user => address to unlock Tokens for
+ */
 const unlockTulipTokens = async (user) => {
   const { TokenTUL: tokenTUL } = await getContracts()
 
