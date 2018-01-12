@@ -35,4 +35,13 @@ contract('DutchExchange updating token aprroval', (accounts) => {
 
     return dx.approvedTokens.call(addr)
   }
+
+  it('intially tokens aren\'t approved', () => Promise.all(testingTokens.map(async (token) => {
+    const symbol = await token.symbol.call()
+    const approved = await getTokenApproval(token)
+
+    logger(`Token ${symbol} at ${token.address} is ${approved ? '' : 'NOT'} approved`)
+
+    assert.isFalse(approved, 'token shouldn\'t be approved yet')
+  })))
 })
