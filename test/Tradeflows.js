@@ -27,6 +27,21 @@ let tokenTUL
 
 
 let contracts
+const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+  assert.equal((await dx.getAuctionIndex.call(eth.address, gno.address)).toNumber(), auctionIndex)
+  assert.equal((await dx.getAuctionIndex.call(gno.address, eth.address)).toNumber(), auctionIndex)
+  assert.equal((await dx.getAuctionStart.call(gno.address, eth.address)).toNumber(), auctionStart)
+  assert.equal((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber(), sellVolumesCurrent)
+  assert.equal((await dx.sellVolumesNext.call(eth.address, gno.address)).toNumber(), sellVolumesNext)
+  let difference = Math.abs((await dx.buyVolumes.call(eth.address, gno.address)).toNumber() - buyVolumes)
+  logger('buyVolumes', buyVolumes)
+  logger((await dx.buyVolumes.call(eth.address, gno.address)).toNumber())
+  assert.isAtLeast(difference, MaxRoundingError) 
+  const [closingPriceNumReal, closingPriceDenReal] = await dx.closingPrices(ST.address, BT.address, auctionIndex)
+  difference = Math.abs(closingPriceNumReal - closingPriceNum)
+  assert.isAtLeast(difference, MaxRoundingError) 
+  assert.equal(closingPriceDenReal, closingPriceDen)
+}
 
 const setupContracts = async () => {
   contracts = await getContracts();
@@ -40,7 +55,7 @@ const setupContracts = async () => {
   } = contracts)
 }
 
-contract('DutchExchange', (accounts) => {
+contract('DutchExchange - Flow 6', (accounts) => {
   const [, seller1, , buyer1] = accounts
 
   beforeEach(async () => {
@@ -104,7 +119,7 @@ contract('DutchExchange', (accounts) => {
 })
 
 
-contract('DutchExchange', (accounts) => {
+contract('DutchExchange - Flow 6 plus additions', (accounts) => {
   const [, seller1, seller2, buyer1, buyer2] = accounts
 
   beforeEach(async () => {
@@ -171,7 +186,7 @@ contract('DutchExchange', (accounts) => {
   })
 })
 
-contract('DutchExchange', (accounts) => {
+contract('DutchExchange - Flow 1', (accounts) => {
   const [, seller1, seller2, buyer1, buyer2] = accounts
 
   beforeEach(async () => {
@@ -255,7 +270,7 @@ contract('DutchExchange', (accounts) => {
   })
 })
 
-contract('DutchExchange', (accounts) => {
+contract('DutchExchange - Flow 9', (accounts) => {
   const [, seller1, , buyer1, buyer2] = accounts
 
   beforeEach(async () => {
@@ -287,13 +302,14 @@ contract('DutchExchange', (accounts) => {
 
   after(eventWatcher.stopWatching)
 
-  it('Flow 9 - clearing an auction + opposite 0 vol with buyOrder, after it closed theoretical', async () => {
+  it('step 2 - closing theoretical', async () => {
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
     let auctionIndex = await getAuctionIndex()
     const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
+    
     // non-clearing buyOrder
-    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.666666)
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     await postBuyOrder(eth, gno, auctionIndex, 10 ** 9, buyer1)
 
     // theoretical clearing at  0.5
@@ -301,20 +317,23 @@ contract('DutchExchange', (accounts) => {
 
     // check that auction is in right place
     auctionIndex = await getAuctionIndex()
-    assert.equal((await dx.getAuctionIndex.call(eth.address, gno.address)).toNumber(), 1)
-    assert.equal((await dx.getAuctionIndex.call(gno.address, eth.address)).toNumber(), 1)
-    assert.equal((await dx.getAuctionStart.call(gno.address, eth.address)).toNumber(), auctionStart)
-    assert.equal((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber(), 10 ** 9 - 10 ** 9 / 200)
-    assert.equal((await dx.sellVolumesNext.call(eth.address, gno.address)).toNumber(), 0)
 
+    // const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(1, auctionStart, 10 ** 9 - 10 ** 9 / 200, 0, 10 ** 9 - 10 ** 9 / 200, 0, 0, eth, gno, 0)
+  })
+
+  it('step 3 - both auctions get cleared', async () => {
+    let auctionIndex = await getAuctionIndex()
     // clearing buyOrder
     const previousBuyVolume = (await dx.buyVolumes(eth.address, gno.address)).toNumber()
     await postBuyOrder(eth, gno, auctionIndex, 10 ** 9, buyer2)
 
+    // check correct closing prices
     const [closingPriceNum] = await dx.closingPrices.call(eth.address, gno.address, auctionIndex)
     assert.equal(previousBuyVolume, closingPriceNum)
     const [closingPriceNum2] = await dx.closingPrices.call(gno.address, eth.address, auctionIndex)
     assert.equal(0, closingPriceNum2)
+
     // check Buyer1 balance and claim
     await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 ** 9 - 10 ** 9 / 200))
     // check Seller1 Balance
@@ -322,11 +341,9 @@ contract('DutchExchange', (accounts) => {
 
     // check that auction is in right place
     auctionIndex = await getAuctionIndex()
-    assert.equal((await dx.getAuctionIndex.call(eth.address, gno.address)).toNumber(), 2)
-    assert.equal((await dx.getAuctionIndex.call(gno.address, eth.address)).toNumber(), 2)
-    assert.equal((await dx.getAuctionStart.call(gno.address, eth.address)).toNumber(), 1)
-    assert.equal((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber(), 0)
-    assert.equal((await dx.sellVolumesNext.call(eth.address, gno.address)).toNumber(), 0)
+
+    // const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(2, 1, 0, 0, 0, 0, 0, eth, gno, 0)
   })
 })
 /*
