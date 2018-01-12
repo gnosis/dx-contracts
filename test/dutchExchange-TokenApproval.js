@@ -36,30 +36,42 @@ contract('DutchExchange updating token aprroval', (accounts) => {
     return dx.approvedTokens.call(addr)
   }
 
+  const getAndPrintApproval = async (token, symbol) => {
+    const approved = await getTokenApproval(token)
+    logger(`Token ${symbol} at ${token.address} is ${approved ? '' : 'NOT'} APPROVED`)
+
+    return approved
+  }
+
+  const assertIsOwner = async (acc) => {
+    const owner = await dx.owner.call()
+    assert.strictEqual(owner, acc, 'account should be DutchExchange contract owner')
+  }
+
+  const assertIsNotOwner = async (acc) => {
+    const owner = await dx.owner.call()
+    assert.notStrictEqual(owner, acc, 'account should not be DutchExchange contract owner')
+  }
+
   it('intially tokens aren\'t approved', () => Promise.all(testingTokens.map(async (token) => {
     const symbol = await token.symbol.call()
-    const approved = await getTokenApproval(token)
-
-    logger(`Token ${symbol} at ${token.address} is ${approved ? '' : 'NOT'} APPROVED`)
+    const approved = await getAndPrintApproval(token, symbol)
 
     assert.isFalse(approved, `${symbol} token shouldn't be approved yet`)
   })))
 
   it('not owner can\'t set token approval', () => Promise.all(testingTokens.map(async (token) => {
     const symbol = await token.symbol.call()
-    const approved1 = await getTokenApproval(token)
+    const approved1 = await getAndPrintApproval(token, symbol)
     assert.isFalse(approved1, `${symbol} token is not approved`)
 
-    const owner = await dx.owner.call()
-    assert.notStrictEqual(owner, seller1, 'web3.eth.accounts[1] should not be DutchExchange contract owner')
+    await assertIsNotOwner(seller1)
 
-    logger(`Token ${symbol} at ${token.address} is ${approved1 ? '' : 'NOT'} APPROVED`)
     logger(`Not owner tries to change ${symbol} approval to ${!approved1}`)
 
     await assertRejects(dx.updateApprovalOfToken(token.address, !approved1, { from: seller1 }), `not owner can't set ${symbol} token approval`)
 
-    const approved2 = await getTokenApproval(token)
-    logger(`Token ${symbol} at ${token.address} is ${approved2 ? '' : 'NOT'} APPROVED`)
+    const approved2 = await getAndPrintApproval(token, symbol)
 
     assert.strictEqual(approved1, approved2, ` ${symbol} token should not change approval`)
     assert.isFalse(approved2, `${symbol} token shouldn't be approved yet`)
@@ -67,19 +79,16 @@ contract('DutchExchange updating token aprroval', (accounts) => {
 
   it('owner can set token approval', () => Promise.all(testingTokens.map(async (token) => {
     const symbol = await token.symbol.call()
-    const approved1 = await getTokenApproval(token)
+    const approved1 = await getAndPrintApproval(token, symbol)
     assert.isFalse(approved1, `${symbol} token is not approved`)
 
-    const owner = await dx.owner.call()
-    assert.strictEqual(owner, master, 'web3.eth.accounts[0] should be DutchExchange contract owner')
+    await assertIsOwner(master)
 
-    logger(`Token ${symbol} at ${token.address} is ${approved1 ? '' : 'NOT'} APPROVED`)
     logger(`Owner changes ${symbol} approval to ${!approved1}`)
 
     await dx.updateApprovalOfToken(token.address, !approved1, { from: master })
 
-    const approved2 = await getTokenApproval(token)
-    logger(`Token ${symbol} at ${token.address} is ${approved2 ? '' : 'NOT'} APPROVED`)
+    const approved2 = await getAndPrintApproval(token, symbol)
 
     assert.strictEqual(!approved1, approved2, ` ${symbol} token should change approval`)
     assert.isTrue(approved2, `${symbol} token should be approved`)
@@ -87,19 +96,16 @@ contract('DutchExchange updating token aprroval', (accounts) => {
 
   it('not owner can\'t remove token approval', () => Promise.all(testingTokens.map(async (token) => {
     const symbol = await token.symbol.call()
-    const approved1 = await getTokenApproval(token)
+    const approved1 = await getAndPrintApproval(token, symbol)
     assert.isTrue(approved1, `${symbol} token is approved`)
 
-    const owner = await dx.owner.call()
-    assert.notStrictEqual(owner, seller1, 'web3.eth.accounts[1] should not be DutchExchange contract owner')
+    await assertIsNotOwner(seller1)
 
-    logger(`Token ${symbol} at ${token.address} is ${approved1 ? '' : 'NOT'} APPROVED`)
     logger(`Not owner tries to change ${symbol} approval to ${!approved1}`)
 
     await assertRejects(dx.updateApprovalOfToken(token.address, !approved1, { from: seller1 }), `not owner can't remove ${symbol} token approval`)
 
-    const approved2 = await getTokenApproval(token)
-    logger(`Token ${symbol} at ${token.address} is ${approved2 ? '' : 'NOT'} APPROVED`)
+    const approved2 = await getAndPrintApproval(token, symbol)
 
     assert.strictEqual(approved1, approved2, ` ${symbol} token should not change approval`)
     assert.isTrue(approved2, `${symbol} token should still be approved`)
@@ -107,19 +113,16 @@ contract('DutchExchange updating token aprroval', (accounts) => {
 
   it('owner can remove token approval', () => Promise.all(testingTokens.map(async (token) => {
     const symbol = await token.symbol.call()
-    const approved1 = await getTokenApproval(token)
+    const approved1 = await getAndPrintApproval(token, symbol)
     assert.isTrue(approved1, `${symbol} token is approved`)
 
-    const owner = await dx.owner.call()
-    assert.strictEqual(owner, master, 'web3.eth.accounts[0] should be DutchExchange contract owner')
+    await assertIsOwner(master)
 
-    logger(`Token ${symbol} at ${token.address} is ${approved1 ? '' : 'NOT'} APPROVED`)
     logger(`Owner changes ${symbol} approval to ${!approved1}`)
 
     await dx.updateApprovalOfToken(token.address, !approved1, { from: master })
 
-    const approved2 = await getTokenApproval(token)
-    logger(`Token ${symbol} at ${token.address} is ${approved2 ? '' : 'NOT'} APPROVED`)
+    const approved2 = await getAndPrintApproval(token, symbol)
 
     assert.strictEqual(!approved1, approved2, ` ${symbol} token should change approval`)
     assert.isFalse(approved2, `${symbol} token should be unapproved`)
