@@ -1,0 +1,22 @@
+#.travis.yml
+sudo: required
+dist: trusty
+language: node_js
+node_js:
+  - '9'
+  - '8'
+  - '7'
+before_install:
+  - rm -rf node_modules
+  - npm install -g truffle ganache-cli ethereumjs-testrpc
+  - npm install --save-dev solidity-coverage codecov
+install:
+  - npm install
+#IF on contract branch - start ganacheCLI || ELSE - move on  
+before_script: 
+  - cd $TRAVIS_BUILD_DIR/travscripts
+  - "chmod +x ./BranchPreScriptCheck.sh && ./BranchPreScriptCheck.sh"
+#CONDITIONALLY run tests or build app
+script: 
+  - cd $TRAVIS_BUILD_DIR/travscripts
+  - "chmod +x ./BranchScript.sh && ./BranchScript.sh"
