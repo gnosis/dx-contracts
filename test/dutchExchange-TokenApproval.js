@@ -56,7 +56,7 @@ contract('DutchExchange updating token aprroval', (accounts) => {
     logger(`Token ${symbol} at ${token.address} is ${approved1 ? '' : 'NOT'} APPROVED`)
     logger(`Not owner tries to change ${symbol} approval to ${!approved1}`)
 
-    await assertRejects(dx.updateApprovalOfToken(token.address, !approved1, { from: seller1 }), `not owner can't change ${symbol} token approval`)
+    await assertRejects(dx.updateApprovalOfToken(token.address, !approved1, { from: seller1 }), `not owner can't set ${symbol} token approval`)
 
     const approved2 = await getTokenApproval(token)
     logger(`Token ${symbol} at ${token.address} is ${approved2 ? '' : 'NOT'} APPROVED`)
@@ -83,5 +83,25 @@ contract('DutchExchange updating token aprroval', (accounts) => {
 
     assert.strictEqual(!approved1, approved2, ` ${symbol} token should change approval`)
     assert.isTrue(approved2, `${symbol} token should be approved`)
+  })))
+
+  it('not owner can\'t remove token approval', () => Promise.all(testingTokens.map(async (token) => {
+    const symbol = await token.symbol.call()
+    const approved1 = await getTokenApproval(token)
+    assert.isTrue(approved1, `${symbol} token is approved`)
+
+    const owner = await dx.owner.call()
+    assert.notStrictEqual(owner, seller1, 'web3.eth.accounts[1] should not be DutchExchange contract owner')
+
+    logger(`Token ${symbol} at ${token.address} is ${approved1 ? '' : 'NOT'} APPROVED`)
+    logger(`Not owner tries to change ${symbol} approval to ${!approved1}`)
+
+    await assertRejects(dx.updateApprovalOfToken(token.address, !approved1, { from: seller1 }), `not owner can't remove ${symbol} token approval`)
+
+    const approved2 = await getTokenApproval(token)
+    logger(`Token ${symbol} at ${token.address} is ${approved2 ? '' : 'NOT'} APPROVED`)
+
+    assert.strictEqual(approved1, approved2, ` ${symbol} token should not change approval`)
+    assert.isTrue(approved2, `${symbol} token should still be approved`)
   })))
 })
