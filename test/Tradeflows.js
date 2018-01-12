@@ -60,7 +60,7 @@ const setupContracts = async () => {
 contract('DutchExchange - Flow 3', (accounts) => {
   const [, seller1, , buyer1] = accounts
 
-  beforeEach(async () => {
+  before(async () => {
     // get contracts
     await setupContracts()
 
@@ -124,7 +124,7 @@ contract('DutchExchange - Flow 3', (accounts) => {
 contract('DutchExchange - Flow 6', (accounts) => {
   const [, seller1, seller2, buyer1, buyer2] = accounts
 
-  beforeEach(async () => {
+  before(async () => {
     // get contracts
     contracts = await getContracts();
     // destructure contracts into upper state
@@ -213,7 +213,7 @@ contract('DutchExchange - Flow 6', (accounts) => {
 contract('DutchExchange - Flow 1', (accounts) => {
   const [, seller1, seller2, buyer1, buyer2] = accounts
 
-  beforeEach(async () => {
+  before(async () => {
     // get contracts
     contracts = await getContracts();
     // destructure contracts into upper state
@@ -301,7 +301,7 @@ contract('DutchExchange - Flow 1', (accounts) => {
 contract('DutchExchange - Flow 9', (accounts) => {
   const [, seller1, , buyer1, buyer2] = accounts
 
-  beforeEach(async () => {
+  before(async () => {
     // get contracts
     contracts = await getContracts();
     // destructure contracts into upper state
