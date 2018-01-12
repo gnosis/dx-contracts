@@ -22,7 +22,7 @@ const blockNumber = () => web3.eth.blockNumber
 const timestamp = (block = 'latest') => web3.eth.getBlock(block).timestamp
 
 const log = silent ? () => {} : console.log.bind(console)
-const logger = async (desc, fn) => log(`---- \n => ${desc} ${fn ? `|| - - - - - - - - - -  - > ${fn}` : ''}`)
+const logger = (desc, fn) => log(`---- \n => ${desc} ${fn ? `|| - - - - - - - - - -  - > ${fn}` : ''}`)
 
 const varLogger = (varName, varValue) => log(varName, '--->', varValue)
 
