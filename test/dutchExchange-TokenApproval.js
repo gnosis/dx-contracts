@@ -104,4 +104,24 @@ contract('DutchExchange updating token aprroval', (accounts) => {
     assert.strictEqual(approved1, approved2, ` ${symbol} token should not change approval`)
     assert.isTrue(approved2, `${symbol} token should still be approved`)
   })))
+
+  it('owner can remove token approval', () => Promise.all(testingTokens.map(async (token) => {
+    const symbol = await token.symbol.call()
+    const approved1 = await getTokenApproval(token)
+    assert.isTrue(approved1, `${symbol} token is approved`)
+
+    const owner = await dx.owner.call()
+    assert.strictEqual(owner, master, 'web3.eth.accounts[0] should be DutchExchange contract owner')
+
+    logger(`Token ${symbol} at ${token.address} is ${approved1 ? '' : 'NOT'} APPROVED`)
+    logger(`Owner changes ${symbol} approval to ${!approved1}`)
+
+    await dx.updateApprovalOfToken(token.address, !approved1, { from: master })
+
+    const approved2 = await getTokenApproval(token)
+    logger(`Token ${symbol} at ${token.address} is ${approved2 ? '' : 'NOT'} APPROVED`)
+
+    assert.strictEqual(!approved1, approved2, ` ${symbol} token should change approval`)
+    assert.isFalse(approved2, `${symbol} token should be unapproved`)
+  })))
 })
