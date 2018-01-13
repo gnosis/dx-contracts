@@ -411,13 +411,6 @@ contract DutchExchange {
         // In that case we only process the part before the overbuy
         // To calculate overbuy, we first get current price
         uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
-        if (sellVolume == 0) {
-            extraTokens[sellToken][buyToken][auctionIndex + 1] = extraTokens[sellToken][buyToken][auctionIndex];
-            extraTokens[sellToken][buyToken][auctionIndex] = 0;
-            // Not necessary, just to save gas:
-            return;
-        }
-
         uint buyVolume = buyVolumes[sellToken][buyToken];
         fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
         uint outstandingVolume = Math.atleastZero(int(sellVolume * price.num / price.den - buyVolume));
@@ -686,6 +679,8 @@ contract DutchExchange {
             scheduleNextAuction(sellToken, buyToken);
 
             if (sellVolumesCurrent[buyToken][sellToken] == 0 && opp.den == 0) {
+                extraTokens[sellToken][buyToken][auctionIndex + 1] = extraTokens[sellToken][buyToken][auctionIndex];
+                extraTokens[sellToken][buyToken][auctionIndex] = 0;
                 AuctionCleared(buyToken, sellToken, 0, 0, auctionIndex);
             }
 

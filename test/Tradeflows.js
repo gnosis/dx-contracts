@@ -77,16 +77,14 @@ contract('DutchExchange - Flow 3', (accounts) => {
       1,
       { from: seller1 },
     )
+    eventWatcher(dx, 'Log', {})
   })
 
   after(eventWatcher.stopWatching)
 
   it('step 1 - Buys tokens at the 3:1 price and clears both auctions', async () => {
-    eventWatcher(dx, 'NewTokenPair', {})
-    
     const auctionIndex = await getAuctionIndex()
     
-
     // general setup information
     logger('PRICE ORACLE', await PriceOracleInterface.at(oracle.address).getUSDETHPrice.call()) 
     logger('tuliptoken', await tokenTUL.totalTokens())

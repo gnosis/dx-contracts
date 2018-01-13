@@ -303,6 +303,7 @@ const unlockTulipTokens = async (user) => {
   assert.equal(withdrawTime, timestamp() + (24 * 3600), 'Withdraw time should be equal to [(24 hours in seconds) + (current Block timestamp in seconds)]')
 }
 
+
 module.exports = {
   checkBalanceBeforeClaim,
   checkUserReceivesTulipTokens,
