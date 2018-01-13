@@ -585,10 +585,10 @@ contract DutchExchange {
             if (buyToken == ETH) {
                 tulipsToIssue = buyerBalance;
             } else if (sellToken == ETH) {
-                tulipsToIssue = buyerBalance * price.num / price.den;
+                tulipsToIssue = buyerBalance * price.den / price.num;
             } else {
                 // Neither token is ETH, so we use historicalPriceOracle()
-                fraction memory priceETH = historicalPriceOracle(sellToken, auctionIndex);
+                fraction memory priceETH = historicalPriceOracle(buyToken, auctionIndex);
                 tulipsToIssue = buyerBalance * priceETH.num / priceETH.den;
             }
         }
