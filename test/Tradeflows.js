@@ -16,6 +16,7 @@ const {
   waitUntilPriceIsXPercentOfPreviousPrice,
   setAndCheckAuctionStarted,
   postBuyOrder,
+  calculateTokensInExchange,
 } = require('./testFunctions')
 
 // Test VARS
@@ -24,6 +25,7 @@ let gno
 let dx
 let oracle
 let tokenTUL
+let balanceInvariant
 
 
 let contracts
@@ -43,6 +45,15 @@ const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVo
   difference = Math.abs(closingPriceNumReal - closingPriceNum)
   assert.isAtMost(difference, MaxRoundingError, 'ClosingPriceNum not okay') 
   assert.equal(closingPriceDenReal, closingPriceDen, 'ClosingPriceDen not okay')
+}
+
+const checkInvariants = async (invariant, accounts, tokens, allowedRoundingErrors = 1024) => {
+  const newBalanceInvariant = await calculateTokensInExchange(accounts, tokens)
+  logger('invariant before', invariant)
+  logger('invariant after', newBalanceInvariant)
+  for (let i = 0; i < tokens.length; i += 1) {
+    assert.isAtMost(Math.abs(balanceInvariant[i] - newBalanceInvariant[i]), allowedRoundingErrors)
+  }
 }
 
 const setupContracts = async () => {
@@ -66,6 +77,9 @@ contract('DutchExchange - Flow 3', (accounts) => {
 
     // set up accounts and tokens[contracts]
     await setupTest(accounts, contracts)
+
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
 
     // add tokenPair ETH GNO
     await dx.addTokenPair(
@@ -98,6 +112,7 @@ contract('DutchExchange - Flow 3', (accounts) => {
     
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
     await checkState(2, 1, 0, 0, 0, 0, 0, gno, eth, 100000)
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
   })
 
   it('step 2 - checks claimings and final price', async () => {
@@ -114,6 +129,7 @@ contract('DutchExchange - Flow 3', (accounts) => {
 
     // check prices:  - actually reduantant with tests postBuyOrder
     const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
     assert.equal(Math.abs(closingPriceNum - closingPriceDen * 3) < 100000, true)
   })
 })
@@ -136,6 +152,9 @@ contract('DutchExchange - Flow 6', (accounts) => {
 
     // set up accounts and tokens[contracts]
     await setupTest(accounts, contracts)
+
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
 
     // add tokenPair ETH GNO
     await dx.addTokenPair(
@@ -170,6 +189,7 @@ contract('DutchExchange - Flow 6', (accounts) => {
     
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
     await checkState(2, 1, 0, 0, 0, 0, 0, gno, eth, 100000)
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
   })
 
   it('step 2 - checks claimings and final price', async () => {
@@ -186,6 +206,7 @@ contract('DutchExchange - Flow 6', (accounts) => {
 
     // check prices:  - actually reduantant with tests postBuyOrder
     const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
     assert.equal(Math.abs(closingPriceNum - closingPriceDen * 3) < 100000, true)
   })
 
@@ -204,6 +225,7 @@ contract('DutchExchange - Flow 6', (accounts) => {
     // check conditions in flow
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
     await checkState(2, timeOfNextAuctionStart, 10 ** 9 - 10 ** 9 / 200, 0, 10 ** 9 * 2 - 10 ** 9 * 2 / 200, 0, 0, gno, eth, 100000)
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
     // TODO testing for extra tokens
   })
 })
@@ -225,6 +247,9 @@ contract('DutchExchange - Flow 1', (accounts) => {
 
     // set up accounts and tokens[contracts]
     await setupTest(accounts, contracts)
+
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
 
     // add tokenPair ETH GNO
     await dx.addTokenPair(
@@ -261,6 +286,7 @@ contract('DutchExchange - Flow 1', (accounts) => {
     await postBuyOrder(gno, eth, auctionIndex, 10 ** 8 * 5 / 2, buyer2)
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
     await checkState(2, 1, 0, 0, 0, 0, 0, gno, eth, 100000)
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
   })  
   it('step 3 - just claiming', async () => {
     const auctionIndex = 1 
@@ -288,6 +314,7 @@ contract('DutchExchange - Flow 1', (accounts) => {
     
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
     await checkState(2, timeOfNextAuctionStart, 10 ** 7 - 10 ** 7 / 200, 0, 0, 0, 0, gno, eth, 0)
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
 
     // check Auction has started and accepts further buyOrders
     await setAndCheckAuctionStarted(eth, gno)
@@ -314,6 +341,9 @@ contract('DutchExchange - Flow 9', (accounts) => {
     // set up accounts and tokens[contracts]
     await setupTest(accounts, contracts)
 
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
+
     // add tokenPair ETH GNO
     await dx.addTokenPair(
       eth.address,
@@ -333,7 +363,7 @@ contract('DutchExchange - Flow 9', (accounts) => {
     await setAndCheckAuctionStarted(eth, gno)
     let auctionIndex = await getAuctionIndex()
     const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
-    
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
     // non-clearing buyOrder
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     await postBuyOrder(eth, gno, auctionIndex, 10 ** 9, buyer1)
@@ -346,6 +376,7 @@ contract('DutchExchange - Flow 9', (accounts) => {
 
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
     await checkState(1, auctionStart, 10 ** 9 - 10 ** 9 / 200, 0, 10 ** 9 - 10 ** 9 / 200, 0, 0, eth, gno, 0)
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
   })
 
   it('step 3 - both auctions get cleared', async () => {
@@ -359,7 +390,6 @@ contract('DutchExchange - Flow 9', (accounts) => {
     assert.equal(previousBuyVolume, closingPriceNum)
     const [closingPriceNum2] = await dx.closingPrices.call(gno.address, eth.address, auctionIndex)
     assert.equal(0, closingPriceNum2)
-
     // check Buyer1 balance and claim
     await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 ** 9 - 10 ** 9 / 200))
     // check Seller1 Balance
@@ -370,6 +400,8 @@ contract('DutchExchange - Flow 9', (accounts) => {
 
     // const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
     await checkState(2, 1, 0, 0, 0, 0, 0, eth, gno, 0)
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+    // await checkInvariants(balanceInvariant, accounts, [eth, gno])
   })
 })
 /*

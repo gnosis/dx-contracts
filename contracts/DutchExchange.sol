@@ -673,16 +673,17 @@ contract DutchExchange {
 
         // if (opposite is zero auction OR opposite auction has cleared) {
         if ((sellVolumesCurrent[buyToken][sellToken] == 0 && opp.den == 0) || opp.den > 0) {
+            
+            if (sellVolumesCurrent[buyToken][sellToken] == 0 && opp.den == 0) {
+                extraTokens[buyToken][sellToken][auctionIndex + 1] += extraTokens[buyToken][sellToken][auctionIndex];
+                extraTokens[buyToken][sellToken][auctionIndex] = 0;
+                AuctionCleared(buyToken, sellToken, 0, 0, auctionIndex);
+            }
+
             // Increment auction index
             setAuctionIndex(sellToken, buyToken);
             // Check if next auction can be scheduled
             scheduleNextAuction(sellToken, buyToken);
-
-            if (sellVolumesCurrent[buyToken][sellToken] == 0 && opp.den == 0) {
-                extraTokens[sellToken][buyToken][auctionIndex + 1] = extraTokens[sellToken][buyToken][auctionIndex];
-                extraTokens[sellToken][buyToken][auctionIndex] = 0;
-                AuctionCleared(buyToken, sellToken, 0, 0, auctionIndex);
-            }
 
         }
 
