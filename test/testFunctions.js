@@ -2,6 +2,16 @@
 const { wait } = require('@digix/tempo')(web3)
 const { timestamp, varLogger } = require('./utils')
 
+// I know, it's gross
+// add wei converter
+/* eslint no-extend-native: 0 */
+Number.prototype.toWei = function toWei() {
+  return (this * 10 ** 18)
+}
+Number.prototype.toEth = function toEth() {
+  return (this / 10 ** 18)
+}
+
 const MaxRoundingError = 100
 
 const contractNames = [
@@ -11,6 +21,7 @@ const contractNames = [
   'TokenTUL',
   'PriceOracle',
 ]
+
 /**
  * getContracts - async loads contracts and instances
  *
@@ -29,33 +40,67 @@ const getContracts = async () => {
 }
 
 /**
- * >setupTest()
- * @param {Array[address]} accounts => ganache-cli accounts passed in globally
- * @param {Object}         contract => Contract object obtained via: const contract = await getContracts() (see above)
+ * getBalance of Acct and Tokens
+ * @param {address} acct 
+ * @param {address} token 
  */
-const setupTest = async (accounts, {
-  DutchExchange: dx, EtherToken: eth, TokenGNO: gno, PriceOracle: oracle,
-}) => {
+const getBalance = async (acct, token) => {
+  const { DutchExchange: dx } = await getContracts()
+  return (await dx.balances.call(token.address, acct)).toNumber()
+}
+
+/**
+ * >setupTest()
+ * @param {Array[address]} accounts         => ganache-cli accounts passed in globally
+ * @param {Object}         contract         => Contract object obtained via: const contract = await getContracts() (see above)
+ * @param {Object}         number Amounts   => { ethAmount = amt to deposit and approve, gnoAmount = for gno, ethUSDPrice = eth price in USD }
+ */
+const setupTest = async (
+  accounts,
+  {
+    DutchExchange: dx,
+    EtherToken: eth,
+    TokenGNO: gno,
+    PriceOracle: oracle,
+  },
+  {
+    startingETH = (50).toWei(),
+    startingGNO = (50).toWei(),
+    ethUSDPrice = 60000,
+  }) => {
   // Await ALL Promises for each account setup
   await Promise.all(accounts.map((acct) => {
     /* eslint array-callback-return:0 */
     if (acct === accounts[0]) return
 
-    eth.deposit({ from: acct, value: 10 ** 9 })
-    eth.approve(dx.address, 10 ** 9, { from: acct })
-    gno.transfer(acct, 10 ** 18, { from: accounts[0] })
-    gno.approve(dx.address, 10 ** 18, { from: acct })
+    eth.deposit({ from: acct, value: startingETH })
+    eth.approve(dx.address, startingETH, { from: acct })
+    gno.transfer(acct, startingGNO, { from: accounts[0] })
+    gno.approve(dx.address, startingGNO, { from: acct })
   }))
   // Deposit depends on ABOVE finishing first... so run here
   await Promise.all(accounts.map((acct) => {
     if (acct === accounts[0]) return
 
-    dx.deposit(eth.address, 10 ** 9, { from: acct })
-    dx.deposit(gno.address, 10 ** 18, { from: acct })
+    dx.deposit(eth.address, startingETH, { from: acct })
+    dx.deposit(gno.address, startingGNO, { from: acct })
   }))
   // add token Pair
   // updating the oracle Price. Needs to be changed later to another mechanism
-  await oracle.updateETHUSDPrice(60000, { from: accounts[0] })
+  await oracle.updateETHUSDPrice(ethUSDPrice, { from: accounts[0] })
+
+  const gnoAcctBalances = await Promise.all(accounts.map(accts => getBalance(accts, gno)))
+  const ethAcctBalances = await Promise.all(accounts.map(accts => getBalance(accts, eth)))
+
+  gnoAcctBalances.forEach((bal, i) => {
+    if (i === 0) return
+    assert.equal(bal, startingGNO)
+  })
+
+  ethAcctBalances.forEach((bal, i) => {
+    if (i === 0) return
+    assert.equal(bal, startingETH)
+  })
 }
 
 // testing Auction Functions
@@ -72,7 +117,7 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
 
   // wait for the right time to send buyOrder
   // implements isAtLeastZero (aka will not go BACK in time)
-  await wait((startingTimeOfAuction - timestamp()) + 500)
+  await wait((startingTimeOfAuction - timestamp()))
 
   console.log(`
   time now ----------> ${new Date(timestamp() * 1000)}
@@ -92,11 +137,30 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno } = await getContracts()
   const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
   const timeToWaitFor = Math.ceil((86400 - p * 43200) / (1 + p)) + startingTimeOfAuction
+  let [num, den] = (await dx.getPriceForJS(eth.address, gno.address, 1)).map(n => n.toNumber())
+  const priceBefore = Number((num / den).toFixed(4))
+  console.log(`
+  Price BEFORE waiting until Price = initial Closing Price (2) * 2
+  ==============================
+  Price.num             = ${num}
+  Price.den             = ${den}
+  Price at this moment  = ${(priceBefore)}
+  ==============================
+  `)
   // wait until the price is good
-  await wait(timeToWaitFor - timestamp())
-  const [num, den] = (await dx.getPriceForJS(eth.address, gno.address, 1)).map(n => n.toNumber())
-  console.log(num, den, 'Price at this moment === ', num / den)
+  await wait(timeToWaitFor - timestamp());
+  ([num, den] = (await dx.getPriceForJS(eth.address, gno.address, 1)).map(n => n.toNumber()))
+  const priceAfter = Number((num / den).toFixed(4))
+  console.log(`
+  Price AFTER waiting until Price = ${p * 100}% of ${priceBefore / 2} (initial Closing Price)
+  ==============================
+  Price.num             = ${num}
+  Price.den             = ${den}
+  Price at this moment  = ${(priceAfter)}
+  ==============================
+  `)
   assert.equal(timestamp() >= timeToWaitFor, true)
+  assert.isAtLeast(priceAfter, (priceBefore / 2) * p)
 }
 
 /**
@@ -169,7 +233,7 @@ const postBuyOrder = async (ST, BT, aucIdx, amt, acct) => {
 
   console.log(`
   Current Auction Index -> ${auctionIdx}
-  Posting Buy Amt -------> ${amt} in ETH for GNO
+  Posting Buy Amt -------> ${amt.toEth()} in GNO for ETH
   `)
 
   return dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct })
@@ -207,8 +271,8 @@ const checkUserReceivesTulipTokens = async (ST, BT, user) => {
   const [returned, tulips] = (await dx.claimBuyerFunds.call(ST.address, BT.address, user, aucIdx)).map(amt => amt.toNumber())
   // set global tulips state
   console.log(`
-    RETURNED  = ${returned}
-    TULIPS    = ${tulips}
+    RETURNED  = ${returned.toEth()}
+    TULIPS    = ${tulips.toEth()}
   `)
   assert.equal(returned, tulips, 'for ETH -> * pair returned tokens should equal tulips minted')
 
@@ -217,11 +281,11 @@ const checkUserReceivesTulipTokens = async (ST, BT, user) => {
      */
   const { receipt: { logs } } = await claimBuyerFunds(ST, BT, false, false, user)
   console.log(logs ? '\tCLAIMING FUNDS SUCCESSFUL' : 'CLAIM FUNDS FAILED')
-  console.log(logs)
+  // console.log(logs)
 
   const buyVolumes = (await dx.buyVolumes.call(ST.address, BT.address)).toNumber()
   console.log(`
-    CURRENT ETH//GNO bVolume = ${buyVolumes}
+    CURRENT ETH//GNO bVolume = ${buyVolumes.toEth()}
   `)
 
   const tulFunds = (await tokenTUL.balanceOf.call(user)).toNumber()
@@ -230,13 +294,14 @@ const checkUserReceivesTulipTokens = async (ST, BT, user) => {
   // userTulips = lockedTulFunds
   const newBalance = (await dx.balances.call(ST.address, user)).toNumber()
   console.log(`
-    USER'S OWNED TUL AMT = ${tulFunds}
-    USER'S LOCKED TUL AMT = ${lockedTulFunds}
+    USER'S OWNED TUL AMT  = ${tulFunds.toEth()}
+    USER'S LOCKED TUL AMT = ${lockedTulFunds.toEth()}
 
-    USER'S ETH AMT = ${newBalance}
+    USER'S ETH AMT = ${newBalance.toEth()}
   `)
-  // due to passage of time(stamp)
-  assert.isAtLeast(lockedTulFunds, tulips, 'final tulip tokens are slightly > than calculated from dx.claimBuyerFunds.call')
+  // with changes, TULIPS are NOT minted until auctionCleared
+  // lockedTulFunds should = 0
+  assert.isAtLeast(lockedTulFunds, 0, 'final tulip tokens are slightly > than calculated from dx.claimBuyerFunds.call')
   assert.isAtLeast(newBalance, lockedTulFunds, 'for ETH -> * pair returned tokens should equal tulips minted')
 }
 
@@ -254,7 +319,7 @@ const unlockTulipTokens = async (user) => {
    */
   let [unlockedFunds, withdrawTime] = (await tokenTUL.unlockedTULs.call(user)).map(n => n.toNumber())    
   console.log(`
-  AMT OF UNLOCKED FUNDS  = ${unlockedFunds}
+  AMT OF UNLOCKED FUNDS  = ${unlockedFunds.toEth()}
   TIME OF WITHDRAWAL     = ${withdrawTime} [0 means no withdraw time as there are 0 locked tokens]
   `)
   assert.equal(unlockedFunds, 0, 'unlockedFunds should be 0')
@@ -267,7 +332,7 @@ const unlockTulipTokens = async (user) => {
   await tokenTUL.lockTokens(userTulips, { from: user })
   const totalAmtLocked = (await tokenTUL.lockTokens.call(userTulips, { from: user })).toNumber()
   console.log(`
-  TOKENS LOCKED           = ${totalAmtLocked}
+  TOKENS LOCKED           = ${totalAmtLocked.toEth()}
   `)
   assert.equal(totalAmtLocked, userTulips, 'Total locked tulips should equal total user balance of tulips')
 
@@ -277,11 +342,11 @@ const unlockTulipTokens = async (user) => {
   await tokenTUL.unlockTokens(userTulips, { from: user });
   ([unlockedFunds, withdrawTime] = (await tokenTUL.unlockTokens.call(userTulips, { from: user })).map(t => t.toNumber()))
   console.log(`
-  AMT OF UNLOCKED FUNDS  = ${unlockedFunds}
+  AMT OF UNLOCKED FUNDS  = ${unlockedFunds.toEth()}
   TIME OF WITHDRAWAL     = ${withdrawTime} --> ${new Date(withdrawTime * 1000)}
   `)
   assert.equal(unlockedFunds, userTulips, 'unlockedFunds should be = userTulips')
-  // assert withdrawTime === now (in seconds) + 24 hours (in seconds) 
+  // assert withdrawTime === now (in seconds) + 24 hours (in seconds)
   assert.equal(withdrawTime, timestamp() + (24 * 3600), 'Withdraw time should be equal to [(24 hours in seconds) + (current Block timestamp in seconds)]')
 }
 
@@ -290,6 +355,7 @@ module.exports = {
   checkUserReceivesTulipTokens,
   claimBuyerFunds,
   getAuctionIndex,
+  getBalance,
   getContracts,
   postBuyOrder,
   setAndCheckAuctionStarted,
