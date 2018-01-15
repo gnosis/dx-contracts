@@ -486,7 +486,7 @@ contract DutchExchange {
                 // priceOracle() depends on latestAuctionIndex
                 // i.e. if a user claims tokens later in the future,
                 // he/she is likely to get slightly different number
-                fraction memory price = priceOracle(buyToken);
+                fraction memory price = historicalPriceOracle(sellToken, auctionIndex);
                 tulipsIssued = sellerBalance * price.num / price.den;
             }
 
@@ -576,12 +576,12 @@ contract DutchExchange {
         if (approvedTokens[buyToken] == true && approvedTokens[sellToken] == true) {
             // Get tulips issued based on ETH price of returned tokens
             if (buyToken == ETH) {
-                tulipsToIssue = buyerBalance * price.num / price.den;
-            } else if (sellToken == ETH) {
                 tulipsToIssue = buyerBalance;
+            } else if (sellToken == ETH) {
+                tulipsToIssue = buyerBalance * price.den / price.num;
             } else {
                 // Neither token is ETH, so we use historicalPriceOracle()
-                fraction memory priceETH = historicalPriceOracle(sellToken, auctionIndex);
+                fraction memory priceETH = historicalPriceOracle(buyToken, auctionIndex);
                 tulipsToIssue = buyerBalance * priceETH.num / priceETH.den;
             }
         }
@@ -743,7 +743,7 @@ contract DutchExchange {
         // (Takes in a amount of user's TUL tokens as ration of all TUL tokens, outputs fee ratio)
         // We premultiply by amount to get fee:
         if (totalTUL > 0) {
-            feeRatio.num = totalTUL - 10 * balanceOfTUL;
+            feeRatio.num = Math.atleastZero(int(totalTUL - 10 * balanceOfTUL));
             feeRatio.den = 16000 * balanceOfTUL + 200 * totalTUL;
         } else {
             feeRatio.num = 1;
