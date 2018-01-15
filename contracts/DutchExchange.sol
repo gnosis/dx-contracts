@@ -672,7 +672,7 @@ contract DutchExchange {
         buyVolumes[sellToken][buyToken] = 0;
 
         // if (opposite is zero auction OR opposite auction has cleared) {
-        if ((sellVolumesCurrent[buyToken][sellToken] == 0 && opp.den == 0) || opp.den > 0) {
+        if ((sellVolumesCurrent[buyToken][sellToken] == 0) || opp.den > 0) {
             
             if (sellVolumesCurrent[buyToken][sellToken] == 0 && opp.den == 0) {
                 extraTokens[buyToken][sellToken][auctionIndex + 1] += extraTokens[buyToken][sellToken][auctionIndex];
