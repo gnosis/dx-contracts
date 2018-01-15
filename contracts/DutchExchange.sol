@@ -666,10 +666,7 @@ contract DutchExchange {
                 sellVolumeNext += sellVolume;
             }
         }
-        // Update state variables
-        sellVolumesCurrent[sellToken][buyToken] = sellVolumeNext;
-        sellVolumesNext[sellToken][buyToken] = 0;
-        buyVolumes[sellToken][buyToken] = 0;
+
 
         // if (opposite is zero auction OR opposite auction has cleared) {
         if ((sellVolumesCurrent[buyToken][sellToken] == 0) || opp.den > 0) {
@@ -679,6 +676,16 @@ contract DutchExchange {
                 extraTokens[buyToken][sellToken][auctionIndex] = 0;
                 AuctionCleared(buyToken, sellToken, 0, 0, auctionIndex);
             }
+
+            // Update state variables
+            sellVolumesCurrent[sellToken][buyToken] = sellVolumeNext;
+            sellVolumesNext[sellToken][buyToken] = 0;
+            buyVolumes[sellToken][buyToken] = 0;
+
+            sellVolumesCurrent[buyToken][sellToken] = sellVolumesNext[buyToken][sellToken];
+            sellVolumesNext[buyToken][sellToken] = 0;
+            buyVolumes[buyToken][sellToken] = 0;
+
 
             // Increment auction index
             setAuctionIndex(sellToken, buyToken);
