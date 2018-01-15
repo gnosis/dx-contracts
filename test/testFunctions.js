@@ -14,17 +14,13 @@ const { timestamp, varLogger } = require('./utils')
 // I know, it's gross
 // add wei converter
 /* eslint no-extend-native: 0 */
-const setNumProto = () => {
-  Number.prototype.toWei = function toWei() {
-    return bn(this, 10).times(10 ** 18).toNumber()
-  }
-  Number.prototype.toEth = function toEth() {
-    return bn(this, 10).div(10 ** 18).toNumber()
-  }
-}
 
-// set it
-setNumProto()
+Number.prototype.toWei = function toWei() {
+  return bn(this, 10).times(10 ** 18).toNumber()
+}
+Number.prototype.toEth = function toEth() {
+  return bn(this, 10).div(10 ** 18).toNumber()
+}
 
 const MaxRoundingError = 100
 
@@ -373,7 +369,6 @@ module.exports = {
   getContracts,
   postBuyOrder,
   setAndCheckAuctionStarted,
-  setNumProto,
   setupTest,
   unlockTulipTokens,
   waitUntilPriceIsXPercentOfPreviousPrice,

@@ -25,7 +25,6 @@ const {
   getBalance,
   getContracts,
   postBuyOrder,
-  setNumProto,
   setupTest,
   setAndCheckAuctionStarted,
   unlockTulipTokens,
@@ -52,11 +51,6 @@ const setupContracts = async () => {
     PriceOracle: oracle,
   } = contracts)
 }
-
-// I know, it's gross
-// add wei converter
-/* eslint no-extend-native: 0 */
-setNumProto()
 
 contract('DutchExchange', (accounts) => {
   const [master, seller1, seller2, buyer1, buyer2] = accounts
@@ -160,7 +154,12 @@ contract('DutchExchange', (accounts) => {
   })
 
   it('BUYER1: ETH --> GNO: user can lock tokens and only unlock them 24 hours later', async () => {
+    /*
+     * SUB TEST 1: 0 tulips as Auc has NOT cleared, time should show 24 hours... is this right?
+     */
     await unlockTulipTokens(buyer1)
+
+    // 
   })
 
   after(() => {
