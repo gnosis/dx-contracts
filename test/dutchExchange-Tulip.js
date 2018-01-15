@@ -1,5 +1,14 @@
-/* eslint no-console:0, max-len:0, no-plusplus:0, no-mixed-operators:0, no-trailing-spaces:0, camelcase:0, no-multi-spaces:0 */
-
+/*
+  eslint prefer-const: 0,
+  max-len: 0,
+  object-curly-newline: 1,
+  no-param-reassign: 0,
+  no-console: 0,
+  no-mixed-operators: 0,
+  no-floating-decimal: 0,
+  no-trailing-spaces: 0,
+  no-multi-spaces: 0,
+*/
 const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 
 const { 
@@ -16,6 +25,7 @@ const {
   getBalance,
   getContracts,
   postBuyOrder,
+  setNumProto,
   setupTest,
   setAndCheckAuctionStarted,
   unlockTulipTokens,
@@ -46,12 +56,7 @@ const setupContracts = async () => {
 // I know, it's gross
 // add wei converter
 /* eslint no-extend-native: 0 */
-Number.prototype.toWei = function toWei() {
-  return (this * 10 ** 18)
-}
-Number.prototype.toEth = function toEth() {
-  return (this / 10 ** 18)
-}
+setNumProto()
 
 contract('DutchExchange', (accounts) => {
   const [master, seller1, seller2, buyer1, buyer2] = accounts
@@ -60,10 +65,10 @@ contract('DutchExchange', (accounts) => {
   let seller1Balance, initialSellVolume 
   
   const startBal = {
-    startingETH: (90).toWei(),
-    startingGNO: (90).toWei(),
+    startingETH: 90..toWei(),
+    startingGNO: 90..toWei(),
     ethUSDPrice: 60000,
-    sellingAmount: (50).toWei(), // Same as web3.toWei(50, 'ether')
+    sellingAmount: 50..toWei(), // Same as web3.toWei(50, 'ether')
   }
   const { startingETH, startingGNO, ethUSDPrice, sellingAmount } = startBal
 

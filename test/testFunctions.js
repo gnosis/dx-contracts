@@ -1,16 +1,30 @@
-/* eslint prefer-const:0, max-len:0, object-curly-newline:1, no-param-reassign:0, no-console:0, no-mixed-operators:0 */
+/*
+  eslint prefer-const: 0,
+  max-len: 0,
+  object-curly-newline: 1,
+  no-param-reassign: 0,
+  no-console: 0,
+  no-mixed-operators: 0,
+  no-floating-decimal: 0,
+*/
+const bn = require('bignumber.js')
 const { wait } = require('@digix/tempo')(web3)
 const { timestamp, varLogger } = require('./utils')
 
 // I know, it's gross
 // add wei converter
 /* eslint no-extend-native: 0 */
-Number.prototype.toWei = function toWei() {
-  return (this * 10 ** 18)
+const setNumProto = () => {
+  Number.prototype.toWei = function toWei() {
+    return bn(this, 10).times(10 ** 18).toNumber()
+  }
+  Number.prototype.toEth = function toEth() {
+    return bn(this, 10).div(10 ** 18).toNumber()
+  }
 }
-Number.prototype.toEth = function toEth() {
-  return (this / 10 ** 18)
-}
+
+// set it
+setNumProto()
 
 const MaxRoundingError = 100
 
@@ -41,8 +55,8 @@ const getContracts = async () => {
 
 /**
  * getBalance of Acct and Tokens
- * @param {address} acct 
- * @param {address} token 
+ * @param {address} acct
+ * @param {address} token
  */
 const getBalance = async (acct, token) => {
   const { DutchExchange: dx } = await getContracts()
@@ -64,8 +78,8 @@ const setupTest = async (
     PriceOracle: oracle,
   },
   {
-    startingETH = (50).toWei(),
-    startingGNO = (50).toWei(),
+    startingETH = 50..toWei(),
+    startingGNO = 50..toWei(),
     ethUSDPrice = 60000,
   }) => {
   // Await ALL Promises for each account setup
@@ -138,7 +152,7 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
   const timeToWaitFor = Math.ceil((86400 - p * 43200) / (1 + p)) + startingTimeOfAuction
   let [num, den] = (await dx.getPriceForJS(eth.address, gno.address, 1)).map(n => n.toNumber())
-  const priceBefore = Number((num / den).toFixed(4))
+  const priceBefore = (num / den).toFixed(18)
   console.log(`
   Price BEFORE waiting until Price = initial Closing Price (2) * 2
   ==============================
@@ -150,7 +164,7 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   // wait until the price is good
   await wait(timeToWaitFor - timestamp());
   ([num, den] = (await dx.getPriceForJS(eth.address, gno.address, 1)).map(n => n.toNumber()))
-  const priceAfter = Number((num / den).toFixed(4))
+  const priceAfter = (num / den).toFixed(18)
   console.log(`
   Price AFTER waiting until Price = ${p * 100}% of ${priceBefore / 2} (initial Closing Price)
   ==============================
@@ -359,6 +373,7 @@ module.exports = {
   getContracts,
   postBuyOrder,
   setAndCheckAuctionStarted,
+  setNumProto,
   setupTest,
   unlockTulipTokens,
   waitUntilPriceIsXPercentOfPreviousPrice,
