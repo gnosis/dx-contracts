@@ -512,7 +512,9 @@ contract DutchExchange {
     {
         (returned, tulipsToIssue) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
 
-        if (auctionIndex == getAuctionIndex(sellToken, buyToken)) {
+        uint den = closingPrices[sellToken][buyToken][auctionIndex];
+
+        if (den == 0) {
             // Auction is running
             claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
         } else {
@@ -667,17 +669,16 @@ contract DutchExchange {
             }
         }
 
-
+        uint sellVolumeOpp = sellVolumesCurrent[buyToken][sellToken];
         // if (opposite is zero auction OR opposite auction has cleared) {
-        if ((sellVolumesCurrent[buyToken][sellToken] == 0) || opp.den > 0) {
-            
-            if (sellVolumesCurrent[buyToken][sellToken] == 0 && opp.den == 0) {
+        if (sellVolumeOpp == 0 || opp.den > 0) {
+            if (sellVolumeOpp == 0) {
                 extraTokens[buyToken][sellToken][auctionIndex + 1] += extraTokens[buyToken][sellToken][auctionIndex];
                 extraTokens[buyToken][sellToken][auctionIndex] = 0;
                 AuctionCleared(buyToken, sellToken, 0, 0, auctionIndex);
             }
 
-            // Update state variables
+            // Update state variables for both auctions
             sellVolumesCurrent[sellToken][buyToken] = sellVolumeNext;
             sellVolumesNext[sellToken][buyToken] = 0;
             buyVolumes[sellToken][buyToken] = 0;
@@ -685,13 +686,10 @@ contract DutchExchange {
             sellVolumesCurrent[buyToken][sellToken] = sellVolumesNext[buyToken][sellToken];
             sellVolumesNext[buyToken][sellToken] = 0;
             buyVolumes[buyToken][sellToken] = 0;
-
-
             // Increment auction index
             setAuctionIndex(sellToken, buyToken);
             // Check if next auction can be scheduled
             scheduleNextAuction(sellToken, buyToken);
-
         }
 
         AuctionCleared(sellToken, buyToken, sellVolume, buyVolume, auctionIndex);
