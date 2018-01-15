@@ -17,7 +17,7 @@ module.exports = function deploy(deployer, networks, accounts) {
   deployer.link(Math, [PriceOracle, DutchExchange, StandardToken, EtherToken, TokenGNO, TokenTUL, TokenOWL])
 
   deployer.deploy(EtherToken)
-    .then(() => deployer.deploy(TokenGNO, 10 ** 19))
+    .then(() => deployer.deploy(TokenGNO, 10000 * (10 ** 18)))
     .then(() => deployer.deploy(TokenTUL, accounts[0], accounts[0]))
     // StandardToken is NECESSARRY to deploy here as it is LINKED w/Math
     .then(() => deployer.deploy(StandardToken))
