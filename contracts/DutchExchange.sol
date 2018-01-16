@@ -801,6 +801,7 @@ contract DutchExchange {
         price.den = sellTokenPrice.den * buyTokenPrice.num;
     }
 
+    // > historicalPriceOracle()
     function historicalPriceOracle(
         address token,
         uint auctionIndex
@@ -848,8 +849,9 @@ contract DutchExchange {
                 price.den = closingPriceETH.num;
             } else {
                 // If both prices are positive, output weighted average
-                price.num = closingPriceETH.den ** 2 * closingPriceToken.den + closingPriceToken.num ** 2 * closingPriceETH.num;
-                price.den = closingPriceETH.num * closingPriceToken.den * (closingPriceETH.den + closingPriceToken.num);
+                uint numPart1 = closingPriceETH.den * closingPriceETH.num * closingPriceToken.den;
+                price.num = numPart1 + closingPriceToken.num ** 2 * closingPriceETH.den;
+                price.den = closingPriceETH.den * closingPriceToken.den * (closingPriceETH.den + closingPriceToken.num);
             }
         } 
     }
