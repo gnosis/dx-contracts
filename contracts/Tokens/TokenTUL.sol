@@ -96,10 +96,12 @@ contract TokenTUL is StandardToken {
         // Adjust amount by locked balances
         amount = Math.min(amount, lockedTULBalances[msg.sender]);
 
-        // Update state variables
-        lockedTULBalances[msg.sender] -= amount;
-        unlockedTULs[msg.sender].amountUnlocked += amount;
-        unlockedTULs[msg.sender].withdrawalTime = now + 24 hours;
+        if (amount > 0) {
+            // Update state variables
+            lockedTULBalances[msg.sender] -= amount;
+            unlockedTULs[msg.sender].amountUnlocked += amount;
+            unlockedTULs[msg.sender].withdrawalTime = now + 24 hours;
+        }
 
         // Get return variables
         totalAmountUnlocked = unlockedTULs[msg.sender].amountUnlocked;
