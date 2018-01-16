@@ -873,13 +873,12 @@ contract DutchExchange {
     function depositAndSell(
         address sellToken,
         address buyToken,
-        uint auctionIndex,
         uint amount
     )
         public
     {
         deposit(sellToken, amount);
-        postSellOrder(sellToken, buyToken, auctionIndex, amount);
+        postSellOrder(sellToken, buyToken, 0, amount);
     }
 
     // > claimAndWithdraw()
