@@ -8,6 +8,7 @@ const StandardToken = artifacts.require('StandardToken')
 const TokenGNO = artifacts.require('TokenGNO')
 const TokenOWL = artifacts.require('TokenOWL')
 const TokenTUL = artifacts.require('TokenTUL')
+const InternalTests = artifacts.require('InternalTests')
 
 module.exports = function deploy(deployer, networks, accounts) {
   let PriceOracleInstance
@@ -41,4 +42,15 @@ module.exports = function deploy(deployer, networks, accounts) {
     .then(() => PriceOracleInstance.updateDutchExchange(DutchExchange.address, { from: accounts[0] }))
     .then(() => TokenTUL.deployed())
     .then(T => T.updateMinter(DutchExchange.address))
+    // .then(() => deployer.deploy(
+    //   InternalTests,              // Contract Name
+    //   TokenTUL.address,
+    //   TokenOWL.address,
+    //   accounts[0],                // @param _owner will be the admin of the contract
+    //   EtherToken.address,         // @param _ETH                - address of ETH ERC-20 token
+    //   PriceOracle.address,        // @param _priceOracleAddress - address of priceOracle
+    //   10000,
+    //   1000,
+    //   { gas: 4000000 }
+    // ))
 }

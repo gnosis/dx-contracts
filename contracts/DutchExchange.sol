@@ -204,7 +204,7 @@ contract DutchExchange {
             fraction memory priceToken2 = priceOracle(token2);
 
             // Compute funded value in ETH and USD
-            uint fundedValueETH = token1Funding * priceToken1.num / priceToken1.den; + token2Funding * priceToken2.num / priceToken2.den;
+            uint fundedValueETH = token1Funding * priceToken1.num / priceToken1.den + token2Funding * priceToken2.num / priceToken2.den;
             fundedValueUSD = fundedValueETH * ETHUSDPrice;
         }
 
@@ -512,7 +512,7 @@ contract DutchExchange {
     {
         (returned, tulipsToIssue) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
 
-        uint den = closingPrices[sellToken][buyToken][auctionIndex];
+        uint den = closingPrices[sellToken][buyToken][auctionIndex].den;
 
         if (den == 0) {
             // Auction is running
