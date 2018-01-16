@@ -432,7 +432,5 @@ contract('DutchExchange --> Tulip Flow --> Seller sells 50 ETHER @ 2:1 price', (
     await unlockTulipTokens(seller1)
   })
 
-  after(() => {
-    eventWatcher.stopWatching()
-  })
+  after(eventWatcher.stopWatching)
 })

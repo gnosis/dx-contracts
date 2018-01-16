@@ -79,19 +79,15 @@ const setupTest = async (
     ethUSDPrice = 60000,
   }) => {
   // Await ALL Promises for each account setup
-  await Promise.all(accounts.map((acct) => {
+  await Promise.all(accounts.slice(1).map((acct) => {
     /* eslint array-callback-return:0 */
-    if (acct === accounts[0]) return
-
     eth.deposit({ from: acct, value: startingETH })
     eth.approve(dx.address, startingETH, { from: acct })
     gno.transfer(acct, startingGNO, { from: accounts[0] })
     gno.approve(dx.address, startingGNO, { from: acct })
   }))
   // Deposit depends on ABOVE finishing first... so run here
-  await Promise.all(accounts.map((acct) => {
-    if (acct === accounts[0]) return
-
+  await Promise.all(accounts.slice(1).map((acct) => {
     dx.deposit(eth.address, startingETH, { from: acct })
     dx.deposit(gno.address, startingGNO, { from: acct })
   }))
@@ -102,15 +98,8 @@ const setupTest = async (
   const gnoAcctBalances = await Promise.all(accounts.map(accts => getBalance(accts, gno)))
   const ethAcctBalances = await Promise.all(accounts.map(accts => getBalance(accts, eth)))
 
-  gnoAcctBalances.forEach((bal, i) => {
-    if (i === 0) return
-    assert.equal(bal, startingGNO)
-  })
-
-  ethAcctBalances.forEach((bal, i) => {
-    if (i === 0) return
-    assert.equal(bal, startingETH)
-  })
+  gnoAcctBalances.slice(1).forEach(bal => assert.equal(bal, startingGNO))
+  ethAcctBalances.slice(1).forEach(bal => assert.equal(bal, startingETH))
 }
 
 // testing Auction Functions
@@ -329,10 +318,9 @@ const checkUserReceivesTulipTokens = async (ST, BT, user) => {
     CURRENT ETH//GNO bVolume = ${buyVolumes.toEth()}
   `)
 
+  // Problem w/consts below is that if the auction has NOT cleared they will always be 0
   const tulFunds = (await tokenTUL.balanceOf.call(user)).toNumber()
   const lockedTulFunds = (await tokenTUL.getLockedAmount.call(user)).toNumber()
-  // set global state
-  // userTulips = lockedTulFunds
   newBalance = (await dx.balances.call(ST.address, user)).toNumber()
   console.log(`
     USER'S OWNED TUL AMT  = ${tulFunds.toEth()}
@@ -340,17 +328,21 @@ const checkUserReceivesTulipTokens = async (ST, BT, user) => {
 
     USER'S ETH AMT = ${newBalance.toEth()}
   `)
-  // with changes, TULIPS are NOT minted until auctionCleared
-  // lockedTulFunds should = 0
-  assert.isAtLeast(lockedTulFunds, 0, 'final tulip tokens are slightly > than calculated from dx.claimBuyerFunds.call')
-  assert.isAtLeast(newBalance, lockedTulFunds, 'for ETH -> * pair returned tokens should equal tulips minted')
+  const refreshedIdx = await getAuctionIndex()
+  if (refreshedIdx === 2) {
+    assert.equal(newBalance, lockedTulFunds, 'for ETH -> * pair, auction has cleared so returned tokens should equal tulips minted')
+  } else if (refreshedIdx === 1) {
+    // with changes, TULIPS are NOT minted until auctionCleared
+    // lockedTulFunds should = 0
+    assert.equal(lockedTulFunds, 0, 'for ETH -> * auction has NOT cleared so there are 0 tulips')
+  }
 }
 
 /**
  * unlockTulipTokens
  * @param {address} user => address to unlock Tokens for
  */
-const unlockTulipTokens = async (user, amt = undefined) => {
+const unlockTulipTokens = async (user, amt) => {
   const { TokenTUL: tokenTUL } = await getContracts()
 
   const lockedBal = (await tokenTUL.lockedTULBalances.call(user))
