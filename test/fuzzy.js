@@ -4,6 +4,7 @@ const {
   // blockNumber,
   assertRejects,
   wait,
+  log: utilLog,
 } = require('./utils')
 
 // > Import files
@@ -34,10 +35,10 @@ const tokenPairs = []
 
 function log(arg) {
   if (typeof arg === 'number') {
-    console.log('failed at', arg)
+    utilLog('failed at', arg)
   } else if (typeof arg === 'boolean') {
-    if (arg) console.log('successful')
-    else console.log('rejected')
+    if (arg) utilLog('successful')
+    else utilLog('rejected')
   }
 }
 
@@ -97,9 +98,9 @@ async function postBuyOrderConditions(i, Ts, Tb, u, aI, am) { //eslint-disable-l
     {
       const aS = (await dx.getAuctionStart(Ts, Tb)).toNumber()
       const time = web3.eth.getBlock('latest').timestamp
-      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-      console.log('aS, time', aS, time)
-      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+      utilLog('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+      utilLog('aS, time', aS, time)
+      utilLog('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
       if (aS > time) { log(i); return false }
       break
     }
@@ -109,18 +110,18 @@ async function postBuyOrderConditions(i, Ts, Tb, u, aI, am) { //eslint-disable-l
     case 2:
     {
       const lAI = (await dx.getAuctionIndex(Ts, Tb)).toNumber()
-      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-      console.log('lAI', lAI)
-      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+      utilLog('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+      utilLog('lAI', lAI)
+      utilLog('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
       if (aI !== lAI) { log(i); return false }
       break
     }
     case 3:
     {
       const cP = (await dx.closingPrices(Ts, Tb, aI)).map(x => x.toNumber())
-      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-      console.log('cP', cP)
-      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+      utilLog('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+      utilLog('cP', cP)
+      utilLog('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
       if (cP[0] !== 0) { log(i); return false }
       break
     }
@@ -143,9 +144,9 @@ async function postSellOrder(Ts, Tb, u, aI, am) {
 }
 
 async function postBuyOrder(Ts, Tb, u, aI, am, j) {
-  console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-  console.log('postBuyOrder j', j)
-  console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+  utilLog('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+  utilLog('postBuyOrder j', j)
+  utilLog('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
   let expectToPass = true
   let i = 0
   while (expectToPass && i < 4) {
@@ -154,7 +155,7 @@ async function postBuyOrder(Ts, Tb, u, aI, am, j) {
   }
   log(expectToPass)
   if (expectToPass) await dx.postBuyOrder(Ts, Tb, aI, am, { from: u })
-  else assertRejects(dx.postBuyOrder(Ts, Tb, aI, am, { from: u }), `failing buyOrder(${Ts}, ${Tb}, ${aI}, ${am}) from ${u}`)
+  else await assertRejects(dx.postBuyOrder(Ts, Tb, aI, am, { from: u }), `failing buyOrder(${Ts}, ${Tb}, ${aI}, ${am}) from ${u}`)
 }
 
 async function claimSellerFunds(Ts, Tb, u, aI) {
@@ -284,7 +285,7 @@ contract('DutchExchange', async (accounts) => {
   for (let j = 0; j < 50; j++) {
     it(`above transaction, number ${j.toString()}`, async () => {
       const t = await selectTransaction()
-      console.log(t[0])
+      utilLog(t[0])
       wait(1800)
       await anotherTransaction(accounts, t, j)
     })

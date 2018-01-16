@@ -14,6 +14,7 @@ const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 const { 
   eventWatcher,
   logger,
+  log,
   timestamp,
 } = require('./utils')
 

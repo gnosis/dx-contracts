@@ -9,7 +9,7 @@
 */
 const bn = require('bignumber.js')
 const { wait } = require('@digix/tempo')(web3)
-const { timestamp, varLogger } = require('./utils')
+const { timestamp, varLogger, log } = require('./utils')
 
 // I know, it's gross
 // add wei converter
@@ -118,7 +118,7 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
   // implements isAtLeastZero (aka will not go BACK in time)
   await wait((startingTimeOfAuction - timestamp()))
 
-  console.log(`
+  log(`
   time now ----------> ${new Date(timestamp() * 1000)}
   auction starts ----> ${new Date(startingTimeOfAuction * 1000)}
   `)
@@ -230,7 +230,7 @@ const postBuyOrder = async (ST, BT, aucIdx, amt, acct) => {
   ST = ST || eth; BT = BT || gno
   let auctionIdx = aucIdx || await getAuctionIndex()
 
-  console.log(`
+  log(`
   Current Auction Index -> ${auctionIdx}
   Posting Buy Amt -------> ${amt.toEth()} in GNO for ETH
   `)
@@ -288,6 +288,7 @@ const claimSellerFunds = async (ST, BT, user, aucIdx, acct) => {
    */
 const checkUserReceivesTulipTokens = async (ST, BT, user) => {
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno, TokenTUL: tokenTUL } = await getContracts()
+
   ST = ST || eth; BT = BT || gno
 
   const aucIdx = await getAuctionIndex()
