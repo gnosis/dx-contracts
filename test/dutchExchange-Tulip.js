@@ -13,13 +13,10 @@ const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 
 const { 
   eventWatcher,
-  logger,
   log,
-  timestamp,
 } = require('./utils')
 
 const {
-  checkBalanceBeforeClaim,
   checkUserReceivesTulipTokens,
   claimBuyerFunds,
   claimSellerFunds,
@@ -30,7 +27,6 @@ const {
   setupTest,
   setAndCheckAuctionStarted,
   unlockTulipTokens,
-  wait,
   waitUntilPriceIsXPercentOfPreviousPrice,
 } = require('./testFunctions')
 
@@ -59,7 +55,7 @@ contract('DutchExchange --> Tulip Flow --> 1 Seller sells 50 ETHER @ 2:1 price -
   const [master, seller1, seller2, buyer1, buyer2] = accounts
   // const user = seller1
   // let userTulips
-  let seller1Balance, initialSellVolume 
+  let seller1Balance 
   
   const startBal = {
     startingETH: 90..toWei(),
@@ -117,7 +113,7 @@ contract('DutchExchange --> Tulip Flow --> 1 Seller sells 50 ETHER @ 2:1 price -
     assert.equal(seller1Balance, (40).toWei(), 'Seller1 should have 40 balance after new Token Pair add')
   })
   it('Check sellVolume', async () => {
-    console.log(`
+    log(`
     =====================================
     T1: Check sellVolume
     =====================================
@@ -125,7 +121,7 @@ contract('DutchExchange --> Tulip Flow --> 1 Seller sells 50 ETHER @ 2:1 price -
 
     const sellVolumes = (await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber()
     const svFee = f => sellingAmount * (f / 100)
-    console.log(`
+    log(`
     SELLVOLUMES === ${sellVolumes.toEth()}
     FEE         === ${svFee(0.5).toEth()}
     `)
@@ -133,12 +129,12 @@ contract('DutchExchange --> Tulip Flow --> 1 Seller sells 50 ETHER @ 2:1 price -
   })
   
   it('BUYER1: postBuyOrder + claim', async () => {
-    console.log(`
+    log(`
     =====================================
     T3: Buyer1 PostBuyOrder
     =====================================
     `)
-    console.log(`
+    log(`
     BUYER1 GNO BALANCE = ${(await getBalance(buyer1, gno)).toEth()}
     `)
     /*
@@ -154,7 +150,7 @@ contract('DutchExchange --> Tulip Flow --> 1 Seller sells 50 ETHER @ 2:1 price -
      */
     await postBuyOrder(eth, gno, false, (20).toWei(), buyer1)
     let buyVolumes = (await dx.buyVolumes.call(eth.address, gno.address)).toNumber()
-    console.log(`
+    log(`
       CURRENT ETH//GNO bVolume = ${buyVolumes.toEth()}
     `)
     // check tulip
@@ -169,7 +165,7 @@ contract('DutchExchange --> Tulip Flow --> 1 Seller sells 50 ETHER @ 2:1 price -
     // post buy order
     await postBuyOrder(eth, gno, false, (20).toWei(), buyer1)
     buyVolumes = (await dx.buyVolumes.call(eth.address, gno.address)).toNumber()
-    console.log(`
+    log(`
       CURRENT ETH//GNO bVolume = ${buyVolumes.toEth()}
     `)
     await checkUserReceivesTulipTokens(eth, gno, buyer1)
@@ -179,10 +175,10 @@ contract('DutchExchange --> Tulip Flow --> 1 Seller sells 50 ETHER @ 2:1 price -
     /*
      * SUB TEST 1: clearAuction
      */ 
-    console.log('buyer1 BALANCE = ', (await getBalance(buyer1, gno)).toEth())
+    log('buyer1 BALANCE = ', (await getBalance(buyer1, gno)).toEth())
     // just to close auction
     await postBuyOrder(eth, gno, 1, 400..toWei(), buyer1)
-    console.log(`
+    log(`
     New Auction Index -> ${await getAuctionIndex()}
     `)
     assert.isAtLeast(await getAuctionIndex(), 2)
@@ -192,7 +188,7 @@ contract('DutchExchange --> Tulip Flow --> 1 Seller sells 50 ETHER @ 2:1 price -
     // event listeners
     // eventWatcher(tokenTUL, 'NewTokensMinted', {})
     // eventWatcher(dx, 'AuctionCleared', {})
-    console.log(`
+    log(`
     ============================================
     T4: Buyer1 - Locking and Unlocking of Tokens
     ============================================
@@ -206,12 +202,12 @@ contract('DutchExchange --> Tulip Flow --> 1 Seller sells 50 ETHER @ 2:1 price -
   })
 
   it('SELLER: ETH --> GNO: seller can lock tokens and only unlock them 24 hours later', async () => {
-    console.log(`
+    log(`
     ============================================
     T5: Seller - Locking and Unlocking of Tokens
     ============================================
     `)
-    console.log('seller BALANCE = ', (await getBalance(seller1, eth)).toEth())
+    log('seller BALANCE = ', (await getBalance(seller1, eth)).toEth())
     // await postBuyOrder(eth, gno, 1, 400..toWei(), buyer1)
     // just to close auction
     await claimSellerFunds(eth, gno, seller1, 1)
@@ -286,7 +282,7 @@ contract('DutchExchange --> Tulip Flow --> Seller sells 50 ETHER @ 2:1 price', (
     assert.equal(seller1Balance, (40).toWei(), 'Seller1 should have 40 balance after new Token Pair add')
   })
   it('Check sellVolume', async () => {
-    console.log(`
+    log(`
     =====================================
     T1: Check sellVolume
     =====================================
@@ -294,7 +290,7 @@ contract('DutchExchange --> Tulip Flow --> Seller sells 50 ETHER @ 2:1 price', (
 
     const sellVolumes = (await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber()
     const svFee = f => sellingAmount * (f / 100)
-    console.log(`
+    log(`
     SELLVOLUMES === ${sellVolumes.toEth()}
     FEE         === ${svFee(0.5).toEth()}
     `)
@@ -302,12 +298,12 @@ contract('DutchExchange --> Tulip Flow --> Seller sells 50 ETHER @ 2:1 price', (
   })
 
   it('Buyer2 postBuyOrder + claim', async () => {
-    console.log(`
+    log(`
     =====================================
     T2: Buyer2 PostBuyOrder
     =====================================
     `)
-    console.log(`
+    log(`
     BUYER2 GNO BALANCE = ${(await getBalance(buyer2, gno)).toEth()}
     `)
     /*
@@ -327,12 +323,12 @@ contract('DutchExchange --> Tulip Flow --> Seller sells 50 ETHER @ 2:1 price', (
   })
 
   it('BUYER1: postBuyOrder + claim', async () => {
-    console.log(`
+    log(`
     =====================================
     T3: Buyer1 PostBuyOrder
     =====================================
     `)
-    console.log(`
+    log(`
     BUYER1 GNO BALANCE = ${(await getBalance(buyer1, gno)).toEth()}
     `)
     /*
@@ -346,7 +342,7 @@ contract('DutchExchange --> Tulip Flow --> Seller sells 50 ETHER @ 2:1 price', (
      */
     await postBuyOrder(eth, gno, false, (20).toWei(), buyer1)
     let buyVolumes = (await dx.buyVolumes.call(eth.address, gno.address)).toNumber()
-    console.log(`
+    log(`
       CURRENT ETH//GNO bVolume = ${buyVolumes.toEth()}
     `)
     // check tulip
@@ -361,14 +357,14 @@ contract('DutchExchange --> Tulip Flow --> Seller sells 50 ETHER @ 2:1 price', (
     // post buy order
     await postBuyOrder(eth, gno, false, (20).toWei(), buyer1)
     buyVolumes = (await dx.buyVolumes.call(eth.address, gno.address)).toNumber()
-    console.log(`
+    log(`
       CURRENT ETH//GNO bVolume = ${buyVolumes.toEth()}
     `)
     await checkUserReceivesTulipTokens(eth, gno, buyer1)
   })
 
   it('Clear Auction, assert auctionIndex increase', async () => {
-    console.log(`
+    log(`
     ================================================
     T4: Buyer1 - Clears Auction and Auction Idx >= 2
     ================================================
@@ -376,10 +372,10 @@ contract('DutchExchange --> Tulip Flow --> Seller sells 50 ETHER @ 2:1 price', (
     /*
      * SUB TEST 1: clearAuction
      */ 
-    console.log('buyer1 BALANCE = ', (await getBalance(buyer1, gno)).toEth())
+    log('buyer1 BALANCE = ', (await getBalance(buyer1, gno)).toEth())
     // just to close auction
     await postBuyOrder(eth, gno, 1, 400..toWei(), buyer1)
-    console.log(`
+    log(`
     New Auction Index -> ${await getAuctionIndex()}
     `)
     assert.isAtLeast(await getAuctionIndex(), 2)
@@ -389,7 +385,7 @@ contract('DutchExchange --> Tulip Flow --> Seller sells 50 ETHER @ 2:1 price', (
     // event listeners
     // eventWatcher(tokenTUL, 'NewTokensMinted', {})
     // eventWatcher(dx, 'AuctionCleared', {})
-    console.log(`
+    log(`
     ============================================
     T5: Buyer1 - Locking and Unlocking of Tokens
     ============================================
@@ -406,7 +402,7 @@ contract('DutchExchange --> Tulip Flow --> Seller sells 50 ETHER @ 2:1 price', (
     // event listeners
     // eventWatcher(tokenTUL, 'NewTokensMinted', {})
     // eventWatcher(dx, 'AuctionCleared', {})
-    console.log(`
+    log(`
     ============================================
     T6: Buyer2 - Locking and Unlocking of Tokens
     ============================================
@@ -420,12 +416,12 @@ contract('DutchExchange --> Tulip Flow --> Seller sells 50 ETHER @ 2:1 price', (
   })
 
   it('SELLER: ETH --> GNO: seller can lock tokens and only unlock them 24 hours later', async () => {
-    console.log(`
+    log(`
     ============================================
     T7: Seller - Locking and Unlocking of Tokens
     ============================================
     `)
-    console.log('seller BALANCE = ', (await getBalance(seller1, eth)).toEth())
+    log('seller BALANCE = ', (await getBalance(seller1, eth)).toEth())
     // await postBuyOrder(eth, gno, 1, 400..toWei(), buyer1)
     // just to close auction
     await claimSellerFunds(eth, gno, seller1, 1)

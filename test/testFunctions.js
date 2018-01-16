@@ -138,7 +138,7 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const timeToWaitFor = Math.ceil((86400 - p * 43200) / (1 + p)) + startingTimeOfAuction
   let [num, den] = (await dx.getPriceForJS(eth.address, gno.address, 1))
   const priceBefore = num.div(den)
-  console.log(`
+  log(`
   Price BEFORE waiting until Price = initial Closing Price (2) * 2
   ==============================
   Price.num             = ${num.toNumber()}
@@ -150,7 +150,7 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   await wait(timeToWaitFor - timestamp());
   ([num, den] = (await dx.getPriceForJS(eth.address, gno.address, 1)))
   const priceAfter = num.div(den)
-  console.log(`
+  log(`
   Price AFTER waiting until Price = ${p * 100}% of ${priceBefore / 2} (initial Closing Price)
   ==============================
   Price.num             = ${num.toNumber()}
@@ -236,11 +236,11 @@ const postBuyOrder = async (ST, BT, aucIdx, amt, acct) => {
   `)
   const buyVolumes = (await dx.buyVolumes.call(ST.address, BT.address)).toNumber()
   const sellVolumes = (await dx.sellVolumesCurrent.call(ST.address, BT.address)).toNumber()
-  console.log(`
+  log(`
     Current Buy Volume  => ${buyVolumes.toEth()}
     Current Sell Volume => ${sellVolumes.toEth()}
   `)
-  // console.log('POSTBUYORDER TX RECEIPT ==', await dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct }))
+  // log('POSTBUYORDER TX RECEIPT ==', await dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct }))
   return dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct })
 }
 
@@ -258,7 +258,7 @@ const claimBuyerFunds = async (ST, BT, user, aucIdx, acct) => {
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno } = await getContracts()
   ST = ST || eth; BT = BT || gno; user = user || acct
   let auctionIdx = aucIdx || await getAuctionIndex()
-  console.log('AUC IDX = ', auctionIdx)
+  log('AUC IDX = ', auctionIdx)
   return dx.claimBuyerFunds(ST.address, BT.address, user, auctionIdx, { from: user })
 }
 
@@ -276,7 +276,7 @@ const claimSellerFunds = async (ST, BT, user, aucIdx, acct) => {
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno } = await getContracts()
   ST = ST || eth; BT = BT || gno; user = user || acct
   let auctionIdx = aucIdx || await getAuctionIndex()
-  console.log('AUC IDX = ', auctionIdx)
+  log('AUC IDX = ', auctionIdx)
   return dx.claimSellerFunds(ST.address, BT.address, user, auctionIdx, { from: user })
 }
 
@@ -295,14 +295,14 @@ const checkUserReceivesTulipTokens = async (ST, BT, user) => {
   const [returned, tulips] = (await dx.claimBuyerFunds.call(ST.address, BT.address, user, aucIdx)).map(amt => amt.toNumber())
   const amtClaimed = (await dx.claimedAmounts.call(ST.address, BT.address, aucIdx, user)).toNumber()
   // set global tulips state
-  console.log(`
+  log(`
     RETURNED          = ${returned.toEth()}           <-- Current amt returned in this fn call
     AMOUNT(S) CLAIMED = ${amtClaimed.toEth()}         < -- THIS + RETURNED = TULIPS
 
     TULIPS            = ${tulips.toEth()}             <-- Accumulation of returned + claimedAmounts
   `)
   let newBalance = (await dx.balances.call(ST.address, user)).toNumber()
-  console.log(`
+  log(`
     USER'S ETH AMT = ${newBalance.toEth()}
   `)
   assert.equal(returned + amtClaimed, tulips, 'for ETH -> * pair returned tokens should equal tulips minted')
@@ -311,11 +311,11 @@ const checkUserReceivesTulipTokens = async (ST, BT, user) => {
      * SUB TEST 3: CLAIMBUYERFUNDS - CHECK BUYVOLUMES - CHECK LOCKEDTULIPS AMT = 1:1 FROM AMT IN POSTBUYORDER
      */
   const { receipt: { logs } } = await claimBuyerFunds(ST, BT, false, false, user)
-  console.log(logs ? '\tCLAIMING FUNDS SUCCESSFUL' : 'CLAIM FUNDS FAILED')
-  // console.log(logs)
+  log(logs ? '\tCLAIMING FUNDS SUCCESSFUL' : 'CLAIM FUNDS FAILED')
+  // log(logs)
 
   const buyVolumes = (await dx.buyVolumes.call(ST.address, BT.address)).toNumber()
-  console.log(`
+  log(`
     CURRENT ETH//GNO bVolume = ${buyVolumes.toEth()}
   `)
 
@@ -323,7 +323,7 @@ const checkUserReceivesTulipTokens = async (ST, BT, user) => {
   const tulFunds = (await tokenTUL.balanceOf.call(user)).toNumber()
   const lockedTulFunds = (await tokenTUL.getLockedAmount.call(user)).toNumber()
   newBalance = (await dx.balances.call(ST.address, user)).toNumber()
-  console.log(`
+  log(`
     USER'S OWNED TUL AMT  = ${tulFunds.toEth()}
     USER'S LOCKED TUL AMT = ${lockedTulFunds.toEth()}
 
@@ -347,7 +347,7 @@ const unlockTulipTokens = async (user, amt) => {
   const { TokenTUL: tokenTUL } = await getContracts()
 
   const lockedBal = (await tokenTUL.lockedTULBalances.call(user))
-  console.log(`
+  log(`
   TOKENTUL.lockedTULBalances === ${lockedBal.toNumber().toEth()}
   `)
 
@@ -358,7 +358,7 @@ const unlockTulipTokens = async (user, amt) => {
    * [should be 0,0 as none unlocked yet]
    */
   let [unlockedFunds, withdrawTime] = (await tokenTUL.unlockedTULs.call(user)).map(n => n.toNumber())
-  console.log(`
+  log(`
   AMT OF UNLOCKED FUNDS  = ${unlockedFunds.toEth()}
   TIME OF WITHDRAWAL     = ${withdrawTime} [0 means no withdraw time as there are 0 locked tokens]
   `)
@@ -371,7 +371,7 @@ const unlockTulipTokens = async (user, amt) => {
   // lock tokens - arbitarily high amt to force Math.min
   await tokenTUL.lockTokens(userTulips, { from: user })
   const totalAmtLocked = (await tokenTUL.lockTokens.call(userTulips, { from: user })).toNumber()
-  console.log(`
+  log(`
   TOKENS LOCKED          = ${totalAmtLocked.toEth()}
   `)
   // assert.equal(totalAmtLocked, userTulips, 'Total locked tulips should equal total user balance of tulips')
@@ -381,7 +381,7 @@ const unlockTulipTokens = async (user, amt) => {
    */
   await tokenTUL.unlockTokens(userTulips, { from: user });
   ([unlockedFunds, withdrawTime] = (await tokenTUL.unlockTokens.call(userTulips, { from: user })).map(t => t.toNumber()))
-  console.log(`
+  log(`
   AMT OF UNLOCKED FUNDS  = ${unlockedFunds.toEth()}
   TIME OF WITHDRAWAL     = ${withdrawTime} --> ${new Date(withdrawTime * 1000)}
   `)
