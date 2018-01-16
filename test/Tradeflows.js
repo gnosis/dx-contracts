@@ -33,7 +33,7 @@ const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVo
   assert.equal((await dx.getAuctionIndex.call(eth.address, gno.address)).toNumber(), auctionIndex)
   assert.equal((await dx.getAuctionIndex.call(gno.address, eth.address)).toNumber(), auctionIndex)
   let difference = Math.abs((await dx.getAuctionStart.call(gno.address, eth.address)).toNumber() - auctionStart)
-  assert.isAtMost(difference, 1, 'time difference bigger than 1 sec')
+  assert.isAtMost(difference, 2, 'time difference bigger than 1 sec')
   assert.equal((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber(), sellVolumesCurrent, ' current SellVolume not correct')
   assert.equal((await dx.sellVolumesNext.call(eth.address, gno.address)).toNumber(), sellVolumesNext, 'sellVOlumeNext is incorrect')
   difference = Math.abs((await dx.buyVolumes.call(eth.address, gno.address)).toNumber() - buyVolumes)
@@ -99,6 +99,7 @@ contract('DutchExchange - Flow 3', (accounts) => {
       1,
       { from: seller1 },
     )
+
     eventWatcher(dx, 'Log', {})
   })
 
@@ -113,8 +114,9 @@ contract('DutchExchange - Flow 3', (accounts) => {
 
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
-    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
     
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+
     // post buyOrder to clear auction with small overbuy
     await postBuyOrder(eth, gno, auctionIndex, (10 ** 9) * 3, buyer1)
     
