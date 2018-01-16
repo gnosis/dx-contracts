@@ -204,7 +204,7 @@ contract DutchExchange {
             fraction memory priceToken2 = priceOracle(token2);
 
             // Compute funded value in ETH and USD
-            uint fundedValueETH = token1Funding * priceToken1.num / priceToken1.den; + token2Funding * priceToken2.num / priceToken2.den;
+            uint fundedValueETH = token1Funding * priceToken1.num / priceToken1.den + token2Funding * priceToken2.num / priceToken2.den;
             fundedValueUSD = fundedValueETH * ETHUSDPrice;
         }
 
@@ -907,19 +907,6 @@ contract DutchExchange {
     {
         fraction memory price = priceOracle(token);
         return (price.num, price.den);
-    }
-
-    function testing(address token)
-    public
-    returns(uint){
-        fraction memory b=priceOracle(token);
-        return b.num;
-    }
-    function testing2(address token1, address token2, uint index)
-    public
-    returns(uint){
-        fraction memory b=getPrice(token1,token2, index);
-        return b.num;
     }
 
     // > helper fns
