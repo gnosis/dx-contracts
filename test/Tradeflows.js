@@ -91,6 +91,7 @@ contract('DutchExchange - Flow 3', (accounts) => {
       1,
       { from: seller1 },
     )
+
     eventWatcher(dx, 'Log', {})
   })
 
@@ -105,8 +106,9 @@ contract('DutchExchange - Flow 3', (accounts) => {
 
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
-    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
     
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+
     // post buyOrder to clear auction with small overbuy
     await postBuyOrder(eth, gno, auctionIndex, (10 ** 9) * 3, buyer1)
     
