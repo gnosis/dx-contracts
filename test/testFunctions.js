@@ -246,6 +246,7 @@ const postBuyOrder = async (ST, BT, aucIdx, amt, acct) => {
   Posting Buy Amt -------> ${amt.toEth()} in GNO for ETH
   `)
 
+  // console.log('POSTBUYORDER TX RECEIPT ==', await dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct }))
   return dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct })
 }
 
@@ -279,12 +280,19 @@ const checkUserReceivesTulipTokens = async (ST, BT, user) => {
 
   const aucIdx = await getAuctionIndex()
   const [returned, tulips] = (await dx.claimBuyerFunds.call(ST.address, BT.address, user, aucIdx)).map(amt => amt.toNumber())
+  const amtClaimed = (await dx.claimedAmounts.call(ST.address, BT.address, aucIdx, user)).toNumber()
   // set global tulips state
   console.log(`
-    RETURNED  = ${returned.toEth()}
-    TULIPS    = ${tulips.toEth()}
+    RETURNED          = ${returned.toEth()}
+    TULIPS            = ${tulips.toEth()}
+
+    AMOUNT(S) CLAIMED = ${amtClaimed.toEth()}
   `)
-  assert.equal(returned, tulips, 'for ETH -> * pair returned tokens should equal tulips minted')
+  let newBalance = (await dx.balances.call(ST.address, user)).toNumber()
+  console.log(`
+    USER'S ETH AMT = ${newBalance.toEth()}
+  `)
+  assert.equal(returned + amtClaimed, tulips, 'for ETH -> * pair returned tokens should equal tulips minted')
 
   /*
      * SUB TEST 3: CLAIMBUYERFUNDS - CHECK BUYVOLUMES - CHECK LOCKEDTULIPS AMT = 1:1 FROM AMT IN POSTBUYORDER
@@ -302,7 +310,7 @@ const checkUserReceivesTulipTokens = async (ST, BT, user) => {
   const lockedTulFunds = (await tokenTUL.getLockedAmount.call(user)).toNumber()
   // set global state
   // userTulips = lockedTulFunds
-  const newBalance = (await dx.balances.call(ST.address, user)).toNumber()
+  newBalance = (await dx.balances.call(ST.address, user)).toNumber()
   console.log(`
     USER'S OWNED TUL AMT  = ${tulFunds.toEth()}
     USER'S LOCKED TUL AMT = ${lockedTulFunds.toEth()}
@@ -342,7 +350,7 @@ const unlockTulipTokens = async (user) => {
   await tokenTUL.lockTokens(userTulips, { from: user })
   const totalAmtLocked = (await tokenTUL.lockTokens.call(userTulips, { from: user })).toNumber()
   console.log(`
-  TOKENS LOCKED           = ${totalAmtLocked.toEth()}
+  TOKENS LOCKED          = ${totalAmtLocked.toEth()}
   `)
   assert.equal(totalAmtLocked, userTulips, 'Total locked tulips should equal total user balance of tulips')
 
@@ -371,5 +379,6 @@ module.exports = {
   setAndCheckAuctionStarted,
   setupTest,
   unlockTulipTokens,
+  wait,
   waitUntilPriceIsXPercentOfPreviousPrice,
 }

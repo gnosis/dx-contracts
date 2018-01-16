@@ -28,6 +28,7 @@ const {
   setupTest,
   setAndCheckAuctionStarted,
   unlockTulipTokens,
+  wait,
   waitUntilPriceIsXPercentOfPreviousPrice,
 } = require('./testFunctions')
 
@@ -52,7 +53,7 @@ const setupContracts = async () => {
   } = contracts)
 }
 
-contract('DutchExchange', (accounts) => {
+contract('DutchExchange --> Tulip Flow --> Seller sells 50 ETHER @ 2:1 price', (accounts) => {
   const [master, seller1, seller2, buyer1, buyer2] = accounts
   // const user = seller1
   // let userTulips
@@ -122,7 +123,7 @@ contract('DutchExchange', (accounts) => {
     `)
     assert.equal(sellVolumes, sellingAmount - svFee(0.5), 'sellVolumes === seller1Balance')
   })
-  it('Buyer2 postBuyOrder + claim', async () => {
+  xit('Buyer2 postBuyOrder + claim', async () => {
     console.log(`
     BUYER2 GNO BALANCE = ${(await getBalance(buyer2, gno)).toEth()}
     `)
@@ -142,24 +143,62 @@ contract('DutchExchange', (accounts) => {
     await checkUserReceivesTulipTokens(eth, gno, buyer2)
   })
 
-  it('Buyer1 postBuyOrder + claim', async () => {
+  it('BUYER1: postBuyOrder + claim', async () => {
     console.log(`
     BUYER1 GNO BALANCE = ${(await getBalance(buyer1, gno)).toEth()}
     `)
+    /*
+     * SUB TEST 1: MOVE TIME AFTER SCHEDULED AUCTION START TIME && ASSERT AUCTION-START =TRUE
+     */
+    await setAndCheckAuctionStarted(eth, gno)
     // eventWatcher(dx, 'NewBuyOrder', {})
+    
+    /*
+     * SUB TEST 2: postBuyOrder => 20 GNO @ 4:1 price
+     * post buy order @ price 4:1 aka 1 GNO => 1/4 ETH && 1 ETH => 4 GNO
+     * @{return} ... 20GNO * 1/4 => 5 ETHER
+     */
+    await postBuyOrder(eth, gno, false, (20).toWei(), buyer1)
+    let buyVolumes = (await dx.buyVolumes.call(eth.address, gno.address)).toNumber()
+    console.log(`
+      CURRENT ETH//GNO bVolume = ${buyVolumes.toEth()}
+    `)
+    // check tulip
+    await checkUserReceivesTulipTokens(eth, gno, buyer1)
+
+    /*
+     * SUB TEST 3: postBuyOrder => 20 GNO @ 2:1 price
+     * post buy order @ price 2:1 aka 1 GNO => 1/2 ETH && 1 ETH => 2 GNO
+     * @{return} ... 20GNO * 1/2 => 10 ETHER
+     */
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     // post buy order
     await postBuyOrder(eth, gno, false, (20).toWei(), buyer1)
-    // wait for price to drop
+    buyVolumes = (await dx.buyVolumes.call(eth.address, gno.address)).toNumber()
+    console.log(`
+      CURRENT ETH//GNO bVolume = ${buyVolumes.toEth()}
+    `)
     await checkUserReceivesTulipTokens(eth, gno, buyer1)
   })
 
-  it('BUYER1: ETH --> GNO: user can lock tokens and only unlock them 24 hours later', async () => {
+  xit('BUYER1: ETH --> GNO: user can lock tokens and only unlock them 24 hours later', async () => {
     /*
      * SUB TEST 1: 0 tulips as Auc has NOT cleared, time should show 24 hours... is this right?
      */
-    await unlockTulipTokens(buyer1)
+    // await unlockTulipTokens(buyer1)
 
-    // 
+    /*
+     * SUB TEST 2: clearAuction, try again
+     */ 
+    console.log(`
+    BEFORE wait = ${new Date(timestamp() * 1000)}
+    `)
+    await wait(86400)
+    console.log(`
+    AFTER wait  = ${new Date(timestamp() * 1000)}
+    `)
+    await checkUserReceivesTulipTokens(eth, gno, buyer1)
+    // await unlockTulipTokens(buyer1)
   })
 
   after(() => {
