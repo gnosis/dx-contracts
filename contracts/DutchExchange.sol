@@ -512,7 +512,7 @@ contract DutchExchange {
     {
         (returned, tulipsToIssue) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
 
-        uint den = closingPrices[sellToken][buyToken][auctionIndex];
+        uint den = closingPrices[sellToken][buyToken][auctionIndex].den;
 
         if (den == 0) {
             // Auction is running
