@@ -204,7 +204,7 @@ contract DutchExchange {
             fraction memory priceToken2 = priceOracle(token2);
 
             // Compute funded value in ETH and USD
-            uint fundedValueETH = token1Funding * priceToken1.num / priceToken1.den; + token2Funding * priceToken2.num / priceToken2.den;
+            uint fundedValueETH = token1Funding * priceToken1.num / priceToken1.den + token2Funding * priceToken2.num / priceToken2.den;
             fundedValueUSD = fundedValueETH * ETHUSDPrice;
         }
 
@@ -512,7 +512,7 @@ contract DutchExchange {
     {
         returned = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
 
-        uint den = closingPrices[sellToken][buyToken][auctionIndex];
+        uint den = closingPrices[sellToken][buyToken][auctionIndex].den;
 
         if (den == 0) {
             // Auction is running
@@ -527,9 +527,8 @@ contract DutchExchange {
             uint extraTokensTotal = extraTokens[sellToken][buyToken][auctionIndex];
             uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
 
-            // num represents buyVolume
-            uint num = closingPrices[sellToken][buyToken][auctionIndex].num;
-            uint tokensExtra = buyerBalance * extraTokensTotal / num;
+            // closingPrices.num represents buyVolume
+            uint tokensExtra = buyerBalance * extraTokensTotal / closingPrices[sellToken][buyToken][auctionIndex].num;
             returned += tokensExtra;
 
             if (approvedTokens[buyToken] == true && approvedTokens[sellToken] == true) {
@@ -689,7 +688,7 @@ contract DutchExchange {
             buyVolumes[sellToken][buyToken] = 0;
 
             sellVolumesCurrent[buyToken][sellToken] = sellVolumesNext[buyToken][sellToken];
-            sellVolumeNext[buyToken][sellToken] = 0;
+            sellVolumesNext[buyToken][sellToken] = 0;
             buyVolumes[buyToken][sellToken] = 0;
 
             // Increment auction index
@@ -748,13 +747,13 @@ contract DutchExchange {
         returns (fraction memory feeRatio)
     {
         uint totalTUL = TokenTUL(TUL).totalTokens();
-        uint balanceOfTUL = TokenTUL(TUL).lockedTULBalances(user);
 
         // The fee function is chosen such that
         // F(0) = 0.5%, F(1%) = 0.25%, F(>=10%) = 0
         // (Takes in a amount of user's TUL tokens as ration of all TUL tokens, outputs fee ratio)
         // We premultiply by amount to get fee:
         if (totalTUL > 0) {
+            uint balanceOfTUL = TokenTUL(TUL).lockedTULBalances(user);
             feeRatio.num = Math.atleastZero(int(totalTUL - 10 * balanceOfTUL));
             feeRatio.den = 16000 * balanceOfTUL + 200 * totalTUL;
         } else {
