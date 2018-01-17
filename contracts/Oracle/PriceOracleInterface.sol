@@ -39,7 +39,7 @@ contract PriceOracleInterface {
         priceFeedSource = _priceFeedSource;
     }
 
-    function updateCruator(
+    function updateCurator(
         address _owner
     )
         public

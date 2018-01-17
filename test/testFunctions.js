@@ -31,6 +31,7 @@ const contractNames = [
   'TokenTUL',
   'PriceOracleInterface',
   'PriceFeed',
+  'Medianizer',
 ]
 
 /**
@@ -73,11 +74,12 @@ const setupTest = async (
     EtherToken: eth,
     TokenGNO: gno,
     PriceFeed: oracle,
+    Medianizer: medianizer,
   },
   {
     startingETH = 50..toWei(),
     startingGNO = 50..toWei(),
-    ethUSDPrice = (1008 * (10 ** 18)),
+    ethUSDPrice = (1008..toWei()),
   }) => {
   // Await ALL Promises for each account setup
   await Promise.all(accounts.map((acct) => {
@@ -98,7 +100,7 @@ const setupTest = async (
   }))
   // add token Pair
   // updating the oracle Price. Needs to be changed later to another mechanism
-  await oracle.post(ethUSDPrice, 1516168838 * 2, 0x0, { from: accounts[0] })
+  await oracle.post(ethUSDPrice, 1516168838 * 2, medianizer.address, { from: accounts[0] })
 
   const gnoAcctBalances = await Promise.all(accounts.map(accts => getBalance(accts, gno)))
   const ethAcctBalances = await Promise.all(accounts.map(accts => getBalance(accts, eth)))

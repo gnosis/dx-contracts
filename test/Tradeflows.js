@@ -26,7 +26,7 @@ let dx
 let oracle
 let tokenTUL
 let balanceInvariant
-
+const ether = 10 ** 18
 
 let contracts
 const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
@@ -70,7 +70,7 @@ const setupContracts = async () => {
 const startBal = {
   startingETH: 90.0.toWei(),
   startingGNO: 90.0.toWei(),
-  ethUSDPrice: 60000,
+  ethUSDPrice: 1008.0.toWei(),
   sellingAmount: 50.0.toWei(), // Same as web3.toWei(50, 'ether')
 }
 
@@ -93,7 +93,7 @@ contract('DutchExchange - Flow 3', (accounts) => {
     await dx.addTokenPair(
       eth.address,
       gno.address,
-      10 ** 9,
+      50 * ether,
       0,
       2,
       1,
@@ -118,7 +118,7 @@ contract('DutchExchange - Flow 3', (accounts) => {
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
 
     // post buyOrder to clear auction with small overbuy
-    await postBuyOrder(eth, gno, auctionIndex, (10 ** 9) * 3, buyer1)
+    await postBuyOrder(eth, gno, auctionIndex, (10 * ether) * 3, buyer1)
     
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
     await checkState(2, 1, 0, 0, 0, 0, 0, gno, eth, 100000)
@@ -132,10 +132,10 @@ contract('DutchExchange - Flow 3', (accounts) => {
     * 2. await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)
     * 3. assert.equal(balanceBeforeClaim + 10 ** 9 - (await dx.balances.call(eth.address, buyer1)).toNumber() < MaxRoundingError, true)
     */
-    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 ** 9 - 10 ** 9 / 200), 100000)
+    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 * ether - 10 * ether / 200), 100000)
 
     // claim Sellerfunds
-    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 * 3 - 10 ** 9 * 3 / 200), 100000)
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 * ether * 3 - 10 * ether * 3 / 200), 100000)
 
     // check prices:  - actually reduantant with tests postBuyOrder
     const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
