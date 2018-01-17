@@ -299,6 +299,7 @@ contract DutchExchange {
     )
         public
     {
+        amount = Math.min(amount, balances[sellToken][msg.sender]);
         // Note: if a user specifies auctionIndex of 0, it
         // means he is agnostic which auction his sell order goes into
 
@@ -559,6 +560,7 @@ contract DutchExchange {
         // Claim tokens
         balances[sellToken][user] += returned;
         NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned);
+        ClaimBuyerFunds(returned, tulipsIssued);
     }
 
     // > getUnclaimedBuyerFunds()
@@ -1050,5 +1052,10 @@ contract DutchExchange {
     event LogNumber(
         string l,
         uint n
+    );
+
+    event ClaimBuyerFunds (
+        uint returned,
+        uint tulipsIssued
     );
 }
