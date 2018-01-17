@@ -35,4 +35,12 @@ contract InternalTests is DutchExchange {
           _thresholdNewAuction
         )
     {}
+
+  function calculateFeeRatioForJS(
+    address user
+  ) public view returns (uint, uint)
+  {
+    fraction memory feeRatio = calculateFeeRatio(user);
+    return (feeRatio.num, feeRatio.den);
+  }
 }
