@@ -853,9 +853,8 @@ contract DutchExchange {
                 price.den = closingPriceETH.num;
             } else {
                 // If both prices are positive, output weighted average
-                uint numPart1 = closingPriceETH.den * closingPriceETH.num * closingPriceToken.den;
-                price.num = numPart1 + closingPriceToken.num ** 2 * closingPriceETH.den;
-                price.den = closingPriceETH.den * closingPriceToken.den * (closingPriceETH.den + closingPriceToken.num);
+                price.num = closingPriceETH.den ** 2 * closingPriceToken.den + closingPriceToken.num ** 2 * closingPriceETH.num;
+                price.den = closingPriceETH.num * closingPriceToken.den * (closingPriceETH.den + closingPriceToken.num);
             }
         } 
     }
