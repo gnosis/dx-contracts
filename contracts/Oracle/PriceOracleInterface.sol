@@ -40,12 +40,12 @@ contract PriceOracleInterface {
     }
 
     function updateCruator(
-        address _priceFeedSource
+        address _owner
     )
         public
         onlyOwner()
     {
-        priceFeedSource = _priceFeedSource;
+        owner = _owner;
     }
 
     /// @dev returns the USDETH price, ie current value would be 45034 == 450 USD and 34 Cents
