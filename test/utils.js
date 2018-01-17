@@ -97,7 +97,7 @@ eventWatcher.stopWatching = (contract, event) => {
   }
 }
 
-const wait = (seconds) => {
+/* const wait = (seconds) => {
   const id = Date.now()
   web3.currentProvider.send({
     jsonrpc: '2.0',
@@ -113,7 +113,7 @@ const wait = (seconds) => {
     id: id + 1,
   })
 }
-
+*/
 module.exports = {
   assertRejects,
   blockNumber,
@@ -121,6 +121,6 @@ module.exports = {
   logger,
   log,
   varLogger,
-  wait,
+  // wait,
   timestamp,
 }

@@ -204,7 +204,7 @@ contract DutchExchange {
             fraction memory priceToken2 = priceOracle(token2);
 
             // Compute funded value in ETH and USD
-            uint fundedValueETH = token1Funding * priceToken1.num / priceToken1.den; + token2Funding * priceToken2.num / priceToken2.den;
+            uint fundedValueETH = token1Funding * priceToken1.num / priceToken1.den + token2Funding * priceToken2.num / priceToken2.den;
             fundedValueUSD = fundedValueETH * ETHUSDPrice;
         }
 
@@ -411,13 +411,6 @@ contract DutchExchange {
         // In that case we only process the part before the overbuy
         // To calculate overbuy, we first get current price
         uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
-        if (sellVolume == 0) {
-            extraTokens[sellToken][buyToken][auctionIndex + 1] = extraTokens[sellToken][buyToken][auctionIndex];
-            extraTokens[sellToken][buyToken][auctionIndex] = 0;
-            // Not necessary, just to save gas:
-            return;
-        }
-
         uint buyVolume = buyVolumes[sellToken][buyToken];
         fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
         uint outstandingVolume = Math.atleastZero(int(sellVolume * price.num / price.den - buyVolume));
@@ -493,7 +486,7 @@ contract DutchExchange {
                 // priceOracle() depends on latestAuctionIndex
                 // i.e. if a user claims tokens later in the future,
                 // he/she is likely to get slightly different number
-                fraction memory price = priceOracle(buyToken);
+                fraction memory price = historicalPriceOracle(sellToken, auctionIndex);
                 tulipsIssued = sellerBalance * price.num / price.den;
             }
 
@@ -515,34 +508,53 @@ contract DutchExchange {
         uint auctionIndex
     )
         public
-        returns (uint returned, uint tulipsToIssue)
+        returns (uint returned, uint tulipsIssued)
     {
-        (returned, tulipsToIssue) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
+        returned = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
 
-        if (auctionIndex == getAuctionIndex(sellToken, buyToken)) {
+        uint den = closingPrices[sellToken][buyToken][auctionIndex].den;
+
+        if (den == 0) {
             // Auction is running
             claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
         } else {
-            // Auction has closed    
+            // Auction has closed
+            // We DON'T want to check for returned > 0, because that would fail if a user claims
+            // intermediate funds & auction clears in same block (he/she would not be able to claim extraTokens)
+
             // Assign extra sell tokens (this is possible only after auction has cleared,
             // because buyVolume could still increase before that)
             uint extraTokensTotal = extraTokens[sellToken][buyToken][auctionIndex];
             uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
 
-            // num represents buyVolume
-            uint num = closingPrices[sellToken][buyToken][auctionIndex].num;
-            uint tokensExtra = buyerBalance * extraTokensTotal / num;
+            // closingPrices.num represents buyVolume
+            uint tokensExtra = buyerBalance * extraTokensTotal / closingPrices[sellToken][buyToken][auctionIndex].num;
             returned += tokensExtra;
+
+            if (approvedTokens[buyToken] == true && approvedTokens[sellToken] == true) {
+                uint tulipsToIssue;
+                // Get tulips issued based on ETH price of returned tokens
+                if (buyToken == ETH) {
+                    tulipsToIssue = buyerBalance;
+                } else if (sellToken == ETH) {
+                    fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
+                    tulipsToIssue = buyerBalance * price.den / price.num;
+                } else {
+                    // Neither token is ETH, so we use historicalPriceOracle()
+                    fraction memory priceETH = historicalPriceOracle(buyToken, auctionIndex);
+                    tulipsToIssue = buyerBalance * priceETH.num / priceETH.den;
+                }
+
+                if (tulipsToIssue > 0) {
+                    // Issue TUL
+                    TokenTUL(TUL).mintTokens(user, tulipsToIssue);
+                }
+            }
 
             // Auction has closed
             // Reset buyerBalances and claimedAmounts
             buyerBalances[sellToken][buyToken][auctionIndex][user] = 0;
             claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0; 
-
-            if (tulipsToIssue > 0) {
-                // Issue TUL
-                TokenTUL(TUL).mintTokens(user, tulipsToIssue);
-            }
         }
 
         // Claim tokens
@@ -559,7 +571,7 @@ contract DutchExchange {
     )
         public
         constant
-        returns (uint unclaimedBuyerFunds, uint tulipsToIssue)
+        returns (uint unclaimedBuyerFunds)
     {
         // R1: checks if particular auction has ever run
         // require(auctionIndex <= getAuctionIndex(sellToken, buyToken));
@@ -578,19 +590,6 @@ contract DutchExchange {
             unclaimedBuyerFunds = 0;
         } else {
             unclaimedBuyerFunds = buyerBalance * price.den / price.num - claimedAmounts[sellToken][buyToken][auctionIndex][user];
-        }
-
-        if (approvedTokens[buyToken] == true && approvedTokens[sellToken] == true) {
-            // Get tulips issued based on ETH price of returned tokens
-            if (buyToken == ETH) {
-                tulipsToIssue = buyerBalance;
-            } else if (sellToken == ETH) {
-                tulipsToIssue = buyerBalance * price.den / price.num;
-            } else {
-                // Neither token is ETH, so we use historicalPriceOracle()
-                fraction memory priceETH = historicalPriceOracle(buyToken, auctionIndex);
-                tulipsToIssue = buyerBalance * priceETH.num / priceETH.den;
-            }
         }
     }
 
@@ -673,19 +672,28 @@ contract DutchExchange {
                 sellVolumeNext += sellVolume;
             }
         }
-        // Update state variables
-        sellVolumesCurrent[sellToken][buyToken] = sellVolumeNext;
-        sellVolumesNext[sellToken][buyToken] = 0;
-        buyVolumes[sellToken][buyToken] = 0;
 
+        uint sellVolumeOpp = sellVolumesCurrent[buyToken][sellToken];
         // if (opposite is zero auction OR opposite auction has cleared) {
-        if (sellVolumesCurrent[buyToken][sellToken] == 0 || opp.den > 0) {
+        if (sellVolumeOpp == 0 || opp.den > 0) {
+            if (sellVolumeOpp == 0) {
+                extraTokens[buyToken][sellToken][auctionIndex + 1] += extraTokens[buyToken][sellToken][auctionIndex];
+                extraTokens[buyToken][sellToken][auctionIndex] = 0;
+                AuctionCleared(buyToken, sellToken, 0, 0, auctionIndex);
+            }
+
+            // Update state variables for both auctions
+            sellVolumesCurrent[sellToken][buyToken] = sellVolumeNext;
+            sellVolumesNext[sellToken][buyToken] = 0;
+            buyVolumes[sellToken][buyToken] = 0;
+
+            sellVolumesCurrent[buyToken][sellToken] = sellVolumesNext[buyToken][sellToken];
+            sellVolumesNext[buyToken][sellToken] = 0;
+            buyVolumes[buyToken][sellToken] = 0;
             // Increment auction index
             setAuctionIndex(sellToken, buyToken);
             // Check if next auction can be scheduled
             scheduleNextAuction(sellToken, buyToken);
-            AuctionCleared(buyToken, sellToken, 0, 0, auctionIndex);
-
         }
 
         AuctionCleared(sellToken, buyToken, sellVolume, buyVolume, auctionIndex);
@@ -722,9 +730,10 @@ contract DutchExchange {
                 // Adjust fee
                 fee -= amountOfOWLBurned * fee / feeInUSD;
             }
+
+            extraTokens[primaryToken][secondaryToken][auctionIndex + 1] += fee;
         }
 
-        extraTokens[primaryToken][secondaryToken][auctionIndex + 1] += fee;
         amountAfterFee = amount - fee;
     }
 
@@ -737,14 +746,14 @@ contract DutchExchange {
         returns (fraction memory feeRatio)
     {
         uint totalTUL = TokenTUL(TUL).totalTokens();
-        uint balanceOfTUL = TokenTUL(TUL).lockedTULBalances(user);
 
         // The fee function is chosen such that
         // F(0) = 0.5%, F(1%) = 0.25%, F(>=10%) = 0
         // (Takes in a amount of user's TUL tokens as ration of all TUL tokens, outputs fee ratio)
         // We premultiply by amount to get fee:
         if (totalTUL > 0) {
-            feeRatio.num = totalTUL - 10 * balanceOfTUL;
+            uint balanceOfTUL = TokenTUL(TUL).lockedTULBalances(user);
+            feeRatio.num = Math.atleastZero(int(totalTUL - 10 * balanceOfTUL));
             feeRatio.den = 16000 * balanceOfTUL + 200 * totalTUL;
         } else {
             feeRatio.num = 1;
@@ -796,6 +805,7 @@ contract DutchExchange {
         price.den = sellTokenPrice.den * buyTokenPrice.num;
     }
 
+    // > historicalPriceOracle()
     function historicalPriceOracle(
         address token,
         uint auctionIndex
@@ -842,7 +852,7 @@ contract DutchExchange {
                 price.num = closingPriceETH.den;
                 price.den = closingPriceETH.num;
             } else {
-                // If both prices are positive, output weighted average
+                // If both prices are positive, output weighted average                
                 price.num = closingPriceETH.den ** 2 * closingPriceToken.den + closingPriceToken.num ** 2 * closingPriceETH.num;
                 price.den = closingPriceETH.num * closingPriceToken.den * (closingPriceETH.den + closingPriceToken.num);
             }
@@ -868,13 +878,12 @@ contract DutchExchange {
     function depositAndSell(
         address sellToken,
         address buyToken,
-        uint auctionIndex,
         uint amount
     )
         public
     {
         deposit(sellToken, amount);
-        postSellOrder(sellToken, buyToken, auctionIndex, amount);
+        postSellOrder(sellToken, buyToken, 0, amount);
     }
 
     // > claimAndWithdraw()
@@ -903,19 +912,6 @@ contract DutchExchange {
     {
         fraction memory price = priceOracle(token);
         return (price.num, price.den);
-    }
-
-    function testing(address token)
-    public
-    returns(uint){
-        fraction memory b=priceOracle(token);
-        return b.num;
-    }
-    function testing2(address token1, address token2, uint index)
-    public
-    returns(uint){
-        fraction memory b=getPrice(token1,token2, index);
-        return b.num;
     }
 
     // > helper fns

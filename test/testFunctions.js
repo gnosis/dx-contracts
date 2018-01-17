@@ -22,7 +22,7 @@ Number.prototype.toEth = function toEth() {
   return bn(this, 10).div(10 ** 18).toNumber()
 }
 
-const MaxRoundingError = 100
+const MaxRoundingError = 1000000
 
 const contractNames = [
   'DutchExchange',
@@ -179,7 +179,7 @@ const checkBalanceBeforeClaim = async (
   ST,
   BT,
   amt = (10 ** 9),
-  round = MaxRoundingError,
+  round = (MaxRoundingError),
 ) => {
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno } = await getContracts()
   ST = ST || eth; BT = BT || gno
@@ -287,7 +287,9 @@ const claimSellerFunds = async (ST, BT, user, aucIdx, acct) => {
    * @param {address} user  => address of current user buying and owning tulips
    */
 const checkUserReceivesTulipTokens = async (ST, BT, user) => {
-  const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno, TokenTUL: tokenTUL } = await getContracts()
+  const {
+    DutchExchange: dx, EtherToken: eth, TokenGNO: gno, TokenTUL: tokenTUL,
+  } = await getContracts()
 
   ST = ST || eth; BT = BT || gno
 
@@ -389,6 +391,55 @@ const unlockTulipTokens = async (user, amt) => {
   // assert withdrawTime === now (in seconds) + 24 hours (in seconds)
   assert.equal(withdrawTime, timestamp() + (24 * 3600), 'Withdraw time should be equal to [(24 hours in seconds) + (current Block timestamp in seconds)]')
 }
+/**
+ * calculateTokensInExchange - calculates the tokens held by the exchange
+ * @param {address} token => address to unlock Tokens for
+ */
+const calculateTokensInExchange = async (Accounts, Tokens) => {
+  let results = []
+  const { DutchExchange: dx } = await getContracts()
+  for (let token of Tokens) {
+    // add all normal balances
+    let balance = 0
+    for (let acct of Accounts) {
+      balance += (await dx.balances.call(token.address, acct)).toNumber()
+    }
+
+    // check balances in each trading pair token<->tokenToTradeAgainst
+    // check through all auctions
+
+    for (let tokenPartner of Tokens) {
+      if (token.address !== tokenPartner.address) {
+        let lastAuctionIndex = (await dx.getAuctionIndex.call(token.address, tokenPartner.address)).toNumber()
+        // check old auctions balances
+        for (let auctionIndex = 1; auctionIndex < lastAuctionIndex; auctionIndex += 1) {
+          for (let acct of Accounts) {
+            if ((await dx.buyerBalances(token.address, tokenPartner.address, auctionIndex, acct)) > 0) {
+              const [w] = (await dx.claimBuyerFunds.call(token.address, tokenPartner.address, acct, auctionIndex))
+              balance += w.toNumber()
+            }
+            if ((await dx.sellerBalances(tokenPartner.address, token.address, auctionIndex, acct)).toNumber() > 0) {
+              const [w] = await dx.claimSellerFunds.call(tokenPartner.address, token.address, acct, auctionIndex)
+              balance += w.toNumber()
+            }
+          }
+        }
+        // check current auction balances
+        balance += (await dx.buyVolumes.call(tokenPartner.address, token.address)).toNumber()
+        balance += (await dx.sellVolumesCurrent.call(token.address, tokenPartner.address)).toNumber()
+
+        // check next auction balances
+        balance += (await dx.sellVolumesNext.call(token.address, tokenPartner.address)).toNumber()
+        balance += (await dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex)).toNumber()
+        balance += (await dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex + 1)).toNumber()
+        balance += (await dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex + 2)).toNumber()
+        // logger('extraTokens',(await dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex)).toNumber())
+      }
+    }
+    results.push(balance)
+  }
+  return results
+}
 
 module.exports = {
   checkBalanceBeforeClaim,
@@ -404,4 +455,5 @@ module.exports = {
   unlockTulipTokens,
   wait,
   waitUntilPriceIsXPercentOfPreviousPrice,
+  calculateTokensInExchange,
 }
