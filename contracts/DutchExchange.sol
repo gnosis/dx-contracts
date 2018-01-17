@@ -666,7 +666,7 @@ contract DutchExchange {
         // Logic so tokens don't get stuck in auctions where clearing price was 0
         uint sellVolumeNext = sellVolumesNext[sellToken][buyToken];
         if (buyVolume == 0) {
-            extraTokens[sellToken][buyToken][auctionIndex + 1] = extraTokens[sellToken][buyToken][auctionIndex];
+            extraTokens[sellToken][buyToken][auctionIndex + 1] += extraTokens[sellToken][buyToken][auctionIndex];
             extraTokens[sellToken][buyToken][auctionIndex] = 0;
             if (sellVolume > 0) {
                 sellVolumeNext += sellVolume;

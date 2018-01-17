@@ -47,12 +47,12 @@ const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVo
   assert.equal(closingPriceDenReal, closingPriceDen, 'ClosingPriceDen not okay')
 }
 
-const checkInvariants = async (invariant, accounts, tokens, allowedRoundingErrors = 1024) => {
+const checkInvariants = async (invariant, accounts, tokens, allowedRoundingErrors = 1) => {
   const newBalanceInvariant = await calculateTokensInExchange(accounts, tokens)
   logger('invariant before', invariant)
   logger('invariant after', newBalanceInvariant)
   for (let i = 0; i < tokens.length; i += 1) {
-    assert.isAtMost(Math.abs(balanceInvariant[i] - newBalanceInvariant[i]), allowedRoundingErrors)
+    assert.isAtMost(balanceInvariant[i].minus(newBalanceInvariant[i]).abs(), allowedRoundingErrors, `issue with Token${i}`)
   }
 }
 
@@ -67,16 +67,24 @@ const setupContracts = async () => {
     PriceOracle: oracle,
   } = contracts)
 }
+const startBal = {
+  startingETH: 90.0.toWei(),
+  startingGNO: 90.0.toWei(),
+  ethUSDPrice: 60000,
+  sellingAmount: 50.0.toWei(), // Same as web3.toWei(50, 'ether')
+}
+
 
 contract('DutchExchange - Flow 3', (accounts) => {
   const [, seller1, , buyer1] = accounts
+
 
   before(async () => {
     // get contracts
     await setupContracts()
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts)
+    await setupTest(accounts, contracts, startBal)
 
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
@@ -153,7 +161,7 @@ contract('DutchExchange - Flow 6', (accounts) => {
     } = contracts)
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts)
+    await setupTest(accounts, contracts, startBal)
 
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
@@ -248,7 +256,7 @@ contract('DutchExchange - Flow 4', (accounts) => {
     } = contracts)
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts)
+    await setupTest(accounts, contracts, startBal)
 
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
@@ -352,7 +360,7 @@ contract('DutchExchange - Flow 1', (accounts) => {
     } = contracts)
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts)
+    await setupTest(accounts, contracts, startBal)
 
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
@@ -445,7 +453,7 @@ contract('DutchExchange - Flow 9', (accounts) => {
     } = contracts)
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts)
+    await setupTest(accounts, contracts, startBal)
 
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
