@@ -209,7 +209,7 @@ contract DutchExchange {
         }
 
         // R5
-        // require(fundedValueUSD >= thresholdNewTokenPair);
+        require(fundedValueUSD >= thresholdNewTokenPair);
         if (fundedValueUSD < thresholdNewTokenPair) {
             Log('addTokenPair R5');
             return;

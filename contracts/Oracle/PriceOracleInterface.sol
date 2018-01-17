@@ -48,7 +48,7 @@ contract PriceOracleInterface {
         priceFeedSource = _priceFeedSource;
     }
 
-    /// @dev returns the USDETH price in Cents, ie current value would be 45034 == 450 USD and 34 Cents
+    /// @dev returns the USDETH price, ie current value would be 45034 == 450 USD and 34 Cents
     function getUSDETHPrice() 
         public
         view
@@ -60,9 +60,9 @@ contract PriceOracleInterface {
         if (!valid) {
             NonValidPriceFeed(priceFeedSource);
         }
-        return uint256(price)/10000;
+        return uint256(price)/(1 ether));
     }  
-
+/* 
     /// @dev returns the amount of Wei equal to 1 USD
     function getWEIUSDPrice() 
         public
@@ -91,5 +91,5 @@ contract PriceOracleInterface {
             NonValidPriceFeed(priceFeedSource);
         }
         return uint128(price);
-    }     
+    }    */  
 }
