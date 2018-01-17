@@ -31,14 +31,14 @@ module.exports = function deploy(deployer, networks, accounts) {
     .then(() => deployer.deploy(TokenOWL, TokenGNO.address /* ,PriceOracle.adress */, 0))
     // @dev DX Constructor creates exchange
     .then(() => deployer.deploy(
-      DutchExchange,              // Contract Name
+      DutchExchange,                            // Contract Name
       TokenTUL.address,
       TokenOWL.address,
-      accounts[0],                // @param _owner will be the admin of the contract
-      EtherToken.address,         // @param _ETH                - address of ETH ERC-20 token
+      accounts[0],                           // @param _owner will be the admin of the contract
+      EtherToken.address,                   // @param _ETH               - address of ETH ERC-20 token
       PriceOracleInterface.address,        // @param _priceOracleAddress - address of priceOracle
-      10000000000000000000000,
-      1000000000000000000000,
+      10000000000000000000000,            // @param _thresholdNewTokenPair: 10,000
+      1000000000000000000000,            // @param _thresholdNewAuction:     1,000
     ))
     .then(() => Medianizer.deployed())
     .then(M => M.set(PriceFeed.address, { from: accounts[0] }))
