@@ -302,6 +302,8 @@ contract DutchExchange {
         // Note: if a user specifies auctionIndex of 0, it
         // means he is agnostic which auction his sell order goes into
 
+        amount = Math.min(amount, balances[sellToken][msg.sender]);
+
         // R1
         // require(amount > 0);
         if (amount == 0) {
@@ -532,22 +534,21 @@ contract DutchExchange {
             returned += tokensExtra;
 
             if (approvedTokens[buyToken] == true && approvedTokens[sellToken] == true) {
-                uint tulipsToIssue;
                 // Get tulips issued based on ETH price of returned tokens
                 if (buyToken == ETH) {
-                    tulipsToIssue = buyerBalance;
+                    tulipsIssued = buyerBalance;
                 } else if (sellToken == ETH) {
                     fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
-                    tulipsToIssue = buyerBalance * price.den / price.num;
+                    tulipsIssued = buyerBalance * price.den / price.num;
                 } else {
                     // Neither token is ETH, so we use historicalPriceOracle()
                     fraction memory priceETH = historicalPriceOracle(buyToken, auctionIndex);
-                    tulipsToIssue = buyerBalance * priceETH.num / priceETH.den;
+                    tulipsIssued = buyerBalance * priceETH.num / priceETH.den;
                 }
 
-                if (tulipsToIssue > 0) {
+                if (tulipsIssued > 0) {
                     // Issue TUL
-                    TokenTUL(TUL).mintTokens(user, tulipsToIssue);
+                    TokenTUL(TUL).mintTokens(user, tulipsIssued);
                 }
             }
 
