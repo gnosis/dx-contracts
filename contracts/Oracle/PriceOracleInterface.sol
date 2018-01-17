@@ -60,7 +60,7 @@ contract PriceOracleInterface {
         if (!valid) {
             NonValidPriceFeed(priceFeedSource);
         }
-        return uint256(price)/(1 ether));
+        return uint256(price)/(1 ether);
     }  
 /* 
     /// @dev returns the amount of Wei equal to 1 USD
