@@ -77,7 +77,7 @@ const setupTest = async (
   {
     startingETH = 50..toWei(),
     startingGNO = 50..toWei(),
-    ethUSDPrice = 60000,
+    ethUSDPrice = (1008 * (10 ** 18)),
   }) => {
   // Await ALL Promises for each account setup
   await Promise.all(accounts.map((acct) => {

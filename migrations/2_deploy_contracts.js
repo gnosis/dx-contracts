@@ -10,8 +10,10 @@ const TokenGNO = artifacts.require('TokenGNO')
 const TokenOWL = artifacts.require('TokenOWL')
 const TokenTUL = artifacts.require('TokenTUL')
 
+// ETH price as reported by MakerDAO with 18 decimal places
+const currentETHPrice = (1008 * (10 ** 18))
+
 module.exports = function deploy(deployer, networks, accounts) {
-  let PriceOracleInstance
   // let TULInstance;
   deployer.deploy(Math)
   // StandardToken is NECESSARRY to deploy here as it is LINKED w/Math
@@ -22,12 +24,9 @@ module.exports = function deploy(deployer, networks, accounts) {
     .then(() => deployer.deploy(TokenTUL, accounts[0], accounts[0]))
     // StandardToken is NECESSARRY to deploy here as it is LINKED w/Math
     .then(() => deployer.deploy(StandardToken))
-    //.then(() => deployer.deploy(PriceOracle, accounts[0], EtherToken.address))
     .then(() => deployer.deploy(PriceFeed))
     .then(() => deployer.deploy(PriceOracleInterface, accounts[0], PriceFeed.address))
-    .then(() => {
-      return deployer.deploy(TokenOWL, TokenGNO.address /* ,PriceOracle.adress */, 0)
-    })
+    .then(() => deployer.deploy(TokenOWL, TokenGNO.address /* ,PriceOracle.adress */, 0))
     // @dev DX Constructor creates exchange
     .then(() => deployer.deploy(
       DutchExchange,              // Contract Name
@@ -40,7 +39,7 @@ module.exports = function deploy(deployer, networks, accounts) {
       1000,
     ))
     .then(() => PriceFeed.deployed())
-    .then(P => P.post(900, 1516168838 * 2, 0x0, { from: accounts[0] }))
+    .then(P => P.post(currentETHPrice, 1516168838 * 2, 0x0, { from: accounts[0] }))
     .then(() => TokenTUL.deployed())
     .then(T => T.updateMinter(DutchExchange.address))
 }
