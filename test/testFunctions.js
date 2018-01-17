@@ -22,14 +22,16 @@ Number.prototype.toEth = function toEth() {
   return bn(this, 10).div(10 ** 18).toNumber()
 }
 
-const MaxRoundingError = 1000000
+const MaxRoundingError = 100
 
 const contractNames = [
   'DutchExchange',
   'EtherToken',
   'TokenGNO',
   'TokenTUL',
-  'PriceOracle',
+  'PriceOracleInterface',
+  'PriceFeed',
+  'Medianizer',
 ]
 
 /**
@@ -71,12 +73,13 @@ const setupTest = async (
     DutchExchange: dx,
     EtherToken: eth,
     TokenGNO: gno,
-    PriceOracle: oracle,
+    PriceFeed: oracle,
+    Medianizer: medianizer,
   },
   {
     startingETH = 50..toWei(),
-    startingGNO = 200..toWei(),
-    ethUSDPrice = 60000,
+    startingGNO = 50..toWei(),
+    ethUSDPrice = 1008..toWei(),
   }) => {
   // Await ALL Promises for each account setup
   await Promise.all(accounts.slice(1).map((acct) => {
@@ -93,7 +96,7 @@ const setupTest = async (
   }))
   // add token Pair
   // updating the oracle Price. Needs to be changed later to another mechanism
-  await oracle.updateETHUSDPrice(ethUSDPrice, { from: accounts[0] })
+  await oracle.post(ethUSDPrice, 1516168838 * 2, medianizer.address, { from: accounts[0] })
 
   const gnoAcctBalances = await Promise.all(accounts.map(accts => getBalance(accts, gno)))
   const ethAcctBalances = await Promise.all(accounts.map(accts => getBalance(accts, eth)))
@@ -400,9 +403,9 @@ const calculateTokensInExchange = async (Accounts, Tokens) => {
   const { DutchExchange: dx } = await getContracts()
   for (let token of Tokens) {
     // add all normal balances
-    let balance = 0
+    let balance = bn(0)
     for (let acct of Accounts) {
-      balance += (await dx.balances.call(token.address, acct)).toNumber()
+      balance = balance.add((await dx.balances.call(token.address, acct)))
     }
 
     // check balances in each trading pair token<->tokenToTradeAgainst
@@ -414,25 +417,25 @@ const calculateTokensInExchange = async (Accounts, Tokens) => {
         // check old auctions balances
         for (let auctionIndex = 1; auctionIndex < lastAuctionIndex; auctionIndex += 1) {
           for (let acct of Accounts) {
-            if ((await dx.buyerBalances(token.address, tokenPartner.address, auctionIndex, acct)) > 0) {
+            if ((await dx.buyerBalances(token.address, tokenPartner.address, auctionIndex, acct)).toNumber() > 0) {
               const [w] = (await dx.claimBuyerFunds.call(token.address, tokenPartner.address, acct, auctionIndex))
-              balance += w.toNumber()
+              balance = balance.add(w)
             }
             if ((await dx.sellerBalances(tokenPartner.address, token.address, auctionIndex, acct)).toNumber() > 0) {
               const [w] = await dx.claimSellerFunds.call(tokenPartner.address, token.address, acct, auctionIndex)
-              balance += w.toNumber()
+              balance = balance.add(w)
             }
           }
         }
         // check current auction balances
-        balance += (await dx.buyVolumes.call(tokenPartner.address, token.address)).toNumber()
-        balance += (await dx.sellVolumesCurrent.call(token.address, tokenPartner.address)).toNumber()
+        balance = balance.add((await dx.buyVolumes.call(tokenPartner.address, token.address)))
+        balance = balance.add((await dx.sellVolumesCurrent.call(token.address, tokenPartner.address)))
 
         // check next auction balances
-        balance += (await dx.sellVolumesNext.call(token.address, tokenPartner.address)).toNumber()
-        balance += (await dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex)).toNumber()
-        balance += (await dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex + 1)).toNumber()
-        balance += (await dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex + 2)).toNumber()
+        balance = balance.add((await dx.sellVolumesNext.call(token.address, tokenPartner.address)))
+        balance = balance.add((await dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex)))
+        balance = balance.add((await dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex + 1)))
+        balance = balance.add((await dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex + 2)))
         // logger('extraTokens',(await dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex)).toNumber())
       }
     }

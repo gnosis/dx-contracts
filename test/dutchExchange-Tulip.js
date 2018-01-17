@@ -232,7 +232,9 @@ contract('DutchExchange --> Tulip Flow --> Seller sells 50 ETHER @ 2:1 price', (
     ethUSDPrice: 60000,
     sellingAmount: 50..toWei(), // Same as web3.toWei(50, 'ether')
   }
-  const { startingETH, startingGNO, ethUSDPrice, sellingAmount } = startBal
+  const {
+    startingETH, startingGNO, ethUSDPrice, sellingAmount, 
+  } = startBal
 
   before(async () => {
     // get contracts
