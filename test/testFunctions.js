@@ -30,6 +30,7 @@ const contractNames = [
   'TokenGNO',
   'TokenTUL',
   'PriceOracle',
+  'InternalTests',
 ]
 
 /**
