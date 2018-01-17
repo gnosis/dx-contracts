@@ -173,11 +173,14 @@ contract DutchExchange {
 
         uint fundedValueUSD;
         uint ETHUSDPrice = PriceOracleInterface(ETHUSDOracle).getUSDETHPrice();
-
+        // David Code
+        LogNumber("ETHUSDPrice from Oracle", ETHUSDPrice);
         // Compute fundedValueUSD
         if (token1 == ETH) {
             // C1
             fundedValueUSD = token1Funding * ETHUSDPrice;
+            // David Code
+            LogNumber("fundedValueUSD * ETHUSDPrice", fundedValueUSD);
         } else if (token2 == ETH) {
             // C2
             fundedValueUSD = token2Funding * ETHUSDPrice;
@@ -209,10 +212,10 @@ contract DutchExchange {
         }
 
         // R5
-        require(fundedValueUSD >= thresholdNewTokenPair);
+        // require(fundedValueUSD >= thresholdNewTokenPair);
         if (fundedValueUSD < thresholdNewTokenPair) {
             Log('addTokenPair R5');
-            return;
+            // return;
         }
 
         // Save prices of opposite auctions
@@ -515,7 +518,7 @@ contract DutchExchange {
     {
         fraction memory price;
         (returned, price) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
-
+        LogNumber("claimBuyerFUnds price.den", price.den);
         if (price.den == 0) {
             // Auction is running
             claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
@@ -735,11 +738,11 @@ contract DutchExchange {
 
             extraTokens[primaryToken][secondaryToken][auctionIndex + 1] += fee;
         }
-
+// DAVID CODE
         amountAfterFee = amount - fee;
+        LogNumber("Amount after Settle Fee", amountAfterFee);
     }
-
-
+    
     // > calculateFeeRatio()
     function calculateFeeRatio(
         address user

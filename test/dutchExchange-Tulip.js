@@ -52,17 +52,17 @@ const setupContracts = async () => {
   } = contracts)
 }
 
-const c1 = () => contract('DutchExchange --> Tulip Flow --> Check new claimBuyerFunds fn', (accounts) => {
+const c1 = () => contract('DutchExchange --> Tulip Flow --> Check new claimBuyerFunds fn ||', (accounts) => {
   const [master, seller1, , buyer1] = accounts
   // const user = seller1
   // let userTulips
   let seller1Balance 
   
   const startBal = {
-    startingETH: 90..toWei(),
+    startingETH: 1000..toWei(),
     startingGNO: 1000..toWei(),
-    ethUSDPrice: 60000,
-    sellingAmount: 50..toWei(), // Same as web3.toWei(50, 'ether')
+    ethUSDPrice: 6000..toWei(),   // 400 ETH @ $6000/ETH = $2,400,000 USD
+    sellingAmount: 400..toWei(), // Same as web3.toWei(50, 'ether')
   }
   const { 
     startingETH,
@@ -74,7 +74,7 @@ const c1 = () => contract('DutchExchange --> Tulip Flow --> Check new claimBuyer
   before(async () => {
     // get contracts
     await setupContracts()
-
+    eventWatcher(dx, 'LogNumber', {})
     /*
      * SUB TEST 1: Check passed in ACCT has NO balances in DX for token passed in
      */
@@ -88,7 +88,7 @@ const c1 = () => contract('DutchExchange --> Tulip Flow --> Check new claimBuyer
      * SUB TEST 2: Check passed in ACCT has NO balances in DX for token passed in
      */
     seller1Balance = await getBalance(seller1, eth)
-    assert.equal(seller1Balance, startingETH, 'Seller1 should have 90 * 10 ** 18')
+    assert.equal(seller1Balance, startingETH, `Seller1 should have balance of ${startingETH.toEth()}`)
 
     /*
      * SUB TEST 3: assert both eth and gno get approved by DX
@@ -105,19 +105,19 @@ const c1 = () => contract('DutchExchange --> Tulip Flow --> Check new claimBuyer
      * SUB TEST 4: create new token pair and assert Seller1Balance = 0 after depositing more than Balance
      */
     // add tokenPair ETH GNO
-
+    console.log('Selling amt ', sellingAmount.toEth())
     await dx.addTokenPair(
       eth.address,
       gno.address,
-      sellingAmount,  // ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
+      sellingAmount,  // 500 ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
       0,              // buyVolume for GNO
       2,              // lastClosingPrice NUM
       1,              // lastClosingPrice DEN
       { from: seller1 },
     )
-    seller1Balance = await getBalance(seller1, eth)
+    seller1Balance = await getBalance(seller1, eth) // dx.balances(token) - sellingAmt
     log(`\nSeller Balance ====> ${seller1Balance.toEth()}\n`)
-    assert.equal(seller1Balance, 90..toWei(), 'Seller1 should have 90 balance after new Token Pair add')
+    assert.equal(seller1Balance, startingETH - sellingAmount, `Seller1 should have ${startingETH.toEth()} balance after new Token Pair add`)
   })
   
   it('Check sellVolume', async () => {
@@ -138,6 +138,7 @@ const c1 = () => contract('DutchExchange --> Tulip Flow --> Check new claimBuyer
   
   it('BUYER1: Non Auction clearing PostBuyOrder + Claim => Tulips = 0', async () => {
     eventWatcher(dx, 'ClaimBuyerFunds', {})
+    eventWatcher(dx, 'LogNumber', {})
     log(`
     ============================================================================================
     T2.5: Buyer1 PostBuyOrder => [[Non Auction clearing PostBuyOrder + Claim]] => [[Tulips = 0]]
@@ -155,8 +156,23 @@ const c1 = () => contract('DutchExchange --> Tulip Flow --> Check new claimBuyer
      * post buy order @ price 4:1 aka 1 GNO => 1/4 ETH && 1 ETH => 4 GNO
      * @{return} ... 20GNO * 1/4 => 5 ETHER
      */
+    // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
+    const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
+    // Should be 4 here as closing price starts @ 2 and we times by 2
+    const [num, den] = (await dx.getPriceForJS(eth.address, gno.address, 1)).map(i => i.toNumber())
+    log(`
+    Last Closing Prices:
+    closeN        = ${closingNum}
+    closeD        = ${closingDen}
+    closingPrice  = ${closingNum / closingDen}
+    ===========================================
+    Current Prices:
+    n             = ${num}
+    d             = ${den}
+    price         = ${num / den}
+    `)
     await postBuyOrder(eth, gno, false, (20).toWei(), buyer1)
-    log(`CURRENT ETH//GNO bVolume = ${((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()).toEth()}`)
+    log(`\nBuy Volume AFTER = ${((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()).toEth()}`)
     let idx = await getAuctionIndex()
     const [claimedFunds, tulipsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
     await dx.claimBuyerFunds(eth.address, gno.address, buyer1, idx)
@@ -171,7 +187,7 @@ const c1 = () => contract('DutchExchange --> Tulip Flow --> Check new claimBuyer
     // await checkUserReceivesTulipTokens(eth, gno, buyer1)
   })
 
-  it('BUYER1: Auction clearing PostBuyOrder + Claim => Tulips = sellVolume', async () => {
+  xit('BUYER1: Auction clearing PostBuyOrder + Claim => Tulips = sellVolume', async () => {
     eventWatcher(dx, 'AuctionCleared', {})
     log(`
     ================================================================================================
@@ -187,7 +203,7 @@ const c1 = () => contract('DutchExchange --> Tulip Flow --> Check new claimBuyer
      * @{return} ... 20GNO * 1/4 => 5 ETHER
      */
     await postBuyOrder(eth, gno, false, 400..toWei(), buyer1)
-    log(`CURRENT ETH//GNO bVolume = ${((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()).toEth()}`)
+    log(`\nBuy Volume AFTER = ${((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()).toEth()}`)
     let idx = await getAuctionIndex()
     const [claimedFunds, tulipsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx - 1)).map(i => i.toNumber())
     await dx.claimBuyerFunds(eth.address, gno.address, buyer1, idx - 1)
