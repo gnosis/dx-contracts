@@ -109,14 +109,15 @@ const c1 = () => contract('DutchExchange --> Tulip Flow --> Check new claimBuyer
     await dx.addTokenPair(
       eth.address,
       gno.address,
-      sellingAmount,  // 50 ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
+      sellingAmount,  // ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
       0,              // buyVolume for GNO
       2,              // lastClosingPrice NUM
       1,              // lastClosingPrice DEN
       { from: seller1 },
     )
     seller1Balance = await getBalance(seller1, eth)
-    assert.equal(seller1Balance, (40).toWei(), 'Seller1 should have 40 balance after new Token Pair add')
+    log(`\nSeller Balance ====> ${seller1Balance.toEth()}\n`)
+    assert.equal(seller1Balance, 90..toWei(), 'Seller1 should have 90 balance after new Token Pair add')
   })
   
   it('Check sellVolume', async () => {
@@ -138,9 +139,9 @@ const c1 = () => contract('DutchExchange --> Tulip Flow --> Check new claimBuyer
   it('BUYER1: Non Auction clearing PostBuyOrder + Claim => Tulips = 0', async () => {
     eventWatcher(dx, 'ClaimBuyerFunds', {})
     log(`
-    ==================================================================================
-    T3: Buyer1 PostBuyOrder => Non Auction clearing PostBuyOrder + Claim => Tulips = 0
-    ==================================================================================
+    ============================================================================================
+    T2.5: Buyer1 PostBuyOrder => [[Non Auction clearing PostBuyOrder + Claim]] => [[Tulips = 0]]
+    ============================================================================================
     `)
     log(`
     BUYER1 GNO BALANCE = ${(await getBalance(buyer1, gno)).toEth()}
@@ -173,9 +174,9 @@ const c1 = () => contract('DutchExchange --> Tulip Flow --> Check new claimBuyer
   it('BUYER1: Auction clearing PostBuyOrder + Claim => Tulips = sellVolume', async () => {
     eventWatcher(dx, 'AuctionCleared', {})
     log(`
-    ==================================================================================
-    T3: Buyer1 PostBuyOrder => Auction clearing PostBuyOrder + Claim => Tulips = 0
-    ==================================================================================
+    ================================================================================================
+    T3: Buyer1 PostBuyOrder => Auction clearing PostBuyOrder + Claim => Tulips = 49.75 || sellVolume
+    ================================================================================================
     `)
     log(`
     BUYER1 GNO BALANCE = ${(await getBalance(buyer1, gno)).toEth()}
@@ -196,7 +197,7 @@ const c1 = () => contract('DutchExchange --> Tulip Flow --> Check new claimBuyer
     TULIPS ISSUED => ${tulipsIssued.toEth()}
     `)
 
-    assert.equal(tulipsIssued, 49.75, 'Tulips only issued / minted after auction Close so here = 0')
+    assert.equal(tulipsIssued.toEth(), 49.75, 'Tulips only issued / minted after auction Close so here = 0')
     // check tulip
     // await checkUserReceivesTulipTokens(eth, gno, buyer1)
   })

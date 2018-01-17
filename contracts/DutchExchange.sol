@@ -855,11 +855,7 @@ contract DutchExchange {
                 price.num = closingPriceETH.den;
                 price.den = closingPriceETH.num;
             } else {
-<<<<<<< HEAD
-                // If both prices are positive, output weighted average                
-=======
                 // If both prices are positive, output weighted average
->>>>>>> d5a6511e00fbf47c4cc45447f050aacdfa7181ce
                 price.num = closingPriceETH.den ** 2 * closingPriceToken.den + closingPriceToken.num ** 2 * closingPriceETH.num;
                 price.den = closingPriceETH.num * closingPriceToken.den * (closingPriceETH.den + closingPriceToken.num);
             }

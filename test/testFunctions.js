@@ -82,15 +82,17 @@ const setupTest = async (
     ethUSDPrice = 1008..toWei(),
   }) => {
   // Await ALL Promises for each account setup
-  await Promise.all(accounts.slice(1).map((acct) => {
+  await Promise.all(accounts.map((acct) => {
     /* eslint array-callback-return:0 */
+    if (acct === accounts[0]) return
     eth.deposit({ from: acct, value: startingETH })
     eth.approve(dx.address, startingETH, { from: acct })
     gno.transfer(acct, startingGNO, { from: accounts[0] })
     gno.approve(dx.address, startingGNO, { from: acct })
   }))
   // Deposit depends on ABOVE finishing first... so run here
-  await Promise.all(accounts.slice(1).map((acct) => {
+  await Promise.all(accounts.map((acct) => {
+    if (acct === accounts[0]) return
     dx.deposit(eth.address, startingETH, { from: acct })
     dx.deposit(gno.address, startingGNO, { from: acct })
   }))
@@ -235,13 +237,14 @@ const postBuyOrder = async (ST, BT, aucIdx, amt, acct) => {
 
   log(`
   Current Auction Index -> ${auctionIdx}
-  Posting Buy Amt -------> ${amt.toEth()} in GNO for ETH
   `)
   const buyVolumes = (await dx.buyVolumes.call(ST.address, BT.address)).toNumber()
   const sellVolumes = (await dx.sellVolumesCurrent.call(ST.address, BT.address)).toNumber()
   log(`
-    Current Buy Volume  => ${buyVolumes.toEth()}
-    Current Sell Volume => ${sellVolumes.toEth()}
+    Current Buy Volume BEFORE Posting => ${buyVolumes.toEth()}
+    Current Sell Volume               => ${sellVolumes.toEth()}
+    ----
+    Posting Buy Amt -------------------> ${amt.toEth()} in GNO for ETH
   `)
   // log('POSTBUYORDER TX RECEIPT ==', await dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct }))
   return dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct })
