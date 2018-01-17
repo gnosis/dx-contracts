@@ -1,16 +1,16 @@
 pragma solidity ^0.4.18;
 
-import "../DutchExchange/DutchExchangeInterface.sol";
+import "../Oracle/PriceFeed.sol";
 import "../Utils/Math.sol";
+
 
 contract PriceOracleInterface {
     using Math for *;
 
-    uint public lastPriceETHUSD = 0;
-    DutchExchangeInterface dutchExchange;
-    address public etherToken;
+    address public priceFeedSource;
     address public owner;
     
+    event NonValidPriceFeed(address priceFeedSource);
 
      // Modifiers
     modifier onlyOwner() {
@@ -19,18 +19,32 @@ contract PriceOracleInterface {
     }
 
     ///@dev constructor of the contract, 
-    function PriceOracleInterface(address _owner, address _etherToken)
+    function PriceOracleInterface(
+        address _owner,
+        address _priceFeedSource
+    )
         public
     {
         owner = _owner;
-        etherToken=_etherToken;
+        priceFeedSource = _priceFeedSource;
     }
    
-    function updateDutchExchange(DutchExchangeInterface _dutchExchange)
+    function updatePriceFeedSource(
+        address _priceFeedSource
+    )
         public
         onlyOwner()
     {
-        dutchExchange = _dutchExchange;
+        priceFeedSource = _priceFeedSource;
+    }
+
+    function updateCruator(
+        address _priceFeedSource
+    )
+        public
+        onlyOwner()
+    {
+        priceFeedSource = _priceFeedSource;
     }
 
     /// @dev returns the USDETH price in Cents, ie current value would be 45034 == 450 USD and 34 Cents
@@ -38,41 +52,28 @@ contract PriceOracleInterface {
         public
         view
         returns (uint)
-    ;
-
-    /// @dev anyone can trigger the Update process for the USD ETH feed. 
-    ///  possible solutions could be realityCheck with a big 
-    ///  set of arbitrators: realityKey, Gnosis, Consensus, oralize or chainlink request
-    function updateETHUSDPrice(uint ETHPrice) 
+    {
+        bytes32 price;
+        bool valid=true;
+        (price, valid) = PriceFeed(priceFeedSource).peek();
+        if (!valid) {
+            NonValidPriceFeed(priceFeedSource);
+        }
+        return uint256(price);
+    }     
+    
+    /// @dev returns the USDETH price in Cents, ie current value would be 45034 == 450 USD and 34 Cents
+    function getUSDETHPrice2() 
         public
-        onlyOwner()
-     ;
-    // function getTokensValueInCENTS(
-    //     address tokenAddress,
-    //     uint amount
-    // ) 
-    //     public 
-    //     view
-    //     returns (uint)
-    // ;
-    // function getTokensValueInETH(
-    //     address tokenAddress,
-    //     uint amount
-    // ) 
-    //     public 
-    //     view
-    //     returns (uint)
-    // ;
-    // function getTokensValueInETHwithMinVolume(address tokenAddress, uint amount, uint minVolumeInETH) 
-    // public 
-    // view
-    // returns (uint)
-    // ;
-
-    // function getTokensValueInToken(address token1, address token2, uint amount1, uint amount2) 
-    // public 
-    // view
-    // returns (uint)
-    // ;
-    // function getCurrentDutchExchange() public view returns(address);
+        view
+        returns (uint)
+    {
+        bytes32 price;
+        bool valid=true;
+        (price, valid) = PriceFeed(priceFeedSource).peek();
+        if (!valid) {
+            NonValidPriceFeed(priceFeedSource);
+        }
+        return uint128(price);
+    }     
 }

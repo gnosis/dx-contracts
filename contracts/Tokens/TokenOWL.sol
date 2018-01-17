@@ -2,7 +2,7 @@ pragma solidity ^0.4.18;
 
 import "./StandardToken.sol";
 import "../Utils/Math.sol";
-import "../Oracle/PriceOracle.sol";
+import "../Oracle/PriceOracleInterface.sol";
 
 
 contract TokenOWL is StandardToken {

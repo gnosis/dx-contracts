@@ -64,7 +64,7 @@ const setupContracts = async () => {
     EtherToken: eth,
     TokenGNO: gno,
     TokenTUL: tokenTUL,
-    PriceOracle: oracle,
+    PriceOracleInterface: oracle,
   } = contracts)
 }
 const startBal = {
@@ -157,7 +157,7 @@ contract('DutchExchange - Flow 6', (accounts) => {
       EtherToken: eth,
       TokenGNO: gno,
       TokenTUL: tokenTUL,
-      PriceOracle: oracle,
+      PriceOracleInterface: oracle,
     } = contracts)
 
     // set up accounts and tokens[contracts]
@@ -252,7 +252,7 @@ contract('DutchExchange - Flow 4', (accounts) => {
       EtherToken: eth,
       TokenGNO: gno,
       TokenTUL: tokenTUL,
-      PriceOracle: oracle,
+      PriceOracleInterface: oracle,
     } = contracts)
 
     // set up accounts and tokens[contracts]
@@ -356,7 +356,7 @@ contract('DutchExchange - Flow 1', (accounts) => {
       EtherToken: eth,
       TokenGNO: gno,
       TokenTUL: tokenTUL,
-      PriceOracle: oracle,
+      PriceOracleInterface: oracle,
     } = contracts)
 
     // set up accounts and tokens[contracts]
@@ -449,7 +449,7 @@ contract('DutchExchange - Flow 9', (accounts) => {
       EtherToken: eth,
       TokenGNO: gno,
       TokenTUL: tokenTUL,
-      PriceOracle: oracle,
+      PriceOracleInterface: oracle,
     } = contracts)
 
     // set up accounts and tokens[contracts]

@@ -29,7 +29,8 @@ const contractNames = [
   'EtherToken',
   'TokenGNO',
   'TokenTUL',
-  'PriceOracle',
+  'PriceOracleInterface',
+  'PriceFeed',
 ]
 
 /**
@@ -71,7 +72,7 @@ const setupTest = async (
     DutchExchange: dx,
     EtherToken: eth,
     TokenGNO: gno,
-    PriceOracle: oracle,
+    PriceFeed: oracle,
   },
   {
     startingETH = 50..toWei(),
@@ -97,7 +98,7 @@ const setupTest = async (
   }))
   // add token Pair
   // updating the oracle Price. Needs to be changed later to another mechanism
-  await oracle.updateETHUSDPrice(ethUSDPrice, { from: accounts[0] })
+  await oracle.post(ethUSDPrice, 1516168838 * 2, 0x0, { from: accounts[0] })
 
   const gnoAcctBalances = await Promise.all(accounts.map(accts => getBalance(accts, gno)))
   const ethAcctBalances = await Promise.all(accounts.map(accts => getBalance(accts, eth)))
