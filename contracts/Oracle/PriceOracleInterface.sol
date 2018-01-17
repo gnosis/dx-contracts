@@ -56,11 +56,11 @@ contract PriceOracleInterface {
     {
         bytes32 price;
         bool valid=true;
-        (price, valid) = PriceFeed(priceFeedSource).peek();
+        (price, valid) = Medianizer(priceFeedSource).peek();
         if (!valid) {
             NonValidPriceFeed(priceFeedSource);
         }
-        return uint256(price)/100;
+        return uint256(price)/10000;
     }  
 
     /// @dev returns the amount of Wei equal to 1 USD
@@ -71,7 +71,7 @@ contract PriceOracleInterface {
     {
         bytes32 price;
         bool valid=true;
-        (price, valid) = PriceFeed(priceFeedSource).peek();
+        (price, valid) = Medianizer(priceFeedSource).peek();
         if (!valid) {
             NonValidPriceFeed(priceFeedSource);
         }
@@ -86,7 +86,7 @@ contract PriceOracleInterface {
     {
         bytes32 price;
         bool valid=true;
-        (price, valid) = PriceFeed(priceFeedSource).peek();
+        (price, valid) = Medianizer(priceFeedSource).peek();
         if (!valid) {
             NonValidPriceFeed(priceFeedSource);
         }

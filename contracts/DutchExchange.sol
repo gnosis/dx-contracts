@@ -720,6 +720,7 @@ contract DutchExchange {
 
             // Convert fee to ETH, then USD
             uint feeInETH = fee * price.num / price.den;
+            // Uses 18 decimal places <> exactly as OWL tokens: 10**18 OWL == 1 USD 
             uint feeInUSD = feeInETH * ETHUSDPrice;
             uint amountOfOWLBurned = Math.min(balances[OWL][msg.sender], feeInUSD / 2);
 
@@ -736,6 +737,7 @@ contract DutchExchange {
 
         amountAfterFee = amount - fee;
     }
+
 
     // > calculateFeeRatio()
     function calculateFeeRatio(
