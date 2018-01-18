@@ -1,5 +1,5 @@
 /* eslint no-console:0, max-len:0, no-plusplus:0, no-mixed-operators:0 */
-const {
+/* const {
   // timestamp,
   // blockNumber,
   assertRejects,
@@ -80,7 +80,7 @@ async function postSellOrderConditions(i, Ts, Tb, u, aI, am) {
   }
 
   return true
-}
+} */
 
 /**
  * async postBuyOrderConditions
@@ -91,7 +91,7 @@ async function postSellOrderConditions(i, Ts, Tb, u, aI, am) {
  * @param {*} aI  = Auction index
  * @param {*} am  = ???
  */
-async function postBuyOrderConditions(i, Ts, Tb, u, aI, am) { //eslint-disable-line
+/* async function postBuyOrderConditions(i, Ts, Tb, u, aI, am) { //eslint-disable-line
   switch (i) {
     case 0:
     {
@@ -290,3 +290,4 @@ contract('DutchExchange', async (accounts) => {
     })
   }
 })
+*/
