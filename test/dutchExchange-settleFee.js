@@ -70,4 +70,20 @@ contract('DutchExchange - calculateFeeRatio', (accounts) => {
     const [num, den] = (await dx.calculateFeeRatioForJS.call(seller1)).map(n => n.toNumber())
     assert.strictEqual(num / den, 0.005, 'feeRatio is 0.5% when total TUL tokens > 0 but account\'s TUL balance == 0')
   })
+
+  it('calculateFeeRatio works correctly when TokenTul.totalTokens() > 0 and account has 1 % total TUL', async () => {
+    const totalTul1 = (await tul.totalTokens.call()).toNumber()
+    const percent1 = Math.round(totalTul1 / (1 / 0.01 - 1))
+    await tul.mintTokens(seller1, percent1, { from: master })
+
+    assert.strictEqual(totalTul1, 1000, 'there are available total TUL tokens')
+
+    const totalTul2 = (await tul.totalTokens.call()).toNumber()
+
+    const lockedTULBalance = (await tul.lockedTULBalances.call(seller1)).toNumber()
+    assert.strictEqual(lockedTULBalance, Math.round(totalTul2 * 0.01), 'seller has 1% of total TUL')
+
+    const [num, den] = (await dx.calculateFeeRatioForJS.call(seller1)).map(n => n.toNumber())
+    assert.equal((num / den).toFixed(4), 0.0025, 'feeRatio is 0.5% when total TUL tokens > 0 but account\'s TUL balance == 1% total TUL')
+  })
 })
