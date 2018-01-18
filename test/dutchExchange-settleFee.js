@@ -165,4 +165,16 @@ contract('DutchExchange - settleFee', (accounts) => {
   const getLockedTUL = async account => (await tul.lockedTULBalances.call(account)).toNumber()
 
   const mintTokens = (account, amount) => tul.mintTokens(account, amount, { from: master })
+
+  it('amountAfterFee == amount when fee == 0', async () => {
+    const totalTul1 = await getTotalTUL()
+    const lockedTULBalance1 = await getLockedTUL(seller1)
+    const percent10 = Math.ceil((totalTul1 - lockedTULBalance1 / 0.1) / (1 / 0.1 - 1))
+    await mintTokens(seller1, percent10)
+
+    const amount = 100
+
+    const amountAfterFee = await settleFee.call(eth.address, gno.address, 1, seller1, amount)
+    assert.strictEqual(amountAfterFee, amount, 'amount should not change when fee == 0')
+  })
 })
