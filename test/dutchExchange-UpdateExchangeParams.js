@@ -5,13 +5,12 @@ const {
 
 const { getContracts } = require('./testFunctions')
 
-const PriceOracle = artifacts.require('PriceOracle')
+const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 
 // Test VARS
 let newPO
 let dx
-let eth
-
+let medianizer
 
 let contracts
 
@@ -19,17 +18,16 @@ contract('DutchExchange updating exchange params', (accounts) => {
   const [master, seller1] = accounts
 
   before(async () => {
-    // get contracts
+    // get contractsU
     contracts = await getContracts();
     // destructure contracts into upper state
     ({
       DutchExchange: dx,
-      EtherToken: eth,
+      Medianizer: medianizer,
     } = contracts)
 
-    // a new deployed PriceOracle to replace the old with
-    newPO = await PriceOracle.new(master, eth.address)
-    await newPO.updateDutchExchange(dx.address, { from: master })
+    // a new deployed PriceOracleInterface to replace the old with
+    newPO = await PriceOracleInterface.new(master, medianizer.address)
   })
 
   const getExchangeParams = async () => {
