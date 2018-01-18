@@ -30,9 +30,7 @@ const ether = 10 ** 18
 
 let contracts
 
-const valMinusFee = function (amount) {
-  return amount - amount / 200
-}
+const valMinusFee = amount => amount - (amount / 200)
 
 const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
   assert.equal((await dx.getAuctionIndex.call(ST.address, BT.address)).toNumber(), auctionIndex, 'auction Index not correct')
