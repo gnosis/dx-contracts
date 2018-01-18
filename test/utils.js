@@ -35,20 +35,22 @@ let stopWatching = {}
  * @param {Object} args?       - not required, args to look for
  * @returns stopWatching function
  */
-const eventWatcher = (contract, event, args) => {
-  const eventObject = contract[event](args).watch((err, result) => {
+const eventWatcher = (contract, eventName, args = {}) => {
+  const eventObject = contract[eventName](args).watch((err, result) => {
+    const { event, args: { l, n } } = result
     if (err) return log(err)
-
-    const { args: { l, n } } = result
-    return log(`
-    LOG FOUND:
-    ========================
-    ${l} ==> ${Number(n).toEth()}
-    ========================
-    `)
+    if (event === 'LogNumber') {
+      return log(`
+      LOG FOUND:
+      ========================
+      ${l} ==> ${Number(n).toEth()}
+      ========================
+      `)
+    }
+    return log(result)
   })
   const contractEvents = stopWatching[contract.address] || (stopWatching[contract.address] = {})
-  const unwatch = contractEvents[event] = eventObject.stopWatching.bind(eventObject)
+  const unwatch = contractEvents[eventName] = eventObject.stopWatching.bind(eventObject)
 
   return unwatch
 }

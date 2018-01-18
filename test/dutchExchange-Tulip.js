@@ -105,7 +105,7 @@ const c1 = () => contract('DutchExchange --> Tulip Flow --> Check new claimBuyer
      * SUB TEST 4: create new token pair and assert Seller1Balance = 0 after depositing more than Balance
      */
     // add tokenPair ETH GNO
-    console.log('Selling amt ', sellingAmount.toEth())
+    log('Selling amt ', sellingAmount.toEth())
     await dx.addTokenPair(
       eth.address,
       gno.address,
@@ -233,8 +233,8 @@ const c1 = () => contract('DutchExchange --> Tulip Flow --> Check new claimBuyer
 
   xit('BUYER1: ETH --> GNO: user can lock tokens and only unlock them 24 hours later', async () => {
     // event listeners
-    // eventWatcher(tokenTUL, 'NewTokensMinted', {})
-    // eventWatcher(dx, 'AuctionCleared', {})
+    // eventWatcher(tokenTUL, 'NewTokensMinted')
+    // eventWatcher(dx, 'AuctionCleared')
     log(`
     ============================================
     T4: Buyer1 - Locking and Unlocking of Tokens
@@ -262,9 +262,7 @@ const c1 = () => contract('DutchExchange --> Tulip Flow --> Check new claimBuyer
     await unlockTulipTokens(seller1)
   })
 
-  after(() => {
-    eventWatcher.stopWatching()
-  })
+  after(eventWatcher.stopWatching())
 })
 
 const c2 = () => contract('DutchExchange --> Tulip Flow --> 1 Seller sells 50 ETHER @ 2:1 price --> only 1 BUYER', (accounts) => {
