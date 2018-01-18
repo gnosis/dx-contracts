@@ -36,7 +36,17 @@ let stopWatching = {}
  * @returns stopWatching function
  */
 const eventWatcher = (contract, event, args) => {
-  const eventObject = contract[event](args).watch((err, result) => err ? log(err) : log('Found', result))
+  const eventObject = contract[event](args).watch((err, result) => {
+    if (err) return log(err)
+
+    const { args: { l, n } } = result
+    return log(`
+    LOG FOUND:
+    ========================
+    ${l} ==> ${Number(n).toEth()}
+    ========================
+    `)
+  })
   const contractEvents = stopWatching[contract.address] || (stopWatching[contract.address] = {})
   const unwatch = contractEvents[event] = eventObject.stopWatching.bind(eventObject)
 
@@ -97,23 +107,6 @@ eventWatcher.stopWatching = (contract, event) => {
   }
 }
 
-const wait = (seconds) => {
-  const id = Date.now()
-  web3.currentProvider.send({
-    jsonrpc: '2.0',
-    method: 'evm_increaseTime',
-    params: [seconds] || [],
-    id,
-  })
-
-  web3.currentProvider.send({
-    jsonrpc: '2.0',
-    method: 'evm_mine',
-    params: [],
-    id: id + 1,
-  })
-}
-
 module.exports = {
   assertRejects,
   blockNumber,
@@ -121,6 +114,6 @@ module.exports = {
   logger,
   log,
   varLogger,
-  wait,
+  // wait,
   timestamp,
 }
