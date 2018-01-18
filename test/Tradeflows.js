@@ -112,7 +112,7 @@ contract('DutchExchange - Flow 3', (accounts) => {
     const auctionIndex = await getAuctionIndex()
     
     // general setup information
-    logger('PRICE ORACLE', await oracle.address.getUSDETHPrice.call()) 
+    logger('PRICE ORACLE', await oracle.getUSDETHPrice.call()) 
     logger('tuliptoken', await tokenTUL.totalTokens())
 
     // ASSERT Auction has started
