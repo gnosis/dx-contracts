@@ -76,7 +76,7 @@ contract('DutchExchange - calculateFeeRatio', (accounts) => {
     const percent1 = Math.round(totalTul1 / (1 / 0.01 - 1))
     await tul.mintTokens(seller1, percent1, { from: master })
 
-    assert.strictEqual(totalTul1, 1000, 'there are available total TUL tokens')
+    assert.isAbove(totalTul1, 0, 'there are available total TUL tokens')
 
     const totalTul2 = (await tul.totalTokens.call()).toNumber()
 
@@ -84,6 +84,23 @@ contract('DutchExchange - calculateFeeRatio', (accounts) => {
     assert.strictEqual(lockedTULBalance, Math.round(totalTul2 * 0.01), 'seller has 1% of total TUL')
 
     const [num, den] = (await dx.calculateFeeRatioForJS.call(seller1)).map(n => n.toNumber())
-    assert.equal((num / den).toFixed(4), 0.0025, 'feeRatio is 0.5% when total TUL tokens > 0 but account\'s TUL balance == 1% total TUL')
+    assert.equal((num / den).toFixed(4), 0.0025, 'feeRatio is 0.25% when total TUL tokens > 0 but account\'s TUL balance == 1% total TUL')
+  })
+
+  it('calculateFeeRatio works correctly when TokenTul.totalTokens() > 0 and account has 10 % total TUL', async () => {
+    const totalTul1 = (await tul.totalTokens.call()).toNumber()
+    const lockedTULBalance1 = (await tul.lockedTULBalances.call(seller1)).toNumber()
+    const percent10 = Math.ceil((totalTul1 - lockedTULBalance1 / 0.1) / (1 / 0.1 - 1))
+    await tul.mintTokens(seller1, percent10, { from: master })
+
+    assert.isAbove(totalTul1, 0, 'there are available total TUL tokens')
+
+    const totalTul2 = (await tul.totalTokens.call()).toNumber()
+
+    const lockedTULBalance2 = (await tul.lockedTULBalances.call(seller1)).toNumber()
+    assert.strictEqual(lockedTULBalance2, Math.ceil(totalTul2 * 0.1), 'seller has 10% of total TUL')
+
+    const [num, den] = (await dx.calculateFeeRatioForJS.call(seller1)).map(n => n.toNumber())
+    assert.equal(num / den, 0, 'feeRatio is 0% when total TUL tokens > 0 but account\'s TUL balance == 10% total TUL')
   })
 })
