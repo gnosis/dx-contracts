@@ -1,6 +1,6 @@
 /* eslint no-console:0, max-len:0, no-plusplus:0, no-mixed-operators:0, no-trailing-spaces:0 */
 
-const PriceOracleInterface = artifacts.require('PriceOracleInterface')
+// const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 
 const { 
   eventWatcher,
@@ -112,7 +112,7 @@ contract('DutchExchange - Flow 3', (accounts) => {
     const auctionIndex = await getAuctionIndex()
     
     // general setup information
-    logger('PRICE ORACLE', await PriceOracleInterface.at(oracle.address).getUSDETHPrice.call()) 
+    logger('PRICE ORACLE', await oracle.address.getUSDETHPrice.call()) 
     logger('tuliptoken', await tokenTUL.totalTokens())
 
     // ASSERT Auction has started
@@ -190,7 +190,7 @@ contract('DutchExchange - Flow 6', (accounts) => {
     
 
     // general setup information
-    logger('PRICE ORACLE', await PriceOracleInterface.at(oracle.address).getUSDETHPrice.call()) 
+    logger('PRICE ORACLE', await oracle.getUSDETHPrice.call()) 
     logger('tuliptoken', await tokenTUL.totalTokens())
 
     // ASSERT Auction has started
