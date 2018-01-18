@@ -66,7 +66,7 @@ contract('DutchExchange - calculateFeeRatio', (accounts) => {
     return mintTokens(account, toMint)
   }
 
-  it('calculateFeeRatio works correctly when TokenTul.totalTokens() == 0', async () => {
+  it('feeRatio == 0.5% when total TUL == 0', async () => {
     const totalTul = await getTotalTUL()
 
     assert.strictEqual(totalTul, 0, 'initially no TUL tokens')
@@ -75,7 +75,7 @@ contract('DutchExchange - calculateFeeRatio', (accounts) => {
     assert.strictEqual(num / den, 0.005, 'feeRatio is 0.5% when total TUL tokens == 0')
   })
 
-  it('calculateFeeRatio works correctly when TokenTul.totalTokens() > 0', async () => {
+  it('feeRatio == 0.5% when total TUL > 0 and account has 0 TUL', async () => {
     await tul.updateMinter(master, { from: master })
     await mintTokens(master, 1000)
     const totalTul = await getTotalTUL()
@@ -89,7 +89,7 @@ contract('DutchExchange - calculateFeeRatio', (accounts) => {
     assert.strictEqual(num / den, 0.005, 'feeRatio is 0.5% when total TUL tokens > 0 but account\'s TUL balance == 0')
   })
 
-  it('calculateFeeRatio works correctly when TokenTul.totalTokens() > 0 and account has 1 % total TUL', async () => {
+  it('feeRatio == 0.25% when account has 1% of total TUL', async () => {
     await mintPercent(seller1, 0.01)
 
     const totalTul2 = await getTotalTUL()
@@ -103,7 +103,7 @@ contract('DutchExchange - calculateFeeRatio', (accounts) => {
     assert.equal((num / den).toFixed(4), 0.0025, 'feeRatio is 0.25% when total TUL tokens > 0 but account\'s TUL balance == 1% total TUL')
   })
 
-  it('calculateFeeRatio works correctly when TokenTul.totalTokens() > 0 and account has >= 10 % total TUL', async () => {
+  it('feeRatio == 0% when account has >= 10% of total TUL', async () => {
     await mintPercent(seller1, 0.11)
 
     const totalTul2 = await getTotalTUL()
