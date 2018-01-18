@@ -292,14 +292,14 @@ const claimSellerFunds = async (ST, BT, user, aucIdx, acct) => {
    * @param {address} BT    => Buy Token: token to buy
    * @param {address} user  => address of current user buying and owning tulips
    */
-const checkUserReceivesTulipTokens = async (ST, BT, user) => {
+const checkUserReceivesTulipTokens = async (ST, BT, user, idx) => {
   const {
     DutchExchange: dx, EtherToken: eth, TokenGNO: gno, TokenTUL: tokenTUL,
   } = await getContracts()
 
   ST = ST || eth; BT = BT || gno
 
-  const aucIdx = await getAuctionIndex()
+  const aucIdx = idx || await getAuctionIndex()
   const [returned, tulips] = (await dx.claimBuyerFunds.call(ST.address, BT.address, user, aucIdx)).map(amt => amt.toNumber())
   const amtClaimed = (await dx.claimedAmounts.call(ST.address, BT.address, aucIdx, user)).toNumber()
   // set global tulips state
@@ -313,12 +313,17 @@ const checkUserReceivesTulipTokens = async (ST, BT, user) => {
   log(`
     USER'S ETH AMT = ${newBalance.toEth()}
   `)
-  assert.equal(returned + amtClaimed, tulips, 'for ETH -> * pair returned tokens should equal tulips minted')
+  const calcAucIdx = await getAuctionIndex()
+  if (calcAucIdx === 1) {
+    assert.equal(tulips, 0, 'Auction is still running Tulips calculated still 0')
+  } else {
+    assert.isAtLeast(tulips.toEth(), (returned + amtClaimed).toEth(), 'Auction closed returned tokens should equal tulips minted')
+  }
 
   /*
-     * SUB TEST 3: CLAIMBUYERFUNDS - CHECK BUYVOLUMES - CHECK LOCKEDTULIPS AMT = 1:1 FROM AMT IN POSTBUYORDER
-     */
-  const { receipt: { logs } } = await claimBuyerFunds(ST, BT, false, false, user)
+   * SUB TEST 3: CLAIMBUYERFUNDS - CHECK BUYVOLUMES - CHECK LOCKEDTULIPS AMT = 1:1 FROM AMT IN POSTBUYORDER
+   */
+  const { receipt: { logs } } = await claimBuyerFunds(ST, BT, false, aucIdx, user)
   log(logs ? '\tCLAIMING FUNDS SUCCESSFUL' : 'CLAIM FUNDS FAILED')
   // log(logs)
 
@@ -339,7 +344,7 @@ const checkUserReceivesTulipTokens = async (ST, BT, user) => {
   `)
   const refreshedIdx = await getAuctionIndex()
   if (refreshedIdx === 2) {
-    assert.equal(newBalance, lockedTulFunds, 'for ETH -> * pair, auction has cleared so returned tokens should equal tulips minted')
+    assert.equal(tulips.toEth(), lockedTulFunds.toEth(), 'for ETH -> * pair, auction has cleared so returned tokens should equal tulips minted')
   } else if (refreshedIdx === 1) {
     // with changes, TULIPS are NOT minted until auctionCleared
     // lockedTulFunds should = 0
@@ -363,7 +368,7 @@ const unlockTulipTokens = async (user, amt) => {
   // const userTulips = 5000..toWei()
   /*
    * SUB TEST 1: CHECK UNLOCKED AMT + WITHDRAWAL TIME
-   * [should be 0,0 as none unlocked yet]
+   * [should be 0,0 as none LOCKED so naturally none to unlock yet]
    */
   let [unlockedFunds, withdrawTime] = (await tokenTUL.unlockedTULs.call(user)).map(n => n.toNumber())
   log(`

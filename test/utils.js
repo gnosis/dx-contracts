@@ -35,19 +35,38 @@ let stopWatching = {}
  * @param {Object} args?       - not required, args to look for
  * @returns stopWatching function
  */
-const eventWatcher = (contract, eventName, args = {}) => {
-  const eventObject = contract[eventName](args).watch((err, result) => {
-    const { event, args: { l, n } } = result
+const eventWatcher = (contract, eventName, argum = {}) => {
+  const eventObject = contract[eventName](argum).watch((err, result) => {
+    const { event, args } = result
     if (err) return log(err)
-    if (event === 'LogNumber') {
-      return log(`
-      LOG FOUND:
-      ========================
-      ${l} ==> ${Number(n).toEth()}
-      ========================
-      `)
+
+    switch (event) {
+      // const { args: { returned, tulipsIssued } } = result
+      case 'LogNumber':
+        return log(`
+        LOG FOUND:
+        ========================
+        ${args.l} ==> ${Number(args.n).toEth()}
+        ========================
+        `)
+      case 'ClaimBuyerFunds':
+        return log(`
+        LOG FOUND:
+        ========================
+        RETURNED      ==> ${Number(args.returned).toEth()}
+        TULIPS ISSUED ==> ${Number(args.tulipsIssued).toEth()}
+        ========================
+        `)
+      default:
+        log(`
+        LOG FOUND:
+        ========================
+        Event Name: ${event}
+        Args:       
+        ${JSON.stringify(args, undefined, 2)}
+        ========================
+        `)
     }
-    return log(result)
   })
   const contractEvents = stopWatching[contract.address] || (stopWatching[contract.address] = {})
   const unwatch = contractEvents[eventName] = eventObject.stopWatching.bind(eventObject)
