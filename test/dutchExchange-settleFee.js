@@ -59,10 +59,20 @@ contract('DutchExchange - calculateFeeRatio', (accounts) => {
   const getHowManyToAdd = (totalTul, lockedTULBalance, percent) =>
     Math.round((totalTul - (lockedTULBalance / percent)) / ((1 / percent) - 1))
 
+  // mint TUL to make account have a given percent of total TUL
   const mintPercent = async (account, percent) => {
     const totalTul = await getTotalTUL()
     const lockedTULBalance = await getLockedTUL(seller1)
-    const toMint = getHowManyToAdd(totalTul, lockedTULBalance, percent)
+    // calculate how much is left to reach the given percent
+    let toMint = getHowManyToAdd(totalTul, lockedTULBalance, percent)
+
+    // if given percent < current percent
+    if (toMint < 0) {
+      // need to add to total TUL
+      // mint for master
+      account = master
+      toMint = (lockedTULBalance / percent) - totalTul
+    }
     return mintTokens(account, toMint)
   }
 
