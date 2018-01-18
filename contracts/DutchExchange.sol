@@ -302,6 +302,8 @@ contract DutchExchange {
         // Note: if a user specifies auctionIndex of 0, it
         // means he is agnostic which auction his sell order goes into
 
+        amount = Math.min(amount, balances[sellToken][msg.sender]);
+
         // R1
         // require(amount > 0);
         if (amount == 0) {
@@ -510,11 +512,10 @@ contract DutchExchange {
         public
         returns (uint returned, uint tulipsIssued)
     {
-        returned = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
+        fraction memory price;
+        (returned, price) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
 
-        uint den = closingPrices[sellToken][buyToken][auctionIndex].den;
-
-        if (den == 0) {
+        if (price.den == 0) {
             // Auction is running
             claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
         } else {
@@ -532,22 +533,20 @@ contract DutchExchange {
             returned += tokensExtra;
 
             if (approvedTokens[buyToken] == true && approvedTokens[sellToken] == true) {
-                uint tulipsToIssue;
                 // Get tulips issued based on ETH price of returned tokens
                 if (buyToken == ETH) {
-                    tulipsToIssue = buyerBalance;
+                    tulipsIssued = buyerBalance;
                 } else if (sellToken == ETH) {
-                    fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
-                    tulipsToIssue = buyerBalance * price.den / price.num;
+                    tulipsIssued = buyerBalance * price.den / price.num;
                 } else {
                     // Neither token is ETH, so we use historicalPriceOracle()
                     fraction memory priceETH = historicalPriceOracle(buyToken, auctionIndex);
-                    tulipsToIssue = buyerBalance * priceETH.num / priceETH.den;
+                    tulipsIssued = buyerBalance * priceETH.num / priceETH.den;
                 }
 
-                if (tulipsToIssue > 0) {
+                if (tulipsIssued > 0) {
                     // Issue TUL
-                    TokenTUL(TUL).mintTokens(user, tulipsToIssue);
+                    TokenTUL(TUL).mintTokens(user, tulipsIssued);
                 }
             }
 
@@ -562,6 +561,7 @@ contract DutchExchange {
         NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned);
     }
 
+    // > getUnclaimedBuyerFunds()
     /// @dev Claim buyer funds for one auction
     function getUnclaimedBuyerFunds(
         address sellToken,
@@ -571,7 +571,7 @@ contract DutchExchange {
     )
         public
         constant
-        returns (uint unclaimedBuyerFunds)
+        returns (uint unclaimedBuyerFunds, fraction memory price)
     {
         // R1: checks if particular auction has ever run
         // require(auctionIndex <= getAuctionIndex(sellToken, buyToken));
@@ -580,15 +580,14 @@ contract DutchExchange {
             return;
         }
 
-        uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
-
-        fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
+        price = getPrice(sellToken, buyToken, auctionIndex);
 
         if (price.num == 0) {
             // This should rarely happen - as long as there is >= 1 buy order,
             // auction will clear before price = 0. So this is just fail-safe
             unclaimedBuyerFunds = 0;
         } else {
+            uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
             unclaimedBuyerFunds = buyerBalance * price.den / price.num - claimedAmounts[sellToken][buyToken][auctionIndex][user];
         }
     }
@@ -854,7 +853,8 @@ contract DutchExchange {
                 price.num = closingPriceETH.den;
                 price.den = closingPriceETH.num;
             } else {
-                // If both prices are positive, output weighted average                
+                // If both prices are positive, output weighted average
+
                 price.num = closingPriceETH.den ** 2 * closingPriceToken.den + closingPriceToken.num ** 2 * closingPriceETH.num;
                 price.den = closingPriceETH.num * closingPriceToken.den * (closingPriceETH.den + closingPriceToken.num);
             }

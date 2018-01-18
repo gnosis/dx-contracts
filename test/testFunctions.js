@@ -203,7 +203,7 @@ const checkBalanceBeforeClaim = async (
     token = BT
   }
 
-  const balanceBeforeClaim = (await dx.balances.call(token.address, acct)).toNumber()
+  const balanceBeforeClaim = (await dx.balances.call(token.address, acct))
 
   if (claiming === 'buyer') {
     await dx.claimBuyerFunds(ST.address, BT.address, acct, idx)
@@ -211,14 +211,14 @@ const checkBalanceBeforeClaim = async (
     await dx.claimSellerFunds(ST.address, BT.address, acct, idx)
   }
 
-  const balanceAfterClaim = (await dx.balances.call(token.address, acct)).toNumber()
-  const difference = Math.abs(balanceBeforeClaim + amt - balanceAfterClaim)
+  const balanceAfterClaim = (await dx.balances.call(token.address, acct))
+  const difference = balanceBeforeClaim.add(amt).minus(balanceAfterClaim).abs()
   varLogger('claiming for', claiming)
-  varLogger('balanceBeforeClaim', balanceBeforeClaim)
+  varLogger('balanceBeforeClaim', balanceBeforeClaim.toNumber())
   varLogger('amount', amt)
-  varLogger('balanceAfterClaim', balanceAfterClaim)
-  varLogger('difference', difference)
-  assert.equal(difference < round, true)
+  varLogger('balanceAfterClaim', balanceAfterClaim.toNumber())
+  varLogger('difference', difference.toNumber())
+  assert.equal(difference.toNumber() < round, true)
 }
 
 const getAuctionIndex = async (sell, buy) => {
