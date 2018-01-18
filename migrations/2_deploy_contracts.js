@@ -28,7 +28,7 @@ module.exports = function deploy(deployer, networks, accounts) {
     .then(() => deployer.deploy(PriceFeed))
     .then(() => deployer.deploy(Medianizer))
     .then(() => deployer.deploy(PriceOracleInterface, accounts[0], Medianizer.address))
-    .then(() => deployer.deploy(TokenOWL, TokenGNO.address /* ,PriceOracle.adress */, 0))
+    .then(() => deployer.deploy(TokenOWL))
     // @dev DX Constructor creates exchange
     .then(() => deployer.deploy(
       DutchExchange,              // Contract Name
