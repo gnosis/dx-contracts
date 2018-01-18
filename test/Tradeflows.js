@@ -467,7 +467,7 @@ contract('DutchExchange - Flow 9', (accounts) => {
     await dx.addTokenPair(
       eth.address,
       gno.address,
-      10 ** 9,
+      10 * ether,
       0,
       2,
       1,
@@ -485,7 +485,7 @@ contract('DutchExchange - Flow 9', (accounts) => {
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
     // non-clearing buyOrder
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
-    await postBuyOrder(eth, gno, auctionIndex, 10 ** 9, buyer1)
+    await postBuyOrder(eth, gno, auctionIndex, 10 * ether, buyer1)
 
     // theoretical clearing at  0.5
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.4)
@@ -494,7 +494,7 @@ contract('DutchExchange - Flow 9', (accounts) => {
     auctionIndex = await getAuctionIndex()
 
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-    await checkState(1, auctionStart, 10 ** 9 - 10 ** 9 / 200, 0, 10 ** 9 - 10 ** 9 / 200, 0, 0, eth, gno, 0)
+    await checkState(1, auctionStart, valMinusFee(10 * ether), 0, valMinusFee(10 * ether), 0, 0, eth, gno, 0)
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
   })
 
@@ -502,7 +502,7 @@ contract('DutchExchange - Flow 9', (accounts) => {
     let auctionIndex = await getAuctionIndex()
     // clearing buyOrder
     const previousBuyVolume = (await dx.buyVolumes(eth.address, gno.address)).toNumber()
-    await postBuyOrder(eth, gno, auctionIndex, 10 ** 9, buyer2)
+    await postBuyOrder(eth, gno, auctionIndex, 10 * ether, buyer2)
 
     // check correct closing prices
     const [closingPriceNum] = await dx.closingPrices.call(eth.address, gno.address, auctionIndex)
@@ -510,9 +510,9 @@ contract('DutchExchange - Flow 9', (accounts) => {
     const [closingPriceNum2] = await dx.closingPrices.call(gno.address, eth.address, auctionIndex)
     assert.equal(0, closingPriceNum2)
     // check Buyer1 balance and claim
-    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 ** 9 - 10 ** 9 / 200))
+    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, valMinusFee(10 * ether))
     // check Seller1 Balance
-    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 - 10 ** 9 / 200))
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, valMinusFee(10 * ether))
 
     // check that auction is in right place
     auctionIndex = await getAuctionIndex()
