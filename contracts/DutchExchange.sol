@@ -215,9 +215,14 @@ contract DutchExchange {
             return;
         }
 
-        // Save prices of opposite auctions
-        closingPrices[token1][token2][0] = fraction(initialClosingPriceNum, initialClosingPriceDen);
-        closingPrices[token2][token1][0] = fraction(initialClosingPriceDen, initialClosingPriceNum);
+        if (token1 == ETH || token2 == ETH) {
+            // Save prices of opposite auctions
+            closingPrices[token1][token2][0] = fraction(initialClosingPriceNum, initialClosingPriceDen);
+            closingPrices[token2][token1][0] = fraction(initialClosingPriceDen, initialClosingPriceNum);
+        } else {
+            closingPrices[token1][token2][0] = fraction(priceToken2.num * priceToken1.den, priceToken2.den * priceToken1.num);
+            closingPrices[token2][token1][0] = fraction(priceToken2.den * priceToken1.num, priceToken2.num * priceToken1.den);
+        }
 
         addTokenPair2(token1, token2, token1Funding, token2Funding);
     }
@@ -517,7 +522,9 @@ contract DutchExchange {
         fraction memory price;
         (returned, price) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
 
-        if (price.den == 0) {
+        uint den = closingPrices[sellToken][buyToken][auctionIndex].den;
+
+        if (den == 0) {
             // Auction is running
             claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
         } else {
