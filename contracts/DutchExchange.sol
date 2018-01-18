@@ -527,6 +527,7 @@ contract DutchExchange {
         (returned, price) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
 
         uint den = closingPrices[sellToken][buyToken][auctionIndex].den;
+        // David Code
         LogNumber("claimBuyerFUnds price.den", den);
         if (den == 0) {
             // Auction is running
@@ -747,8 +748,8 @@ contract DutchExchange {
 
             extraTokens[primaryToken][secondaryToken][auctionIndex + 1] += fee;
         }
-// DAVID CODE
         amountAfterFee = amount - fee;
+        // DAVID CODE
         LogNumber("Amount after Settle Fee", amountAfterFee);
     }
     
@@ -868,10 +869,6 @@ contract DutchExchange {
                 price.den = closingPriceETH.num;
             } else {
                 // If both prices are positive, output weighted average
-<<<<<<< HEAD
-=======
-
->>>>>>> a93dcd816213cef094408e365ba3213e12fd9094
                 price.num = closingPriceETH.den ** 2 * closingPriceToken.den + closingPriceToken.num ** 2 * closingPriceETH.num;
                 price.den = closingPriceETH.num * closingPriceToken.den * (closingPriceETH.den + closingPriceToken.num);
             }

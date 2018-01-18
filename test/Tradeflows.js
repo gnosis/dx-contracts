@@ -54,8 +54,8 @@ const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVo
 
 const checkInvariants = async (invariant, accounts, tokens, allowedRoundingErrors = 1) => {
   const newBalanceInvariant = await calculateTokensInExchange(accounts, tokens)
-  logger('invariant before', invariant)
-  logger('invariant after', newBalanceInvariant)
+  logger('invariant before', invariant.map(v => v.toNumber()))
+  logger('invariant after', newBalanceInvariant.map(v => v.toNumber()))
   for (let i = 0; i < tokens.length; i += 1) {
     assert.isAtMost(balanceInvariant[i].minus(newBalanceInvariant[i]).abs(), allowedRoundingErrors, `issue with Token${i}`)
   }
