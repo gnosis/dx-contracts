@@ -417,6 +417,8 @@ contract DutchExchange {
         fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
         uint outstandingVolume = Math.atleastZero(int(sellVolume * price.num / price.den - buyVolume));
 
+        LogOustandingVolume(outstandingVolume);
+
         uint amountAfterFee;
         if (amount < outstandingVolume) {
             if (amount > 0) {
@@ -1046,6 +1048,10 @@ contract DutchExchange {
 
     event Log(
         string l
+    );
+
+    event LogOustandingVolume(
+        uint l
     );
 
     event LogNumber(
