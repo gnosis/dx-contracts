@@ -515,7 +515,9 @@ contract DutchExchange {
         fraction memory price;
         (returned, price) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
 
-        if (price.den == 0) {
+        uint den = closingPrices[sellToken][buyToken][auctionIndex].den;
+
+        if (den == 0) {
             // Auction is running
             claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
         } else {
