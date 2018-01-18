@@ -138,10 +138,10 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
  * @param {unit}    p   => percentage of the previous price
  */
 const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
-  const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno } = await getContracts()
+  const { DutchExchange: dx } = await getContracts()
   const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
   const timeToWaitFor = Math.ceil((86400 - p * 43200) / (1 + p)) + startingTimeOfAuction
-  let [num, den] = (await dx.getPriceForJS(eth.address, gno.address, 1))
+  let [num, den] = (await dx.getPriceForJS(ST.address, BT.address, 1))
   const priceBefore = num.div(den)
   log(`
   Price BEFORE waiting until Price = initial Closing Price (2) * 2
@@ -153,7 +153,7 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   `)
   // wait until the price is good
   await wait(timeToWaitFor - timestamp());
-  ([num, den] = (await dx.getPriceForJS(eth.address, gno.address, 1)))
+  ([num, den] = (await dx.getPriceForJS(ST.address, BT.address, 1)))
   const priceAfter = num.div(den)
   log(`
   Price AFTER waiting until Price = ${p * 100}% of ${priceBefore / 2} (initial Closing Price)
@@ -194,7 +194,7 @@ const checkBalanceBeforeClaim = async (
     token = BT
   }
 
-  const balanceBeforeClaim = (await dx.balances.call(token.address, acct)).toNumber()
+  const balanceBeforeClaim = (await dx.balances.call(token.address, acct))
 
   if (claiming === 'buyer') {
     await dx.claimBuyerFunds(ST.address, BT.address, acct, idx)
@@ -202,14 +202,14 @@ const checkBalanceBeforeClaim = async (
     await dx.claimSellerFunds(ST.address, BT.address, acct, idx)
   }
 
-  const balanceAfterClaim = (await dx.balances.call(token.address, acct)).toNumber()
-  const difference = Math.abs(balanceBeforeClaim + amt - balanceAfterClaim)
+  const balanceAfterClaim = (await dx.balances.call(token.address, acct))
+  const difference = balanceBeforeClaim.add(amt).minus(balanceAfterClaim).abs()
   varLogger('claiming for', claiming)
-  varLogger('balanceBeforeClaim', balanceBeforeClaim)
+  varLogger('balanceBeforeClaim', balanceBeforeClaim.toNumber())
   varLogger('amount', amt)
-  varLogger('balanceAfterClaim', balanceAfterClaim)
-  varLogger('difference', difference)
-  assert.equal(difference < round, true)
+  varLogger('balanceAfterClaim', balanceAfterClaim.toNumber())
+  varLogger('difference', difference.toNumber())
+  assert.equal(difference.toNumber() < round, true)
 }
 
 const getAuctionIndex = async (sell, buy) => {

@@ -218,9 +218,14 @@ contract DutchExchange {
             // return;
         }
 
-        // Save prices of opposite auctions
-        closingPrices[token1][token2][0] = fraction(initialClosingPriceNum, initialClosingPriceDen);
-        closingPrices[token2][token1][0] = fraction(initialClosingPriceDen, initialClosingPriceNum);
+        if (token1 == ETH || token2 == ETH) {
+            // Save prices of opposite auctions
+            closingPrices[token1][token2][0] = fraction(initialClosingPriceNum, initialClosingPriceDen);
+            closingPrices[token2][token1][0] = fraction(initialClosingPriceDen, initialClosingPriceNum);
+        } else {
+            closingPrices[token1][token2][0] = fraction(priceToken2.num * priceToken1.den, priceToken2.den * priceToken1.num);
+            closingPrices[token2][token1][0] = fraction(priceToken2.den * priceToken1.num, priceToken2.num * priceToken1.den);
+        }
 
         addTokenPair2(token1, token2, token1Funding, token2Funding);
     }
@@ -421,6 +426,8 @@ contract DutchExchange {
         fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
         uint outstandingVolume = Math.atleastZero(int(sellVolume * price.num / price.den - buyVolume));
 
+        LogOustandingVolume(outstandingVolume);
+
         uint amountAfterFee;
         if (amount < outstandingVolume) {
             if (amount > 0) {
@@ -518,8 +525,10 @@ contract DutchExchange {
     {
         fraction memory price;
         (returned, price) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
-        LogNumber("claimBuyerFUnds price.den", price.den);
-        if (price.den == 0) {
+
+        uint den = closingPrices[sellToken][buyToken][auctionIndex].den;
+        LogNumber("claimBuyerFUnds price.den", den);
+        if (den == 0) {
             // Auction is running
             claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
         } else {
@@ -859,6 +868,10 @@ contract DutchExchange {
                 price.den = closingPriceETH.num;
             } else {
                 // If both prices are positive, output weighted average
+<<<<<<< HEAD
+=======
+
+>>>>>>> a93dcd816213cef094408e365ba3213e12fd9094
                 price.num = closingPriceETH.den ** 2 * closingPriceToken.den + closingPriceToken.num ** 2 * closingPriceETH.num;
                 price.den = closingPriceETH.num * closingPriceToken.den * (closingPriceETH.den + closingPriceToken.num);
             }
@@ -1050,6 +1063,10 @@ contract DutchExchange {
 
     event Log(
         string l
+    );
+
+    event LogOustandingVolume(
+        uint l
     );
 
     event LogNumber(
