@@ -930,14 +930,34 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
     // TUL were locked
     // TUL were UNLOCKED - starts 24h countdown
     // withdraw time MUST be < NOW aka TUL can be withdrawn
+
+    /**
+     * Sub-Test 1: 
+     * assert amount unlocked is not 0
+     * move time 24 hours
+     * assert withdrawTime is < now
+     */
     const [amountUnlocked, withdrawTime] = (await tokenTUL.unlockedTULs.call(buyer1)).map(n => n.toNumber())
-    assert(amountUnlocked !== 0, 'Amount unlocked isnt 0 aka there are tulips')
+    assert(amountUnlocked !== 0 && amountUnlocked === sellVolumes, 'Amount unlocked isnt 0 aka there are tulips')
+    // wait 24 hours
     await wait(86405)
     log(`
+    amt unlocked  ==> ${amountUnlocked.toEth()}
     withdrawTime  ==> ${withdrawTime} ==> ${new Date(withdrawTime * 1000)}
     time now      ==> ${timestamp()}  ==> ${new Date(timestamp() * 1000)}
     `)
     assert(withdrawTime < timestamp(), 'withdrawTime must be < now')
+    // withdraw them!
+    await tokenTUL.withdrawUnlockedTokens({ from: buyer1 })
+    /**
+     * Sub Test 2:
+     * assert balance[user] of TUL != 0
+     */
+    const userTULBalance = (await tokenTUL.balances.call(buyer1)).toNumber()
+    log(`
+    BUYER1 TUL Balance ===> ${userTULBalance.toEth()}
+    `)
+    assert(userTULBalance > 0 && userTULBalance === sellVolumes, 'Buyer1 should have non 0 Token TUL balances')
   })
 
   it('SELLER1: Unlocked TUL tokens can be Withdrawn and Balances show for this', async () => {

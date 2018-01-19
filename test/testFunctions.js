@@ -334,7 +334,7 @@ const checkUserReceivesTulipTokens = async (ST, BT, user, idx) => {
 
   // Problem w/consts below is that if the auction has NOT cleared they will always be 0
   const tulFunds = (await tokenTUL.balanceOf.call(user)).toNumber()
-  const lockedTulFunds = (await tokenTUL.getLockedAmount.call(user)).toNumber()
+  const lockedTulFunds = (await tokenTUL.lockedTULBalances.call(user)).toNumber()
   newBalance = (await dx.balances.call(ST.address, user)).toNumber()
   log(`
     USER'S OWNED TUL AMT  = ${tulFunds.toEth()}
@@ -370,7 +370,7 @@ const unlockTulipTokens = async (user) => {
 
   // cache the locked Amount of user Tulips from TokenTUL MAP
   // this map is ONLY calculated and filled AFTER auction clears
-  const lockedUserTulips = (await tokenTUL.getLockedAmount.call(user)).toNumber()
+  const lockedUserTulips = (await tokenTUL.lockedTULBalances.call(user)).toNumber()
   /*
    * SUB TEST 1: CHECK UNLOCKED AMT + WITHDRAWAL TIME
    * [should be 0,0 as none LOCKED so naturally none to unlock yet]
