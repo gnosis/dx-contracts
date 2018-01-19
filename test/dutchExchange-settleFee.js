@@ -247,7 +247,7 @@ contract('DutchExchange - settleFee', (accounts) => {
     }
   }
 
-  const makeFeeRatio = {
+  const feeRatioShortcuts = {
     '0%': async (account) => {
       // fee is 0% when account has >= 10% of total TUL
       await ensureTotalTUL()
@@ -284,12 +284,26 @@ contract('DutchExchange - settleFee', (accounts) => {
     },
   }
 
+  /**
+   * Sets TUL tokens so that feeRatio would be 0, 0.5 or 0.25 %
+   * @param {0 | 0.5 | 0.25} percent
+   * @param {address} account
+   */
+  const makeFeeRatioPercent = (percent, account) => {
+    if (typeof percent === 'number' || !percent.endsWith('%')) percent += '%'
+    const shortcut = feeRatioShortcuts[percent]
+
+    assert.isOK(shortcut, `No shortcut for setting feeRatio to ${percent}`)
+
+    return shortcut(account)
+  }
+
   it('amountAfterFee == amount when fee == 0', async () => {
     // const totalTul1 = await getTotalTUL()
     // const lockedTULBalance1 = await getLockedTUL(seller1)
     // const percent10 = Math.ceil((totalTul1 - lockedTULBalance1 / 0.1) / (1 / 0.1 - 1))
     // await mintTokens(seller1, percent10)
-    await makeFeeRatio['0%'](seller1)
+    await makeFeeRatioPercent(0, seller1)
 
     const amount = 100
 
