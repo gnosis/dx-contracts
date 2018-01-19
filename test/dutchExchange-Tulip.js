@@ -307,7 +307,7 @@ const c1 = () => contract('DX Tulip Flow --> 1 Seller + 1 Buyer', (accounts) => 
     await unlockTulipTokens(seller1)
   })
 
-  after(eventWatcher.stopWatching)
+  afterEach(eventWatcher.stopWatching)
 })
 
 const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) => {
@@ -449,7 +449,7 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     CLAIMED FUNDS => ${claimedFunds.toEth()}
     TULIPS ISSUED => ${tulipsIssued.toEth()}
     `)
-
+    
     assert.equal(tulipsIssued, 0, 'Tulips only issued / minted after auction Close so here = 0')
   })
 
@@ -591,8 +591,6 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
 
     // assert both amount of tulips issued = sellVolume
     assert.equal((b1TulipsIssued + b2TulipsIssued).toEth(), 99.5, 'Tulips only issued / minted after auction Close so here = 99.5 || sell Volume')
-    // check tulip
-    // await checkUserReceivesTulipTokens(eth, gno, buyer1)
   })
 
   it('Clear Auction, assert auctionIndex increase', async () => {
@@ -614,9 +612,9 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     New Auction Index -> ${await getAuctionIndex()}
     `)
     // meh dont like this
-    assert.isAtLeast(((await getBalance(buyer1, eth)).toEth()).toFixed(3), ((startBal.startingETH + buyer1Returns).toEth()).toFixed(3), 'Buyer 1 has the returned value into ETHER + original balance')
-    assert.isAtLeast(((await getBalance(buyer2, eth)).toEth()).toFixed(3), ((startBal.startingETH + buyer2Returns).toEth()).toFixed(3), 'Buyer 2 has the returned value into ETHER + original balance')
-    assert.isAtLeast(await getAuctionIndex(), 2)
+    assert.equal(((await getBalance(buyer1, eth)).toEth()).toFixed(2), ((startBal.startingETH + buyer1Returns).toEth()).toFixed(2), 'Buyer 1 has the returned value into ETHER + original balance')
+    assert.equal(((await getBalance(buyer2, eth)).toEth()).toFixed(2), ((startBal.startingETH + buyer2Returns).toEth()).toFixed(2), 'Buyer 2 has the returned value into ETHER + original balance')
+    assert.equal(await getAuctionIndex(), 2)
   })
 
   it('BUYER1: ETH --> GNO: user can lock tokens and only unlock them 24 hours later', async () => {
@@ -669,7 +667,7 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     await unlockTulipTokens(seller1)
   })
 
-  after(eventWatcher.stopWatching)
+  afterEach(eventWatcher.stopWatching)
 })
 
 const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts) => {
@@ -961,10 +959,36 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
   })
 
   it('SELLER1: Unlocked TUL tokens can be Withdrawn and Balances show for this', async () => {
-    
+    /**
+     * Sub-Test 1: 
+     * assert amount unlocked is not 0
+     * move time 24 hours
+     * assert withdrawTime is < now
+     */
+    const [amountUnlocked, withdrawTime] = (await tokenTUL.unlockedTULs.call(seller1)).map(n => n.toNumber())
+    assert(amountUnlocked !== 0 && amountUnlocked === sellVolumes, 'Amount unlocked isnt 0 aka there are tulips')
+    // wait 24 hours
+    await wait(86405)
+    log(`
+    amt unlocked  ==> ${amountUnlocked.toEth()}
+    withdrawTime  ==> ${withdrawTime} ==> ${new Date(withdrawTime * 1000)}
+    time now      ==> ${timestamp()}  ==> ${new Date(timestamp() * 1000)}
+    `)
+    assert(withdrawTime < timestamp(), 'withdrawTime must be < now')
+    // withdraw them!
+    await tokenTUL.withdrawUnlockedTokens({ from: seller1 })
+    /**
+     * Sub Test 2:
+     * assert balance[user] of TUL != 0
+     */
+    const userTULBalance = (await tokenTUL.balances.call(seller1)).toNumber()
+    log(`
+    seller1 TUL Balance ===> ${userTULBalance.toEth()}
+    `)
+    assert(userTULBalance > 0 && userTULBalance === sellVolumes, 'seller1 should have non 0 Token TUL balances')
   })
 
-  after(eventWatcher.stopWatching)
+  afterEach(eventWatcher.stopWatching)
 })
 
 // arg conditionally start contracts
