@@ -1,6 +1,6 @@
 /* eslint no-console:0, max-len:0, no-plusplus:0, no-mixed-operators:0, no-trailing-spaces:0 */
 
-const PriceOracleInterface = artifacts.require('PriceOracleInterface')
+// const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 
 const { 
   eventWatcher,
@@ -26,19 +26,22 @@ let dx
 let oracle
 let tokenTUL
 let balanceInvariant
-
+const ether = 10 ** 18
 
 let contracts
+
+const valMinusFee = amount => amount - (amount / 200)
+
 const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-  assert.equal((await dx.getAuctionIndex.call(eth.address, gno.address)).toNumber(), auctionIndex)
-  assert.equal((await dx.getAuctionIndex.call(gno.address, eth.address)).toNumber(), auctionIndex)
-  let difference = Math.abs((await dx.getAuctionStart.call(gno.address, eth.address)).toNumber() - auctionStart)
-  assert.isAtMost(difference, 1)
-  assert.equal((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber(), sellVolumesCurrent, ' current SellVolume not correct')
-  assert.equal((await dx.sellVolumesNext.call(eth.address, gno.address)).toNumber(), sellVolumesNext, 'sellVOlumeNext is incorrect')
-  difference = Math.abs((await dx.buyVolumes.call(eth.address, gno.address)).toNumber() - buyVolumes)
+  assert.equal((await dx.getAuctionIndex.call(ST.address, BT.address)).toNumber(), auctionIndex, 'auction Index not correct')
+  assert.equal((await dx.getAuctionIndex.call(BT.address, ST.address)).toNumber(), auctionIndex)
+  let difference = Math.abs((await dx.getAuctionStart.call(ST.address, BT.address)).toNumber() - auctionStart)
+  assert.isAtMost(difference, 2, 'time difference bigger than 1 sec')
+  assert.equal((await dx.sellVolumesCurrent.call(ST.address, BT.address)).toNumber(), sellVolumesCurrent, ' current SellVolume not correct')
+  assert.equal((await dx.sellVolumesNext.call(ST.address, BT.address)).toNumber(), sellVolumesNext, 'sellVOlumeNext is incorrect')
+  difference = Math.abs((await dx.buyVolumes.call(ST.address, BT.address)).toNumber() - buyVolumes)
   logger('buyVolumes', buyVolumes)
-  logger((await dx.buyVolumes.call(eth.address, gno.address)).toNumber())
+  logger((await dx.buyVolumes.call(ST.address, BT.address)).toNumber())
   assert.isAtMost(difference, MaxRoundingError, 'buyVolumes incorrect') 
   const [closingPriceNumReal, closingPriceDenReal] = await dx.closingPrices(ST.address, BT.address, auctionIndex)
   logger('ClosingPriceNumReal', closingPriceNumReal)
@@ -47,12 +50,12 @@ const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVo
   assert.equal(closingPriceDenReal, closingPriceDen, 'ClosingPriceDen not okay')
 }
 
-const checkInvariants = async (invariant, accounts, tokens, allowedRoundingErrors = 1024) => {
+const checkInvariants = async (invariant, accounts, tokens, allowedRoundingErrors = 1) => {
   const newBalanceInvariant = await calculateTokensInExchange(accounts, tokens)
-  logger('invariant before', invariant)
-  logger('invariant after', newBalanceInvariant)
+  logger('invariant before', invariant.map(v => v.toNumber()))
+  logger('invariant after', newBalanceInvariant.map(v => v.toNumber()))
   for (let i = 0; i < tokens.length; i += 1) {
-    assert.isAtMost(Math.abs(balanceInvariant[i] - newBalanceInvariant[i]), allowedRoundingErrors)
+    assert.isAtMost(balanceInvariant[i].minus(newBalanceInvariant[i]).abs(), allowedRoundingErrors, `issue with Token${i}`)
   }
 }
 
@@ -64,19 +67,27 @@ const setupContracts = async () => {
     EtherToken: eth,
     TokenGNO: gno,
     TokenTUL: tokenTUL,
-    PriceOracle: oracle,
+    PriceOracleInterface: oracle,
   } = contracts)
 }
+const startBal = {
+  startingETH: 90.0.toWei(),
+  startingGNO: 90.0.toWei(),
+  ethUSDPrice: 1008.0.toWei(),
+  sellingAmount: 50.0.toWei(), // Same as web3.toWei(50, 'ether')
+}
+
 
 contract('DutchExchange - Flow 3', (accounts) => {
   const [, seller1, , buyer1] = accounts
+
 
   before(async () => {
     // get contracts
     await setupContracts()
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts)
+    await setupTest(accounts, contracts, startBal)
 
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
@@ -85,12 +96,13 @@ contract('DutchExchange - Flow 3', (accounts) => {
     await dx.addTokenPair(
       eth.address,
       gno.address,
-      10 ** 9,
+      10 * ether,
       0,
       2,
       1,
       { from: seller1 },
     )
+
     eventWatcher(dx, 'Log', {})
   })
 
@@ -100,15 +112,16 @@ contract('DutchExchange - Flow 3', (accounts) => {
     const auctionIndex = await getAuctionIndex()
     
     // general setup information
-    logger('PRICE ORACLE', await PriceOracleInterface.at(oracle.address).getUSDETHPrice.call()) 
+    logger('PRICE ORACLE', await oracle.getUSDETHPrice.call()) 
     logger('tuliptoken', await tokenTUL.totalTokens())
 
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
-    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
     
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+
     // post buyOrder to clear auction with small overbuy
-    await postBuyOrder(eth, gno, auctionIndex, (10 ** 9) * 3, buyer1)
+    await postBuyOrder(eth, gno, auctionIndex, (10 * ether) * 3, buyer1)
     
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
     await checkState(2, 1, 0, 0, 0, 0, 0, gno, eth, 100000)
@@ -122,15 +135,15 @@ contract('DutchExchange - Flow 3', (accounts) => {
     * 2. await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)
     * 3. assert.equal(balanceBeforeClaim + 10 ** 9 - (await dx.balances.call(eth.address, buyer1)).toNumber() < MaxRoundingError, true)
     */
-    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 ** 9 - 10 ** 9 / 200), 100000)
+    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, valMinusFee(10 * ether), 100000)
 
     // claim Sellerfunds
-    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 * 3 - 10 ** 9 * 3 / 200), 100000)
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, valMinusFee(10 * ether * 3), 10 ** 17)
 
     // check prices:  - actually reduantant with tests postBuyOrder
     const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
-    assert.equal(Math.abs(closingPriceNum - closingPriceDen * 3) < 100000, true)
+    assert.equal(closingPriceNum.minus(closingPriceDen.mul(3)).abs().toNumber() < 10 ** 17, true)
   })
 })
 
@@ -147,11 +160,11 @@ contract('DutchExchange - Flow 6', (accounts) => {
       EtherToken: eth,
       TokenGNO: gno,
       TokenTUL: tokenTUL,
-      PriceOracle: oracle,
+      PriceOracleInterface: oracle,
     } = contracts)
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts)
+    await setupTest(accounts, contracts, startBal)
 
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
@@ -160,7 +173,7 @@ contract('DutchExchange - Flow 6', (accounts) => {
     await dx.addTokenPair(
       eth.address,
       gno.address,
-      10 ** 9,
+      10 * ether,
       0,
       2,
       1,
@@ -177,7 +190,7 @@ contract('DutchExchange - Flow 6', (accounts) => {
     
 
     // general setup information
-    logger('PRICE ORACLE', await PriceOracleInterface.at(oracle.address).getUSDETHPrice.call()) 
+    logger('PRICE ORACLE', await oracle.getUSDETHPrice.call()) 
     logger('tuliptoken', await tokenTUL.totalTokens())
 
     // ASSERT Auction has started
@@ -185,7 +198,7 @@ contract('DutchExchange - Flow 6', (accounts) => {
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
     
     // post buyOrder to clear auction with small overbuy
-    await postBuyOrder(eth, gno, auctionIndex, (10 ** 9) * 3, buyer1)
+    await postBuyOrder(eth, gno, auctionIndex, (10 * ether) * 3, buyer1)
     
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
     await checkState(2, 1, 0, 0, 0, 0, 0, gno, eth, 100000)
@@ -199,39 +212,39 @@ contract('DutchExchange - Flow 6', (accounts) => {
     * 2. await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)
     * 3. assert.equal(balanceBeforeClaim + 10 ** 9 - (await dx.balances.call(eth.address, buyer1)).toNumber() < MaxRoundingError, true)
     */
-    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 ** 9 - 10 ** 9 / 200), 100000)
+    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, valMinusFee(10 * ether), 100000)
 
     // claim Sellerfunds
-    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 * 3 - 10 ** 9 * 3 / 200), 100000)
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, valMinusFee(10 * ether * 3), 10 ** 16)
 
     // check prices:  - actually reduantant with tests postBuyOrder
     const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
-    assert.equal(Math.abs(closingPriceNum - closingPriceDen * 3) < 100000, true)
+    assert.equal(Math.abs(closingPriceNum - closingPriceDen * 3) < 10 ** 16, true)
   })
 
   it('step 3 - restarting the auction', async () => {
     // post new sell order to start next auction
     let auctionIndex = await getAuctionIndex()
     const timeOfNextAuctionStart = timestamp() + 10 * 60
-    await dx.postSellOrder(eth.address, gno.address, auctionIndex, 10 ** 9, { from: seller2 })
+    await dx.postSellOrder(eth.address, gno.address, auctionIndex, 10 * ether, { from: seller2 })
 
     auctionIndex = await getAuctionIndex()
     
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
-    await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer2 })
+    await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 * ether * 2, { from: buyer2 })
 
     // check conditions in flow
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-    await checkState(2, timeOfNextAuctionStart, 10 ** 9 - 10 ** 9 / 200, 0, 10 ** 9 * 2 - 10 ** 9 * 2 / 200, 0, 0, gno, eth, 100000)
+    await checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether), 0, valMinusFee(10 * ether * 2), 0, 0, eth, gno, 100000)
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
     // TODO testing for extra tokens
   })
 })
 
-contract('DutchExchange - Flow 1', (accounts) => {
-  const [, seller1, seller2, buyer1, buyer2] = accounts
+contract('DutchExchange - Flow 4', (accounts) => {
+  const [, seller1, seller2, buyer1, buyer2, seller3] = accounts
 
   before(async () => {
     // get contracts
@@ -242,11 +255,11 @@ contract('DutchExchange - Flow 1', (accounts) => {
       EtherToken: eth,
       TokenGNO: gno,
       TokenTUL: tokenTUL,
-      PriceOracle: oracle,
+      PriceOracleInterface: oracle,
     } = contracts)
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts)
+    await setupTest(accounts, contracts, startBal)
 
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
@@ -255,8 +268,8 @@ contract('DutchExchange - Flow 1', (accounts) => {
     await dx.addTokenPair(
       eth.address,
       gno.address,
-      10 ** 9,
-      10 ** 8 * 5,
+      10 * ether,
+      ether * 5,
       2,
       1,
       { from: seller1 },
@@ -274,33 +287,44 @@ contract('DutchExchange - Flow 1', (accounts) => {
 
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
     // clearing first auction
-    await postBuyOrder(eth, gno, auctionIndex, 10 ** 9 * 3, buyer1)
+    await postBuyOrder(eth, gno, auctionIndex, 10 * ether * 3, buyer1)
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-    await checkState(1, auctionStart, 0, 0, 0, (10 ** 9 - 10 ** 9 / 200) * 3, 10 ** 9 - 10 ** 9 / 200, eth, gno, 100000)
+    await checkState(1, auctionStart, valMinusFee(10 * ether), 0, valMinusFee(10 * ether * 3), valMinusFee(10 * ether) * 3, valMinusFee(10 * ether), eth, gno, 10 ** 16)
+  })
+
+  it('step 1 - ensuring immediate restart of next auctions', async () => { 
+    const auctionIndex = await getAuctionIndex()
+    const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
+    await dx.postSellOrder(eth.address, gno.address, auctionIndex + 1, 10 * ether, { from: seller2 })
+    await dx.postSellOrder(eth.address, gno.address, 0, 10 * ether, { from: seller2 })
+    await dx.postSellOrder(gno.address, eth.address, 0, 10 * ether, { from: seller3 })
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(1, auctionStart, valMinusFee(10 * ether), valMinusFee(10 * ether * 2), valMinusFee(10 * ether) * 3, valMinusFee(10 * ether) * 3, valMinusFee(10 * ether), eth, gno, 10 ** 16)
   })
 
   it('step 2 - clearing second auction', async () => { 
     const auctionIndex = await getAuctionIndex()
-    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1) 
+    await waitUntilPriceIsXPercentOfPreviousPrice(gno, eth, 1.0)
     // clearing second auction
-    await postBuyOrder(gno, eth, auctionIndex, 10 ** 8 * 5 / 2, buyer2)
+    const timeOfNextAuctionStart = timestamp() + 10 * 60
+    logger('current sell volume', (await dx.sellVolumesCurrent.call(gno.address, eth.address)).toNumber())
+    await postBuyOrder(gno, eth, auctionIndex, 10 ** 18 * 5 / 2, buyer2)
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-    await checkState(2, 1, 0, 0, 0, 0, 0, gno, eth, 100000)
+    await checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether * 2), 0, 0, 0, 0, eth, gno, 100000)
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
   })  
   it('step 3 - just claiming', async () => {
     const auctionIndex = 1 
     // claim buyer1 BUYER funds
-    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 ** 9 - 10 ** 9 / 200), 100000)
+    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, valMinusFee(10 * ether), 1)
     // claim seller2 BUYER funds - RECIPROCAL
-    await checkBalanceBeforeClaim(buyer2, auctionIndex, 'buyer', gno, eth, (10 ** 8 * 5 - 10 ** 8 * 5 / 200), 100000)
+    await checkBalanceBeforeClaim(buyer2, auctionIndex, 'buyer', gno, eth, valMinusFee(ether * 5), 1)
     // claim SELLER funds
-    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 * 3 - 10 ** 9 * 3 / 200), 100000)
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, valMinusFee(10 * ether * 3), 10 ** 16)
     // claim SELLER funds
-    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', gno, eth, (10 ** 8 * 5 / 2 - 10 ** 8 * 5 / 2 / 200), 100000)
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', gno, eth, valMinusFee(ether * 5 / 2), 10 ** 16)
   })
 
-  // check all conditions
    
   it('step 3 - restarting auction', async () => {
     let auctionIndex = await getAuctionIndex()  
@@ -310,10 +334,103 @@ contract('DutchExchange - Flow 1', (accounts) => {
     // post new sell order to start next auction
     // startingTimeOfAuction = await getStartingTimeOfAuction(eth, gno)
     const timeOfNextAuctionStart = timestamp() + 10 * 60
-    await dx.postSellOrder(eth.address, gno.address, auctionIndex, 10 ** 7, { from: seller2 })
+    await dx.postSellOrder(eth.address, gno.address, auctionIndex, 10 * ether, { from: seller2 })
     
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-    await checkState(2, timeOfNextAuctionStart, 10 ** 7 - 10 ** 7 / 200, 0, 0, 0, 0, gno, eth, 0)
+    await checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether) * 3, 0, 0, 0, 0, eth, gno, 0)
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+
+    // check Auction has started and accepts further buyOrders
+    await setAndCheckAuctionStarted(eth, gno)
+    auctionIndex = await getAuctionIndex()
+    await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer2 })
+  })
+})
+
+contract('DutchExchange - Flow 1', (accounts) => {
+  const [, seller1, seller2, buyer1, buyer2] = accounts
+
+  before(async () => {
+    // get contracts
+    contracts = await getContracts();
+    // destructure contracts into upper state
+    ({
+      DutchExchange: dx,
+      EtherToken: eth,
+      TokenGNO: gno,
+      TokenTUL: tokenTUL,
+      PriceOracleInterface: oracle,
+    } = contracts)
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
+
+    // add tokenPair ETH GNO
+    await dx.addTokenPair(
+      eth.address,
+      gno.address,
+      10 * ether,
+      ether * 5,
+      2,
+      1,
+      { from: seller1 },
+    )
+  })
+
+  after(eventWatcher.stopWatching)
+
+  it('step 1 - clearing one auction', async () => {
+    const auctionIndex = await getAuctionIndex()
+
+    // ASSERT Auction has started
+    await setAndCheckAuctionStarted(eth, gno)
+    const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
+
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+    // clearing first auction
+    await postBuyOrder(eth, gno, auctionIndex, 10 * ether * 3, buyer1)
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(1, auctionStart, valMinusFee(10 * ether), 0, valMinusFee(10 * ether * 3), valMinusFee(10 * ether) * 3, valMinusFee(10 * ether), eth, gno, 10 ** 16)
+  })
+
+  it('step 2 - clearing second auction', async () => { 
+    const auctionIndex = await getAuctionIndex()
+    await waitUntilPriceIsXPercentOfPreviousPrice(gno, eth, 1.0)
+    // clearing second auction
+    logger('current sell volume', (await dx.sellVolumesCurrent.call(gno.address, eth.address)).toNumber())
+    await postBuyOrder(gno, eth, auctionIndex, 10 ** 18 * 5 / 2, buyer2)
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(2, 1, 0, 0, 0, 0, 0, gno, eth, 100000)
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })   
+
+  it('step 3 - just claiming', async () => {
+    const auctionIndex = 1 
+    // claim buyer1 BUYER funds
+    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, valMinusFee(10 * ether), 1)
+    // claim seller2 BUYER funds - RECIPROCAL
+    await checkBalanceBeforeClaim(buyer2, auctionIndex, 'buyer', gno, eth, valMinusFee(ether * 5), 1)
+    // claim SELLER funds
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, valMinusFee(10 * ether * 3), 10 ** 16)
+    // claim SELLER funds
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', gno, eth, valMinusFee(ether * 5 / 2), 10 ** 16)
+  })
+   
+  it('step 3 - restarting auction', async () => {
+    let auctionIndex = await getAuctionIndex()  
+
+    logger('new auction index:', auctionIndex)
+    logger('auctionStartDate', (await dx.getAuctionStart(eth.address, gno.address)).toNumber())
+    // post new sell order to start next auction
+    // startingTimeOfAuction = await getStartingTimeOfAuction(eth, gno)
+    const timeOfNextAuctionStart = timestamp() + 10 * 60
+    await dx.postSellOrder(eth.address, gno.address, auctionIndex, 10 * ether, { from: seller2 })
+    
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether) * 1, 0, 0, 0, 0, eth, gno, 0)
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
 
     // check Auction has started and accepts further buyOrders
@@ -335,11 +452,11 @@ contract('DutchExchange - Flow 9', (accounts) => {
       EtherToken: eth,
       TokenGNO: gno,
       TokenTUL: tokenTUL,
-      PriceOracle: oracle,
+      PriceOracleInterface: oracle,
     } = contracts)
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts)
+    await setupTest(accounts, contracts, startBal)
 
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
@@ -348,7 +465,7 @@ contract('DutchExchange - Flow 9', (accounts) => {
     await dx.addTokenPair(
       eth.address,
       gno.address,
-      10 ** 9,
+      10 * ether,
       0,
       2,
       1,
@@ -366,7 +483,7 @@ contract('DutchExchange - Flow 9', (accounts) => {
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
     // non-clearing buyOrder
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
-    await postBuyOrder(eth, gno, auctionIndex, 10 ** 9, buyer1)
+    await postBuyOrder(eth, gno, auctionIndex, 10 * ether, buyer1)
 
     // theoretical clearing at  0.5
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.4)
@@ -375,7 +492,7 @@ contract('DutchExchange - Flow 9', (accounts) => {
     auctionIndex = await getAuctionIndex()
 
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-    await checkState(1, auctionStart, 10 ** 9 - 10 ** 9 / 200, 0, 10 ** 9 - 10 ** 9 / 200, 0, 0, eth, gno, 0)
+    await checkState(1, auctionStart, valMinusFee(10 * ether), 0, valMinusFee(10 * ether), 0, 0, eth, gno, 0)
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
   })
 
@@ -383,7 +500,7 @@ contract('DutchExchange - Flow 9', (accounts) => {
     let auctionIndex = await getAuctionIndex()
     // clearing buyOrder
     const previousBuyVolume = (await dx.buyVolumes(eth.address, gno.address)).toNumber()
-    await postBuyOrder(eth, gno, auctionIndex, 10 ** 9, buyer2)
+    await postBuyOrder(eth, gno, auctionIndex, 10 * ether, buyer2)
 
     // check correct closing prices
     const [closingPriceNum] = await dx.closingPrices.call(eth.address, gno.address, auctionIndex)
@@ -391,9 +508,9 @@ contract('DutchExchange - Flow 9', (accounts) => {
     const [closingPriceNum2] = await dx.closingPrices.call(gno.address, eth.address, auctionIndex)
     assert.equal(0, closingPriceNum2)
     // check Buyer1 balance and claim
-    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 ** 9 - 10 ** 9 / 200))
+    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, valMinusFee(10 * ether))
     // check Seller1 Balance
-    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 - 10 ** 9 / 200))
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, valMinusFee(10 * ether))
 
     // check that auction is in right place
     auctionIndex = await getAuctionIndex()
@@ -404,6 +521,220 @@ contract('DutchExchange - Flow 9', (accounts) => {
     // await checkInvariants(balanceInvariant, accounts, [eth, gno])
   })
 })
+
+contract('DutchExchange - Flow 10', (accounts) => {
+  const [, seller1, seller2, buyer1, buyer2] = accounts
+
+  before(async () => {
+    // get contracts
+    contracts = await getContracts();
+    // destructure contracts into upper state
+    ({
+      DutchExchange: dx,
+      EtherToken: eth,
+      TokenGNO: gno,
+      TokenTUL: tokenTUL,
+      PriceOracleInterface: oracle,
+    } = contracts)
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
+
+    // add tokenPair ETH GNO
+    await dx.addTokenPair(
+      eth.address,
+      gno.address,
+      10 * ether,
+      ether * 5,
+      2,
+      1,
+      { from: seller1 },
+    )
+  })
+
+  after(eventWatcher.stopWatching)
+
+  it('step 2 - clearing one auction theoretical', async () => {
+    const auctionIndex = await getAuctionIndex()
+
+    // ASSERT Auction has started
+    await setAndCheckAuctionStarted(eth, gno)
+    const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
+
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+    // clearing first auction
+    await postBuyOrder(eth, gno, auctionIndex, 10 * ether * 2, buyer1)
+
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
+    
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(1, auctionStart, valMinusFee(10 * ether), 0, valMinusFee(10 * ether * 2), 0, 0, eth, gno, 10 ** 16)
+  })
+
+  it('step 2 - clearing one auction', async () => {
+    const auctionIndex = await getAuctionIndex()
+
+    // ASSERT Auction has started
+    await setAndCheckAuctionStarted(eth, gno)
+    const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
+
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
+    // clearing first auction
+    await postBuyOrder(eth, gno, auctionIndex, 10 * ether * 3, buyer1)
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(1, auctionStart, valMinusFee(10 * ether), 0, valMinusFee(10 * ether * 2), valMinusFee(10 * ether) * 2, valMinusFee(10 * ether), eth, gno, 10 ** 16)
+  })
+
+  it('step 3 - clearing second auction', async () => { 
+    const auctionIndex = await getAuctionIndex()
+    await waitUntilPriceIsXPercentOfPreviousPrice(gno, eth, 1.0)
+    // clearing second auction
+    logger('current sell volume', (await dx.sellVolumesCurrent.call(gno.address, eth.address)).toNumber())
+    await postBuyOrder(gno, eth, auctionIndex, 10 ** 18 * 5 / 2, buyer2)
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(2, 1, 0, 0, 0, 0, 0, gno, eth, 100000)
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })   
+
+  it('step 4 - just claiming', async () => {
+    const auctionIndex = 1 
+    // claim buyer1 BUYER funds
+    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, valMinusFee(10 * ether), 1)
+    // claim seller2 BUYER funds - RECIPROCAL
+    await checkBalanceBeforeClaim(buyer2, auctionIndex, 'buyer', gno, eth, valMinusFee(ether * 5), 1)
+    // claim SELLER funds
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, valMinusFee(10 * ether * 2), 10 ** 16)
+    // claim SELLER funds
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', gno, eth, valMinusFee(ether * 5 / 2), 10 ** 16)
+  })
+   
+  it('step 5 - restarting auction', async () => {
+    let auctionIndex = await getAuctionIndex()  
+
+    logger('new auction index:', auctionIndex)
+    logger('auctionStartDate', (await dx.getAuctionStart(eth.address, gno.address)).toNumber())
+    // post new sell order to start next auction
+    // startingTimeOfAuction = await getStartingTimeOfAuction(eth, gno)
+    const timeOfNextAuctionStart = timestamp() + 10 * 60
+    await dx.postSellOrder(eth.address, gno.address, auctionIndex, 10 * ether, { from: seller2 })
+    
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether) * 1, 0, 0, 0, 0, eth, gno, 0)
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+
+    // check Auction has started and accepts further buyOrders
+    await setAndCheckAuctionStarted(eth, gno)
+    auctionIndex = await getAuctionIndex()
+    await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer2 })
+  })
+})
+
+
+contract('DutchExchange - Flow 7', (accounts) => {
+  const [, seller1, seller2, buyer1, buyer2, seller3] = accounts
+
+  before(async () => {
+    // get contracts
+    contracts = await getContracts();
+    // destructure contracts into upper state
+    ({
+      DutchExchange: dx,
+      EtherToken: eth,
+      TokenGNO: gno,
+      TokenTUL: tokenTUL,
+      PriceOracleInterface: oracle,
+    } = contracts)
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
+
+    // add tokenPair ETH GNO
+    await dx.addTokenPair(
+      eth.address,
+      gno.address,
+      10 * ether,
+      ether * 5,
+      2,
+      1,
+      { from: seller1 },
+    )
+  })
+
+  after(eventWatcher.stopWatching)
+
+  it('step 1 - clearing one auction theoretical', async () => {
+    const auctionIndex = await getAuctionIndex()
+
+    // ASSERT Auction has started
+    await setAndCheckAuctionStarted(eth, gno)
+    const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
+
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+    // clearing first auction
+    await postBuyOrder(eth, gno, auctionIndex, 10 * ether * 2, buyer1)
+
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
+    
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(1, auctionStart, valMinusFee(10 * ether), 0, valMinusFee(10 * ether * 2), 0, 0, eth, gno, 10 ** 16)
+  })
+
+  it('step 2 - clearing one auction', async () => {
+    const auctionIndex = await getAuctionIndex()
+
+    // ASSERT Auction has started
+    await setAndCheckAuctionStarted(eth, gno)
+    const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
+
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
+    // clearing first auction
+    await postBuyOrder(eth, gno, auctionIndex, 10 * ether * 3, buyer1)
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(1, auctionStart, valMinusFee(10 * ether), 0, valMinusFee(10 * ether * 2), valMinusFee(10 * ether) * 2, valMinusFee(10 * ether), eth, gno, 10 ** 16)
+  })
+
+  it('step 2 - ensuring immediate restart of next auctions', async () => { 
+    const auctionIndex = await getAuctionIndex()
+    const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
+    await dx.postSellOrder(eth.address, gno.address, auctionIndex + 1, 10 * ether, { from: seller2 })
+    await dx.postSellOrder(eth.address, gno.address, 0, 10 * ether, { from: seller2 })
+    await dx.postSellOrder(gno.address, eth.address, 0, 10 * ether, { from: seller3 })
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(1, auctionStart, valMinusFee(10 * ether), valMinusFee(10 * ether * 2), valMinusFee(10 * ether) * 2, valMinusFee(10 * ether) * 2, valMinusFee(10 * ether), eth, gno, 10 ** 16)
+  })
+
+  it('step 3 - clearing second auction', async () => { 
+    const auctionIndex = await getAuctionIndex()
+    await waitUntilPriceIsXPercentOfPreviousPrice(gno, eth, 1.0)
+    // clearing second auction
+    const timeOfNextAuctionStart = timestamp() + 60 * 10 
+    logger('current sell volume', (await dx.sellVolumesCurrent.call(gno.address, eth.address)).toNumber())
+    await postBuyOrder(gno, eth, auctionIndex, 10 ** 18 * 5 / 2, buyer2)
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether * 2), 0, 0, 0, 0, eth, gno, 100000)
+    await checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether), 0, 0, 0, 0, gno, eth, 100000)
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })   
+
+  it('step 4 - just claiming', async () => {
+    const auctionIndex = 1 
+    // claim buyer1 BUYER funds
+    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, valMinusFee(10 * ether), 1)
+    // claim seller2 BUYER funds - RECIPROCAL
+    await checkBalanceBeforeClaim(buyer2, auctionIndex, 'buyer', gno, eth, valMinusFee(ether * 5), 1)
+    // claim SELLER funds
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, valMinusFee(10 * ether * 2), 10 ** 16)
+    // claim SELLER funds
+    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', gno, eth, valMinusFee(ether * 5 / 2), 10 ** 16)
+  })
+})
+
 /*
 contract('DutchExchange', (accounts) => {
   const [, seller1, , buyer1, buyer2] = accounts

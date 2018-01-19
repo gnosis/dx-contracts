@@ -200,12 +200,15 @@ contract DutchExchange {
 
         uint fundedValueUSD;
         uint ETHUSDPrice = PriceOracleInterface(ETHUSDOracle).getUSDETHPrice();
-
+        // David Code
+        LogNumber("ETHUSDPrice from Oracle", ETHUSDPrice);
         // Compute fundedValueUSD
         if (token1 == ETH) {
             // C1
             // MUL: 10^24 * 10^4 = 10^28
             fundedValueUSD = token1Funding * ETHUSDPrice;
+            // David Code
+            LogNumber("fundedValueUSD * ETHUSDPrice", fundedValueUSD);
         } else if (token2 == ETH) {
             // C2
             // MUL: 10^24 * 10^4 = 10^28
@@ -330,6 +333,7 @@ contract DutchExchange {
     )
         public
     {
+        amount = Math.min(amount, balances[sellToken][msg.sender]);
         // Note: if a user specifies auctionIndex of 0, it
         // means he is agnostic which auction his sell order goes into
 
@@ -463,6 +467,8 @@ contract DutchExchange {
         // 10^27 * 10^39 = 10^66
         uint outstandingVolume = Math.atleastZero(int(sellVolume * price.num / price.den - buyVolume));
 
+        LogOustandingVolume(outstandingVolume);
+
         uint amountAfterFee;
         if (amount < outstandingVolume) {
             if (amount > 0) {
@@ -564,7 +570,8 @@ contract DutchExchange {
         (returned, price) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
 
         uint den = closingPrices[sellToken][buyToken][auctionIndex].den;
-
+        // David Code
+        LogNumber("claimBuyerFUnds price.den", den);
         if (den == 0) {
             // Auction is running
             claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
@@ -612,6 +619,7 @@ contract DutchExchange {
         // Claim tokens
         balances[sellToken][user] += returned;
         NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned);
+        ClaimBuyerFunds(returned, tulipsIssued);
     }
 
     // > getUnclaimedBuyerFunds()
@@ -723,7 +731,7 @@ contract DutchExchange {
         // Logic so tokens don't get stuck in auctions where clearing price was 0
         uint sellVolumeNext = sellVolumesNext[sellToken][buyToken];
         if (buyVolume == 0) {
-            extraTokens[sellToken][buyToken][auctionIndex + 1] = extraTokens[sellToken][buyToken][auctionIndex];
+            extraTokens[sellToken][buyToken][auctionIndex + 1] += extraTokens[sellToken][buyToken][auctionIndex];
             extraTokens[sellToken][buyToken][auctionIndex] = 0;
             if (sellVolume > 0) {
                 sellVolumeNext += sellVolume;
@@ -747,7 +755,6 @@ contract DutchExchange {
             sellVolumesCurrent[buyToken][sellToken] = sellVolumesNext[buyToken][sellToken];
             sellVolumesNext[buyToken][sellToken] = 0;
             buyVolumes[buyToken][sellToken] = 0;
-
             // Increment auction index
             setAuctionIndex(sellToken, buyToken);
             // Check if next auction can be scheduled
@@ -781,6 +788,7 @@ contract DutchExchange {
             // 10^23 * 10^25 / 10^25 = 10^23
             uint feeInETH = fee * price.num / price.den;
             // 10^23 * 10^4 = 10^31
+            // Uses 18 decimal places <> exactly as OWL tokens: 10**18 OWL == 1 USD 
             uint feeInUSD = feeInETH * ETHUSDPrice;
             uint amountOfOWLBurned = Math.min(balances[OWL][msg.sender], feeInUSD / 2);
 
@@ -795,10 +803,11 @@ contract DutchExchange {
 
             extraTokens[primaryToken][secondaryToken][auctionIndex + 1] += fee;
         }
-
         amountAfterFee = amount - fee;
+        // DAVID CODE
+        LogNumber("Amount after Settle Fee", amountAfterFee);
     }
-
+    
     // > calculateFeeRatio()
     function calculateFeeRatio(
         address user
@@ -1009,19 +1018,6 @@ contract DutchExchange {
         return (price.num, price.den);
     }
 
-    function testing(address token)
-    public
-    returns(uint){
-        fraction memory b=priceOracle(token);
-        return b.num;
-    }
-    function testing2(address token1, address token2, uint index)
-    public
-    returns(uint){
-        fraction memory b=getPrice(token1,token2, index);
-        return b.num;
-    }
-
     // > helper fns
     function getTokenOrder(
         address token1,
@@ -1154,8 +1150,17 @@ contract DutchExchange {
         string l
     );
 
+    event LogOustandingVolume(
+        uint l
+    );
+
     event LogNumber(
         string l,
         uint n
+    );
+
+    event ClaimBuyerFunds (
+        uint returned,
+        uint tulipsIssued
     );
 }
