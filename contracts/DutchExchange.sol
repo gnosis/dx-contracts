@@ -876,10 +876,10 @@ contract DutchExchange {
         }
 
         // R1
-        require(price.num <= 10 ** 35 || price.den <= 10 ** 35);
+        // require(price.num <= 10 ** 35 || price.den <= 10 ** 35);
         if (price.num > 10 ** 35 || price.den > 10 ** 35) {
             Log('computeRatioOfHistoricalPriceOracles R1');
-            return
+            return;
         }
     }
 
