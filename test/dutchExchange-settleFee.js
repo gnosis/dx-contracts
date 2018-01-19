@@ -224,17 +224,71 @@ contract('DutchExchange - settleFee', (accounts) => {
 
   settleFee.call = async (...args) => (await dx.settleFeePub.call(...args)).toNumber()
 
-  const getTotalTUL = async () => (await tul.totalTokens.call()).toNumber()
+  // const getTotalTUL = async () => (await tul.totalTokens.call()).toNumber()
 
-  const getLockedTUL = async account => (await tul.lockedTULBalances.call(account)).toNumber()
+  // const getLockedTUL = async account => (await tul.lockedTULBalances.call(account)).toNumber()
 
-  const mintTokens = (account, amount) => tul.mintTokens(account, amount, { from: master })
+  // const mintTokens = (account, amount) => tul.mintTokens(account, amount, { from: master })
+
+  const {
+    getTotalTUL,
+    getLockedTUL,
+    unlockTUL,
+    mintTokens,
+    mintPercent,
+    calculateFeeRatio,
+  } = getHelperFunctions(master)
+
+  const ensureTotalTUL = async () => {
+    const totalTul = await getTotalTUL()
+    if (totalTul === 0) {
+      await mintTokens(master, 1000)
+    }
+  }
+
+  const makeFeeRatio = {
+    '0%': async (account) => {
+      // fee is 0% when account has >= 10% of total TUL
+      await ensureTotalTUL()
+      await mintPercent(account, 0.11)
+
+      const [num, den] = await calculateFeeRatio(account)
+      assert.equal(num / den, 0, 'feeRatio is 0% when total TUL tokens > 0 and account\'s TUL balance >= 10% total TUL')
+    },
+    '0.5%': async (account) => {
+      const totalTul = await getTotalTUL()
+      // fee is 0.5% when
+      // either total TUL == 0
+      // or total TUL > 0, but account has no TUL
+      if (totalTul > 0) {
+        const lockedTULBalance = await getLockedTUL(account)
+        // get rid of lockedTUL if any
+        if (lockedTULBalance > 0) {
+          await unlockTUL(account, lockedTULBalance)
+        }
+      }
+
+      const [num, den] = await calculateFeeRatio(account)
+      assert.strictEqual(num / den, 0.005, 'feeRatio is 0.5% when total TUL tokens > 0 but account\'s TUL balance == 0')
+    },
+    '0.25%': async (account) => {
+      // fee is 0.25% when account has 1% of total TUL
+      await ensureTotalTUL()
+
+      await mintPercent(account, 0.01)
+
+      const [num, den] = await calculateFeeRatio(account)
+      // round feeRatio a bit
+      assert.equal((num / den).toFixed(4), 0.0025, 'feeRatio is 0.25% when total TUL tokens > 0 but account\'s TUL balance == 1% total TUL')
+    },
+  }
 
   it('amountAfterFee == amount when fee == 0', async () => {
-    const totalTul1 = await getTotalTUL()
-    const lockedTULBalance1 = await getLockedTUL(seller1)
-    const percent10 = Math.ceil((totalTul1 - lockedTULBalance1 / 0.1) / (1 / 0.1 - 1))
-    await mintTokens(seller1, percent10)
+    // const totalTul1 = await getTotalTUL()
+    // const lockedTULBalance1 = await getLockedTUL(seller1)
+    // const percent10 = Math.ceil((totalTul1 - lockedTULBalance1 / 0.1) / (1 / 0.1 - 1))
+    // await mintTokens(seller1, percent10)
+    await makeFeeRatio['0%'](seller1)
 
     const amount = 100
 
