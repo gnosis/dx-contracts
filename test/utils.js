@@ -135,6 +135,5 @@ module.exports = {
   logger,
   log,
   varLogger,
-  // wait,
   timestamp,
 }
