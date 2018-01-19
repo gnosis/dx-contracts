@@ -21,6 +21,8 @@ const getHelperFunctions = (master) => {
 
   const getLockedTUL = async account => (await tul.lockedTULBalances.call(account)).toNumber()
 
+  const unlockTUL = (account, amount) => tul.unlockTokens(amount, { from: account })
+
   const mintTokens = (account, amount) => tul.mintTokens(account, amount, { from: master })
 
   const calculateFeeRatio = async account => (await dx.calculateFeeRatioForJS.call(account)).map(n => n.toNumber())
@@ -48,6 +50,7 @@ const getHelperFunctions = (master) => {
   return {
     getTotalTUL,
     getLockedTUL,
+    unlockTUL,
     mintTokens,
     calculateFeeRatio,
     getHowManyToAdd,
