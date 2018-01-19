@@ -117,7 +117,7 @@ const getState = async (contracts, ST, BT) => {
   return 0
 }
 
-const getIntoState = async (state, accounts, contracts, ST, BT) => {
+const getIntoState = async (state, accounts, ST, BT) => {
   const [, seller1, buyer1] = accounts
   switch (state) {
     case 0:
@@ -152,7 +152,7 @@ const getIntoState = async (state, accounts, contracts, ST, BT) => {
     }
     case 2:
       {
-        await getIntoState(0, accounts, contracts, eth, gno)
+        await getIntoState(0, accounts, eth, gno)
         const auctionIndex = await getAuctionIndex()
 
         // ASSERT Auction has started
@@ -170,7 +170,7 @@ const getIntoState = async (state, accounts, contracts, ST, BT) => {
       break
     case 3:
     {
-      await getIntoState(0, accounts, contracts, eth, gno)
+      await getIntoState(0, accounts, eth, gno)
       await setAndCheckAuctionStarted(ST, BT)
       let auctionIndex = await getAuctionIndex()
       const auctionStart = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
@@ -192,7 +192,7 @@ const getIntoState = async (state, accounts, contracts, ST, BT) => {
     }  
     case 4:
     {
-      await getIntoState(0, accounts, contracts, eth, gno)
+      await getIntoState(0, accounts, eth, gno)
       await setAndCheckAuctionStarted(ST, BT)
       let auctionIndex = await getAuctionIndex()
       const auctionStart = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
@@ -215,7 +215,7 @@ const getIntoState = async (state, accounts, contracts, ST, BT) => {
     }  
     case 5:
     {
-      await getIntoState(2, accounts, contracts, eth, gno)
+      await getIntoState(2, accounts, eth, gno)
       const auctionIndex = await getAuctionIndex()
 
       // ASSERT Auction has started
@@ -230,7 +230,7 @@ const getIntoState = async (state, accounts, contracts, ST, BT) => {
     }
     case 6:
     {
-      await getIntoState(3, accounts, contracts, eth, gno)
+      await getIntoState(3, accounts, eth, gno)
       const auctionIndex = await getAuctionIndex()
 
       // ASSERT Auction has started
@@ -245,7 +245,7 @@ const getIntoState = async (state, accounts, contracts, ST, BT) => {
     }  
     case 7:
     {
-      await getIntoState(1, accounts, contracts, eth, gno)
+      await getIntoState(1, accounts, eth, gno)
       const auctionIndex = await getAuctionIndex()
 
       // ASSERT Auction has started
@@ -312,7 +312,7 @@ contract('DutchExchange - Stage S0 - Auction is running with v>0 in both auction
     await setupTest(accounts, contracts, startBal)
 
     // getting into the right state
-    await getIntoState(0, accounts, contracts, eth, gno)
+    await getIntoState(0, accounts, eth, gno)
     assert.equal(0, await getState(contracts, eth, gno))
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
@@ -351,7 +351,7 @@ contract('DutchExchange - Stage S0 - Auction is running with v>0 in both auction
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
 
     // getting into the right state
-    await getIntoState(0, accounts, contracts, eth, gno)
+    await getIntoState(0, accounts, eth, gno)
 
     eventWatcher(dx, 'Log', {})
   })
@@ -399,7 +399,7 @@ contract('DutchExchange - Stage S0 - Auction is running with v>0 in both auction
     await setupTest(accounts, contracts, startBal)
 
     // getting into the right state
-    await getIntoState(0, accounts, contracts, eth, gno)
+    await getIntoState(0, accounts, eth, gno)
     assert.equal(0, await getState(contracts, eth, gno))
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
@@ -449,7 +449,7 @@ contract('DutchExchange - Stage S1 - Auction is running with v == 0 in one aucti
     await setupTest(accounts, contracts, startBal)
 
     // getting into the right state
-    await getIntoState(1, accounts, contracts, eth, gno)
+    await getIntoState(1, accounts, eth, gno)
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
 
@@ -500,7 +500,7 @@ contract('DutchExchange - Stage S1 - Auction is running with v == 0 in one aucti
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
 
     // getting into the right state
-    await getIntoState(1, accounts, contracts, eth, gno)
+    await getIntoState(1, accounts, eth, gno)
 
     eventWatcher(dx, 'Log', {})
   })
@@ -548,7 +548,7 @@ contract('DutchExchange - Stage S1 - Auction is running with v == 0 in one aucti
     await setupTest(accounts, contracts, startBal)
 
     // getting into the right state
-    await getIntoState(1, accounts, contracts, eth, gno)
+    await getIntoState(1, accounts, eth, gno)
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
 
@@ -598,7 +598,7 @@ contract('DutchExchange - Stage S2 -  1 Auction is running with v > 0, other auc
     await setupTest(accounts, contracts, startBal)
 
     // getting into the right state
-    await getIntoState(2, accounts, contracts, eth, gno)
+    await getIntoState(2, accounts, eth, gno)
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
 
@@ -649,7 +649,7 @@ contract('DutchExchange - Stage S2 -  1 Auction is running with v > 0, other auc
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
 
     // getting into the right state
-    await getIntoState(2, accounts, contracts, eth, gno)
+    await getIntoState(2, accounts, eth, gno)
 
     eventWatcher(dx, 'Log', {})
   })
@@ -696,7 +696,7 @@ contract('DutchExchange - Stage S2 -  1 Auction is running with v > 0, other auc
     await setupTest(accounts, contracts, startBal)
 
     // getting into the right state
-    await getIntoState(2, accounts, contracts, eth, gno)
+    await getIntoState(2, accounts, eth, gno)
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
 
@@ -736,7 +736,7 @@ contract('DutchExchange - Stage S2 -  1 Auction is running with v > 0, other auc
     await setupTest(accounts, contracts, startBal)
 
     // getting into the right state
-    await getIntoState(2, accounts, contracts, eth, gno)
+    await getIntoState(2, accounts, eth, gno)
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
 
@@ -775,7 +775,7 @@ contract('DutchExchange - Stage S2 -  1 Auction is running with v > 0, other auc
     await setupTest(accounts, contracts, startBal)
 
     // getting into the right state
-    await getIntoState(2, accounts, contracts, eth, gno)
+    await getIntoState(2, accounts, eth, gno)
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
 
@@ -823,7 +823,7 @@ contract('DutchExchange - Stage S3 -  1 Auction is closed theoretical', (account
     await setupTest(accounts, contracts, startBal)
 
     // getting into the right state
-    await getIntoState(3, accounts, contracts, eth, gno)
+    await getIntoState(3, accounts, eth, gno)
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
 
@@ -875,7 +875,7 @@ contract('DutchExchange - Stage S3 -  1 Auction is closed theoretical', (account
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
 
     // getting into the right state
-    await getIntoState(3, accounts, contracts, eth, gno)
+    await getIntoState(3, accounts, eth, gno)
 
     eventWatcher(dx, 'Log', {})
   })
@@ -905,7 +905,7 @@ contract('DutchExchange - Stage S3 -  1 Auction is closed theoretical', (account
     await setupTest(accounts, contracts, startBal)
 
     // getting into the right state
-    await getIntoState(3, accounts, contracts, eth, gno)
+    await getIntoState(3, accounts, eth, gno)
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
 
@@ -945,7 +945,7 @@ contract('DutchExchange - Stage S3 -  1 Auction is closed theoretical', (account
     await setupTest(accounts, contracts, startBal)
 
     // getting into the right state
-    await getIntoState(3, accounts, contracts, eth, gno)
+    await getIntoState(3, accounts, eth, gno)
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
 
