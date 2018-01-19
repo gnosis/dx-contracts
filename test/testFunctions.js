@@ -28,6 +28,7 @@ const contractNames = [
   'DutchExchange',
   'EtherToken',
   'TokenGNO',
+  'TokenOWL',
   'TokenTUL',
   'PriceOracleInterface',
   'PriceFeed',
