@@ -1,16 +1,17 @@
 pragma solidity ^0.4.18;
 
-import "../DutchExchange/DutchExchangeInterface.sol";
+import "../Oracle/PriceFeed.sol";
+import "../Oracle/Medianizer.sol";
 import "../Utils/Math.sol";
+
 
 contract PriceOracleInterface {
     using Math for *;
 
-    uint public lastPriceETHUSD = 0;
-    DutchExchangeInterface dutchExchange;
-    address public etherToken;
+    address public priceFeedSource;
     address public owner;
     
+    event NonValidPriceFeed(address priceFeedSource);
 
      // Modifiers
     modifier onlyOwner() {
@@ -19,60 +20,76 @@ contract PriceOracleInterface {
     }
 
     ///@dev constructor of the contract, 
-    function PriceOracleInterface(address _owner, address _etherToken)
+    function PriceOracleInterface(
+        address _owner,
+        address _priceFeedSource
+    )
         public
     {
         owner = _owner;
-        etherToken=_etherToken;
+        priceFeedSource = _priceFeedSource;
     }
    
-    function updateDutchExchange(DutchExchangeInterface _dutchExchange)
+    function updatePriceFeedSource(
+        address _priceFeedSource
+    )
         public
         onlyOwner()
     {
-        dutchExchange = _dutchExchange;
+        priceFeedSource = _priceFeedSource;
     }
 
-    /// @dev returns the USDETH price in Cents, ie current value would be 45034 == 450 USD and 34 Cents
+    function updateCurator(
+        address _owner
+    )
+        public
+        onlyOwner()
+    {
+        owner = _owner;
+    }
+
+    /// @dev returns the USDETH price, ie current value would be 45034 == 450 USD and 34 Cents
     function getUSDETHPrice() 
         public
         view
-        returns (uint)
-    ;
-
-    /// @dev anyone can trigger the Update process for the USD ETH feed. 
-    ///  possible solutions could be realityCheck with a big 
-    ///  set of arbitrators: realityKey, Gnosis, Consensus, oralize or chainlink request
-    function updateETHUSDPrice(uint ETHPrice) 
+        returns (uint256)
+    {
+        bytes32 price;
+        bool valid=true;
+        (price, valid) = Medianizer(priceFeedSource).peek();
+        if (!valid) {
+            NonValidPriceFeed(priceFeedSource);
+        }
+        return uint256(price)/(1 ether);
+    }  
+/* 
+    /// @dev returns the amount of Wei equal to 1 USD
+    function getWEIUSDPrice() 
         public
-        onlyOwner()
-     ;
-    // function getTokensValueInCENTS(
-    //     address tokenAddress,
-    //     uint amount
-    // ) 
-    //     public 
-    //     view
-    //     returns (uint)
-    // ;
-    // function getTokensValueInETH(
-    //     address tokenAddress,
-    //     uint amount
-    // ) 
-    //     public 
-    //     view
-    //     returns (uint)
-    // ;
-    // function getTokensValueInETHwithMinVolume(address tokenAddress, uint amount, uint minVolumeInETH) 
-    // public 
-    // view
-    // returns (uint)
-    // ;
+        view
+        returns (uint256)
+    {
+        bytes32 price;
+        bool valid=true;
+        (price, valid) = Medianizer(priceFeedSource).peek();
+        if (!valid) {
+            NonValidPriceFeed(priceFeedSource);
+        }
+        return uint(10**18 * 10000) / uint256(price);
+    }    
 
-    // function getTokensValueInToken(address token1, address token2, uint amount1, uint amount2) 
-    // public 
-    // view
-    // returns (uint)
-    // ;
-    // function getCurrentDutchExchange() public view returns(address);
+    /// @dev returns the USDETH price in Cents, ie current value would be 45034 == 450 USD and 34 Cents
+    function getUSDETHPrice2() 
+        public
+        view
+        returns (uint128)
+    {
+        bytes32 price;
+        bool valid=true;
+        (price, valid) = Medianizer(priceFeedSource).peek();
+        if (!valid) {
+            NonValidPriceFeed(priceFeedSource);
+        }
+        return uint128(price);
+    }    */  
 }
