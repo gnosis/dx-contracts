@@ -86,6 +86,8 @@ contract('DutchExchange - calculateFeeRatio', (accounts) => {
       gno.transfer(acct, GNOBalance, { from: master }),
       gno.approve(dx.address, GNOBalance, { from: acct }),
     ])))
+
+    await tul.updateMinter(master, { from: master })
   })
 
   after(eventWatcher.stopWatching)
@@ -136,7 +138,6 @@ contract('DutchExchange - calculateFeeRatio', (accounts) => {
   })
 
   it('feeRatio == 0.5% when total TUL > 0 and account has 0 TUL', async () => {
-    await tul.updateMinter(master, { from: master })
     await mintTokens(master, 1000)
     const totalTul = await getTotalTUL()
 
