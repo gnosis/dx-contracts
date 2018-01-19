@@ -991,15 +991,103 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
   afterEach(eventWatcher.stopWatching)
 })
 
+const c4 = () => contract('DX Tulip Flow --> change Owner', (accounts) => {
+  const [master, seller1] = accounts
+  // const user = seller1
+  // let userTulips
+  let seller1Balance
+  
+  const startBal = {
+    startingETH: 1000..toWei(),
+    startingGNO: 1000..toWei(),
+    ethUSDPrice: 6000..toWei(),   // 400 ETH @ $6000/ETH = $2,400,000 USD
+    sellingAmount: 100..toWei(), // Same as web3.toWei(50, 'ether')
+  }
+  const { 
+    startingETH,
+    sellingAmount,
+    // startingGNO,
+    // ethUSDPrice,
+  } = startBal
+
+  before(async () => {
+    // get contracts
+    await setupContracts()
+    eventWatcher(dx, 'LogNumber', {})
+    /*
+     * SUB TEST 1: Check passed in ACCT has NO balances in DX for token passed in
+     */
+    seller1Balance = await getBalance(seller1, eth)
+    assert.equal(seller1Balance, 0, 'Seller1 should have 0 balance')
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    /*
+     * SUB TEST 2: Check passed in ACCT has NO balances in DX for token passed in
+     */
+    seller1Balance = await getBalance(seller1, eth)
+    assert.equal(seller1Balance, startingETH, `Seller1 should have balance of ${startingETH.toEth()}`)
+
+    /*
+     * SUB TEST 3: assert both eth and gno get approved by DX
+     */
+    // approve ETH
+    await dx.updateApprovalOfToken(eth.address, true, { from: master })
+    // approve GNO
+    await dx.updateApprovalOfToken(gno.address, true, { from: master })
+
+    assert.equal(await dx.approvedTokens.call(eth.address), true, 'ETH is approved by DX')
+    assert.equal(await dx.approvedTokens.call(gno.address), true, 'GNO is approved by DX')
+
+    /*
+     * SUB TEST 4: create new token pair and assert Seller1Balance = 0 after depositing more than Balance
+     */
+    // add tokenPair ETH GNO
+    log('Selling amt ', sellingAmount.toEth())
+    await dx.addTokenPair(
+      eth.address,
+      gno.address,
+      sellingAmount,  // 100 ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
+      0,              // buyVolume for GNO
+      2,              // lastClosingPrice NUM
+      1,              // lastClosingPrice DEN
+      { from: seller1 },
+    )
+    seller1Balance = await getBalance(seller1, eth) // dx.balances(token) - sellingAmt
+    log(`\nSeller Balance ====> ${seller1Balance.toEth()}\n`)
+    assert.equal(seller1Balance, startingETH - sellingAmount, `Seller1 should have ${startingETH.toEth()} balance after new Token Pair add`)
+  })
+
+  it('CHANGING OWNER AND MINTER: changes TUL_OWNER from Master to Seller1 --> changes TUL_MINTER from NEW OWNER seller1 to seller1', async () => {
+    const originalTULOwner = await tokenTUL.owner.call()
+    await tokenTUL.updateOwner(seller1, { from: master })
+    const newTULOwner = await tokenTUL.owner.call()
+
+    assert(originalTULOwner === master, 'Original owner should be accounts[0] aka master aka migrations deployed acct for tokenTUL')
+    assert(newTULOwner === seller1, 'New owner should be accounts[1] aka seller1')
+
+    // set new Minter as seller1 - must come from TUL owner aka seller1
+    await tokenTUL.updateMinter(seller1, { from: newTULOwner })
+    const newTULMInter = await tokenTUL.minter.call()
+
+    // assert.equal(originalTULMinter, master, 'Original owner should be accounts[0] aka master aka migrations deployed acct for tokenTUL')
+    assert.equal(newTULMInter, seller1, 'New owner should be accounts[1] aka seller1')
+  })
+
+  afterEach(eventWatcher.stopWatching)
+})
+
 // arg conditionally start contracts
 if (argv.c === 1) {
   // fire contract 1
   c1()
 } else if (argv.c === 2) {
-  // fire contract 2
   c2()
 } else if (argv.c === 3) {
   c3()
+} else if (argv.c === 4) {
+  c4()
 } else {
-  return Promise.all([c1(), c2(), c3()])
+  return Promise.all([c1(), c2(), c3(), c4()])
 }
