@@ -28,6 +28,7 @@ const contractNames = [
   'DutchExchange',
   'EtherToken',
   'TokenGNO',
+  'TokenOWL',
   'TokenTUL',
   'PriceOracleInterface',
   'PriceFeed',
@@ -356,7 +357,7 @@ const checkUserReceivesTulipTokens = async (ST, BT, user, idx) => {
  * unlockTulipTokens
  * @param {address} user => address to unlock Tokens for
  */
-const unlockTulipTokens = async (user, amt) => {
+const unlockTulipTokens = async (user, amt) => {  // eslint-disable-line
   const { TokenTUL: tokenTUL } = await getContracts()
 
   const lockedBal = (await tokenTUL.lockedTULBalances.call(user))
