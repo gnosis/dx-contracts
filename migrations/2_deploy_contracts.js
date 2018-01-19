@@ -37,8 +37,8 @@ module.exports = function deploy(deployer, networks, accounts) {
       accounts[0],                           // @param _owner will be the admin of the contract
       EtherToken.address,                   // @param _ETH               - address of ETH ERC-20 token
       PriceOracleInterface.address,        // @param _priceOracleAddress - address of priceOracle
-      10000000000000000000000,            // @param _thresholdNewTokenPair: 10,000
-      1000000000000000000000,            // @param _thresholdNewAuction:     1,000
+      10000000000000000000000,            // @param _thresholdNewTokenPair: 10,000 dollar
+      1000000000000000000000,            // @param _thresholdNewAuction:     1,000 dollar
     ))
     .then(() => Medianizer.deployed())
     .then(M => M.set(PriceFeed.address, { from: accounts[0] }))
