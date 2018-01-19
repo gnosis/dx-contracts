@@ -224,6 +224,8 @@ contract('DutchExchange - settleFee', (accounts) => {
 
     await tul.updateMinter(master, { from: master })
     logger('PRICE ORACLE', await oracle.getUSDETHPrice.call())
+
+    eventWatcher(dx, 'LogNumber')
   })
 
   after(eventWatcher.stopWatching)
