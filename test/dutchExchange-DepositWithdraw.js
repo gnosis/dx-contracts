@@ -1,6 +1,6 @@
 const {
   eventWatcher,
-  logger,
+  log,
   assertRejects,
 } = require('./utils')
 
@@ -87,14 +87,14 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
     assert.isBelow(depositETH, ETHBalance, 'trying to deposit more ETH than available')
     assert.isBelow(depositGNO, GNOBalance, 'trying to deposit more GNO than available')
 
-    logger(`${acc} depositing\t${depositETH} ETH,\t${depositGNO} GNO`)
+    log(`${acc} depositing\t${depositETH} ETH,\t${depositGNO} GNO`)
 
     await dx.deposit(eth.address, depositETH, { from: acc })
     await dx.deposit(gno.address, depositGNO, { from: acc })
 
     const { ETH: ETHDep, GNO: GNODep } = await getAccDeposits(acc)
 
-    logger(`${acc} deposits:\t${ETHDep} ETH,\t${GNODep} GNO`)
+    log(`${acc} deposits:\t${ETHDep} ETH,\t${GNODep} GNO`)
     // all deposits got accepted
     assert.strictEqual(ETHDep, depositETH, 'new ETH balance in auction should be equal to deposited amount')
     assert.strictEqual(GNODep, depositGNO, 'new GNO balance in auction should be equal to deposited amount')
@@ -118,7 +118,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
     const { ETH: ETHDep1, GNO: GNODep1 } = await getAccDeposits(acc)
     const { ETH: ETHBal1, GNO: GNOBal1 } = await getAccBalances(acc)
 
-    logger(`${acc} withdrawing\t${withdrawETH} ETH,\t${withdrawGNO} GNO`)
+    log(`${acc} withdrawing\t${withdrawETH} ETH,\t${withdrawGNO} GNO`)
 
     await dx.withdraw(eth.address, withdrawETH, { from: acc })
     await dx.withdraw(gno.address, withdrawGNO, { from: acc })
@@ -126,7 +126,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
     const { ETH: ETHDep2, GNO: GNODep2 } = await getAccDeposits(acc)
     const { ETH: ETHBal2, GNO: GNOBal2 } = await getAccBalances(acc)
 
-    logger(`${acc} deposits:\t${ETHDep2} ETH,\t${GNODep2} GNO`)
+    log(`${acc} deposits:\t${ETHDep2} ETH,\t${GNODep2} GNO`)
     assert.strictEqual(ETHDep1 - ETHDep2, withdrawETH, 'ETH deposit should decrease by the amount withdrawn')
     assert.strictEqual(GNODep1 - GNODep2, withdrawGNO, 'GNO deposit should decrease by the amount withdrawn')
 
@@ -146,7 +146,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
 
     const { ETH: ETHBal1, GNO: GNOBal1 } = await getAccBalances(acc)
 
-    logger(`${acc} trying to withdraw\t${withdrawETH} ETH,\t${withdrawGNO} GNO`)
+    log(`${acc} trying to withdraw\t${withdrawETH} ETH,\t${withdrawGNO} GNO`)
 
     // DutchExchange::withdraw Math.min resulted in balances[tokenAddress][msg.sender]
     await dx.withdraw(eth.address, withdrawETH, { from: acc })
@@ -156,7 +156,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
     const { ETH: ETHDep2, GNO: GNODep2 } = await getAccDeposits(acc)
     const { ETH: ETHBal2, GNO: GNOBal2 } = await getAccBalances(acc)
 
-    logger(`${acc} deposits:\t${ETHDep2} ETH,\t${GNODep2} GNO`)
+    log(`${acc} deposits:\t${ETHDep2} ETH,\t${GNODep2} GNO`)
     // all deposits were withdrawn
     assert.strictEqual(ETHDep2, 0, 'ETH deposit should be 0')
     assert.strictEqual(GNODep2, 0, 'GNO deposit should be 0')
@@ -176,7 +176,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
     assert.strictEqual(ETHDep1, 0, 'ETH deposit should be 0')
     assert.strictEqual(GNODep1, 0, 'GNO deposit should be 0')
 
-    logger(`${acc} trying to withdraw\t${withdrawETH} ETH,\t${withdrawGNO} GNO`)
+    log(`${acc} trying to withdraw\t${withdrawETH} ETH,\t${withdrawGNO} GNO`)
 
     // transaction returned early at Log('withdraw R1')
     await assertRejects(dx.withdraw(eth.address, withdrawETH, { from: acc }), 'can\'t withdraw from 0 ETH deposit')
@@ -184,7 +184,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
 
     const { ETH: ETHDep2, GNO: GNODep2 } = await getAccDeposits(acc)
 
-    logger(`${acc} deposits:\t${ETHDep2} ETH,\t${GNODep2} GNO`)
+    log(`${acc} deposits:\t${ETHDep2} ETH,\t${GNODep2} GNO`)
 
     assert.strictEqual(ETHDep1, ETHDep2, 'ETH deposit should not change')
     assert.strictEqual(GNODep1, GNODep2, 'GNO deposit should not change')
@@ -197,7 +197,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
     const depositETH = ETHBal1 + 10
     const depositGNO = GNOBal1 + 10
 
-    logger(`${acc} trying to deposit\t${depositETH} ETH,\t${depositGNO} GNO\n\t10 more than balance available`)
+    log(`${acc} trying to deposit\t${depositETH} ETH,\t${depositGNO} GNO\n\t10 more than balance available`)
 
     // transaction returned early at Log('deposit R1')
     await assertRejects(dx.deposit(eth.address, depositETH, { from: acc }), 'can\'t deposit more than ETH balance')
@@ -205,7 +205,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
 
     const { ETH: ETHDep2, GNO: GNODep2 } = await getAccDeposits(acc)
 
-    logger(`${acc} deposits:\t${ETHDep2} ETH,\t${GNODep2} GNO`)
+    log(`${acc} deposits:\t${ETHDep2} ETH,\t${GNODep2} GNO`)
     assert.strictEqual(ETHDep1, ETHDep2, 'ETH deposit should not change')
     assert.strictEqual(GNODep1, GNODep2, 'GNO deposit should not change')
   })))
@@ -217,7 +217,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
     const depositETH = ETHAllow + 10
     const depositGNO = GNOAllow + 10
 
-    logger(`${acc} trying to deposit\t${depositETH} ETH,\t${depositGNO} GNO\n\t10 more than allowance`)
+    log(`${acc} trying to deposit\t${depositETH} ETH,\t${depositGNO} GNO\n\t10 more than allowance`)
 
     // transaction returned early at Log('deposit R1')
     await assertRejects(dx.deposit(eth.address, depositETH, { from: acc }), 'can\'t deposit more than ETH allowance')
@@ -225,7 +225,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
 
     const { ETH: ETHDep2, GNO: GNODep2 } = await getAccDeposits(acc)
 
-    logger(`${acc} deposits:\t${ETHDep2} ETH,\t${GNODep2} GNO`)
+    log(`${acc} deposits:\t${ETHDep2} ETH,\t${GNODep2} GNO`)
     assert.strictEqual(ETHDep1, ETHDep2, 'ETH deposit should not change')
     assert.strictEqual(GNODep1, GNODep2, 'GNO deposit should not change')
   })))

@@ -35,10 +35,41 @@ let stopWatching = {}
  * @param {Object} args?       - not required, args to look for
  * @returns stopWatching function
  */
-const eventWatcher = (contract, event, args) => {
-  const eventObject = contract[event](args).watch((err, result) => err ? log(err) : log('Found', result))
+const eventWatcher = (contract, eventName, argum = {}) => {
+  const eventObject = contract[eventName](argum).watch((err, result) => {
+    const { event, args } = result
+    if (err) return log(err)
+
+    switch (event) {
+      // const { args: { returned, tulipsIssued } } = result
+      case 'LogNumber':
+        return log(`
+        LOG FOUND:
+        ========================
+        ${args.l} ==> ${Number(args.n).toEth()}
+        ========================
+        `)
+      case 'ClaimBuyerFunds':
+        return log(`
+        LOG FOUND:
+        ========================
+        RETURNED      ==> ${Number(args.returned).toEth()}
+        TULIPS ISSUED ==> ${Number(args.tulipsIssued).toEth()}
+        ========================
+        `)
+      default:
+        log(`
+        LOG FOUND:
+        ========================
+        Event Name: ${event}
+        Args:       
+        ${JSON.stringify(args, undefined, 2)}
+        ========================
+        `)
+    }
+  })
   const contractEvents = stopWatching[contract.address] || (stopWatching[contract.address] = {})
-  const unwatch = contractEvents[event] = eventObject.stopWatching.bind(eventObject)
+  const unwatch = contractEvents[eventName] = eventObject.stopWatching.bind(eventObject)
 
   return unwatch
 }
@@ -97,23 +128,6 @@ eventWatcher.stopWatching = (contract, event) => {
   }
 }
 
-const wait = (seconds) => {
-  const id = Date.now()
-  web3.currentProvider.send({
-    jsonrpc: '2.0',
-    method: 'evm_increaseTime',
-    params: [seconds] || [],
-    id,
-  })
-
-  web3.currentProvider.send({
-    jsonrpc: '2.0',
-    method: 'evm_mine',
-    params: [],
-    id: id + 1,
-  })
-}
-
 module.exports = {
   assertRejects,
   blockNumber,
@@ -121,6 +135,6 @@ module.exports = {
   logger,
   log,
   varLogger,
-  wait,
+  // wait,
   timestamp,
 }

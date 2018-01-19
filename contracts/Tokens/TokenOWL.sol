@@ -2,7 +2,7 @@ pragma solidity ^0.4.18;
 
 import "./StandardToken.sol";
 import "../Utils/Math.sol";
-import "../Oracle/PriceOracle.sol";
+import "../Oracle/PriceOracleInterface.sol";
 
 
 contract TokenOWL is StandardToken {
@@ -46,7 +46,7 @@ contract TokenOWL is StandardToken {
 
         oracleContract = _oracle;
         //Tokens credited for Airdrop
-        balances[msg.sender] = 1000000000000;
+        balances[msg.sender] = 100000000 ether;
     }
     
     //@dev: Allows GNO holders to lock GNO for OWL
