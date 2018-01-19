@@ -69,6 +69,7 @@ const eventWatcher = (contract, eventName, argum = {}) => {
     }
   })
   const contractEvents = stopWatching[contract.address] || (stopWatching[contract.address] = {})
+  if (contractEvents[eventName]) contractEvents[eventName]()
   const unwatch = contractEvents[eventName] = eventObject.stopWatching.bind(eventObject)
 
   return unwatch
