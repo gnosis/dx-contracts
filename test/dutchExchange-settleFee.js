@@ -16,6 +16,45 @@ let dx
 
 let contracts
 
+const getHelperFunctions = (master) => {
+  const getTotalTUL = async () => (await tul.totalTokens.call()).toNumber()
+
+  const getLockedTUL = async account => (await tul.lockedTULBalances.call(account)).toNumber()
+
+  const mintTokens = (account, amount) => tul.mintTokens(account, amount, { from: master })
+
+  const calculateFeeRatio = async account => (await dx.calculateFeeRatioForJS.call(account)).map(n => n.toNumber())
+
+  const getHowManyToAdd = (totalTul, lockedTULBalance, percent) =>
+    Math.round((totalTul - (lockedTULBalance / percent)) / ((1 / percent) - 1))
+
+  // mint TUL to make account have a given percent of total TUL
+  const mintPercent = async (account, percent) => {
+    const totalTul = await getTotalTUL()
+    const lockedTULBalance = await getLockedTUL(account)
+    // calculate how much is left to reach the given percent
+    let toMint = getHowManyToAdd(totalTul, lockedTULBalance, percent)
+
+    // if given percent < current percent
+    if (toMint < 0) {
+      // need to add to total TUL
+      // mint for master
+      account = master
+      toMint = (lockedTULBalance / percent) - totalTul
+    }
+    return mintTokens(account, toMint)
+  }
+
+  return {
+    getTotalTUL,
+    getLockedTUL,
+    mintTokens,
+    calculateFeeRatio,
+    getHowManyToAdd,
+    mintPercent,
+  }
+}
+
 contract('DutchExchange - calculateFeeRatio', (accounts) => {
   const [master, seller1] = accounts
   const testingAccs = accounts.slice(1, 5)
@@ -48,33 +87,41 @@ contract('DutchExchange - calculateFeeRatio', (accounts) => {
 
   after(eventWatcher.stopWatching)
 
-  const getTotalTUL = async () => (await tul.totalTokens.call()).toNumber()
+  const {
+    getTotalTUL,
+    getLockedTUL,
+    mintTokens,
+    calculateFeeRatio,
+    mintPercent,
+  } = getHelperFunctions(master)
 
-  const getLockedTUL = async account => (await tul.lockedTULBalances.call(account)).toNumber()
+  // const getTotalTUL = async () => (await tul.totalTokens.call()).toNumber()
 
-  const mintTokens = (account, amount) => tul.mintTokens(account, amount, { from: master })
+  // const getLockedTUL = async account => (await tul.lockedTULBalances.call(account)).toNumber()
 
-  const calculateFeeRatio = async account => (await dx.calculateFeeRatioForJS.call(account)).map(n => n.toNumber())
+  // const mintTokens = (account, amount) => tul.mintTokens(account, amount, { from: master })
 
-  const getHowManyToAdd = (totalTul, lockedTULBalance, percent) =>
-    Math.round((totalTul - (lockedTULBalance / percent)) / ((1 / percent) - 1))
+  // const calculateFeeRatio = async account => (await dx.calculateFeeRatioForJS.call(account)).map(n => n.toNumber())
 
-  // mint TUL to make account have a given percent of total TUL
-  const mintPercent = async (account, percent) => {
-    const totalTul = await getTotalTUL()
-    const lockedTULBalance = await getLockedTUL(seller1)
-    // calculate how much is left to reach the given percent
-    let toMint = getHowManyToAdd(totalTul, lockedTULBalance, percent)
+  // const getHowManyToAdd = (totalTul, lockedTULBalance, percent) =>
+  //   Math.round((totalTul - (lockedTULBalance / percent)) / ((1 / percent) - 1))
 
-    // if given percent < current percent
-    if (toMint < 0) {
-      // need to add to total TUL
-      // mint for master
-      account = master
-      toMint = (lockedTULBalance / percent) - totalTul
-    }
-    return mintTokens(account, toMint)
-  }
+  // // mint TUL to make account have a given percent of total TUL
+  // const mintPercent = async (account, percent) => {
+  //   const totalTul = await getTotalTUL()
+  //   const lockedTULBalance = await getLockedTUL(seller1)
+  //   // calculate how much is left to reach the given percent
+  //   let toMint = getHowManyToAdd(totalTul, lockedTULBalance, percent)
+
+  //   // if given percent < current percent
+  //   if (toMint < 0) {
+  //     // need to add to total TUL
+  //     // mint for master
+  //     account = master
+  //     toMint = (lockedTULBalance / percent) - totalTul
+  //   }
+  //   return mintTokens(account, toMint)
+  // }
 
   it('feeRatio == 0.5% when total TUL == 0', async () => {
     const totalTul = await getTotalTUL()
