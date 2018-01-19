@@ -1,17 +1,16 @@
 const {
   eventWatcher,
   logger,
-  assertRejects,
 } = require('./utils')
 
-const { getContracts } = require('./testFunctions')
+const { getContracts, setupTest } = require('./testFunctions')
 
 // Test VARS
 let eth
 let gno
 let tul
 let dx
-// let inT
+let oracle
 
 
 let contracts
@@ -180,11 +179,13 @@ contract('DutchExchange - calculateFeeRatio', (accounts) => {
 
 contract('DutchExchange - settleFee', (accounts) => {
   const [master, seller1] = accounts
-  const testingAccs = accounts.slice(1, 5)
 
-  const ETHBalance = 10 ** 9
-
-  const GNOBalance = 10 ** 15
+  const startBal = {
+    startingETH: 90.0.toWei(),
+    startingGNO: 90.0.toWei(),
+    ethUSDPrice: 1008.0.toWei(),
+    sellingAmount: 50.0.toWei(), // Same as web3.toWei(50, 'ether')
+  }
 
   before(async () => {
     // get contracts
@@ -197,17 +198,32 @@ contract('DutchExchange - settleFee', (accounts) => {
       TokenTUL: tul,
       // using internal contract with settleFeePub calling dx.settleFee internally
       InternalTests: dx,
+      PriceOracleInterface: oracle,
     } = contracts)
 
-    // set up initial balances for accounts and allowance for dx in accounts' names
-    await Promise.all(testingAccs.map(acct => Promise.all([
-      eth.deposit({ from: acct, value: ETHBalance }),
-      eth.approve(dx.address, ETHBalance, { from: acct }),
-      gno.transfer(acct, GNOBalance, { from: master }),
-      gno.approve(dx.address, GNOBalance, { from: acct }),
-    ])))
+    // // set up initial balances for accounts and allowance for dx in accounts' names
+    // await Promise.all(testingAccs.map(acct => Promise.all([
+    //   eth.deposit({ from: acct, value: ETHBalance }),
+    //   eth.approve(dx.address, ETHBalance, { from: acct }),
+    //   gno.transfer(acct, GNOBalance, { from: master }),
+    //   gno.approve(dx.address, GNOBalance, { from: acct }),
+    // ])))
+
+    await setupTest(accounts, contracts, startBal)
+
+    // add tokenPair ETH GNO
+    await dx.addTokenPair(
+      eth.address,
+      gno.address,
+      10 * (10 ** 18),
+      0,
+      2,
+      1,
+      { from: seller1 },
+    )
 
     await tul.updateMinter(master, { from: master })
+    logger('PRICE ORACLE', await oracle.getUSDETHPrice.call())
   })
 
   after(eventWatcher.stopWatching)
