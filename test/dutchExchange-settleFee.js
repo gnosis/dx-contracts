@@ -293,7 +293,7 @@ contract('DutchExchange - settleFee', (accounts) => {
     if (typeof percent === 'number' || !percent.endsWith('%')) percent += '%'
     const shortcut = feeRatioShortcuts[percent]
 
-    assert.isOK(shortcut, `No shortcut for setting feeRatio to ${percent}`)
+    assert.isOk(shortcut, `No shortcut for setting feeRatio to ${percent}`)
 
     return shortcut(account)
   }
