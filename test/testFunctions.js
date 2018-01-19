@@ -252,6 +252,33 @@ const postBuyOrder = async (ST, BT, aucIdx, amt, acct) => {
 }
 
 /**
+ * postSellOrder
+ * @param {address} ST      => Sell Token
+ * @param {address} BT      => Buy Token
+ * @param {uint}    aucIdx  => auctionIndex
+ * @param {uint}    amt     => amount
+ *
+ * @returns { tx receipt }
+ */
+const postSellOrder = async (ST, BT, aucIdx, amt, acct) => {
+  const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno } = await getContracts()
+  ST = ST || eth; BT = BT || gno
+  let auctionIdx = aucIdx || 0
+
+  const buyVolumes = (await dx.buyVolumes.call(ST.address, BT.address)).toNumber()
+  const sellVolumes = (await dx.sellVolumesCurrent.call(ST.address, BT.address)).toNumber()
+  log(`
+    Current Buy Volume BEFORE Posting => ${buyVolumes.toEth()}
+    Current Sell Volume               => ${sellVolumes.toEth()}
+    ----
+    Posting Sell Amt -------------------> ${amt.toEth()} in ${ST} for ${BT} in auction ${auctionIdx}
+  `)
+  // log('POSTBUYORDER TX RECEIPT ==', await dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct }))
+  return dx.postSellOrder(ST.address, BT.address, auctionIdx, amt, { from: acct })
+}
+
+
+/**
  * claimBuyerFunds
  * @param {address} ST      => Sell Token
  * @param {address} BT      => Buy Token
@@ -462,6 +489,7 @@ module.exports = {
   getBalance,
   getContracts,
   postBuyOrder,
+  postSellOrder,
   setAndCheckAuctionStarted,
   setupTest,
   unlockTulipTokens,
