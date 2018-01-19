@@ -15,7 +15,6 @@ const {
   setupTest,
   getContracts,
   getAuctionIndex,
-  checkBalanceBeforeClaim,
   waitUntilPriceIsXPercentOfPreviousPrice,
   setAndCheckAuctionStarted,
   postBuyOrder,
@@ -27,8 +26,6 @@ const {
 let eth
 let gno
 let dx
-let oracle
-let tokenTUL
 let balanceInvariant
 const ether = 10 ** 18
 
@@ -56,7 +53,7 @@ const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVo
 
 const getState = async (contracts, ST, BT) => {
   const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
-  if (auctionStart == 1) { return 5 }
+  if (auctionStart === 1) { return 5 }
   const auctionIndex = await getAuctionIndex()
   console.log('at least here')
   let numP
@@ -69,7 +66,7 @@ const getState = async (contracts, ST, BT) => {
   [numP, denP] = (await dx.getPriceForJS.call(ST.address, BT.address, auctionIndex))
   numBasedOnVolume = await dx.buyVolumes.call(ST.address, BT.address)
   denBasedOnVolume = await dx.sellVolumesCurrent(ST.address, BT.address)
-  const isAuctionTheoreticalClosed = (numP.mul(denBasedOnVolume).sub(numBasedOnVolume.mul(denP)).toNumber() == 0);
+  const isAuctionTheoreticalClosed = (numP.mul(denBasedOnVolume).sub(numBasedOnVolume.mul(denP)).toNumber() === 0);
   [numPP, denPP] = (await dx.closingPrices.call(ST.address, BT.address, auctionIndex))
   const isAuctionClosed = (numPP.toNumber() > 0)
   console.log(`at least here2${isAuctionClosed}`)
@@ -80,7 +77,7 @@ const getState = async (contracts, ST, BT) => {
   [numP2, denP2] = (await dx.getPriceForJS.call(BT.address, ST.address, auctionIndex))
   numBasedOnVolume = await dx.buyVolumes.call(BT.address, ST.address)
   denBasedOnVolume = await dx.sellVolumesCurrent(BT.address, ST.address)
-  const isOppAuctionTheoreticalClosed = (numP2.mul(denBasedOnVolume).minus(numBasedOnVolume.mul(denP2)).toNumber() == 0);
+  const isOppAuctionTheoreticalClosed = (numP2.mul(denBasedOnVolume).minus(numBasedOnVolume.mul(denP2)).toNumber() === 0);
   [numPP, denPP] = (await dx.closingPrices.call(BT.address, ST.address, auctionIndex))
   const isOppAuctionClosed = (numPP.toNumber() > 0)
   
@@ -121,7 +118,7 @@ const getState = async (contracts, ST, BT) => {
 }
 
 const getIntoState = async (state, accounts, contracts, ST, BT) => {
-  const [, seller1, seller2, buyer1, buyer2] = accounts
+  const [, seller1, buyer1] = accounts
   switch (state) {
     case 0:
     {
@@ -177,7 +174,6 @@ const getIntoState = async (state, accounts, contracts, ST, BT) => {
       await setAndCheckAuctionStarted(ST, BT)
       let auctionIndex = await getAuctionIndex()
       const auctionStart = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
-      await checkInvariants(balanceInvariant, accounts, [ST, BT])
 
       // non-clearing buyOrder
       await waitUntilPriceIsXPercentOfPreviousPrice(ST, BT, 1)
@@ -191,7 +187,6 @@ const getIntoState = async (state, accounts, contracts, ST, BT) => {
 
       // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
       await checkState(1, auctionStart, valMinusFee(10 * ether), 0, valMinusFee(10 * ether), 0, 0, ST, BT, 0)
-      await checkInvariants(balanceInvariant, accounts, [ST, BT])
       assert.equal(3, await getState(contracts, eth, gno))
       break
     }  
@@ -201,7 +196,6 @@ const getIntoState = async (state, accounts, contracts, ST, BT) => {
       await setAndCheckAuctionStarted(ST, BT)
       let auctionIndex = await getAuctionIndex()
       const auctionStart = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
-      await checkInvariants(balanceInvariant, accounts, [ST, BT])
       
       // non-clearing buyOrder
       await waitUntilPriceIsXPercentOfPreviousPrice(ST, BT, 1)
@@ -215,9 +209,9 @@ const getIntoState = async (state, accounts, contracts, ST, BT) => {
 
       // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
       await checkState(1, auctionStart, valMinusFee(10 * ether), 0, valMinusFee(10 * ether), 0, 0, ST, BT, 0)
-      await checkInvariants(balanceInvariant, accounts, [ST, BT])
       
       assert.equal(4, await getState(contracts, eth, gno))
+      break
     }  
     case 5:
     {
@@ -226,13 +220,13 @@ const getIntoState = async (state, accounts, contracts, ST, BT) => {
 
       // ASSERT Auction has started
       await setAndCheckAuctionStarted(ST, BT)
-      const auctionStart = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
 
       await waitUntilPriceIsXPercentOfPreviousPrice(ST, BT, 1.5)
       // clearing first auction
       await postBuyOrder(ST, BT, auctionIndex, 10 * ether * 3, buyer1)
       
       assert.equal(5, await getState(contracts, eth, gno))
+      break
     }
     case 6:
     {
@@ -241,13 +235,13 @@ const getIntoState = async (state, accounts, contracts, ST, BT) => {
 
       // ASSERT Auction has started
       await setAndCheckAuctionStarted(ST, BT)
-      const auctionStart = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
 
       await waitUntilPriceIsXPercentOfPreviousPrice(ST, BT, 0.5)
       // clearing first auction
       await postBuyOrder(BT, ST, auctionIndex, 5 * ether, buyer1)
       
       assert.equal(6, await getState(contracts, eth, gno))
+      break
     }  
     case 7:
     {
@@ -256,15 +250,13 @@ const getIntoState = async (state, accounts, contracts, ST, BT) => {
 
       // ASSERT Auction has started
       await setAndCheckAuctionStarted(ST, BT)
-      const auctionStart = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
-
-
       // clearing first auction
       await postBuyOrder(ST, BT, auctionIndex, 10 * ether * 2, buyer1)
 
       await waitUntilPriceIsXPercentOfPreviousPrice(ST, BT, 0.9)
       
       assert.equal(6, await getState(contracts, eth, gno))
+      break
     }   
     default:
   }
@@ -309,7 +301,7 @@ const startBal = {
 //
 
 contract('DutchExchange - Stage S0 - Auction is running with v>0 in both auctions', (accounts) => {
-  const [, seller1, , buyer1] = accounts
+  const [, , , buyer1] = accounts
 
 
   before(async () => {
@@ -346,7 +338,7 @@ contract('DutchExchange - Stage S0 - Auction is running with v>0 in both auction
 })
 
 contract('DutchExchange - Stage S0 - Auction is running with v>0 in both auctions', (accounts) => {
-  const [, seller1, , buyer1] = accounts
+  const [, , , buyer1] = accounts
 
   before(async () => {
     // get contracts
@@ -398,7 +390,7 @@ contract('DutchExchange - Stage S0 - Auction is running with v>0 in both auction
 })
 
 contract('DutchExchange - Stage S0 - Auction is running with v>0 in both auctions', (accounts) => {
-  const [, seller1, , buyer1, seller2] = accounts
+  const [, seller1, , , seller2] = accounts
   before(async () => {
     // get contracts
     await setupContracts()
@@ -482,7 +474,6 @@ contract('DutchExchange - Stage S1 - Auction is running with v == 0 in one aucti
 
   it('postBuyOrder - posting a buyOrder to get into S5', async () => {
     const auctionIndex = await getAuctionIndex()
-    const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
     await setAndCheckAuctionStarted(eth, gno)
       
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
@@ -496,7 +487,7 @@ contract('DutchExchange - Stage S1 - Auction is running with v == 0 in one aucti
 })
 
 contract('DutchExchange - Stage S1 - Auction is running with v == 0 in one auctions', (accounts) => {
-  const [, seller1, , buyer1] = accounts
+  const [, , , buyer1] = accounts
 
   before(async () => {
     // get contracts
@@ -548,7 +539,7 @@ contract('DutchExchange - Stage S1 - Auction is running with v == 0 in one aucti
 })
 
 contract('DutchExchange - Stage S1 - Auction is running with v == 0 in one auctions', (accounts) => {
-  const [, seller1, , buyer1, seller2] = accounts
+  const [, seller1, , , seller2] = accounts
   before(async () => {
     // get contracts
     await setupContracts()
@@ -596,7 +587,7 @@ contract('DutchExchange - Stage S1 - Auction is running with v == 0 in one aucti
 
 
 contract('DutchExchange - Stage S2 -  1 Auction is running with v > 0, other auctions is closed', (accounts) => {
-  const [, seller1, , buyer1] = accounts
+  const [, , , buyer1] = accounts
 
 
   before(async () => {
@@ -632,7 +623,6 @@ contract('DutchExchange - Stage S2 -  1 Auction is running with v > 0, other auc
 
   it('postBuyOrder - posting a buyOrder to get into S5', async () => {
     const auctionIndex = await getAuctionIndex()
-    const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
     await setAndCheckAuctionStarted(eth, gno)
       
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
@@ -646,7 +636,7 @@ contract('DutchExchange - Stage S2 -  1 Auction is running with v > 0, other auc
 })
 
 contract('DutchExchange - Stage S2 -  1 Auction is running with v > 0, other auctions is closed', (accounts) => {
-  const [, seller1, , buyer1, buyer2] = accounts
+  const [, , , buyer1, buyer2] = accounts
 
   before(async () => {
     // get contracts
@@ -697,7 +687,7 @@ contract('DutchExchange - Stage S2 -  1 Auction is running with v > 0, other auc
 })
 
 contract('DutchExchange - Stage S2 -  1 Auction is running with v > 0, other auctions is closed', (accounts) => {
-  const [, seller1, , buyer1, seller2] = accounts
+  const [, seller1, , , seller2] = accounts
   before(async () => {
     // get contracts
     await setupContracts()
@@ -758,7 +748,6 @@ contract('DutchExchange - Stage S2 -  1 Auction is running with v > 0, other auc
 
   it('postBuyOrder - posting a buyOrder to get into S0', async () => {
     const auctionIndex = await getAuctionIndex()
-    const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
     await setAndCheckAuctionStarted(eth, gno)
     await postSellOrder(gno, eth, auctionIndex + 1, 10 * ether * 3, seller1)
     await postSellOrder(eth, gno, auctionIndex + 1, 10 * ether * 3, seller1)
@@ -798,7 +787,6 @@ contract('DutchExchange - Stage S2 -  1 Auction is running with v > 0, other auc
 
   it('postBuyOrder - posting a buyOrder to get into S1', async () => {
     const auctionIndex = await getAuctionIndex()
-    const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
     await setAndCheckAuctionStarted(eth, gno)
     await postSellOrder(eth, gno, auctionIndex + 1, 10 * ether * 3, seller1)  
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
@@ -824,7 +812,7 @@ contract('DutchExchange - Stage S2 -  1 Auction is running with v > 0, other auc
 
 
 contract('DutchExchange - Stage S3 -  1 Auction is closed theoretical', (accounts) => {
-  const [, seller1, , buyer1] = accounts
+  const [, , , buyer1] = accounts
 
 
   before(async () => {
@@ -874,7 +862,7 @@ contract('DutchExchange - Stage S3 -  1 Auction is closed theoretical', (account
 })
 
 contract('DutchExchange - Stage S3 -  1 Auction is closed theoretical', (accounts) => {
-  const [, seller1, , buyer1, buyer2] = accounts
+  const [, , , , buyer2] = accounts
 
   before(async () => {
     // get contracts
@@ -908,7 +896,7 @@ contract('DutchExchange - Stage S3 -  1 Auction is closed theoretical', (account
 })
 
 contract('DutchExchange - Stage S3 -  1 Auction is closed theoretical', (accounts) => {
-  const [, seller1, , buyer1, seller2] = accounts
+  const [, seller1, , , seller2] = accounts
   before(async () => {
     // get contracts
     await setupContracts()
@@ -946,7 +934,7 @@ contract('DutchExchange - Stage S3 -  1 Auction is closed theoretical', (account
 
 
 contract('DutchExchange - Stage S3 -  1 Auction is closed theoretical', (accounts) => {
-  const [, seller1, , buyer1] = accounts
+  const [, , , buyer1] = accounts
 
 
   before(async () => {
