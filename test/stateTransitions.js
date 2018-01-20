@@ -51,7 +51,7 @@ const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVo
   assert.equal(closingPriceDenReal, closingPriceDen, 'ClosingPriceDen not okay')
 }
 
-const getState = async (contracts, ST, BT) => {
+const getState = async (contracts, ST, BT) => { // eslint-disable-line
   const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
   if (auctionStart === 1) { return 5 }
   const auctionIndex = await getAuctionIndex()
@@ -59,11 +59,11 @@ const getState = async (contracts, ST, BT) => {
   let numP
   let denP
   let numPP
-  let denPP
+  let denPP // eslint-disable-line
   let numBasedOnVolume
   let denBasedOnVolume
   // calculate state of Auction
-  [numP, denP] = (await dx.getPriceForJS.call(ST.address, BT.address, auctionIndex))
+  [numP, denP] = (await dx.getPriceForJS.call(ST.address, BT.address, auctionIndex)) // eslint-disable-line
   numBasedOnVolume = await dx.buyVolumes.call(ST.address, BT.address)
   denBasedOnVolume = await dx.sellVolumesCurrent(ST.address, BT.address)
   const isAuctionTheoreticalClosed = (numP.mul(denBasedOnVolume).sub(numBasedOnVolume.mul(denP)).toNumber() === 0);
@@ -74,8 +74,8 @@ const getState = async (contracts, ST, BT) => {
   // calculate state of OppAuction
   let numP2
   let denP2
-  [numP2, denP2] = (await dx.getPriceForJS.call(BT.address, ST.address, auctionIndex))
-  numBasedOnVolume = await dx.buyVolumes.call(BT.address, ST.address)
+  [numP2, denP2] = (await dx.getPriceForJS.call(BT.address, ST.address, auctionIndex)) // eslint-disable-line
+  numBasedOnVolume = await dx.buyVolumes.call(BT.address, ST.address) 
   denBasedOnVolume = await dx.sellVolumesCurrent(BT.address, ST.address)
   const isOppAuctionTheoreticalClosed = (numP2.mul(denBasedOnVolume).minus(numBasedOnVolume.mul(denP2)).toNumber() === 0);
   [numPP, denPP] = (await dx.closingPrices.call(BT.address, ST.address, auctionIndex))
@@ -118,7 +118,7 @@ const getState = async (contracts, ST, BT) => {
 }
 
 const getIntoState = async (state, accounts, ST, BT) => {
-  const [, seller1, buyer1] = accounts
+  const [, seller1, buyer1, buyer2] = accounts
   switch (state) {
     case 0:
     {
@@ -230,13 +230,14 @@ const getIntoState = async (state, accounts, ST, BT) => {
     }
     case 6:
     {
-      await getIntoState(3, accounts, eth, gno)
+      await getIntoState(4, accounts, eth, gno)
       const auctionIndex = await getAuctionIndex()
 
       // ASSERT Auction has started
       await setAndCheckAuctionStarted(ST, BT)
 
-      await waitUntilPriceIsXPercentOfPreviousPrice(ST, BT, 0.5)
+      await waitUntilPriceIsXPercentOfPreviousPrice(ST, BT, 0.4)
+
       // clearing first auction
       await postBuyOrder(BT, ST, auctionIndex, 5 * ether, buyer1)
       
@@ -255,7 +256,7 @@ const getIntoState = async (state, accounts, ST, BT) => {
 
       await waitUntilPriceIsXPercentOfPreviousPrice(ST, BT, 0.9)
       
-      assert.equal(6, await getState(contracts, eth, gno))
+      assert.equal(7, await getState(contracts, eth, gno))
       break
     }   
     default:
@@ -969,3 +970,549 @@ contract('DutchExchange - Stage S3 -  1 Auction is closed theoretical', (account
   })
 })
 
+
+//
+//
+//
+//  Testing State 4
+//
+//
+//
+//
+
+
+contract('DutchExchange - Stage S4 -  both Auction are closed theoretical', (accounts) => {
+  const [, , , buyer1] = accounts
+
+
+  before(async () => {
+    // get contracts
+    await setupContracts()
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    // getting into the right state
+    await getIntoState(4, accounts, eth, gno)
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
+
+    eventWatcher(dx, 'Log', {})
+  })
+
+  after(eventWatcher.stopWatching)
+
+
+  it('postBuyOrder - posting a buyOrder clearing non-theoretical closed auction getting into S6', async () => {
+    const auctionIndex = await getAuctionIndex()
+    const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
+    await setAndCheckAuctionStarted(eth, gno)
+      
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.5)
+    // clearing first auction
+    await postBuyOrder(gno, eth, auctionIndex, 10 * ether * 3, buyer1)
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(1, auctionStart, valMinusFee(5 * ether), 0, valMinusFee(2 * ether), valMinusFee(2 * ether), valMinusFee(5 * ether), gno, eth, 10 ** 18)
+    assert.equal(6, await getState(contracts, eth, gno))
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })
+})
+
+contract('DutchExchange - Stage S4 -  both Auction are closed theoretical', (accounts) => {
+  const [, seller1, , , seller2] = accounts
+  before(async () => {
+    // get contracts
+    await setupContracts()
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    // getting into the right state
+    await getIntoState(4, accounts, eth, gno)
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
+
+    eventWatcher(dx, 'Log', {})
+  })
+
+  after(eventWatcher.stopWatching)
+
+  it('postSellOrder - posting a SellOrder and stay in this state S4', async () => {
+    const auctionIndex = await getAuctionIndex()
+    const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
+    await setAndCheckAuctionStarted(eth, gno)
+      
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+    // clearing first auction
+    await postSellOrder(gno, eth, auctionIndex + 1, 10 * ether * 3, seller1)
+    await postSellOrder(gno, eth, 0, 10 * ether * 3, seller2)
+    await assertRejects(postSellOrder(gno, eth, auctionIndex, 10 * ether * 3, seller1))
+    await assertRejects(postSellOrder(gno, eth, auctionIndex + 2, 10 * ether * 3, seller1))
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(1, auctionStart, valMinusFee(5 * ether), valMinusFee(10 * ether * 6), valMinusFee(2 * ether), 0, 0, gno, eth, 1)
+    assert.equal(4, await getState(contracts, eth, gno))
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })
+})
+
+
+//
+//
+//
+//  Testing State 7
+//
+//
+//
+//
+
+
+contract('DutchExchange - Stage S7 -  both Auction are closed theoretical with vol=0 in one auction', (accounts) => {
+  const [, , , buyer1] = accounts
+
+
+  before(async () => {
+    // get contracts
+    await setupContracts()
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    // getting into the right state
+    await getIntoState(7, accounts, eth, gno)
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
+
+    eventWatcher(dx, 'Log', {})
+  })
+
+  after(eventWatcher.stopWatching)
+
+
+  it('postBuyOrder - posting a buyOrder clearing non-theoretical closed auction getting into S5', async () => {
+    const auctionIndex = await getAuctionIndex()
+    await setAndCheckAuctionStarted(eth, gno)
+      
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.5)
+    // clearing first auction
+    await postBuyOrder(eth, gno, auctionIndex, 10 * ether * 3, buyer1)
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(2, 1, 0, 0, 0, 0, 0, gno, eth, 1)
+    assert.equal(5, await getState(contracts, eth, gno))
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })
+})
+
+contract('DutchExchange - Stage S7 -  both Auction are closed theoretical with vol=0 in one auction', (accounts) => {
+  const [, seller1, , , seller2] = accounts
+  before(async () => {
+    // get contracts
+    await setupContracts()
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    // getting into the right state
+    await getIntoState(7, accounts, eth, gno)
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
+
+    eventWatcher(dx, 'Log', {})
+  })
+
+  after(eventWatcher.stopWatching)
+
+  it('postSellOrder - posting a SellOrder and stay in this state S7', async () => {
+    const auctionIndex = await getAuctionIndex()
+    const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
+    await setAndCheckAuctionStarted(eth, gno)
+      
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+    // clearing first auction
+    await postSellOrder(gno, eth, auctionIndex + 1, 10 * ether * 3, seller1)
+    await postSellOrder(gno, eth, 0, 10 * ether * 3, seller2)
+    await assertRejects(postSellOrder(gno, eth, auctionIndex, 10 * ether * 3, seller1))
+    await assertRejects(postSellOrder(gno, eth, auctionIndex + 2, 10 * ether * 3, seller1))
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(1, auctionStart, 0, valMinusFee(10 * ether * 6), 0, 0, 0, gno, eth, 1)
+    assert.equal(7, await getState(contracts, eth, gno))
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })
+})
+
+contract('DutchExchange - Stage S7 -  both Auction are closed theoretical with vol=0 in one auction', (accounts) => {
+  const [, seller2, , buyer1] = accounts
+
+
+  before(async () => {
+    // get contracts
+    await setupContracts()
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    // getting into the right state
+    await getIntoState(7, accounts, eth, gno)
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
+
+    eventWatcher(dx, 'Log', {})
+  })
+
+  after(eventWatcher.stopWatching)
+
+
+  it('postBuyOrder - posting a buyOrder clearing non-theoretical closed auction getting into S1', async () => {
+    const auctionIndex = await getAuctionIndex()
+    await setAndCheckAuctionStarted(eth, gno)
+    
+    await postSellOrder(eth, gno, 0, 10 * ether * 3, seller2)  
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.5)
+    // clearing first auction
+    const newAuctionStart = timestamp() + 60 * 10
+    await postBuyOrder(eth, gno, auctionIndex, 10 * ether * 3, buyer1)
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(2, newAuctionStart, 0, 0, 0, 0, 0, gno, eth, 1)
+    assert.equal(1, await getState(contracts, eth, gno))
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })
+})
+
+
+contract('DutchExchange - Stage S7 -  both Auction are closed theoretical with vol=0 in one auction', (accounts) => {
+  const [, seller2, , buyer1] = accounts
+
+
+  before(async () => {
+    // get contracts
+    await setupContracts()
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    // getting into the right state
+    await getIntoState(7, accounts, eth, gno)
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
+
+    eventWatcher(dx, 'Log', {})
+  })
+
+  after(eventWatcher.stopWatching)
+
+
+  it('postBuyOrder - posting a buyOrder clearing non-theoretical closed auction getting into S0', async () => {
+    const auctionIndex = await getAuctionIndex()
+    await setAndCheckAuctionStarted(eth, gno)
+
+    await postSellOrder(gno, eth, 0, 10 * ether * 3, seller2) 
+    
+    await postSellOrder(eth, gno, 0, 10 * ether * 3, seller2)  
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.5)
+    // clearing first auction
+
+    const newAuctionStart = timestamp() + 60 * 10
+    await postBuyOrder(eth, gno, auctionIndex, 10 * ether * 3, buyer1)
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(2, newAuctionStart, valMinusFee(10 * ether * 3), 0, 0, 0, 0, gno, eth, 1)
+    assert.equal(0, await getState(contracts, eth, gno))
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })
+})
+
+
+//
+//
+//
+//  Testing State 6
+//
+//
+//
+//
+
+
+contract('DutchExchange - Stage S6 -  one auction closed, other one just closed theoretical', (accounts) => {
+  const [, , , buyer1] = accounts
+
+
+  before(async () => {
+    // get contracts
+    await setupContracts()
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    // getting into the right state
+    await getIntoState(6, accounts, eth, gno)
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
+
+    eventWatcher(dx, 'Log', {})
+  })
+
+  after(eventWatcher.stopWatching)
+
+
+  it('postBuyOrder - posting a buyOrder into alredy closed auction staying in S6', async () => {
+    const auctionIndex = await getAuctionIndex()
+    const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
+    await setAndCheckAuctionStarted(eth, gno)
+      
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.5)
+    // clearing first auction
+    await assertRejects(postBuyOrder(eth, gno, auctionIndex, 10 * ether * 3, buyer1))
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(1, auctionStart, valMinusFee(5 * ether), 0, valMinusFee(2 * ether), valMinusFee(2 * ether), valMinusFee(5 * ether), gno, eth, 10 ** 18)
+    assert.equal(6, await getState(contracts, eth, gno))
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })
+
+  it('postBuyOrder - posting a buyOrder clsoing the theoretical auction and switch to  S5', async () => {
+    const auctionIndex = await getAuctionIndex()
+    await setAndCheckAuctionStarted(eth, gno)
+      
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.5)
+    // clearing first auction
+    await postBuyOrder(gno, eth, auctionIndex, 10 * ether * 3, buyer1)
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(2, 1, 0, 0, 0, 0, 0, gno, eth, 0)
+    assert.equal(5, await getState(contracts, eth, gno))
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })
+})
+
+contract('DutchExchange - Stage S6 -  one auction closed, other one just closed theoretical', (accounts) => {
+  const [, seller1, , , seller2] = accounts
+  before(async () => {
+    // get contracts
+    await setupContracts()
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    // getting into the right state
+    await getIntoState(6, accounts, eth, gno)
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
+
+    eventWatcher(dx, 'Log', {})
+  })
+
+  after(eventWatcher.stopWatching)
+
+  it('postSellOrder - posting a SellOrder and stay in this state S6', async () => {
+    const auctionIndex = await getAuctionIndex()
+    const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
+    await setAndCheckAuctionStarted(eth, gno)
+      
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+    // clearing first auction
+    await postSellOrder(gno, eth, auctionIndex + 1, 10 * ether * 3, seller1)
+    await postSellOrder(gno, eth, 0, 10 * ether * 3, seller2)
+    await assertRejects(postSellOrder(gno, eth, auctionIndex, 10 * ether * 3, seller1))
+    await assertRejects(postSellOrder(gno, eth, auctionIndex + 2, 10 * ether * 3, seller1))
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(1, auctionStart, valMinusFee(5 * ether), valMinusFee(10 * ether * 6), valMinusFee(2 * ether), 0, 0, gno, eth, 1)
+    assert.equal(6, await getState(contracts, eth, gno))
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })
+})
+
+
+contract('DutchExchange - Stage S6 -  one auction closed, other one just closed theoretical', (accounts) => {
+  const [, seller1, seller2, buyer1] = accounts
+
+  before(async () => {
+    // get contracts
+    await setupContracts()
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    // getting into the right state
+    await getIntoState(6, accounts, eth, gno)
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
+
+    eventWatcher(dx, 'Log', {})
+  })
+
+  after(eventWatcher.stopWatching)
+
+  it('postBuyOrder - posting a buyOrder clsoing the theoretical auction and switch to  S0', async () => {
+    const auctionIndex = await getAuctionIndex()
+    await setAndCheckAuctionStarted(eth, gno)
+    await postSellOrder(gno, eth, auctionIndex + 1, 10 * ether * 3, seller1)
+    await postSellOrder(gno, eth, 0, 10 * ether * 3, seller2)
+
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.5)
+    // clearing first auction
+    const newAuctionStart = timestamp() + 60 * 10
+    await postBuyOrder(gno, eth, auctionIndex, 10 * ether * 3, buyer1)
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(2, newAuctionStart, valMinusFee(10 * ether * 3), 0, 0, 0, 0, gno, eth, 1)
+    assert.equal(0, await getState(contracts, eth, gno))
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })
+})
+
+
+contract('DutchExchange - Stage S6 -  one auction closed, other one just closed theoretical', (accounts) => {
+  const [seller2, seller1, , buyer1] = accounts
+
+  before(async () => {
+    // get contracts
+    await setupContracts()
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    // getting into the right state
+    await getIntoState(6, accounts, eth, gno)
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
+
+    eventWatcher(dx, 'Log', {})
+  })
+
+  after(eventWatcher.stopWatching)
+
+  it('postBuyOrder - posting a buyOrder clsoing the theoretical auction and switch to  S1', async () => {
+    const auctionIndex = await getAuctionIndex()
+    await setAndCheckAuctionStarted(eth, gno)
+    await postSellOrder(gno, eth, auctionIndex + 1, 10 * ether * 3, seller1)
+    await postSellOrder(eth, gno, 0, 10 * ether * 3, seller2)
+
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.5)
+    // clearing first auction
+    const newAuctionStart = timestamp() + 60 * 10
+    await postBuyOrder(gno, eth, auctionIndex, 10 * ether * 3, buyer1)
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(2, newAuctionStart, valMinusFee(10 * ether * 3), 0, 0, 0, 0, gno, eth, 1)
+    assert.equal(1, await getState(contracts, eth, gno))
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })
+})
+
+//
+//
+//
+//  Testing State 5
+//
+//
+//
+//
+
+
+contract('DutchExchange - Stage S5 -  waiting to reach the threshold', (accounts) => {
+  const [, seller1, , buyer1] = accounts
+
+
+  before(async () => {
+    // get contracts
+    await setupContracts()
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    // getting into the right state
+    await getIntoState(5, accounts, eth, gno)
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
+
+    eventWatcher(dx, 'Log', {})
+  })
+
+  after(eventWatcher.stopWatching)
+
+
+  it('postBuyOrder - posting a buyOrder should fail', async () => {
+    const auctionIndex = await getAuctionIndex()      
+    // clearing first auction
+    await assertRejects(await postBuyOrder(eth, gno, auctionIndex, 10 * ether * 3, buyer1))
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    assert.equal(5, await getState(contracts, eth, gno))
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })
+
+  it('postBuyOrder - posting a small sellOrder and staying in S5', async () => {
+    const auctionIndex = await getAuctionIndex()
+      
+    // clearing first auction
+    await postSellOrder(gno, eth, auctionIndex + 1, ether / 10, seller1)
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(2, 1, valMinusFee(ether / 10), 0, 0, 0, 0, gno, eth, 0)
+    assert.equal(5, await getState(contracts, eth, gno))
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })
+})
+
+contract('DutchExchange - Stage S5 -  waiting to reach the threshold', (accounts) => {
+  const [, seller1, , , seller2] = accounts
+  before(async () => {
+    // get contracts
+    await setupContracts()
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    // getting into the right state
+    await getIntoState(5, accounts, eth, gno)
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
+
+    eventWatcher(dx, 'Log', {})
+  })
+
+  after(eventWatcher.stopWatching)
+
+  it('postSellOrder - posting a SellOrders and switch to S0', async () => {
+    const auctionIndex = await getAuctionIndex()
+    await setAndCheckAuctionStarted(eth, gno)
+      
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+    // clearing first auction
+    await postSellOrder(eth, gno, auctionIndex + 1, ether / 10, seller1)
+    const newAuctionStart = timestamp() + 60 * 10
+    await postSellOrder(gno, eth, 0, 10 * ether * 3, seller2)
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(2, newAuctionStart, valMinusFee(30 * ether), 0, 0, 0, 0, gno, eth, 1)
+    assert.equal(0, await getState(contracts, eth, gno))
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })
+})
+
+
+contract('DutchExchange - Stage S5 -  waiting to reach the threshold', (accounts) => {
+  const [seller2, seller1, , buyer1] = accounts
+
+  before(async () => {
+    // get contracts
+    await setupContracts()
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    // getting into the right state
+    await getIntoState(5, accounts, eth, gno)
+    // calculate the invariants
+    balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
+
+    eventWatcher(dx, 'Log', {})
+  })
+
+  after(eventWatcher.stopWatching)
+
+  it('postBuyOrder - posting a SellOrders and switch to S1', async () => {
+    const auctionIndex = await getAuctionIndex()
+    await setAndCheckAuctionStarted(eth, gno)
+
+    const newAuctionStart = timestamp() + 60 * 10
+    await postSellOrder(eth, gno, 0, 10 * ether * 3, seller2)
+
+    // clearing first auction
+    // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+    await checkState(2, newAuctionStart, valMinusFee(10 * ether * 3), 0, 0, 0, 0, gno, eth, 1)
+    assert.equal(1, await getState(contracts, eth, gno))
+    await checkInvariants(balanceInvariant, accounts, [eth, gno])
+  })
+})
