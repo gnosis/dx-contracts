@@ -5,9 +5,6 @@ if [[ $TRAVIS_BRANCH =~ (contracts?(\/[a-zA-Z0-9/._-]*)?) ]]; then
   #jump back to root
   cd $TRAVIS_BUILD_DIR
   echo " ==> JUMPING LOCATIONS: NOW IN $TRAVIS_BUILD_DIR"
-  #compile contracts
-  echo "TRUFFLE COMPILE - compiling contracts to build/contracts" && 
-  truffle compile --all && 
   #run solcover
   echo " ==> RUNNING solidity-coverage" && 
   ./node_modules/.bin/solidity-coverage

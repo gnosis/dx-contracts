@@ -115,14 +115,4 @@ contract TokenTUL is StandardToken {
         balances[msg.sender] += unlockedTULs[msg.sender].amountUnlocked;
         unlockedTULs[msg.sender].amountUnlocked = 0;
     }
-    
-    function getLockedAmount(
-        address user
-    )
-        constant
-        public
-        returns (uint lockedTULs)
-    {
-        lockedTULs = lockedTULBalances[user];
-    }
 }
