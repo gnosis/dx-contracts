@@ -196,7 +196,7 @@ const c1 = () => contract('DX Tulip Flow --> 1 Seller + 1 Buyer', (accounts) => 
 
   it(
     'BUYER1: Tries to lock and unlock Tulips --> Auction NOT cleared --> asserts 0 Tulips minted and in mapping', 
-    async () => unlockTulipTokens(buyer1),
+    () => unlockTulipTokens(buyer1),
   )
 
   it('BUYER1: Auction clearing PostBuyOrder + Claim => Tulips = sellVolume', async () => {
@@ -812,7 +812,7 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
 
   it(
     'BUYER1: Tries to lock and unlock Tulips --> Auction NOT cleared --> asserts 0 Tulips minted and in mapping', 
-    async () => unlockTulipTokens(buyer1),
+    () => unlockTulipTokens(buyer1),
   )
 
   it('BUYER1: Auction clearing PostBuyOrder + Claim => Tulips = sellVolume', async () => {
@@ -1089,5 +1089,5 @@ if (argv.c === 1) {
 } else if (argv.c === 4) {
   c4()
 } else {
-  return Promise.all([c1(), c2(), c3(), c4()])
+  [c1, c2, c3, c4].forEach(c => c())
 }
