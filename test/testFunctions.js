@@ -335,7 +335,7 @@ const checkUserReceivesTulipTokens = async (ST, BT, user, idx) => {
 
   // Problem w/consts below is that if the auction has NOT cleared they will always be 0
   const tulFunds = (await tokenTUL.balanceOf.call(user)).toNumber()
-  const lockedTulFunds = (await tokenTUL.getLockedAmount.call(user)).toNumber()
+  const lockedTulFunds = (await tokenTUL.lockedTULBalances.call(user)).toNumber()
   newBalance = (await dx.balances.call(ST.address, user)).toNumber()
   log(`
     USER'S OWNED TUL AMT  = ${tulFunds.toEth()}
@@ -357,16 +357,21 @@ const checkUserReceivesTulipTokens = async (ST, BT, user, idx) => {
  * unlockTulipTokens
  * @param {address} user => address to unlock Tokens for
  */
-const unlockTulipTokens = async (user, amt) => {  // eslint-disable-line
+const unlockTulipTokens = async (user) => {
   const { TokenTUL: tokenTUL } = await getContracts()
+  // cache auction index for verification of auciton close
+  const aucIdx = await getAuctionIndex()
 
-  const lockedBal = (await tokenTUL.lockedTULBalances.call(user))
+  // cache locked balances Mapping in TokenTUL contract
+  // filled automatically after auction closes and TokenTUL.mintTokens is called
+  const lockedBalMap = (await tokenTUL.lockedTULBalances.call(user))
   log(`
-  TOKENTUL.lockedTULBalances === ${lockedBal.toNumber().toEth()}
+  TOKENTUL.lockedTULBalances[user] === ${lockedBalMap.toNumber().toEth()}
   `)
 
-  const userTulips = (await tokenTUL.getLockedAmount.call(user)).toNumber()
-  // const userTulips = 5000..toWei()
+  // cache the locked Amount of user Tulips from TokenTUL MAP
+  // this map is ONLY calculated and filled AFTER auction clears
+  const lockedUserTulips = (await tokenTUL.lockedTULBalances.call(user)).toNumber()
   /*
    * SUB TEST 1: CHECK UNLOCKED AMT + WITHDRAWAL TIME
    * [should be 0,0 as none LOCKED so naturally none to unlock yet]
@@ -382,26 +387,39 @@ const unlockTulipTokens = async (user, amt) => {  // eslint-disable-line
   /*
    * SUB TEST 2: LOCK TOKENS
    */
-  // lock tokens - arbitarily high amt to force Math.min
-  await tokenTUL.lockTokens(userTulips, { from: user })
-  const totalAmtLocked = (await tokenTUL.lockTokens.call(userTulips, { from: user })).toNumber()
+  // lock total tulips in lockedMap
+  await tokenTUL.lockTokens(lockedUserTulips, { from: user })
+  const totalAmtLocked = (await tokenTUL.lockTokens.call(lockedUserTulips, { from: user })).toNumber()
   log(`
   TOKENS LOCKED          = ${totalAmtLocked.toEth()}
   `)
-  // assert.equal(totalAmtLocked, userTulips, 'Total locked tulips should equal total user balance of tulips')
+  if (aucIdx === 2) {
+    // auction HAS cleared, TUL should have been minted
+    assert.equal(totalAmtLocked, lockedUserTulips, 'Total locked tulips should equal total user balance of tulips')
+  } else {
+    // auction has NOT cleared, no minting
+    assert.equal(totalAmtLocked, 0, 'Total locked tulips should equal total user balance of tulips')
+  }
 
   /*
    * SUB TEST 3: UN-LOCK TOKENS
    */
-  await tokenTUL.unlockTokens(userTulips, { from: user });
-  ([unlockedFunds, withdrawTime] = (await tokenTUL.unlockTokens.call(userTulips, { from: user })).map(t => t.toNumber()))
+  await tokenTUL.unlockTokens(lockedUserTulips, { from: user });
+  ([unlockedFunds, withdrawTime] = (await tokenTUL.unlockTokens.call(lockedUserTulips, { from: user })).map(t => t.toNumber()))
   log(`
   AMT OF UNLOCKED FUNDS  = ${unlockedFunds.toEth()}
   TIME OF WITHDRAWAL     = ${withdrawTime} --> ${new Date(withdrawTime * 1000)}
   `)
-  assert.equal(unlockedFunds, userTulips, 'unlockedFunds should be = userTulips')
-  // assert withdrawTime === now (in seconds) + 24 hours (in seconds)
-  assert.equal(withdrawTime, timestamp() + (24 * 3600), 'Withdraw time should be equal to [(24 hours in seconds) + (current Block timestamp in seconds)]')
+  if (aucIdx === 2) {
+    // Auction HAS cleared
+    assert.equal(unlockedFunds, lockedUserTulips, 'unlockedFunds should be = lockedUserTulips')
+    // assert withdrawTime === now (in seconds) + 24 hours (in seconds)
+    assert.equal(withdrawTime, timestamp() + (24 * 3600), 'Withdraw time should be equal to [(24 hours in seconds) + (current Block timestamp in seconds)]')
+  } else {
+    assert.equal(unlockedFunds, 0, 'unlockedFunds should be = 0 as no tokens minted')
+    // assert withdrawTime === now (in seconds) + 24 hours (in seconds)
+    assert.equal(withdrawTime, 0, 'Withdraw time should be equal 0 as no Token minted')
+  }
 }
 /**
  * calculateTokensInExchange - calculates the tokens held by the exchange
