@@ -344,7 +344,7 @@ contract('DutchExchange - settleFee', (accounts) => {
 
   const getOWLinDX = async account => (await dx.balances.call(owl.address, account)).toNumber()
 
-  // fee is uint, so we Math.round
+  // fee is uint, so use Math.floor
   const calculateFee = (amount, feeRatio) => Math.floor(amount * feeRatio)
 
   const calculateFeeInUSD = async (fee, token) => {
@@ -362,6 +362,12 @@ contract('DutchExchange - settleFee', (accounts) => {
     return calculateFee(feeInETH, ETHUSDPrice.toNumber())
   }
 
+  const depositOWL = async (account, amount) => {
+    await owl.transfer(account, amount, { from: master })
+    await owl.approve(dx.address, amount, { from: account })
+    return dx.deposit(owl.address, amount, { from: account })
+  }
+
   it('amountAfterFee == amount when fee == 0', async () => {
     // const totalTul1 = await getTotalTUL()
     // const lockedTULBalance1 = await getLockedTUL(seller1)
@@ -374,11 +380,12 @@ contract('DutchExchange - settleFee', (accounts) => {
 
     const extraTokens1 = await getExtraTokens(eth.address, gno.address, auctionIndex)
 
-    const amountAfterFee = await settleFee.call(eth.address, gno.address, auctionIndex, seller1, amount)
+    const amountAfterFee = await settleFee
+      .call(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
 
     assert.strictEqual(amountAfterFee, amount, 'amount should not change when fee == 0')
 
-    await settleFee(eth.address, gno.address, auctionIndex, seller1, amount)
+    await settleFee(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
     const extraTokens2 = await getExtraTokens(eth.address, gno.address, auctionIndex)
 
     assert.strictEqual(extraTokens1, extraTokens2, 'extraTokens should not change when fee == 0')
@@ -396,7 +403,9 @@ contract('DutchExchange - settleFee', (accounts) => {
 
     const extraTokens1 = await getExtraTokens(eth.address, gno.address, auctionIndex)
 
-    const amountAfterFee = await settleFee.call(eth.address, gno.address, auctionIndex, seller1, amount)
+    const amountAfterFee = await settleFee
+      .call(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
+
     const fee = calculateFee(amount, feeRatio)
     // console.log(feeRatio, 'fee', fee)
 
@@ -404,7 +413,7 @@ contract('DutchExchange - settleFee', (accounts) => {
 
     assert.strictEqual(amountAfterFee, amount - fee, 'amount should be decreased by fee')
 
-    await settleFee(eth.address, gno.address, auctionIndex, seller1, amount)
+    await settleFee(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
     const extraTokens2 = await getExtraTokens(eth.address, gno.address, auctionIndex)
 
 
@@ -423,9 +432,7 @@ contract('DutchExchange - settleFee', (accounts) => {
 
     const owlAmount = Math.floor(feeInUSD / 2) - 1
 
-    await owl.transfer(seller1, owlAmount, { from: master })
-    await owl.approve(dx.address, owlAmount, { from: seller1 })
-    await dx.deposit(owl.address, owlAmount, { from: seller1 })
+    await depositOWL(seller1, owlAmount)
 
     const owlBalance1 = await getOWLinDX(seller1)
 
@@ -443,7 +450,8 @@ contract('DutchExchange - settleFee', (accounts) => {
 
     const extraTokens1 = await getExtraTokens(eth.address, gno.address, auctionIndex)
 
-    const amountAfterFee = await settleFee.call(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
+    const amountAfterFee = await settleFee
+      .call(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
 
     assert.strictEqual(amountAfterFee, amount - fee, 'amount should be decreased by fee')
 
@@ -470,9 +478,7 @@ contract('DutchExchange - settleFee', (accounts) => {
 
     const owlAmount = Math.floor(feeInUSD / 2) + 10
 
-    await owl.transfer(seller1, owlAmount, { from: master })
-    await owl.approve(dx.address, owlAmount, { from: seller1 })
-    await dx.deposit(owl.address, owlAmount, { from: seller1 })
+    await depositOWL(seller1, owlAmount)
 
     const owlBalance1 = await getOWLinDX(seller1)
 
@@ -489,7 +495,8 @@ contract('DutchExchange - settleFee', (accounts) => {
 
     const extraTokens1 = await getExtraTokens(eth.address, gno.address, auctionIndex)
 
-    const amountAfterFee = await settleFee.call(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
+    const amountAfterFee = await settleFee
+      .call(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
 
     assert.strictEqual(amountAfterFee, amount - fee, 'amount should be decreased by fee')
 
