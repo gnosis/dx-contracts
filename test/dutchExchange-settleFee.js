@@ -342,10 +342,25 @@ contract('DutchExchange - settleFee', (accounts) => {
   const getExtraTokens = async (primaryToken, secondaryToken, auctionIndex) =>
     (await dx.extraTokens.call(primaryToken, secondaryToken, auctionIndex + 1)).toNumber()
 
-  const getOWLinDX = async account => (await dx.balances(owl.address, account)).toNumber()
+  const getOWLinDX = async account => (await dx.balances.call(owl.address, account)).toNumber()
 
   // fee is uint, so we Math.round
-  const calculateFee = (amount, feeRatio) => Math.round(amount * feeRatio)
+  const calculateFee = (amount, feeRatio) => Math.floor(amount * feeRatio)
+
+  const calculateFeeInUSD = async (fee, token) => {
+    const [ETHUSDPrice, [num, den]] = await Promise.all([
+      oracle.getUSDETHPrice.call(),
+      dx.getPriceOracleForJS.call(token),
+    ])
+
+    console.log('ETHUSDPrice', ETHUSDPrice.toNumber())
+    console.log('price.num', num.toNumber())
+    console.log('price.den', den.toNumber())
+
+    const feeInETH = calculateFee(fee, num.toNumber() / den.toNumber())
+    console.log('feeInETH', feeInETH)
+    return calculateFee(feeInETH, ETHUSDPrice.toNumber())
+  }
 
   it('amountAfterFee == amount when fee == 0', async () => {
     // const totalTul1 = await getTotalTUL()
