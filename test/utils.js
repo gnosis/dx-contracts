@@ -58,7 +58,7 @@ const eventWatcher = (contract, eventName, argum = {}) => {
         ========================
         `)
       default:
-        log(`
+        return log(`
         LOG FOUND:
         ========================
         Event Name: ${event}
@@ -115,18 +115,25 @@ eventWatcher.stopWatching = (contract, event) => {
   }
 
   // otherwise stop watching all events
-  for (const key of Object.keys(stopWatching)) {
-    const contractEvents = stopWatching[key]
-    for (const ev of Object.keys(contractEvents)) {
-      contractEvents[ev]()
+  const unwatchAll = () => {
+    for (const key of Object.keys(stopWatching)) {
+      const contractEvents = stopWatching[key]
+      for (const ev of Object.keys(contractEvents)) {
+        contractEvents[ev]()
+      }
     }
+    stopWatching = {}
   }
-  stopWatching = {}
 
   // allow to be used as a direct input to mocha hooks (contract === done callback)
   if (typeof contract === 'function') {
-    contract()
-  }
+    // unwatch after a delay as not all events a typically has been displayed
+    // in case of after() hook
+    setTimeout(() => {
+      unwatchAll()
+      contract()
+    }, 500)
+  } else unwatchAll()
 }
 
 module.exports = {
