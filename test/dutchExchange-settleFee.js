@@ -457,4 +457,50 @@ contract('DutchExchange - settleFee', (accounts) => {
     assert.strictEqual(owlBalance2, 0, 'all OWL should be burned as it was < feeInUSD/2 and all used up')
     console.log(owlBalance2)
   })
+
+  it('amountAfterFee == amount - fee(adjusted) when fee > 0 and account\'s OWL > feeInUSD / 2', async () => {
+    const feeRatio = await makeFeeRatioPercent(0.5, seller1)
+    console.log('feeRatio', feeRatio)
+
+    const amount = 1000
+    let fee = calculateFee(amount, feeRatio)
+    const feeInUSD = await calculateFeeInUSD(fee, eth.address)
+
+    console.log('feeInUSD', feeInUSD)
+
+    const owlAmount = Math.floor(feeInUSD / 2) + 10
+
+    await owl.transfer(seller1, owlAmount, { from: master })
+    await owl.approve(dx.address, owlAmount, { from: seller1 })
+    await dx.deposit(owl.address, owlAmount, { from: seller1 })
+
+    const owlBalance1 = await getOWLinDX(seller1)
+
+    assert.strictEqual(owlBalance1, owlAmount, 'account should have OWL balance > feeInUSD / 2')
+
+    const amountOfOWLBurned = Math.floor(feeInUSD / 2)
+    console.log('fee1', fee)
+    fee = Math.floor(fee - Math.floor((amountOfOWLBurned * fee) / feeInUSD))
+    assert.isAbove(fee, 0, 'fee must be > 0')
+    console.log('amountOfOWLBurned', amountOfOWLBurned)
+    console.log('fee3', fee)
+
+    const auctionIndex = 1
+
+    const extraTokens1 = await getExtraTokens(eth.address, gno.address, auctionIndex)
+
+    const amountAfterFee = await settleFee.call(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
+
+    assert.strictEqual(amountAfterFee, amount - fee, 'amount should be decreased by fee')
+
+    await settleFee(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
+    const extraTokens2 = await getExtraTokens(eth.address, gno.address, auctionIndex)
+
+    assert.strictEqual(extraTokens1 + fee, extraTokens2, 'extraTokens should be increased by fee')
+
+    const owlBalance2 = await getOWLinDX(seller1)
+    assert.strictEqual(owlBalance2, owlBalance1 - amountOfOWLBurned, 'some OWL should have been burned')
+    assert.isAbove(owlBalance2, 0, 'some OWL should remain as it was > feeInUSD/2 and not all used up')
+    console.log(owlBalance2)
+  })
 })
