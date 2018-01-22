@@ -196,7 +196,7 @@ const c1 = () => contract('DX Tulip Flow --> 1 Seller + 1 Buyer', (accounts) => 
 
   it(
     'BUYER1: Tries to lock and unlock Tulips --> Auction NOT cleared --> asserts 0 Tulips minted and in mapping', 
-    async () => unlockTulipTokens(buyer1),
+    () => unlockTulipTokens(buyer1),
   )
 
   it('BUYER1: Auction clearing PostBuyOrder + Claim => Tulips = sellVolume', async () => {
@@ -812,7 +812,7 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
 
   it(
     'BUYER1: Tries to lock and unlock Tulips --> Auction NOT cleared --> asserts 0 Tulips minted and in mapping', 
-    async () => unlockTulipTokens(buyer1),
+    () => unlockTulipTokens(buyer1),
   )
 
   it('BUYER1: Auction clearing PostBuyOrder + Claim => Tulips = sellVolume', async () => {
@@ -987,8 +987,6 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
     `)
     assert(userTULBalance > 0 && userTULBalance === sellVolumes, 'seller1 should have non 0 Token TUL balances')
   })
-
-  afterEach(eventWatcher.stopWatching)
 })
 
 const c4 = () => contract('DX Tulip Flow --> change Owner', (accounts) => {
@@ -1078,9 +1076,128 @@ const c4 = () => contract('DX Tulip Flow --> change Owner', (accounts) => {
   afterEach(eventWatcher.stopWatching)
 })
 
+const c5 = () => contract('DX Tulip Flow --> 2 Sellers || Tulip issuance', (accounts) => {
+  const [master, seller1, seller2, buyer1, seller3] = accounts
+  const sellers = [seller1, seller2]
+  // const user = seller1
+  // let userTulips
+  let seller1Balance, seller2Balance, sellVolumes
+  let seller3SellAmount
+  
+  const startBal = {
+    startingETH: 1000..toWei(),
+    startingGNO: 1000..toWei(),
+    ethUSDPrice: 6000..toWei(),   // 400 ETH @ $6000/ETH = $2,400,000 USD
+    sellingAmount: 100..toWei(), // Same as web3.toWei(50, 'ether')
+  }
+  const { 
+    startingETH,
+    sellingAmount,
+    // startingGNO,
+    // ethUSDPrice,
+  } = startBal
+
+  before('Before checks', async () => {
+    // get contracts
+    await setupContracts()
+    eventWatcher(dx, 'LogNumber', {});
+    /*
+     * SUB TEST 1: Check passed in ACCT has NO balances in DX for token passed in
+     */
+    ([seller1Balance, seller2Balance] = await Promise.all(sellers.map(s => getBalance(s, eth))))
+    assert.equal(seller1Balance, 0, 'Seller1 should have 0 balance')
+    assert.equal(seller2Balance, 0, 'Seller2 should have 0 balance')
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal);
+
+    /*
+     * SUB TEST 2: Check passed in ACCT has NO balances in DX for token passed in
+     */
+    ([seller1Balance, seller2Balance] = await Promise.all(sellers.map(s => getBalance(s, eth))))
+    assert.equal(seller1Balance, startingETH, `Seller1 should have balance of ${startingETH.toEth()}`)
+    assert.equal(seller2Balance, startingETH, `Seller2 should have balance of ${startingETH.toEth()}`)
+
+    /*
+     * SUB TEST 3: assert both eth and gno get approved by DX
+     */
+    // approve ETH
+    await dx.updateApprovalOfToken(eth.address, true, { from: master })
+    // approve GNO
+    await dx.updateApprovalOfToken(gno.address, true, { from: master })
+
+    assert.equal(await dx.approvedTokens.call(eth.address), true, 'ETH is approved by DX')
+    assert.equal(await dx.approvedTokens.call(gno.address), true, 'GNO is approved by DX')
+
+    /*
+     * SUB TEST 4: create new token pair and assert Seller1Balance = 0 after depositing more than Balance
+     */
+    // add tokenPair ETH GNO
+    log('Selling amt ', sellingAmount.toEth())
+    await dx.addTokenPair(
+      eth.address,
+      gno.address,
+      sellingAmount,  // 100 ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
+      0,              // buyVolume for GNO
+      2,              // lastClosingPrice NUM
+      1,              // lastClosingPrice DEN
+      { from: seller1 },
+    );
+
+    ([seller1Balance, seller2Balance] = await Promise.all(sellers.map(s => getBalance(s, eth))))
+    assert.equal(seller1Balance, startingETH - sellingAmount, `Seller1 should have ${startingETH.toEth()} balance after new Token Pair add`)
+    assert.equal(seller2Balance, startingETH, `Seller2 should still have balance of ${startingETH.toEth()}`)
+  })
+  afterEach(eventWatcher.stopWatching)
+
+  it('Seller2 posts sell order in same auction ... ', async () => {
+    let aucIdx = await getAuctionIndex()
+    await dx.postSellOrder(eth.address, gno.address, aucIdx, sellingAmount, { from: seller2 })
+    sellVolumes = (await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber()
+
+    const postFeeSV = fee => ((sellingAmount * sellers.length) * (1 - (fee / 100))).toEth()
+
+    log(`
+    sV ==> ${sellVolumes.toEth()}
+    `)
+
+    assert.equal(sellVolumes.toEth(), postFeeSV(0.5), `SV should = ${sellingAmount.toEth() * 2}`)
+  })
+
+  it('Seller 3 posts a different amount', async () => { 
+    seller3SellAmount = 50..toWei()
+    await dx.postSellOrder(eth.address, gno.address, 1, seller3SellAmount, { from: seller3 })
+  })
+
+  it('Move forward in time to end auction', async () => {
+    // price is ~~ 2:1
+    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
+    await postBuyOrder(eth, gno, 1, 600..toWei(), buyer1)
+
+    const aucIdx = await getAuctionIndex()
+    assert(aucIdx === 2, 'Auc ended and moved +1 idx')
+  })
+
+  it('Sellers 1 and 2 can take out their equal share of Tulips', () => 
+    Promise.all(sellers.map(async (seller) => {
+      await claimSellerFunds(eth, gno, seller, 1)
+      let tulBal = (await tokenTUL.lockedTULBalances.call(seller)).toNumber()
+      log(tulBal)
+
+      assert.equal(tulBal, sellVolumes / 2, 'Tulips minted should equal each sellers\' amount posted after FEES')
+    })))
+  
+  it('Seller 3 can take out their smaller share', async () => {
+    await claimSellerFunds(eth, gno, seller3, 1)
+    const tulBal = (await tokenTUL.lockedTULBalances.call(seller3)).toNumber()
+    log(tulBal)
+
+    assert.equal(tulBal, seller3SellAmount * 0.995, 'Seller 3 balance is their sell amount * fee')
+  })  
+})  
+
 // arg conditionally start contracts
 if (argv.c === 1) {
-  // fire contract 1
   c1()
 } else if (argv.c === 2) {
   c2()
@@ -1088,6 +1205,8 @@ if (argv.c === 1) {
   c3()
 } else if (argv.c === 4) {
   c4()
+} else if (argv.c === 5) {
+  c5()
 } else {
-  return Promise.all([c1(), c2(), c3(), c4()])
+  [c1, c2, c3, c4, c5].forEach(c => c())
 }
