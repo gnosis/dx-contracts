@@ -9,6 +9,7 @@ const { getContracts, setupTest } = require('./testFunctions')
 let eth
 let gno
 let tul
+let owl
 let dx
 let oracle
 
@@ -196,6 +197,7 @@ contract('DutchExchange - settleFee', (accounts) => {
       EtherToken: eth,
       TokenGNO: gno,
       TokenTUL: tul,
+      TokenOWL: owl,
       // using internal contract with settleFeePub calling dx.settleFee internally
       InternalTests: dx,
       PriceOracleInterface: oracle,
@@ -272,7 +274,10 @@ contract('DutchExchange - settleFee', (accounts) => {
       await mintPercent(account, 0.11)
 
       const [num, den] = await calculateFeeRatio(account)
-      assert.equal(num / den, 0, 'feeRatio is 0% when total TUL tokens > 0 and account\'s TUL balance >= 10% total TUL')
+      const feeRatio = num / den
+      assert.equal(feeRatio, 0, 'feeRatio is 0% when total TUL tokens > 0 and account\'s TUL balance >= 10% total TUL')
+
+      return feeRatio
     },
     '0.5%': async (account) => {
       const totalTul = await getTotalTUL()
@@ -288,7 +293,10 @@ contract('DutchExchange - settleFee', (accounts) => {
       }
 
       const [num, den] = await calculateFeeRatio(account)
-      assert.strictEqual(num / den, 0.005, 'feeRatio is 0.5% when total TUL tokens > 0 but account\'s TUL balance == 0')
+      const feeRatio = num / den
+      assert.strictEqual(feeRatio, 0.005, 'feeRatio is 0.5% when total TUL tokens > 0 but account\'s TUL balance == 0')
+
+      return feeRatio
     },
     '0.25%': async (account) => {
       // fee is 0.25% when account has 1% of total TUL
@@ -297,8 +305,11 @@ contract('DutchExchange - settleFee', (accounts) => {
       await mintPercent(account, 0.01)
 
       const [num, den] = await calculateFeeRatio(account)
+      const feeRatio = num / den
       // round feeRatio a bit
-      assert.equal((num / den).toFixed(4), 0.0025, 'feeRatio is 0.25% when total TUL tokens > 0 but account\'s TUL balance == 1% total TUL')
+      assert.equal((feeRatio).toFixed(4), 0.0025, 'feeRatio is 0.25% when total TUL tokens > 0 but account\'s TUL balance == 1% total TUL')
+
+      return feeRatio
     },
   }
 
@@ -319,6 +330,11 @@ contract('DutchExchange - settleFee', (accounts) => {
   const getExtraTokens = async (primaryToken, secondaryToken, auctionIndex) =>
     (await dx.extraTokens.call(primaryToken, secondaryToken, auctionIndex + 1)).toNumber()
 
+  const getOWLinDX = async account => (await dx.balances(owl.address, account)).toNumber()
+
+  // fee is uint, so we Math.round
+  const calculateFee = (amount, feeRatio) => Math.round(amount * feeRatio)
+
   it('amountAfterFee == amount when fee == 0', async () => {
     // const totalTul1 = await getTotalTUL()
     // const lockedTULBalance1 = await getLockedTUL(seller1)
@@ -330,7 +346,6 @@ contract('DutchExchange - settleFee', (accounts) => {
     const auctionIndex = 1
 
     const extraTokens1 = await getExtraTokens(eth.address, gno.address, auctionIndex)
-    console.log('extraToken1', extraTokens1)
 
     const amountAfterFee = await settleFee.call(eth.address, gno.address, auctionIndex, seller1, amount)
 
@@ -338,8 +353,36 @@ contract('DutchExchange - settleFee', (accounts) => {
 
     await settleFee(eth.address, gno.address, auctionIndex, seller1, amount)
     const extraTokens2 = await getExtraTokens(eth.address, gno.address, auctionIndex)
-    console.log('extraToken1', extraTokens1)
 
     assert.strictEqual(extraTokens1, extraTokens2, 'extraTokens should not change when fee == 0')
+  })
+
+  it('amountAfterFee == amount - fee when fee > 0 and account\'s OWL == 0', async () => {
+    // const totalTul1 = await getTotalTUL()
+    // const lockedTULBalance1 = await getLockedTUL(seller1)
+    // const percent10 = Math.ceil((totalTul1 - lockedTULBalance1 / 0.1) / (1 / 0.1 - 1))
+    // await mintTokens(seller1, percent10)
+
+    const owlBalance = await getOWLinDX(seller1)
+
+    assert.strictEqual(owlBalance, 0, 'initially OWL balance should be 0')
+
+    const feeRatio = await makeFeeRatioPercent(0.5, seller1)
+
+    const amount = 10
+    const auctionIndex = 1
+
+    const extraTokens1 = await getExtraTokens(eth.address, gno.address, auctionIndex)
+
+    const amountAfterFee = await settleFee.call(eth.address, gno.address, auctionIndex, seller1, amount)
+    const fee = calculateFee(amount, feeRatio)
+
+    assert.strictEqual(amountAfterFee, amount - fee, 'amount should be decreased by fee')
+
+    await settleFee(eth.address, gno.address, auctionIndex, seller1, amount)
+    const extraTokens2 = await getExtraTokens(eth.address, gno.address, auctionIndex)
+
+
+    assert.strictEqual(extraTokens1 + fee, extraTokens2, 'extraTokens should be increased by fee')
   })
 })
