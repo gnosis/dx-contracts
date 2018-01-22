@@ -269,17 +269,25 @@ contract('DutchExchange - settleFee', (accounts) => {
 
   const feeRatioShortcuts = {
     '0%': async (account) => {
+      let [num, den] = await calculateFeeRatio(account)
+      let feeRatio = num / den
+      if (feeRatio === 0) return feeRatio
+
       // fee is 0% when account has >= 10% of total TUL
       await ensureTotalTUL()
-      await mintPercent(account, 0.11)
+      await mintPercent(account, 0.11);
 
-      const [num, den] = await calculateFeeRatio(account)
-      const feeRatio = num / den
+      ([num, den] = await calculateFeeRatio(account))
+      feeRatio = num / den
       assert.equal(feeRatio, 0, 'feeRatio is 0% when total TUL tokens > 0 and account\'s TUL balance >= 10% total TUL')
 
       return feeRatio
     },
     '0.5%': async (account) => {
+      let [num, den] = await calculateFeeRatio(account)
+      let feeRatio = num / den
+      if (feeRatio === 0.005) return feeRatio
+
       const totalTul = await getTotalTUL()
       // fee is 0.5% when
       // either total TUL == 0
@@ -292,22 +300,26 @@ contract('DutchExchange - settleFee', (accounts) => {
         }
       }
 
-      const [num, den] = await calculateFeeRatio(account)
-      const feeRatio = num / den
+      ([num, den] = await calculateFeeRatio(account))
+      feeRatio = num / den
       assert.strictEqual(feeRatio, 0.005, 'feeRatio is 0.5% when total TUL tokens > 0 but account\'s TUL balance == 0')
 
       return feeRatio
     },
     '0.25%': async (account) => {
+      let [num, den] = await calculateFeeRatio(account)
+      let feeRatio = num / den
+      if (feeRatio.toFixed(4) === 0.0025) return feeRatio
+
       // fee is 0.25% when account has 1% of total TUL
       await ensureTotalTUL()
 
-      await mintPercent(account, 0.01)
+      await mintPercent(account, 0.01);
 
-      const [num, den] = await calculateFeeRatio(account)
-      const feeRatio = num / den
+      ([num, den] = await calculateFeeRatio(account))
+      feeRatio = num / den
       // round feeRatio a bit
-      assert.equal((feeRatio).toFixed(4), 0.0025, 'feeRatio is 0.25% when total TUL tokens > 0 but account\'s TUL balance == 1% total TUL')
+      assert.equal(feeRatio.toFixed(4), 0.0025, 'feeRatio is 0.25% when total TUL tokens > 0 but account\'s TUL balance == 1% total TUL')
 
       return feeRatio
     },
