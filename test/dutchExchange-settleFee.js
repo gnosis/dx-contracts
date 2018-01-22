@@ -316,6 +316,9 @@ contract('DutchExchange - settleFee', (accounts) => {
     return shortcut(account)
   }
 
+  const getExtraTokens = async (primaryToken, secondaryToken, auctionIndex) =>
+    (await dx.extraTokens.call(primaryToken, secondaryToken, auctionIndex + 1)).toNumber()
+
   it('amountAfterFee == amount when fee == 0', async () => {
     // const totalTul1 = await getTotalTUL()
     // const lockedTULBalance1 = await getLockedTUL(seller1)
@@ -323,9 +326,20 @@ contract('DutchExchange - settleFee', (accounts) => {
     // await mintTokens(seller1, percent10)
     await makeFeeRatioPercent(0, seller1)
 
-    const amount = 100
+    const amount = 10
+    const auctionIndex = 1
 
-    const amountAfterFee = await settleFee.call(eth.address, gno.address, 1, seller1, amount)
+    const extraTokens1 = await getExtraTokens(eth.address, gno.address, auctionIndex)
+    console.log('extraToken1', extraTokens1)
+
+    const amountAfterFee = await settleFee.call(eth.address, gno.address, auctionIndex, seller1, amount)
+
     assert.strictEqual(amountAfterFee, amount, 'amount should not change when fee == 0')
+
+    await settleFee(eth.address, gno.address, auctionIndex, seller1, amount)
+    const extraTokens2 = await getExtraTokens(eth.address, gno.address, auctionIndex)
+    console.log('extraToken1', extraTokens1)
+
+    assert.strictEqual(extraTokens1, extraTokens2, 'extraTokens should not change when fee == 0')
   })
 })
