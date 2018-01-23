@@ -21,7 +21,6 @@ module.exports = function deploy(deployer) {
 
       return initParams
     }).then((initParams) => {
-      console.log(`deploying InternalFunctions test contract with ${initParams}`)
       return  deployer.deploy(InternalTests, ...initParams)
     })
 }

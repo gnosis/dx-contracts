@@ -122,34 +122,6 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
     mintPercent,
   } = getHelperFunctions(master)
 
-  // const getTotalTUL = async () => (await tul.totalTokens.call()).toNumber()
-
-  // const getLockedTUL = async account => (await tul.lockedTULBalances.call(account)).toNumber()
-
-  // const mintTokens = (account, amount) => tul.mintTokens(account, amount, { from: master })
-
-  // const calculateFeeRatio = async account => (await dx.calculateFeeRatioForJS.call(account)).map(n => n.toNumber())
-
-  // const getHowManyToAdd = (totalTul, lockedTULBalance, percent) =>
-  //   Math.round((totalTul - (lockedTULBalance / percent)) / ((1 / percent) - 1))
-
-  // // mint TUL to make account have a given percent of total TUL
-  // const mintPercent = async (account, percent) => {
-  //   const totalTul = await getTotalTUL()
-  //   const lockedTULBalance = await getLockedTUL(seller1)
-  //   // calculate how much is left to reach the given percent
-  //   let toMint = getHowManyToAdd(totalTul, lockedTULBalance, percent)
-
-  //   // if given percent < current percent
-  //   if (toMint < 0) {
-  //     // need to add to total TUL
-  //     // mint for master
-  //     account = master
-  //     toMint = (lockedTULBalance / percent) - totalTul
-  //   }
-  //   return mintTokens(account, toMint)
-  // }
-
   it('feeRatio == 0.5% when total TUL == 0', async () => {
     const totalTul = await getTotalTUL()
 
@@ -227,14 +199,6 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
       PriceOracleInterface: oracle,
     } = contracts)
 
-    // // set up initial balances for accounts and allowance for dx in accounts' names
-    // await Promise.all(testingAccs.map(acct => Promise.all([
-    //   eth.deposit({ from: acct, value: ETHBalance }),
-    //   eth.approve(dx.address, ETHBalance, { from: acct }),
-    //   gno.transfer(acct, GNOBalance, { from: master }),
-    //   gno.approve(dx.address, GNOBalance, { from: acct }),
-    // ])))
-
     await setupTest(accounts, contracts, startBal)
 
     // add tokenPair ETH GNO
@@ -280,12 +244,6 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
     return amountAfterFee
   }
-
-  // const getTotalTUL = async () => (await tul.totalTokens.call()).toNumber()
-
-  // const getLockedTUL = async account => (await tul.lockedTULBalances.call(account)).toNumber()
-
-  // const mintTokens = (account, amount) => tul.mintTokens(account, amount, { from: master })
 
   const {
     getTotalTUL,
@@ -403,12 +361,7 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
       dx.getPriceOracleForJS.call(token),
     ])
 
-    // console.log('ETHUSDPrice', ETHUSDPrice.toNumber())
-    // console.log('price.num', num.toNumber())
-    // console.log('price.den', den.toNumber())
-
     const feeInETH = calculateFee(fee, num.toNumber() / den.toNumber(), false)
-    // console.log('feeInETH', feeInETH)
     return calculateFee(feeInETH, ETHUSDPrice.toNumber(), false)
   }
 
@@ -426,10 +379,6 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
   }
 
   it('amountAfterFee == amount when fee == 0', async () => {
-    // const totalTul1 = await getTotalTUL()
-    // const lockedTULBalance1 = await getLockedTUL(seller1)
-    // const percent10 = Math.ceil((totalTul1 - lockedTULBalance1 / 0.1) / (1 / 0.1 - 1))
-    // await mintTokens(seller1, percent10)
     await makeFeeRatioPercent(0, seller1)
 
     const amount = 10
@@ -461,7 +410,6 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
     const extraTokens1 = await getExtraTokens(eth.address, gno.address, auctionIndex)
 
     const fee = calculateFee(amount, feeRatio)
-    // console.log(feeRatio, 'fee', fee)
 
     assert.isAbove(fee, 0, 'fee must be > 0')
 
@@ -479,13 +427,10 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
   it('amountAfterFee == amount - fee(adjusted) when fee > 0 and account\'s OWL < feeInUSD / 2', async () => {
     const feeRatio = await makeFeeRatioPercent(0.5, seller1)
-    // console.log('feeRatio', feeRatio)
 
     const amount = 1000
     let fee = calculateFee(amount, feeRatio)
     const feeInUSD = await calculateFeeInUSD(fee, eth.address)
-
-    // console.log('feeInUSD', feeInUSD)
 
     const owlAmount = Math.floor(feeInUSD / 2) - 1
 
@@ -497,11 +442,9 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
     assert.isAbove(owlBalance1, 0, 'account should have OWL balance > 0')
 
     const amountOfOWLBurned = owlBalance1
-    // console.log('fee1', fee)
+
     fee = adjustFee(fee, amountOfOWLBurned, feeInUSD)
     assert.isAbove(fee, 0, 'fee must be > 0')
-    // console.log('amountOfOWLBurned', amountOfOWLBurned)
-    // console.log('fee3', fee)
 
     const auctionIndex = 1
 
@@ -522,18 +465,14 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
     assert.strictEqual(owlBalance2, owlBalance1 - amountOfOWLBurned, 'some OWL should have been burned')
     assert.strictEqual(owlBalance2, 0, 'all OWL should be burned as it was < feeInUSD/2 and all used up')
-    // console.log(owlBalance2)
   })
 
   it('amountAfterFee == amount - fee(adjusted) when fee > 0 and account\'s OWL > feeInUSD / 2', async () => {
     const feeRatio = await makeFeeRatioPercent(0.5, seller1)
-    // console.log('feeRatio', feeRatio)
 
     const amount = 1000
     let fee = calculateFee(amount, feeRatio)
     const feeInUSD = await calculateFeeInUSD(fee, eth.address)
-
-    // console.log('feeInUSD', feeInUSD)
 
     const owlAmount = Math.floor(feeInUSD / 2) + 10
 
@@ -544,11 +483,10 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
     assert.strictEqual(owlBalance1, owlAmount, 'account should have OWL balance > feeInUSD / 2')
 
     const amountOfOWLBurned = Math.floor(feeInUSD / 2)
-    // console.log('fee1', fee)
+
     fee = adjustFee(fee, amountOfOWLBurned, feeInUSD)
     assert.isAbove(fee, 0, 'fee must be > 0')
-    // console.log('amountOfOWLBurned', amountOfOWLBurned)
-    // console.log('fee3', fee)
+
 
     const auctionIndex = 1
 
@@ -569,7 +507,6 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
     assert.strictEqual(owlBalance2, owlBalance1 - amountOfOWLBurned, 'some OWL should have been burned')
     assert.isAbove(owlBalance2, 0, 'some OWL should remain as it was > feeInUSD/2 and not all used up')
-    // console.log(owlBalance2)
   })
 })
 
