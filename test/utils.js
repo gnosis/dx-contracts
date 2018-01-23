@@ -1,4 +1,7 @@
 /* eslint no-console:0, no-confusing-arrow:0 */
+// `truffle test --silent` or `truffle test -s` to suppress logs
+const { silent } = require('minimist')(process.argv.slice(2), { alias: { silent: 's' } })
+
 const assertRejects = async (q, msg) => {
   let res, catchFlag = false
   try {
@@ -18,11 +21,10 @@ const blockNumber = () => web3.eth.blockNumber
 
 const timestamp = (block = 'latest') => web3.eth.getBlock(block).timestamp
 
-const logger = async (desc, fn) => console.log(`---- \n => ${desc} ${fn ? `|| - - - - - - - - - -  - > ${fn}` : ''}`)
+const log = silent ? () => {} : console.log.bind(console)
+const logger = (desc, fn) => log(`---- \n => ${desc} ${fn ? `|| - - - - - - - - - -  - > ${fn}` : ''}`)
 
-const varLogger = (varName, varValue) => {
-  console.log(varName, '--->', varValue)
-}
+const varLogger = (varName, varValue) => log(varName, '--->', varValue)
 
 // keeps track of watched events
 let stopWatching = {}
@@ -33,10 +35,41 @@ let stopWatching = {}
  * @param {Object} args?       - not required, args to look for
  * @returns stopWatching function
  */
-const eventWatcher = (contract, event, args) => {
-  const eventObject = contract[event](args).watch((err, result) => err ? console.log(err) : console.log('Found', result))
+const eventWatcher = (contract, eventName, argum = {}) => {
+  const eventObject = contract[eventName](argum).watch((err, result) => {
+    const { event, args } = result
+    if (err) return log(err)
+
+    switch (event) {
+      // const { args: { returned, tulipsIssued } } = result
+      case 'LogNumber':
+        return log(`
+        LOG FOUND:
+        ========================
+        ${args.l} ==> ${Number(args.n).toEth()}
+        ========================
+        `)
+      case 'ClaimBuyerFunds':
+        return log(`
+        LOG FOUND:
+        ========================
+        RETURNED      ==> ${Number(args.returned).toEth()}
+        TULIPS ISSUED ==> ${Number(args.tulipsIssued).toEth()}
+        ========================
+        `)
+      default:
+        log(`
+        LOG FOUND:
+        ========================
+        Event Name: ${event}
+        Args:       
+        ${JSON.stringify(args, undefined, 2)}
+        ========================
+        `)
+    }
+  })
   const contractEvents = stopWatching[contract.address] || (stopWatching[contract.address] = {})
-  const unwatch = contractEvents[event] = eventObject.stopWatching.bind(eventObject)
+  const unwatch = contractEvents[eventName] = eventObject.stopWatching.bind(eventObject)
 
   return unwatch
 }
@@ -54,7 +87,7 @@ eventWatcher.stopWatching = (contract, event) => {
     const contractEvents = stopWatching[contract.address]
 
     if (!contractEvents) {
-      console.log('contract was never watched')
+      log('contract was never watched')
       return
     }
 
@@ -74,7 +107,7 @@ eventWatcher.stopWatching = (contract, event) => {
       unwatch()
       delete stopWatching[event]
     } else {
-      console.log(`${event} event was never watched`)
+      log(`${event} event was never watched`)
     }
 
     return
@@ -95,28 +128,12 @@ eventWatcher.stopWatching = (contract, event) => {
   }
 }
 
-/* const wait = (seconds) => {
-  const id = Date.now()
-  web3.currentProvider.send({
-    jsonrpc: '2.0',
-    method: 'evm_increaseTime',
-    params: [seconds] || [],
-    id,
-  })
-
-  web3.currentProvider.send({
-    jsonrpc: '2.0',
-    method: 'evm_mine',
-    params: [],
-    id: id + 1,
-  })
-}
-*/
 module.exports = {
   assertRejects,
   blockNumber,
   eventWatcher,
   logger,
+  log,
   varLogger,
   // wait,
   timestamp,
