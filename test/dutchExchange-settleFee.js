@@ -17,6 +17,8 @@ let oracle
 
 let contracts
 
+const separateLogs = () => log('\n    ----------------------------------')
+
 const getHelperFunctions = (master) => {
   const getTotalTUL = async (print = true) => {
     const totalTul = (await tul.totalTokens.call()).toNumber()
@@ -36,9 +38,9 @@ const getHelperFunctions = (master) => {
 
   const mintTokens = (account, amount) => tul.mintTokens(account, amount, { from: master })
 
-  const calculateFeeRatio = async (account) => {
+  const calculateFeeRatio = async (account, print = true) => {
     const [num, den] = (await dx.calculateFeeRatioForJS.call(account)).map(n => n.toNumber())
-    log(`\tfeeRatio == ${((num / den) * 100).toFixed(2)}% == ${num}/${den} == ${num / den}`)
+    if (print) log(`\tfeeRatio == ${((num / den) * 100).toFixed(2)}% == ${num}/${den} == ${num / den}`)
 
     return [num, den]
   }
@@ -82,9 +84,7 @@ contract('DutchExchange - calculateFeeRatio', (accounts) => {
 
   const GNOBalance = 10 ** 15
 
-  beforeEach(() => {
-    log('\n    ----------------------------------')
-  })
+  beforeEach(separateLogs)
 
   before(async () => {
     // get contracts
@@ -208,6 +208,8 @@ contract('DutchExchange - settleFee', (accounts) => {
     sellingAmount: 50.0.toWei(),
   }
 
+  beforeEach(separateLogs)
+
   before(async () => {
     // get contracts
     contracts = await getContracts();
@@ -247,6 +249,9 @@ contract('DutchExchange - settleFee', (accounts) => {
     await tul.updateMinter(master, { from: master })
     logger('PRICE ORACLE', await oracle.getUSDETHPrice.call())
 
+    const [num, den] = await dx.getPriceOracleForJS.call(eth.address)
+    logger('PRICE', `${num}/${den} == ${num / den}`)
+
     eventWatcher(dx, 'LogNumber')
   })
 
@@ -261,9 +266,18 @@ contract('DutchExchange - settleFee', (accounts) => {
    * @param {address} user
    * @param {uint} amount
    */
-  const settleFee = (...args) => dx.settleFeePub(...args)
+  const settleFee = (...args) => {
+    log(`\t tx : settling fee for ${args[4]} amount of tokens\n\t*`)
+    return dx.settleFeePub(...args)
+  }
 
-  settleFee.call = async (...args) => (await dx.settleFeePub.call(...args)).toNumber()
+  settleFee.call = async (...args) => {
+    const amountAfterFee = (await dx.settleFeePub.call(...args)).toNumber()
+    log(`\t*\n\t given ${args[4]} amount of tokens`)
+    log(`\t calculated amountAfterFee == ${amountAfterFee}`)
+
+    return amountAfterFee
+  }
 
   // const getTotalTUL = async () => (await tul.totalTokens.call()).toNumber()
 
@@ -289,7 +303,7 @@ contract('DutchExchange - settleFee', (accounts) => {
 
   const feeRatioShortcuts = {
     '0%': async (account) => {
-      let [num, den] = await calculateFeeRatio(account)
+      let [num, den] = await calculateFeeRatio(account, false)
       let feeRatio = num / den
       if (feeRatio === 0) return feeRatio
 
@@ -304,7 +318,7 @@ contract('DutchExchange - settleFee', (accounts) => {
       return feeRatio
     },
     '0.5%': async (account) => {
-      let [num, den] = await calculateFeeRatio(account)
+      let [num, den] = await calculateFeeRatio(account, false)
       let feeRatio = num / den
       if (feeRatio === 0.005) return feeRatio
 
@@ -327,7 +341,7 @@ contract('DutchExchange - settleFee', (accounts) => {
       return feeRatio
     },
     '0.25%': async (account) => {
-      let [num, den] = await calculateFeeRatio(account)
+      let [num, den] = await calculateFeeRatio(account, false)
       let feeRatio = num / den
       if (feeRatio.toFixed(4) === 0.0025) return feeRatio
 
@@ -359,13 +373,27 @@ contract('DutchExchange - settleFee', (accounts) => {
     return shortcut(account)
   }
 
-  const getExtraTokens = async (primaryToken, secondaryToken, auctionIndex) =>
-    (await dx.extraTokens.call(primaryToken, secondaryToken, auctionIndex + 1)).toNumber()
+  const getExtraTokens = async (primaryToken, secondaryToken, auctionIndex) => {
+    const extraTokens = (await dx.extraTokens.call(primaryToken, secondaryToken, auctionIndex + 1)).toNumber()
+    log(`\textraTokens == ${extraTokens}`)
 
-  const getOWLinDX = async account => (await dx.balances.call(owl.address, account)).toNumber()
+    return extraTokens
+  }
+
+  const getOWLinDX = async (account) => {
+    const owlAmount = (await dx.balances.call(owl.address, account)).toNumber()
+    log(`\taccount's OWL in DX == ${owlAmount}`)
+
+    return owlAmount
+  }
 
   // fee is uint, so use Math.floor
-  const calculateFee = (amount, feeRatio) => Math.floor(amount * feeRatio)
+  const calculateFee = (amount, feeRatio, print = true) => {
+    const fee = Math.floor(amount * feeRatio)
+    if (print) log(`\tfee == ${fee}`)
+
+    return fee
+  }
 
   const calculateFeeInUSD = async (fee, token) => {
     const [ETHUSDPrice, [num, den]] = await Promise.all([
@@ -373,13 +401,20 @@ contract('DutchExchange - settleFee', (accounts) => {
       dx.getPriceOracleForJS.call(token),
     ])
 
-    console.log('ETHUSDPrice', ETHUSDPrice.toNumber())
-    console.log('price.num', num.toNumber())
-    console.log('price.den', den.toNumber())
+    // console.log('ETHUSDPrice', ETHUSDPrice.toNumber())
+    // console.log('price.num', num.toNumber())
+    // console.log('price.den', den.toNumber())
 
-    const feeInETH = calculateFee(fee, num.toNumber() / den.toNumber())
-    console.log('feeInETH', feeInETH)
-    return calculateFee(feeInETH, ETHUSDPrice.toNumber())
+    const feeInETH = calculateFee(fee, num.toNumber() / den.toNumber(), false)
+    // console.log('feeInETH', feeInETH)
+    return calculateFee(feeInETH, ETHUSDPrice.toNumber(), false)
+  }
+
+  const adjustFee = (fee, amountOfOWLBurned, feeInUSD) => {
+    const adjustedFee = Math.floor(fee - Math.floor((amountOfOWLBurned * fee) / feeInUSD))
+    log(`\tadjusted fee == ${adjustedFee}`)
+
+    return adjustedFee
   }
 
   const depositOWL = async (account, amount) => {
@@ -423,13 +458,13 @@ contract('DutchExchange - settleFee', (accounts) => {
 
     const extraTokens1 = await getExtraTokens(eth.address, gno.address, auctionIndex)
 
-    const amountAfterFee = await settleFee
-      .call(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
-
     const fee = calculateFee(amount, feeRatio)
     // console.log(feeRatio, 'fee', fee)
 
     assert.isAbove(fee, 0, 'fee must be > 0')
+
+    const amountAfterFee = await settleFee
+      .call(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
 
     assert.strictEqual(amountAfterFee, amount - fee, 'amount should be decreased by fee')
 
@@ -442,13 +477,13 @@ contract('DutchExchange - settleFee', (accounts) => {
 
   it('amountAfterFee == amount - fee(adjusted) when fee > 0 and account\'s OWL < feeInUSD / 2', async () => {
     const feeRatio = await makeFeeRatioPercent(0.5, seller1)
-    console.log('feeRatio', feeRatio)
+    // console.log('feeRatio', feeRatio)
 
     const amount = 1000
     let fee = calculateFee(amount, feeRatio)
     const feeInUSD = await calculateFeeInUSD(fee, eth.address)
 
-    console.log('feeInUSD', feeInUSD)
+    // console.log('feeInUSD', feeInUSD)
 
     const owlAmount = Math.floor(feeInUSD / 2) - 1
 
@@ -460,11 +495,11 @@ contract('DutchExchange - settleFee', (accounts) => {
     assert.isAbove(owlBalance1, 0, 'account should have OWL balance > 0')
 
     const amountOfOWLBurned = owlBalance1
-    console.log('fee1', fee)
-    fee = Math.floor(fee - Math.floor((amountOfOWLBurned * fee) / feeInUSD))
+    // console.log('fee1', fee)
+    fee = adjustFee(fee, amountOfOWLBurned, feeInUSD)
     assert.isAbove(fee, 0, 'fee must be > 0')
-    console.log('amountOfOWLBurned', amountOfOWLBurned)
-    console.log('fee3', fee)
+    // console.log('amountOfOWLBurned', amountOfOWLBurned)
+    // console.log('fee3', fee)
 
     const auctionIndex = 1
 
@@ -481,20 +516,22 @@ contract('DutchExchange - settleFee', (accounts) => {
     assert.strictEqual(extraTokens1 + fee, extraTokens2, 'extraTokens should be increased by fee')
 
     const owlBalance2 = await getOWLinDX(seller1)
+    log(`\tburned OWL == ${amountOfOWLBurned}`)
+
     assert.strictEqual(owlBalance2, owlBalance1 - amountOfOWLBurned, 'some OWL should have been burned')
     assert.strictEqual(owlBalance2, 0, 'all OWL should be burned as it was < feeInUSD/2 and all used up')
-    console.log(owlBalance2)
+    // console.log(owlBalance2)
   })
 
   it('amountAfterFee == amount - fee(adjusted) when fee > 0 and account\'s OWL > feeInUSD / 2', async () => {
     const feeRatio = await makeFeeRatioPercent(0.5, seller1)
-    console.log('feeRatio', feeRatio)
+    // console.log('feeRatio', feeRatio)
 
     const amount = 1000
     let fee = calculateFee(amount, feeRatio)
     const feeInUSD = await calculateFeeInUSD(fee, eth.address)
 
-    console.log('feeInUSD', feeInUSD)
+    // console.log('feeInUSD', feeInUSD)
 
     const owlAmount = Math.floor(feeInUSD / 2) + 10
 
@@ -505,11 +542,11 @@ contract('DutchExchange - settleFee', (accounts) => {
     assert.strictEqual(owlBalance1, owlAmount, 'account should have OWL balance > feeInUSD / 2')
 
     const amountOfOWLBurned = Math.floor(feeInUSD / 2)
-    console.log('fee1', fee)
-    fee = Math.floor(fee - Math.floor((amountOfOWLBurned * fee) / feeInUSD))
+    // console.log('fee1', fee)
+    fee = adjustFee(fee, amountOfOWLBurned, feeInUSD)
     assert.isAbove(fee, 0, 'fee must be > 0')
-    console.log('amountOfOWLBurned', amountOfOWLBurned)
-    console.log('fee3', fee)
+    // console.log('amountOfOWLBurned', amountOfOWLBurned)
+    // console.log('fee3', fee)
 
     const auctionIndex = 1
 
@@ -526,8 +563,10 @@ contract('DutchExchange - settleFee', (accounts) => {
     assert.strictEqual(extraTokens1 + fee, extraTokens2, 'extraTokens should be increased by fee')
 
     const owlBalance2 = await getOWLinDX(seller1)
+    log(`\tburned OWL == ${amountOfOWLBurned}`)
+
     assert.strictEqual(owlBalance2, owlBalance1 - amountOfOWLBurned, 'some OWL should have been burned')
     assert.isAbove(owlBalance2, 0, 'some OWL should remain as it was > feeInUSD/2 and not all used up')
-    console.log(owlBalance2)
+    // console.log(owlBalance2)
   })
 })
