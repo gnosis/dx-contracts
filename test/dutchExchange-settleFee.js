@@ -4,6 +4,8 @@ const {
   log,
 } = require('./utils')
 
+const argv = require('minimist')(process.argv.slice(2), { alias: { contract: 'c' } })
+
 const { getContracts, setupTest } = require('./testFunctions')
 
 // Test VARS
@@ -76,7 +78,7 @@ const getHelperFunctions = (master) => {
   }
 }
 
-contract('DutchExchange - calculateFeeRatio', (accounts) => {
+const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
   const [master, seller1] = accounts
   const testingAccs = accounts.slice(1, 5)
 
@@ -198,7 +200,7 @@ contract('DutchExchange - calculateFeeRatio', (accounts) => {
   })
 })
 
-contract('DutchExchange - settleFee', (accounts) => {
+const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
   const [master, seller1] = accounts
 
   const startBal = {
@@ -570,3 +572,9 @@ contract('DutchExchange - settleFee', (accounts) => {
     // console.log(owlBalance2)
   })
 })
+
+
+const contractTests = [c1, c2]
+const cTest = contractTests[argv.c - 1]
+if (cTest) cTest()
+else contractTests.forEach(c => c())
