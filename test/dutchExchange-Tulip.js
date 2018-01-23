@@ -11,11 +11,11 @@
 */
 
 // const PriceOracleInterface = artifacts.require('PriceOracleInterface')
-const argv = require('minimist')(process.argv.slice(2), { alias: { selector: 'sel' } })
 const { 
   eventWatcher,
   log,
   timestamp,
+  enableContractFlag,
 } = require('./utils')
 
 const {
@@ -1196,17 +1196,5 @@ const c5 = () => contract('DX Tulip Flow --> 2 Sellers || Tulip issuance', (acco
   })  
 })  
 
-// arg conditionally start contracts
-if (argv.c === 1) {
-  c1()
-} else if (argv.c === 2) {
-  c2()
-} else if (argv.c === 3) {
-  c3()
-} else if (argv.c === 4) {
-  c4()
-} else if (argv.c === 5) {
-  c5()
-} else {
-  [c1, c2, c3, c4, c5].forEach(c => c())
-}
+// conditionally start contracts
+enableContractFlag(c1, c2, c3, c4, c5)

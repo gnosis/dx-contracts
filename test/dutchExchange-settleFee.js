@@ -2,9 +2,8 @@ const {
   eventWatcher,
   logger,
   log,
+  enableContractFlag,
 } = require('./utils')
-
-const argv = require('minimist')(process.argv.slice(2), { alias: { contract: 'c' } })
 
 const { getContracts, setupTest } = require('./testFunctions')
 
@@ -511,7 +510,4 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 })
 
 
-const contractTests = [c1, c2]
-const cTest = contractTests[argv.c - 1]
-if (cTest) cTest()
-else contractTests.forEach(c => c())
+enableContractFlag(c1, c2)
