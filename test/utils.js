@@ -36,7 +36,13 @@ let stopWatching = {}
  * @returns stopWatching function
  */
 const eventWatcher = (contract, eventName, argum = {}) => {
-  const eventObject = contract[eventName](argum).watch((err, result) => {
+  const eventFunc = contract[eventName]
+  if (!eventFunc) {
+    log(`No event ${eventName} available in the contract`)
+    return null
+  }
+
+  const eventObject = eventFunc(argum).watch((err, result) => {
     const { event, args } = result
     if (err) return log(err)
 
