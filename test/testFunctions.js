@@ -33,6 +33,8 @@ const contractNames = [
   'PriceOracleInterface',
   'PriceFeed',
   'Medianizer',
+  'InternalTests',
+  'TokenOWL',
 ]
 
 /**

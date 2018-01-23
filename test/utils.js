@@ -36,7 +36,13 @@ let stopWatching = {}
  * @returns stopWatching function
  */
 const eventWatcher = (contract, eventName, argum = {}) => {
-  const eventObject = contract[eventName](argum).watch((err, result) => {
+  const eventFunc = contract[eventName]
+  if (!eventFunc) {
+    log(`No event ${eventName} available in the contract`)
+    return null
+  }
+
+  const eventObject = eventFunc(argum).watch((err, result) => {
     const { event, args } = result
     if (err) return log(err)
 
@@ -58,7 +64,7 @@ const eventWatcher = (contract, eventName, argum = {}) => {
         ========================
         `)
       default:
-        log(`
+        return log(`
         LOG FOUND:
         ========================
         Event Name: ${event}
@@ -69,6 +75,7 @@ const eventWatcher = (contract, eventName, argum = {}) => {
     }
   })
   const contractEvents = stopWatching[contract.address] || (stopWatching[contract.address] = {})
+  if (contractEvents[eventName]) contractEvents[eventName]()
   const unwatch = contractEvents[eventName] = eventObject.stopWatching.bind(eventObject)
 
   return unwatch
@@ -114,18 +121,30 @@ eventWatcher.stopWatching = (contract, event) => {
   }
 
   // otherwise stop watching all events
-  for (const key of Object.keys(stopWatching)) {
-    const contractEvents = stopWatching[key]
-    for (const ev of Object.keys(contractEvents)) {
-      contractEvents[ev]()
+  const unwatchAll = () => {
+    for (const key of Object.keys(stopWatching)) {
+      const contractEvents = stopWatching[key]
+      for (const ev of Object.keys(contractEvents)) {
+        contractEvents[ev]()
+      }
     }
+    stopWatching = {}
   }
-  stopWatching = {}
 
   // allow to be used as a direct input to mocha hooks (contract === done callback)
   if (typeof contract === 'function') {
-    contract()
-  }
+    // don't wait if no events were watched
+    if (!Object.keys(stopWatching).length) {
+      contract()
+      return
+    }
+    // unwatch after a delay as not all events a typically has been displayed
+    // in case of after() hook
+    setTimeout(() => {
+      unwatchAll()
+      contract()
+    }, 500)
+  } else unwatchAll()
 }
 
 module.exports = {
