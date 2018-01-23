@@ -133,6 +133,11 @@ eventWatcher.stopWatching = (contract, event) => {
 
   // allow to be used as a direct input to mocha hooks (contract === done callback)
   if (typeof contract === 'function') {
+    // don't wait if no events were watched
+    if (!Object.keys(stopWatching).length) {
+      contract()
+      return
+    }
     // unwatch after a delay as not all events a typically has been displayed
     // in case of after() hook
     setTimeout(() => {
