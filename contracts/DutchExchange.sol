@@ -340,9 +340,11 @@ contract DutchExchange {
                 auctionIndex = latestAuctionIndex;
             }
             // require(auctionIndex == latestAuctionIndex); 
-            if (auctionIndex != latestAuctionIndex) {
-                Log('postSellOrder R1.1');
-                return;
+            else {  // eslint-disable-line
+                if (auctionIndex != latestAuctionIndex) { // eslint-disable-line
+                    Log('postSellOrder R1.1');
+                    return;
+                }
             }
         } else {
             // C2
@@ -351,9 +353,11 @@ contract DutchExchange {
                 auctionIndex = latestAuctionIndex + 1;
             }
             // require(auctionIndex == latestAuctionIndex + 1);
-            if (auctionIndex != latestAuctionIndex + 1) {
-                Log('postSellOrder R2.1');
-                return;
+            else { // eslint-disable-line
+                if (auctionIndex != latestAuctionIndex + 1) { 
+                    Log('postSellOrder R2.1');
+                    return;
+                }
             }
         }
 
@@ -413,6 +417,13 @@ contract DutchExchange {
         // require(auctionStart > 1);
         if (auctionStart <= 1) {
             Log('postBuyOrder R5');
+            return;
+        }
+
+        // R6: auction must be funded
+        // require(sellVolumesCurrent[sellToken][buyToken]>0);
+        if (sellVolumesCurrent[sellToken][buyToken] == 0) {
+            Log('postBuyOrder R6');
             return;
         }
 
