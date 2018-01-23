@@ -737,6 +737,8 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
     log(`\nSeller Balance ====> ${seller1Balance.toEth()}\n`)
     assert.equal(seller1Balance, startingETH - sellingAmount, `Seller1 should have ${startingETH.toEth()} balance after new Token Pair add`)
   })
+
+  afterEach(eventWatcher.stopWatching)
   
   it('Check sellVolume', async () => {
     log(`
