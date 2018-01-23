@@ -48,7 +48,7 @@ contract('TokenOWL - BurnTesting', (accounts) => {
   })
 
   it('check that NoOWLHolder can not call the burn function', async () => {
-    assertRejects(await tokenOWL.burnOWL(1, { from: NoOWLHolder }))
+    await assertRejects(tokenOWL.burnOWL(1, { from: NoOWLHolder }))
   })
 
   it('check that OWLHolder can call the burn OWL and that this costs him the OWL', async () => {
