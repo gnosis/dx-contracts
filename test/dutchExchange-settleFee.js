@@ -1,6 +1,7 @@
 const {
   eventWatcher,
   logger,
+  log,
 } = require('./utils')
 
 const { getContracts, setupTest } = require('./testFunctions')
@@ -17,23 +18,38 @@ let oracle
 let contracts
 
 const getHelperFunctions = (master) => {
-  const getTotalTUL = async () => (await tul.totalTokens.call()).toNumber()
+  const getTotalTUL = async (print = true) => {
+    const totalTul = (await tul.totalTokens.call()).toNumber()
+    if (print) log(`\taccount's total TUL == ${totalTul}`)
 
-  const getLockedTUL = async account => (await tul.lockedTULBalances.call(account)).toNumber()
+    return totalTul
+  }
+
+  const getLockedTUL = async (account, print = true) => {
+    const lockedTul = (await tul.lockedTULBalances.call(account)).toNumber()
+    if (print) log(`\taccount's locked TUL == ${lockedTul}`)
+
+    return lockedTul
+  }
 
   const unlockTUL = (account, amount) => tul.unlockTokens(amount, { from: account })
 
   const mintTokens = (account, amount) => tul.mintTokens(account, amount, { from: master })
 
-  const calculateFeeRatio = async account => (await dx.calculateFeeRatioForJS.call(account)).map(n => n.toNumber())
+  const calculateFeeRatio = async (account) => {
+    const [num, den] = (await dx.calculateFeeRatioForJS.call(account)).map(n => n.toNumber())
+    log(`\tfeeRatio == ${((num / den) * 100).toFixed(2)}% == ${num}/${den} == ${num / den}`)
+
+    return [num, den]
+  }
 
   const getHowManyToAdd = (totalTul, lockedTULBalance, percent) =>
     Math.round((totalTul - (lockedTULBalance / percent)) / ((1 / percent) - 1))
 
   // mint TUL to make account have a given percent of total TUL
   const mintPercent = async (account, percent) => {
-    const totalTul = await getTotalTUL()
-    const lockedTULBalance = await getLockedTUL(account)
+    const totalTul = await getTotalTUL(false)
+    const lockedTULBalance = await getLockedTUL(account, false)
     // calculate how much is left to reach the given percent
     let toMint = getHowManyToAdd(totalTul, lockedTULBalance, percent)
 
@@ -65,6 +81,10 @@ contract('DutchExchange - calculateFeeRatio', (accounts) => {
   const ETHBalance = 10 ** 9
 
   const GNOBalance = 10 ** 15
+
+  beforeEach(() => {
+    log('\n    ----------------------------------')
+  })
 
   before(async () => {
     // get contracts
@@ -153,11 +173,11 @@ contract('DutchExchange - calculateFeeRatio', (accounts) => {
   it('feeRatio == 0.25% when account has 1% of total TUL', async () => {
     await mintPercent(seller1, 0.01)
 
-    const totalTul2 = await getTotalTUL()
-    assert.isAbove(totalTul2, 0, 'there are available total TUL tokens')
+    const totalTul = await getTotalTUL()
+    assert.isAbove(totalTul, 0, 'there are available total TUL tokens')
 
     const lockedTULBalance = await getLockedTUL(seller1)
-    assert.strictEqual(lockedTULBalance, Math.round(totalTul2 * 0.01), 'seller has 1% of total TUL')
+    assert.strictEqual(lockedTULBalance, Math.round(totalTul * 0.01), 'seller has 1% of total TUL')
 
     const [num, den] = await calculateFeeRatio(seller1)
     // round feeRatio a bit
@@ -185,7 +205,7 @@ contract('DutchExchange - settleFee', (accounts) => {
     startingETH: 90.0.toWei(),
     startingGNO: 90.0.toWei(),
     ethUSDPrice: 1008.0.toWei(),
-    sellingAmount: 50.0.toWei(), // Same as web3.toWei(50, 'ether')
+    sellingAmount: 50.0.toWei(),
   }
 
   before(async () => {
