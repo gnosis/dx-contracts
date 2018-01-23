@@ -1,6 +1,6 @@
 /* eslint no-console:0, no-confusing-arrow:0 */
 // `truffle test --silent` or `truffle test -s` to suppress logs
-const { silent } = require('minimist')(process.argv.slice(2), { alias: { silent: 's' } })
+const { silent, contract: contractFlag } = require('minimist')(process.argv.slice(2), { alias: { silent: 's', contract: 'c' } })
 
 const assertRejects = async (q, msg) => {
   let res, catchFlag = false
@@ -147,6 +147,12 @@ eventWatcher.stopWatching = (contract, event) => {
   } else unwatchAll()
 }
 
+const enableContractFlag = (...contractTests) => {
+  const cTest = contractTests[contractFlag - 1]
+  if (cTest) cTest()
+  else contractTests.forEach(c => c())
+}
+
 module.exports = {
   assertRejects,
   blockNumber,
@@ -155,4 +161,5 @@ module.exports = {
   log,
   varLogger,
   timestamp,
+  enableContractFlag,
 }
