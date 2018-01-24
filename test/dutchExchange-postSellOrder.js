@@ -101,4 +101,16 @@ contract('DutchExchange - postSellOrder', (accounts) => {
 
     await assertRejects(dx.postSellOrder(eth.address, gno.address, 1, amount, { from: seller1 }), 'should reject as resulting amount == 0')
   })
+
+  it('rejects when latestAuctionIndex == 0, i.e. no TokenPair was added', async () => {
+    const latestAuctionIndex = (await dx.getAuctionIndex.call(eth.address, gno.address)).toNumber()
+
+    assert.strictEqual(latestAuctionIndex, 0, 'action hasn\'t run yet')
+
+    const amount = 100
+
+    assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
+
+    await assertRejects(dx.postSellOrder(eth.address, gno.address, latestAuctionIndex, amount, { from: seller1 }), 'should reject as latestAuctionIndex == 0')
+  })
 })
