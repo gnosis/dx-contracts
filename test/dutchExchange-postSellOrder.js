@@ -74,8 +74,22 @@ contract('DutchExchange - postSellOrder', (accounts) => {
 
   after(eventWatcher.stopWatching)
 
+  const getTokenBalance = async (account, token) => {
+    return (await dx.balances.call(token.address || token, account)).toNumber()
+  }
+
+  const depositETH = async (account, amount) => {
+    await eth.deposit({ from: account, value: amount })
+    await eth.approve(dx.address, amount, { from: account })
+    return dx.deposit(eth.address, amount, { from: account })
+  }
+
+  const getAuctionIndex = async (sellToken, buyToken) => {
+    return (await dx.getAuctionIndex.call(sellToken.address || sellToken, buyToken.address || buyToken)).toNumber()
+  }
+
   it('rejects when account\'s sellToken balance == 0', async () => {
-    const ethBalance = (await dx.balances.call(eth.address, seller1)).toNumber()
+    const ethBalance = await getTokenBalance(seller1, eth)
 
     assert.strictEqual(ethBalance, 0, 'initially account has no ETH in DX')
 
@@ -87,11 +101,9 @@ contract('DutchExchange - postSellOrder', (accounts) => {
   })
 
   it('rejects when sellToken amount == 0', async () => {
-    eth.deposit({ from: seller1, value: 100 })
-    await eth.approve(dx.address, 100, { from: seller1 })
-    await dx.deposit(eth.address, 100, { from: seller1 })
+    await depositETH(seller1, 100)
 
-    const ethBalance = (await dx.balances.call(eth.address, seller1)).toNumber()
+    const ethBalance = await getTokenBalance(seller1, eth)
 
     assert.isAbove(ethBalance, 0, 'account should have some ETH in DX')
 
@@ -103,7 +115,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
   })
 
   it('rejects when latestAuctionIndex == 0, i.e. no TokenPair was added', async () => {
-    const latestAuctionIndex = (await dx.getAuctionIndex.call(eth.address, gno.address)).toNumber()
+    const latestAuctionIndex = await getAuctionIndex(eth, gno)
 
     assert.strictEqual(latestAuctionIndex, 0, 'action hasn\'t run yet')
 
