@@ -338,9 +338,8 @@ contract DutchExchange {
             // R1.1
             if (auctionIndex == 0) {
                 auctionIndex = latestAuctionIndex;
-            }
-            // require(auctionIndex == latestAuctionIndex); 
-            else {
+            } else {
+            // require(auctionIndex == latestAuctionIndex);
                 if (auctionIndex != latestAuctionIndex) {
                     Log('postSellOrder R1.1');
                     return;
@@ -351,9 +350,8 @@ contract DutchExchange {
             // R2.1: Sell orders must go to next auction
             if (auctionIndex == 0) {
                 auctionIndex = latestAuctionIndex + 1;
-            }
+            } else {
             // require(auctionIndex == latestAuctionIndex + 1);
-            else {
                 if (auctionIndex != latestAuctionIndex + 1) { 
                     Log('postSellOrder R2.1');
                     return;
