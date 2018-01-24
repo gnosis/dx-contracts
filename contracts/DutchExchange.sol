@@ -340,8 +340,8 @@ contract DutchExchange {
                 auctionIndex = latestAuctionIndex;
             }
             // require(auctionIndex == latestAuctionIndex); 
-            else {  // eslint-disable-line
-                if (auctionIndex != latestAuctionIndex) { // eslint-disable-line
+            else {
+                if (auctionIndex != latestAuctionIndex) {
                     Log('postSellOrder R1.1');
                     return;
                 }
@@ -353,7 +353,7 @@ contract DutchExchange {
                 auctionIndex = latestAuctionIndex + 1;
             }
             // require(auctionIndex == latestAuctionIndex + 1);
-            else { // eslint-disable-line
+            else {
                 if (auctionIndex != latestAuctionIndex + 1) { 
                     Log('postSellOrder R2.1');
                     return;
