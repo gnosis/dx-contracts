@@ -16,6 +16,8 @@ let owl
 let dx
 let oracle
 
+let feeRatio
+
 
 let contracts
 
@@ -71,6 +73,11 @@ contract('DutchExchange - postSellOrder', (accounts) => {
 
     eventWatcher(dx, 'NewSellOrder')
     eventWatcher(dx, 'Log')
+
+    const totalTul = (await tul.totalTokens()).toNumber()
+    assert.strictEqual(totalTul, 0, 'total TUL tokens should be 0')
+    // then we now that feeRatio = 1 / 200
+    feeRatio = 1 / 200
   })
 
   after(eventWatcher.stopWatching)
@@ -93,6 +100,64 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     return (await dx.getAuctionStart.call(sellToken.address || sellToken, buyToken.address || buyToken)).toNumber()
   }
 
+  const getSellerBalance = async (account, sellToken, buyToken, auctionIndex) => {
+    return (await dx.sellerBalances
+      .call(sellToken.address || sellToken, buyToken.address || buyToken, auctionIndex, account)
+    ).toNumber()
+  }
+
+  const getSellVolumeCurrent = async (sellToken, buyToken) => {
+    return (await dx.sellVolumesCurrent.call(sellToken.address || sellToken, buyToken.address || buyToken)).toNumber()
+  }
+
+  const getSellVolumeNext = async (sellToken, buyToken) => {
+    return (await dx.sellVolumesNext.call(sellToken.address || sellToken, buyToken.address || buyToken)).toNumber()
+  }
+
+  const getChangedAmounts = async (account, sellToken, buyToken, auctionIndex) => {
+    const [balance, sellerBalance, sellVolumeCurrent, sellVolumeNext] = await Promise.all([
+      getTokenBalance(account, sellToken),
+      getSellerBalance(account, sellToken, buyToken, auctionIndex),
+      getSellVolumeCurrent(sellToken, buyToken),
+      getSellVolumeNext(sellToken, buyToken),
+    ])
+
+    return {
+      balance,
+      sellerBalance,
+      sellVolumeCurrent,
+      sellVolumeNext,
+    }
+  }
+
+  const assertChangedAmounts = async (oldAmounts, newAmounts, amount, amountAfterFee, postedToCurrentAuction) =>
+    Object.keys(newAmounts).forEach((key) => {
+      const oldVal = oldAmounts[key]
+      const newVal = newAmounts[key]
+
+      const incByAmountAfterFee = () => assert.strictEqual(oldVal + amountAfterFee, newVal, `${key} should be increased by amountAfterFee`)
+      const remainTheSame = () => assert.strictEqual(oldVal, newVal, `${key} should remain the same`)
+
+      switch (key) {
+        case 'balance':
+          assert.strictEqual(oldVal - amount, newVal, 'balance should be reduced by amount')
+          return
+        case 'sellerBalance':
+          incByAmountAfterFee()
+          return
+        case 'sellVolumeCurrent':
+          if (postedToCurrentAuction) incByAmountAfterFee()
+          else remainTheSame()
+          return
+        case 'sellVolumeNext':
+          if (!postedToCurrentAuction) incByAmountAfterFee()
+          else remainTheSame()
+          break
+        default:
+      }
+    })
+
+  const getAmountAfterFee = amount => Math.floor(amount - Math.floor(amount * feeRatio))
   it('rejects when account\'s sellToken balance == 0', async () => {
     const ethBalance = await getTokenBalance(seller1, eth)
 
