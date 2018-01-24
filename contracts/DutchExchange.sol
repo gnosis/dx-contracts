@@ -3,7 +3,7 @@ pragma solidity ^0.4.18;
 import "./Utils/Math.sol";
 import "./Tokens/Token.sol";
 import "./Tokens/TokenTUL.sol";
-import "./Tokens/TokenOWL.sol";
+import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "./Oracle/PriceOracleInterface.sol";  
 
 /// @title Dutch Exchange - exchange token pairs with the clever mechanism of the dutch auction
