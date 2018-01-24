@@ -85,4 +85,20 @@ contract('DutchExchange - postSellOrder', (accounts) => {
 
     await assertRejects(dx.postSellOrder(eth.address, gno.address, 1, amount, { from: seller1 }), 'should reject as resulting amount == 0')
   })
+
+  it('rejects when sellToken amount == 0', async () => {
+    eth.deposit({ from: seller1, value: 100 })
+    await eth.approve(dx.address, 100, { from: seller1 })
+    await dx.deposit(eth.address, 100, { from: seller1 })
+
+    const ethBalance = (await dx.balances.call(eth.address, seller1)).toNumber()
+
+    assert.isAbove(ethBalance, 0, 'account should have some ETH in DX')
+
+    const amount = 0
+
+    assert.strictEqual(amount, 0, 'amount should be 0')
+
+    await assertRejects(dx.postSellOrder(eth.address, gno.address, 1, amount, { from: seller1 }), 'should reject as resulting amount == 0')
+  })
 })
