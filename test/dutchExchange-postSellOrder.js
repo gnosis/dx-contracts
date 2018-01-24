@@ -2,6 +2,7 @@ const {
   eventWatcher,
   logger,
   log,
+  assertRejects,
 } = require('./utils')
 
 const { getContracts, setupTest } = require('./testFunctions')
@@ -19,7 +20,7 @@ let contracts
 
 const separateLogs = () => log('\n    ----------------------------------')
 
-contract('DutchExchange - settleFee', (accounts) => {
+contract('DutchExchange - postSellOrder', (accounts) => {
   const [master, seller1] = accounts
 
   const startBal = {
@@ -68,7 +69,20 @@ contract('DutchExchange - settleFee', (accounts) => {
     logger('BT PRICE', `${bNum}/${bDen} == ${bNum / bDen}`)
 
     eventWatcher(dx, 'NewSellOrder')
+    eventWatcher(dx, 'Log')
   })
 
   after(eventWatcher.stopWatching)
+
+  it('rejects when account\'s sellToken balance == 0', async () => {
+    const ethBalance = (await dx.balances.call(eth.address, seller1)).toNumber()
+
+    assert.strictEqual(ethBalance, 0, 'initially account has no ETH in DX')
+
+    const amount = 100
+
+    assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
+
+    await assertRejects(dx.postSellOrder(eth.address, gno.address, 1, amount, { from: seller1 }), 'should reject as resulting amount == 0')
+  })
 })
