@@ -3,6 +3,7 @@ const {
   logger,
   log,
   assertRejects,
+  timestamp,
 } = require('./utils')
 
 const { getContracts, setupTest } = require('./testFunctions')
@@ -88,6 +89,10 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     return (await dx.getAuctionIndex.call(sellToken.address || sellToken, buyToken.address || buyToken)).toNumber()
   }
 
+  const getAuctionStart = async (sellToken, buyToken) => {
+    return (await dx.getAuctionStart.call(sellToken.address || sellToken, buyToken.address || buyToken)).toNumber()
+  }
+
   it('rejects when account\'s sellToken balance == 0', async () => {
     const ethBalance = await getTokenBalance(seller1, eth)
 
@@ -101,7 +106,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
   })
 
   it('rejects when sellToken amount == 0', async () => {
-    await depositETH(seller1, 100)
+    await depositETH(seller1, 50.0.toWei())
 
     const ethBalance = await getTokenBalance(seller1, eth)
 
@@ -124,5 +129,35 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
 
     await assertRejects(dx.postSellOrder(eth.address, gno.address, latestAuctionIndex, amount, { from: seller1 }), 'should reject as latestAuctionIndex == 0')
+  })
+
+  it('rejects when auction isn\'t started and order is posted not to the next auction', async () => {
+    // add tokenPair ETH GNO
+    await dx.addTokenPair(
+      eth.address,
+      gno.address,
+      10 * (10 ** 18),
+      0,
+      2,
+      1,
+      { from: seller1 },
+    )
+    const latestAuctionIndex = await getAuctionIndex(eth, gno)
+    console.log('latestAuctionIndex', latestAuctionIndex)
+
+    assert.strictEqual(latestAuctionIndex, 1, 'action index > 0')
+
+    const auctionStart = await getAuctionStart(eth, gno)
+    console.log('auctionStart', auctionStart)
+    assert.isAbove(auctionStart, timestamp(), 'auction isn\'t yet running')
+
+    const amount = 100
+
+    assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
+
+    const auctionIndex = latestAuctionIndex + 1
+    assert(auctionIndex !== 0 && auctionIndex !== latestAuctionIndex, 'auctionIndex is nether 0 nor latestAuctionIndex')
+
+    await assertRejects(dx.postSellOrder(eth.address, gno.address, latestAuctionIndex + 1, amount, { from: seller1 }), 'should reject as auctionIndex != latestAuctionIndex')
   })
 })
