@@ -158,6 +158,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     })
 
   const getAmountAfterFee = amount => Math.floor(amount - Math.floor(amount * feeRatio))
+
   it('rejects when account\'s sellToken balance == 0', async () => {
     const ethBalance = await getTokenBalance(seller1, eth)
 
@@ -223,6 +224,36 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     const auctionIndex = latestAuctionIndex + 1
     assert(auctionIndex !== 0 && auctionIndex !== latestAuctionIndex, 'auctionIndex is nether 0 nor latestAuctionIndex')
 
-    await assertRejects(dx.postSellOrder(eth.address, gno.address, latestAuctionIndex + 1, amount, { from: seller1 }), 'should reject as auctionIndex != latestAuctionIndex')
+    await assertRejects(dx.postSellOrder(eth.address, gno.address, auctionIndex, amount, { from: seller1 }), 'should reject as auctionIndex != latestAuctionIndex')
+  })
+
+  it('balances are correctly changed when auction isn\'t running and order is posted to the next auction', async () => {
+    const latestAuctionIndex = await getAuctionIndex(eth, gno)
+    console.log('latestAuctionIndex', latestAuctionIndex)
+
+    assert.strictEqual(latestAuctionIndex, 1, 'action index > 0')
+
+    const auctionStart = await getAuctionStart(eth, gno)
+    console.log('auctionStart', auctionStart)
+    const postedToCurrentAuction = timestamp() < auctionStart || auctionStart === 1
+    assert.isAbove(auctionStart, timestamp(), 'auction isn\'t yet running')
+
+    const amount = 1000
+
+    assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
+
+    const amountAfterFee = getAmountAfterFee(amount)
+    console.log('amountAfterFee', amountAfterFee)
+    assert.isAbove(amountAfterFee, 0, 'amountAfterFee should be > 0 to make a difference')
+
+    const auctionIndex = latestAuctionIndex
+    assert(auctionIndex === latestAuctionIndex, 'auctionIndex is latestAuctionIndex')
+
+    const oldAmounts = await getChangedAmounts(seller1, eth, gno, auctionIndex)
+
+    await dx.postSellOrder(eth.address, gno.address, auctionIndex, amount, { from: seller1 })
+
+    const newAmounts = await getChangedAmounts(seller1, eth, gno, auctionIndex)
+    assertChangedAmounts(oldAmounts, newAmounts, amount, amountAfterFee, postedToCurrentAuction)
   })
 })
