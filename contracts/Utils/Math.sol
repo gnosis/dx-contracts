@@ -293,7 +293,7 @@ library Math {
     /// @return Did no overflow occur?
     function safeToMul(int a, int b)
         public
-        constant
+        pure
         returns (bool)
     {
         return (b == 0) || (a * b / b == a);
@@ -331,7 +331,7 @@ library Math {
     /// @return Product
     function mul(int a, int b)
         public
-        constant
+        pure
         returns (int)
     {
         require(safeToMul(a, b));
@@ -340,6 +340,7 @@ library Math {
 
     function min(uint a, uint b) 
         public
+        pure
         returns (uint)
     {
         if (a < b) {
@@ -351,6 +352,7 @@ library Math {
 
     function atleastZero(int a)
         public
+        pure
         returns (uint)
     {
         if (a < 0) {
