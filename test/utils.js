@@ -37,8 +37,8 @@ const gasLogWrapper = (contracts) => {
         // called if @transaction function
         async apply(target, thisArg, argumentsList) {
           const result = await Reflect.apply(target, thisArg, argumentsList)
-          // safeguards against constant functions
-          if (typeof result !== 'object') return result
+          // safeguards against constant functions and BigNumber returns
+          if (typeof result !== 'object' || !result.receipt) return result
           const { receipt: { gasUsed } } = result
           // check that BOTH gas flags are used
           gasLog && gasTx && console.info(`
