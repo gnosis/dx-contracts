@@ -1,6 +1,6 @@
 /* eslint no-console:0, no-confusing-arrow:0 */
 // `truffle test --silent` or `truffle test -s` to suppress logs
-const { silent, contract: contractFlag } = require('minimist')(process.argv.slice(2), { alias: { silent: 's', contract: 'c' } })
+const { silent, contract: contractFlag, noevents } = require('minimist')(process.argv.slice(2), { alias: { silent: 's', contract: 'c' } })
 
 const assertRejects = async (q, msg) => {
   let res, catchFlag = false
@@ -35,7 +35,7 @@ let stopWatching = {}
  * @param {Object} args?       - not required, args to look for
  * @returns stopWatching function
  */
-const eventWatcher = (contract, eventName, argum = {}) => {
+const eventWatcher = noevents ? () => {} : (contract, eventName, argum = {}) => {
   const eventFunc = contract[eventName]
   if (!eventFunc) {
     log(`No event ${eventName} available in the contract`)
@@ -88,7 +88,7 @@ const eventWatcher = (contract, eventName, argum = {}) => {
  * @param {string} event?       - name of event to stop watching,
  *                                if none specified stops watching all events for this contract
  */
-eventWatcher.stopWatching = (contract, event) => {
+eventWatcher.stopWatching = noevents ? () => {} : (contract, event) => {
   // if given particular event name, stop watching it
   if (contract && typeof contract === 'object' && contract.address) {
     const contractEvents = stopWatching[contract.address]
