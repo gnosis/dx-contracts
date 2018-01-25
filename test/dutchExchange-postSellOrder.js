@@ -3,6 +3,7 @@ const {
   log: utilsLog,
   assertRejects,
   timestamp,
+  gasLogger,
 } = require('./utils')
 
 const { getContracts, setupTest, wait } = require('./testFunctions')
@@ -32,6 +33,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
   }
 
   beforeEach(separateLogs)
+  afterEach(() => gasLogger())
 
   before(async () => {
     // get contracts
@@ -49,7 +51,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     eventWatcher(dx, 'NewSellOrder')
     eventWatcher(dx, 'Log')
 
-    const totalTul = (await tul.totalTokens()).toNumber()
+    const totalTul = (await tul.totalTokens.call()).toNumber()
     assert.strictEqual(totalTul, 0, 'total TUL tokens should be 0')
     // then we know that feeRatio = 1 / 200
     feeRatio = 1 / 200
