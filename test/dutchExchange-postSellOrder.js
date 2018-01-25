@@ -297,19 +297,21 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     assertChangedAmounts(oldAmounts, newAmounts, amount, amountAfterFee, postedToCurrentAuction)
   })
 
-  it('rejects when auction is started and order is posted not to the next auction', async () => {
+  it('rejects when auction is running and order is posted not to the next auction', async () => {
 
     const latestAuctionIndex = await getAuctionIndex(eth, gno)
     console.log('latestAuctionIndex', latestAuctionIndex)
 
     assert.strictEqual(latestAuctionIndex, 1, 'action index > 0')
 
+    let auctionStart = await getAuctionStart(eth, gno)
+    assert.isAbove(auctionStart, timestamp(), 'auction isn\'t yet running')
     
-    wait(await getAuctionStart(eth, gno) - timestamp())
+    await wait(await getAuctionStart(eth, gno) - timestamp())
     
-    const auctionStart = await getAuctionStart(eth, gno)
+    auctionStart = await getAuctionStart(eth, gno)
     console.log('auctionStart', auctionStart)
-    assert.isAtLeast(auctionStart, timestamp(), 'auction isn\'t yet running')
+    assert.isAtLeast(timestamp(), auctionStart, 'auction isn\'t yet running')
 
     const amount = 100
 
@@ -320,4 +322,35 @@ contract('DutchExchange - postSellOrder', (accounts) => {
 
     await assertRejects(dx.postSellOrder(eth.address, gno.address, auctionIndex, amount, { from: seller1 }), 'should reject as auctionIndex != latestAuctionIndex')
   })
+
+  it('balances are correctly changed when auction is running and order is posted to the next auction', async () => {
+    const latestAuctionIndex = await getAuctionIndex(eth, gno)
+    console.log('latestAuctionIndex', latestAuctionIndex)
+
+    assert.strictEqual(latestAuctionIndex, 1, 'action index > 0')
+
+    const auctionStart = await getAuctionStart(eth, gno)
+    console.log('auctionStart', auctionStart)
+    const postedToCurrentAuction = timestamp() < auctionStart || auctionStart === 1
+    assert.isAtLeast(timestamp(), auctionStart, 'auction isn\'t yet running')
+
+    const amount = 10000
+
+    assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
+
+    const amountAfterFee = getAmountAfterFee(amount)
+    console.log('amountAfterFee', amountAfterFee)
+    assert.isAbove(amountAfterFee, 0, 'amountAfterFee should be > 0 to make a difference')
+
+    const auctionIndex = latestAuctionIndex + 1
+    assert.strictEqual(auctionIndex, latestAuctionIndex + 1, 'auctionIndex is next auction\'s index')
+
+    const oldAmounts = await getChangedAmounts(seller1, eth, gno, auctionIndex)
+
+    await dx.postSellOrder(eth.address, gno.address, auctionIndex, amount, { from: seller1 })
+
+    const newAmounts = await getChangedAmounts(seller1, eth, gno, auctionIndex)
+    assertChangedAmounts(oldAmounts, newAmounts, amount, amountAfterFee, postedToCurrentAuction)
+  })
+
 })
