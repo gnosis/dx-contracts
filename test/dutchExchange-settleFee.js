@@ -1,5 +1,6 @@
 const {
   eventWatcher,
+  gasLogger,
   logger,
   log,
   enableContractFlag,
@@ -111,6 +112,7 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
     await tul.updateMinter(master, { from: master })
   })
 
+  afterEach(() => gasLogger())
   after(eventWatcher.stopWatching)
 
   const {

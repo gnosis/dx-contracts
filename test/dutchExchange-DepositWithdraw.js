@@ -1,6 +1,7 @@
 const {
   eventWatcher,
   log,
+  gasLogger,
   assertRejects,
 } = require('./utils')
 
@@ -39,10 +40,11 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
       gno.transfer(acct, GNOBalance, { from: master }),
       gno.approve(dx.address, GNOBalance, { from: acct }),
     ])))
-    eventWatcher(dx, 'NewDeposit')
-    eventWatcher(dx, 'NewWithdrawal')
+    // eventWatcher(dx, 'NewDeposit')
+    // eventWatcher(dx, 'NewWithdrawal')
   })
 
+  afterEach(() => gasLogger())
   after(eventWatcher.stopWatching)
 
   const getAccDeposits = async (acc) => {
