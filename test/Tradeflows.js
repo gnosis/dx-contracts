@@ -6,6 +6,8 @@ const {
   eventWatcher,
   logger,
   timestamp,
+  gasLogger,
+  enableContractFlag,
 } = require('./utils')
 
 const {
@@ -43,7 +45,7 @@ const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVo
   logger('buyVolumes', buyVolumes)
   logger((await dx.buyVolumes.call(ST.address, BT.address)).toNumber())
   assert.isAtMost(difference, MaxRoundingError, 'buyVolumes incorrect') 
-  const [closingPriceNumReal, closingPriceDenReal] = await dx.closingPrices(ST.address, BT.address, auctionIndex)
+  const [closingPriceNumReal, closingPriceDenReal] = await dx.closingPrices.call(ST.address, BT.address, auctionIndex)
   logger('ClosingPriceNumReal', closingPriceNumReal)
   difference = Math.abs(closingPriceNumReal - closingPriceNum)
   assert.isAtMost(difference, MaxRoundingError, 'ClosingPriceNum not okay') 
@@ -78,9 +80,8 @@ const startBal = {
 }
 
 
-contract('DutchExchange - Flow 3', (accounts) => {
+const c1 = () => contract('DutchExchange - Flow 3', (accounts) => {
   const [, seller1, , buyer1] = accounts
-
 
   before(async () => {
     // get contracts
@@ -106,6 +107,7 @@ contract('DutchExchange - Flow 3', (accounts) => {
     eventWatcher(dx, 'Log', {})
   })
 
+  afterEach(() => gasLogger())
   after(eventWatcher.stopWatching)
 
   it('step 1 - Buys tokens at the 3:1 price and clears both auctions', async () => {
@@ -113,7 +115,7 @@ contract('DutchExchange - Flow 3', (accounts) => {
     
     // general setup information
     logger('PRICE ORACLE', await oracle.getUSDETHPrice.call()) 
-    logger('tuliptoken', await tokenTUL.totalTokens())
+    logger('tuliptoken', await tokenTUL.totalTokens.call())
 
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
@@ -147,8 +149,7 @@ contract('DutchExchange - Flow 3', (accounts) => {
   })
 })
 
-
-contract('DutchExchange - Flow 6', (accounts) => {
+const c2 = () => contract('DutchExchange - Flow 6', (accounts) => {
   const [, seller1, seller2, buyer1, buyer2] = accounts
 
   before(async () => {
@@ -180,7 +181,7 @@ contract('DutchExchange - Flow 6', (accounts) => {
       { from: seller1 },
     )
   })
-
+  afterEach(() => gasLogger())
   after(eventWatcher.stopWatching)
 
   it('step 1 - Buys tokens at the 3:1 price and clears both auctions', async () => {
@@ -191,7 +192,7 @@ contract('DutchExchange - Flow 6', (accounts) => {
 
     // general setup information
     logger('PRICE ORACLE', await oracle.getUSDETHPrice.call()) 
-    logger('tuliptoken', await tokenTUL.totalTokens())
+    logger('tuliptoken', await tokenTUL.totalTokens.call())
 
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
@@ -243,7 +244,7 @@ contract('DutchExchange - Flow 6', (accounts) => {
   })
 })
 
-contract('DutchExchange - Flow 4', (accounts) => {
+const c3 = () => contract('DutchExchange - Flow 4', (accounts) => {
   const [, seller1, seller2, buyer1, buyer2, seller3] = accounts
 
   before(async () => {
@@ -276,6 +277,7 @@ contract('DutchExchange - Flow 4', (accounts) => {
     )
   })
 
+  afterEach(() => gasLogger())
   after(eventWatcher.stopWatching)
 
   it('step 1 - clearing one auction', async () => {
@@ -330,7 +332,7 @@ contract('DutchExchange - Flow 4', (accounts) => {
     let auctionIndex = await getAuctionIndex()  
 
     logger('new auction index:', auctionIndex)
-    logger('auctionStartDate', (await dx.getAuctionStart(eth.address, gno.address)).toNumber())
+    logger('auctionStartDate', (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber())
     // post new sell order to start next auction
     // startingTimeOfAuction = await getStartingTimeOfAuction(eth, gno)
     const timeOfNextAuctionStart = timestamp() + 10 * 60
@@ -347,7 +349,7 @@ contract('DutchExchange - Flow 4', (accounts) => {
   })
 })
 
-contract('DutchExchange - Flow 1', (accounts) => {
+const c4 = () => contract('DutchExchange - Flow 1', (accounts) => {
   const [, seller1, seller2, buyer1, buyer2] = accounts
 
   before(async () => {
@@ -380,6 +382,7 @@ contract('DutchExchange - Flow 1', (accounts) => {
     )
   })
 
+  afterEach(() => gasLogger())
   after(eventWatcher.stopWatching)
 
   it('step 1 - clearing one auction', async () => {
@@ -423,7 +426,7 @@ contract('DutchExchange - Flow 1', (accounts) => {
     let auctionIndex = await getAuctionIndex()  
 
     logger('new auction index:', auctionIndex)
-    logger('auctionStartDate', (await dx.getAuctionStart(eth.address, gno.address)).toNumber())
+    logger('auctionStartDate', (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber())
     // post new sell order to start next auction
     // startingTimeOfAuction = await getStartingTimeOfAuction(eth, gno)
     const timeOfNextAuctionStart = timestamp() + 10 * 60
@@ -440,7 +443,7 @@ contract('DutchExchange - Flow 1', (accounts) => {
   })
 })
 
-contract('DutchExchange - Flow 9', (accounts) => {
+const c5 = () => contract('DutchExchange - Flow 9', (accounts) => {
   const [, seller1, , buyer1, buyer2] = accounts
 
   before(async () => {
@@ -472,7 +475,7 @@ contract('DutchExchange - Flow 9', (accounts) => {
       { from: seller1 },
     )
   })
-
+  afterEach(() => gasLogger())
   after(eventWatcher.stopWatching)
 
   it('step 2 - closing theoretical', async () => {
@@ -499,7 +502,7 @@ contract('DutchExchange - Flow 9', (accounts) => {
   it('step 3 - both auctions get cleared', async () => {
     let auctionIndex = await getAuctionIndex()
     // clearing buyOrder
-    const previousBuyVolume = (await dx.buyVolumes(eth.address, gno.address)).toNumber()
+    const previousBuyVolume = (await dx.buyVolumes.call(eth.address, gno.address)).toNumber()
     await postBuyOrder(eth, gno, auctionIndex, 10 * ether, buyer2)
 
     // check correct closing prices
@@ -522,7 +525,7 @@ contract('DutchExchange - Flow 9', (accounts) => {
   })
 })
 
-contract('DutchExchange - Flow 10', (accounts) => {
+const c6 = () => contract('DutchExchange - Flow 10', (accounts) => {
   const [, seller1, seller2, buyer1, buyer2] = accounts
 
   before(async () => {
@@ -554,7 +557,7 @@ contract('DutchExchange - Flow 10', (accounts) => {
       { from: seller1 },
     )
   })
-
+  afterEach(() => gasLogger())
   after(eventWatcher.stopWatching)
 
   it('step 2 - clearing one auction theoretical', async () => {
@@ -615,7 +618,7 @@ contract('DutchExchange - Flow 10', (accounts) => {
     let auctionIndex = await getAuctionIndex()  
 
     logger('new auction index:', auctionIndex)
-    logger('auctionStartDate', (await dx.getAuctionStart(eth.address, gno.address)).toNumber())
+    logger('auctionStartDate', (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber())
     // post new sell order to start next auction
     // startingTimeOfAuction = await getStartingTimeOfAuction(eth, gno)
     const timeOfNextAuctionStart = timestamp() + 10 * 60
@@ -632,8 +635,7 @@ contract('DutchExchange - Flow 10', (accounts) => {
   })
 })
 
-
-contract('DutchExchange - Flow 7', (accounts) => {
+const c7 = () => contract('DutchExchange - Flow 7', (accounts) => {
   const [, seller1, seller2, buyer1, buyer2, seller3] = accounts
 
   before(async () => {
@@ -665,7 +667,7 @@ contract('DutchExchange - Flow 7', (accounts) => {
       { from: seller1 },
     )
   })
-
+  afterEach(() => gasLogger())
   after(eventWatcher.stopWatching)
 
   it('step 1 - clearing one auction theoretical', async () => {
@@ -735,142 +737,4 @@ contract('DutchExchange - Flow 7', (accounts) => {
   })
 })
 
-/*
-contract('DutchExchange', (accounts) => {
-  const [, seller1, , buyer1, buyer2] = accounts
-
-  beforeEach(async () => {
-    // get contracts
-    contracts = await getContracts();
-    // destructure contracts into upper state
-    ({
-      DutchExchange: dx,
-      EtherToken: eth,
-      TokenGNO: gno,
-      TokenTUL: tokenTUL,
-      PriceOracle: oracle,
-    } = contracts)
-
-    // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts)
-
-    // add tokenPair ETH GNO
-    await dx.addTokenPair(
-      eth.address,
-      gno.address,
-      10 ** 9,
-      0,
-      2,
-      1,
-      { from: seller1 },
-    )
-  })
-
-  after(eventWatcher.stopWatching)
-
-  it('Flow 9 - clearing an auction + opposite 0 vol with opposite buyOrder, after it closed theoretical', async () => {
-    // ASSERT Auction has started
-    await setAndCheckAuctionStarted(eth, gno)
-    let auctionIndex = await getAuctionIndex()
-    let auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
-    // non-clearing buyOrder
-    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.666666)
-    await postBuyOrder(eth, gno, auctionIndex, 10 ** 9, buyer1)
-
-    //theoretical clearing at  0.5
-    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.4)
-
-    //check that auction is in right place
-    auctionIndex = await getAuctionIndex()
-    assert.equal((await dx.getAuctionIndex.call(eth.address, gno.address)).toNumber(), 1)
-    assert.equal((await dx.getAuctionIndex.call(gno.address, eth.address)).toNumber(), 1)
-    assert.equal((await dx.getAuctionStart.call(gno.address, eth.address)).toNumber(), auctionStart)
-    assert.equal((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber(), 10 ** 9 - 10 ** 9 / 200)
-    assert.equal((await dx.sellVolumesNext.call(eth.address, gno.address)).toNumber(), 0)
-
-    // clearing buyOrder with opposite buyOrder
-    const previousBuyVolume = (await dx.buyVolumes(eth.address, gno.address)).toNumber()
-    await postBuyOrder(gno, eth, auctionIndex, 10 ** 9, buyer2)
-
-    const [closingPriceNum,] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex))
-    assert.equal(previousBuyVolume, closingPriceNum)
-    const [closingPriceNum2] = await dx.closingPrices.call(gno.address, eth.address, auctionIndex)
-    assert.equal(0, closingPriceNum2)
-    // check Buyer1 balance and claim
-    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 ** 9 - 10 ** 9 / 200))
-    // check Seller1 Balance
-    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 9 - 10 ** 9 / 200))
-
-    //check that auction is in right place
-    auctionIndex = await getAuctionIndex()
-    assert.equal((await dx.getAuctionIndex.call(eth.address, gno.address)).toNumber(), 2)
-    assert.equal((await dx.getAuctionIndex.call(gno.address, eth.address)).toNumber(), 2)
-    assert.equal((await dx.getAuctionStart.call(gno.address, eth.address)).toNumber(), 1)
-    assert.equal((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber(), 0)
-    assert.equal((await dx.sellVolumesNext.call(eth.address, gno.address)).toNumber(), 0)
-  })
-})
-contract('DutchExchange', (accounts) => {
-  const [, seller1, , buyer1] = accounts
-
-  beforeEach(async () => {
-    // get contracts
-    contracts = await getContracts();
-    // destructure contracts into upper state
-    ({
-      DutchExchange: dx,
-      EtherToken: eth,
-      TokenGNO: gno,
-      TokenTUL: tokenTUL,
-      PriceOracle: oracle,
-    } = contracts)
-
-    // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts)
-
-    // add tokenPair ETH GNO
-    await dx.addTokenPair(
-      eth.address,
-      gno.address,
-      10 ** 8,
-      0,
-      2,
-      1,
-      { from: seller1 },
-    )
-  })
-
-  after(eventWatcher.stopWatching)
-
-  it('clearing an 0 sellVolume opposite auction after 6 hours and check shift of NextSellVolume', async () => {
-    // ASSERT Auction has started
-    await setAndCheckAuctionStarted(eth, gno)
-
-    const auctionIndex = await getAuctionIndex()
-    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.99)
-    
-    await dx.postSellOrder(eth.address, gno.address, auctionIndex + 1, 10 ** 8, { from: seller1 })
-    let nextSellVolume = (await dx.sellVolumesNext.call(eth.address, gno.address)).toNumber()
-    assert.equal(nextSellVolume, 10 ** 8 - 10 ** 8 / 200)
-    await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 8, { from: buyer1 })
-
-    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.4)
-    const currentSellVolume = (await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber()
-    assert.equal(currentSellVolume, 10 ** 8 - 10 ** 8 / 200)
-    logger('current SellVolume', currentSellVolume)
-
-    nextSellVolume = (await dx.sellVolumesNext.call(eth.address, gno.address)).toNumber()
-    assert.equal(nextSellVolume, 10 ** 8 - 10 ** 8 / 200, 'sellVolumeNextNotCorrectAfterClearing')
-    logger('nextSellVolume', nextSellVolume)
-    console.log(nextSellVolume)
-    await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 8, { from: buyer1 })
-    assert.equal(nextSellVolume, (await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber())
-    assert.equal((await dx.sellVolumesNext.call(eth.address, gno.address)).toNumber(), 0, 'sellVOlumeNext is not reseted')
-
-    // check Buyer1 balance and claim
-    await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, (10 ** 8 - 10 ** 8 / 200))
-    // check Seller1 Balance
-    await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, (10 ** 8 - 10 ** 8 / 200))
-  })
-})
-*/
+enableContractFlag(c1, c2, c3, c4, c5, c6, c7)

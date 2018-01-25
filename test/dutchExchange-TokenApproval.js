@@ -1,6 +1,7 @@
 const {
   logger,
   assertRejects,
+  gasLogger,
 } = require('./utils')
 
 const { getContracts } = require('./testFunctions')
@@ -17,6 +18,7 @@ contract('DutchExchange updating token aprroval', (accounts) => {
   const [master, seller1] = accounts
   let testingTokens
 
+  afterEach(() => gasLogger())
   before(async () => {
     // get contracts
     contracts = await getContracts();

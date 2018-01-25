@@ -11,8 +11,8 @@
 */
 const argv = require('minimist')(process.argv.slice(2), { alias: { selector: 'sel' } })
 const { 
-  eventWatcher,
   log,
+  gasLogger,
   assertRejects,
 } = require('./utils')
 
@@ -39,6 +39,7 @@ const setupContracts = async () => {
 contract('TokenOWL - BurnTesting', (accounts) => {
   const [master, OWLHolder, , NoOWLHolder] = accounts
 
+  afterEach(() => gasLogger())
 
   before(async () => {
     // get contracts

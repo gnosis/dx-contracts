@@ -1,6 +1,8 @@
 /* eslint no-floating-decimal:0 */
 const {
   timestamp,
+  gasLogger,
+  log,
 } = require('./utils')
 
 const {
@@ -20,6 +22,8 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
   const testingAccs = accounts.slice(1, 5)
 
   const ETHBalance = 10..toWei()
+
+  afterEach(() => gasLogger())
 
   before(async () => {
     // get contracts
