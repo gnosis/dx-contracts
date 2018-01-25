@@ -1,7 +1,6 @@
 const {
   eventWatcher,
-  logger,
-  log,
+  log: utilsLog,
   assertRejects,
   timestamp,
 } = require('./utils')
@@ -12,19 +11,18 @@ const { getContracts, setupTest, wait } = require('./testFunctions')
 let eth
 let gno
 let tul
-let owl
 let dx
-let oracle
 
 let feeRatio
 
 
 let contracts
 
-const separateLogs = () => log('\n    ----------------------------------')
+const separateLogs = () => utilsLog('\n    ----------------------------------')
+const log = (...args) => utilsLog('\t', ...args)
 
 contract('DutchExchange - postSellOrder', (accounts) => {
-  const [master, seller1] = accounts
+  const [, seller1] = accounts
 
   const startBal = {
     startingETH: 0,
@@ -40,51 +38,26 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     contracts = await getContracts();
     // destructure contracts into upper state
     ({
-      // DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
       TokenTUL: tul,
-      TokenOWL: owl,
-      // using internal contract with settleFeePub calling dx.settleFee internally
       DutchExchange: dx,
-      PriceOracleInterface: oracle,
     } = contracts)
 
     await setupTest(accounts, contracts, startBal)
-
-    // add tokenPair ETH GNO
-    // await dx.addTokenPair(
-    //   eth.address,
-    //   gno.address,
-    //   10 * (10 ** 18),
-    //   0,
-    //   2,
-    //   1,
-    //   { from: seller1 },
-    // )
-
-    // await tul.updateMinter(master, { from: master })
-    logger('PRICE ORACLE', await oracle.getUSDETHPrice.call())
-
-    const [sNum, sDen] = await dx.getPriceOracleForJS.call(eth.address)
-    logger('ST PRICE', `${sNum}/${sDen} == ${sNum / sDen}`)
-    const [bNum, bDen] = await dx.getPriceOracleForJS.call(gno.address)
-    logger('BT PRICE', `${bNum}/${bDen} == ${bNum / bDen}`)
 
     eventWatcher(dx, 'NewSellOrder')
     eventWatcher(dx, 'Log')
 
     const totalTul = (await tul.totalTokens()).toNumber()
     assert.strictEqual(totalTul, 0, 'total TUL tokens should be 0')
-    // then we now that feeRatio = 1 / 200
+    // then we know that feeRatio = 1 / 200
     feeRatio = 1 / 200
   })
 
   after(eventWatcher.stopWatching)
 
-  const getTokenBalance = async (account, token) => {
-    return (await dx.balances.call(token.address || token, account)).toNumber()
-  }
+  const getTokenBalance = async (account, token) => (await dx.balances.call(token.address || token, account)).toNumber()
 
   const depositETH = async (account, amount) => {
     await eth.deposit({ from: account, value: amount })
@@ -92,27 +65,21 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     return dx.deposit(eth.address, amount, { from: account })
   }
 
-  const getAuctionIndex = async (sellToken, buyToken) => {
-    return (await dx.getAuctionIndex.call(sellToken.address || sellToken, buyToken.address || buyToken)).toNumber()
-  }
+  const getAuctionIndex = async (sellToken, buyToken) =>
+    (await dx.getAuctionIndex.call(sellToken.address || sellToken, buyToken.address || buyToken)).toNumber()
 
-  const getAuctionStart = async (sellToken, buyToken) => {
-    return (await dx.getAuctionStart.call(sellToken.address || sellToken, buyToken.address || buyToken)).toNumber()
-  }
+  const getAuctionStart = async (sellToken, buyToken) =>
+    (await dx.getAuctionStart.call(sellToken.address || sellToken, buyToken.address || buyToken)).toNumber()
 
-  const getSellerBalance = async (account, sellToken, buyToken, auctionIndex) => {
-    return (await dx.sellerBalances
-      .call(sellToken.address || sellToken, buyToken.address || buyToken, auctionIndex, account)
-    ).toNumber()
-  }
+  const getSellerBalance = async (account, sellToken, buyToken, auctionIndex) =>
+    (await dx.sellerBalances.call(sellToken.address || sellToken, buyToken.address || buyToken, auctionIndex, account))
+      .toNumber()
 
-  const getSellVolumeCurrent = async (sellToken, buyToken) => {
-    return (await dx.sellVolumesCurrent.call(sellToken.address || sellToken, buyToken.address || buyToken)).toNumber()
-  }
+  const getSellVolumeCurrent = async (sellToken, buyToken) =>
+    (await dx.sellVolumesCurrent.call(sellToken.address || sellToken, buyToken.address || buyToken)).toNumber()
 
-  const getSellVolumeNext = async (sellToken, buyToken) => {
-    return (await dx.sellVolumesNext.call(sellToken.address || sellToken, buyToken.address || buyToken)).toNumber()
-  }
+  const getSellVolumeNext = async (sellToken, buyToken) =>
+    (await dx.sellVolumesNext.call(sellToken.address || sellToken, buyToken.address || buyToken)).toNumber()
 
   const getChangedAmounts = async (account, sellToken, buyToken, auctionIndex) => {
     const [balance, sellerBalance, sellVolumeCurrent, sellVolumeNext] = await Promise.all([
@@ -123,10 +90,12 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     ])
 
     log(`
-      balance ==\t\t${balance}
-      sellerBalance ==\t\t${sellerBalance}
-      sellVolumeCurrent ==\t${sellVolumeCurrent}
-      sellVolumeNext ==\t\t${sellVolumeNext}
+      balance\t\t==\t${balance}
+      sellerBalance\t==\t${sellerBalance}
+      
+      for auctionIndex ${auctionIndex}
+      sellVolumeCurrent\t==\t${sellVolumeCurrent}
+      sellVolumeNext\t==\t${sellVolumeNext}
     `)
 
     return {
@@ -166,10 +135,16 @@ contract('DutchExchange - postSellOrder', (accounts) => {
 
   const getAmountAfterFee = amount => Math.floor(amount - Math.floor(amount * feeRatio))
 
-  const getEventFromTX = ({ logs }, eventName) => logs.find(l => l.event === eventName)
+  const getEventFromTX = ({ logs }, eventName) => {
+    const event = logs.find(l => l.event === eventName)
+    if (event) return event.args.auctionIndex.toNumber()
+
+    return null
+  }
 
   it('rejects when account\'s sellToken balance == 0', async () => {
     const ethBalance = await getTokenBalance(seller1, eth)
+    log(`balance == ${ethBalance}`)
 
     assert.strictEqual(ethBalance, 0, 'initially account has no ETH in DX')
 
@@ -177,7 +152,9 @@ contract('DutchExchange - postSellOrder', (accounts) => {
 
     assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
 
+    log(`posting sell order for ${amount}`)
     await assertRejects(dx.postSellOrder(eth.address, gno.address, 1, amount, { from: seller1 }), 'should reject as resulting amount == 0')
+    log('tx was rejected')
   })
 
   it('rejects when sellToken amount == 0', async () => {
@@ -191,7 +168,9 @@ contract('DutchExchange - postSellOrder', (accounts) => {
 
     assert.strictEqual(amount, 0, 'amount should be 0')
 
+    log(`posting sell order for ${amount}`)
     await assertRejects(dx.postSellOrder(eth.address, gno.address, 1, amount, { from: seller1 }), 'should reject as resulting amount == 0')
+    log('tx was rejected')
   })
 
   it('rejects when latestAuctionIndex == 0, i.e. no TokenPair was added', async () => {
@@ -202,8 +181,9 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     const amount = 100
 
     assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
-
+    log(`posting sell order for ${amount} to a not yet added token pair`)
     await assertRejects(dx.postSellOrder(eth.address, gno.address, latestAuctionIndex, amount, { from: seller1 }), 'should reject as latestAuctionIndex == 0')
+    log('tx was rejected')
   })
 
   it('rejects when auction isn\'t started and order is posted not to that auction', async () => {
@@ -211,20 +191,19 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     await dx.addTokenPair(
       eth.address,
       gno.address,
-      10 * (10 ** 5),
+      10 ** 6,
       0,
       2,
       1,
       { from: seller1 },
     )
     const latestAuctionIndex = await getAuctionIndex(eth, gno)
-    console.log('latestAuctionIndex', latestAuctionIndex)
 
     assert.strictEqual(latestAuctionIndex, 1, 'action index > 0')
 
     const auctionStart = await getAuctionStart(eth, gno)
-    console.log('auctionStart', auctionStart)
     assert.isAbove(auctionStart, timestamp(), 'auction isn\'t yet running')
+    log(`auction #${latestAuctionIndex} isn't yet running`)
 
     const amount = 100
 
@@ -233,26 +212,26 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     const auctionIndex = latestAuctionIndex + 1
     assert(auctionIndex !== 0 && auctionIndex !== latestAuctionIndex, 'auctionIndex is nether 0 nor latestAuctionIndex')
 
+    log(`posting sell order for ${amount} to auction #${auctionIndex}(next)`)
     await assertRejects(dx.postSellOrder(eth.address, gno.address, auctionIndex, amount, { from: seller1 }), 'should reject as auctionIndex != latestAuctionIndex')
+    log('tx was rejected')
   })
 
   it('balances are correctly changed when auction isn\'t running and order is posted to that auction', async () => {
     const latestAuctionIndex = await getAuctionIndex(eth, gno)
-    console.log('latestAuctionIndex', latestAuctionIndex)
 
     assert.strictEqual(latestAuctionIndex, 1, 'action index > 0')
 
     const auctionStart = await getAuctionStart(eth, gno)
-    console.log('auctionStart', auctionStart)
     const postedToCurrentAuction = timestamp() < auctionStart || auctionStart === 1
     assert.isAbove(auctionStart, timestamp(), 'auction isn\'t yet running')
+    log(`auction #${latestAuctionIndex} isn't yet running`)
 
     const amount = 10000
 
     assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
 
     const amountAfterFee = getAmountAfterFee(amount)
-    console.log('amountAfterFee', amountAfterFee)
     assert.isAbove(amountAfterFee, 0, 'amountAfterFee should be > 0 to make a difference')
 
     const auctionIndex = latestAuctionIndex
@@ -260,6 +239,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
 
     const oldAmounts = await getChangedAmounts(seller1, eth, gno, latestAuctionIndex)
 
+    log(`posting sell order for ${amount} (after fee ${amountAfterFee}) to auction #${auctionIndex}(current)`)
     await dx.postSellOrder(eth.address, gno.address, auctionIndex, amount, { from: seller1 })
 
     const newAmounts = await getChangedAmounts(seller1, eth, gno, latestAuctionIndex)
@@ -268,21 +248,19 @@ contract('DutchExchange - postSellOrder', (accounts) => {
 
   it('order with auctionIndex == 0 when auction isn\'t running is redirected to the correct index and posted to that auction ', async () => {
     const latestAuctionIndex = await getAuctionIndex(eth, gno)
-    console.log('latestAuctionIndex', latestAuctionIndex)
 
     assert.strictEqual(latestAuctionIndex, 1, 'action index > 0')
 
     const auctionStart = await getAuctionStart(eth, gno)
-    console.log('auctionStart', auctionStart)
     const postedToCurrentAuction = timestamp() < auctionStart || auctionStart === 1
     assert.isAbove(auctionStart, timestamp(), 'auction isn\'t yet running')
+    log(`auction #${latestAuctionIndex} isn't yet running`)
 
     const amount = 10000
 
     assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
 
     const amountAfterFee = getAmountAfterFee(amount)
-    console.log('amountAfterFee', amountAfterFee)
     assert.isAbove(amountAfterFee, 0, 'amountAfterFee should be > 0 to make a difference')
 
     const auctionIndex = 0
@@ -290,28 +268,27 @@ contract('DutchExchange - postSellOrder', (accounts) => {
 
     const oldAmounts = await getChangedAmounts(seller1, eth, gno, latestAuctionIndex)
 
+    log(`posting sell order for ${amount} (after fee ${amountAfterFee}) to auction #${auctionIndex}(redirect-to-current)`)
     const tx = await dx.postSellOrder(eth.address, gno.address, auctionIndex, amount, { from: seller1 })
-    assert.strictEqual(getEventFromTX(tx, 'NewSellOrder').args.auctionIndex.toNumber(), latestAuctionIndex, 'tx should be redirected to latestAuctionIndex')
+    assert.strictEqual(getEventFromTX(tx, 'NewSellOrder'), latestAuctionIndex, 'tx should be redirected to latestAuctionIndex')
 
     const newAmounts = await getChangedAmounts(seller1, eth, gno, latestAuctionIndex)
     assertChangedAmounts(oldAmounts, newAmounts, amount, amountAfterFee, postedToCurrentAuction)
   })
 
   it('rejects when auction is running and order is posted not to the next auction', async () => {
-
     const latestAuctionIndex = await getAuctionIndex(eth, gno)
-    console.log('latestAuctionIndex', latestAuctionIndex)
 
     assert.strictEqual(latestAuctionIndex, 1, 'action index > 0')
 
     let auctionStart = await getAuctionStart(eth, gno)
     assert.isAbove(auctionStart, timestamp(), 'auction isn\'t yet running')
-    
+
     await wait(await getAuctionStart(eth, gno) - timestamp())
-    
+
     auctionStart = await getAuctionStart(eth, gno)
-    console.log('auctionStart', auctionStart)
     assert.isAtLeast(timestamp(), auctionStart, 'auction is running')
+    log(`auction #${latestAuctionIndex} is running`)
 
     const amount = 100
 
@@ -320,26 +297,26 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     const auctionIndex = latestAuctionIndex
     assert(auctionIndex !== 0 && auctionIndex !== latestAuctionIndex + 1, 'auctionIndex is nether 0 nor latestAuctionIndex + 1')
 
+    log(`posting sell order for ${amount} to auction #${auctionIndex}(current)`)
     await assertRejects(dx.postSellOrder(eth.address, gno.address, auctionIndex, amount, { from: seller1 }), 'should reject as auctionIndex != latestAuctionIndex')
+    log('tx was rejected')
   })
 
   it('balances are correctly changed when auction is running and order is posted to the next auction', async () => {
     const latestAuctionIndex = await getAuctionIndex(eth, gno)
-    console.log('latestAuctionIndex', latestAuctionIndex)
 
     assert.strictEqual(latestAuctionIndex, 1, 'action index > 0')
 
     const auctionStart = await getAuctionStart(eth, gno)
-    console.log('auctionStart', auctionStart)
     const postedToCurrentAuction = timestamp() < auctionStart || auctionStart === 1
     assert.isAtLeast(timestamp(), auctionStart, 'auction is running')
+    log(`auction #${latestAuctionIndex} is running`)
 
     const amount = 10000
 
     assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
 
     const amountAfterFee = getAmountAfterFee(amount)
-    console.log('amountAfterFee', amountAfterFee)
     assert.isAbove(amountAfterFee, 0, 'amountAfterFee should be > 0 to make a difference')
 
     const auctionIndex = latestAuctionIndex + 1
@@ -347,6 +324,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
 
     const oldAmounts = await getChangedAmounts(seller1, eth, gno, auctionIndex)
 
+    log(`posting sell order for ${amount} (after fee ${amountAfterFee}) to auction #${auctionIndex}(next)`)
     await dx.postSellOrder(eth.address, gno.address, auctionIndex, amount, { from: seller1 })
 
     const newAmounts = await getChangedAmounts(seller1, eth, gno, auctionIndex)
@@ -355,21 +333,19 @@ contract('DutchExchange - postSellOrder', (accounts) => {
 
   it('order with auctionIndex == 0 when auction is running is redirected to the correct index and posted to that auction ', async () => {
     const latestAuctionIndex = await getAuctionIndex(eth, gno)
-    console.log('latestAuctionIndex', latestAuctionIndex)
 
     assert.strictEqual(latestAuctionIndex, 1, 'action index > 0')
 
     const auctionStart = await getAuctionStart(eth, gno)
-    console.log('auctionStart', auctionStart)
     const postedToCurrentAuction = timestamp() < auctionStart || auctionStart === 1
     assert.isAtLeast(timestamp(), auctionStart, 'auction is running')
+    log(`auction #${latestAuctionIndex} is running`)
 
     const amount = 10000
 
     assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
 
     const amountAfterFee = getAmountAfterFee(amount)
-    console.log('amountAfterFee', amountAfterFee)
     assert.isAbove(amountAfterFee, 0, 'amountAfterFee should be > 0 to make a difference')
 
     const auctionIndex = 0
@@ -377,8 +353,9 @@ contract('DutchExchange - postSellOrder', (accounts) => {
 
     const oldAmounts = await getChangedAmounts(seller1, eth, gno, latestAuctionIndex + 1)
 
+    log(`posting sell order for ${amount} (after fee ${amountAfterFee}) to auction #${auctionIndex}(redirect-to-next)`)
     const tx = await dx.postSellOrder(eth.address, gno.address, auctionIndex, amount, { from: seller1 })
-    assert.strictEqual(getEventFromTX(tx, 'NewSellOrder').args.auctionIndex.toNumber(), latestAuctionIndex + 1, 'tx should be redirected to latestAuctionIndex + 1')
+    assert.strictEqual(getEventFromTX(tx, 'NewSellOrder'), latestAuctionIndex + 1, 'tx should be redirected to latestAuctionIndex + 1')
 
     const newAmounts = await getChangedAmounts(seller1, eth, gno, latestAuctionIndex + 1)
     assertChangedAmounts(oldAmounts, newAmounts, amount, amountAfterFee, postedToCurrentAuction)
