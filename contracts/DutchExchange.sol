@@ -201,16 +201,13 @@ contract DutchExchange {
 
         uint fundedValueUSD;
         uint ETHUSDPrice = PriceOracleInterface(ETHUSDOracle).getUSDETHPrice();
-        // David Code
-        LogNumber("ETHUSDPrice from Oracle", ETHUSDPrice);
+
         // Compute fundedValueUSD
         address ETHmem = ETH;
         if (token1 == ETHmem) {
             // C1
             // MUL: 10^30 * 10^4 = 10^34
             fundedValueUSD = token1Funding * ETHUSDPrice;
-            // David Code
-            LogNumber("fundedValueUSD * ETHUSDPrice", fundedValueUSD);
         } else if (token2 == ETHmem) {
             // C2
             // MUL: 10^30 * 10^4 = 10^34
@@ -364,7 +361,7 @@ contract DutchExchange {
 
         // R3
         uint auctionStart = getAuctionStart(sellToken, buyToken);
-        if (now < auctionStart || auctionStart == 1) {
+        if (auctionStart == 1 || auctionStart > now) {
             // C1: We are in the 10 minute buffer period
             // OR waiting for an auction to receive sufficient sellVolume
             // Auction has already cleared, and index has been incremented
@@ -411,7 +408,7 @@ contract DutchExchange {
         // Update variables
         balances[sellToken][msg.sender] -= amount;
         sellerBalances[sellToken][buyToken][auctionIndex][msg.sender] += amountAfterFee;
-        if (now < auctionStart || auctionStart == 1) {
+        if (auctionStart == 1 || auctionStart > now) {
             // C1
             sellVolumesCurrent[sellToken][buyToken] += amountAfterFee;
         } else {
@@ -587,55 +584,47 @@ contract DutchExchange {
         public
         returns (uint returned, uint tulipsIssued)
     {
-        fraction memory price;
-        (returned, price) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
+        fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
 
-        uint den = closingPrices[sellToken][buyToken][auctionIndex].den;
-        // David Code
-        LogNumber("claimBuyerFUnds price.den", den);
-        if (den == 0 && returned > 0) {
+       // R1: checks if particular auction has ever run
+        // require(auctionIndex <= getAuctionIndex(sellToken, buyToken));
+        if (auctionIndex > getAuctionIndex(sellToken, buyToken)) {
+            Log('claimBuyerFunds R1');
+            return;
+        }
+
+        uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
+        uint claimedAmount = claimedAmounts[sellToken][buyToken][auctionIndex][user];
+
+        // R2
+        // require(buyerBalance > 0);
+        if (buyerBalance == 0) {
+            Log('claimBuyerFunds R2');
+            return;
+        }
+
+        if (closingPrice.den == 0) {
             // Auction is running
-            claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
-        } else {
-            // Auction has closed
-            // We DON'T want to check for returned > 0, because that would fail if a user claims
-            // intermediate funds & auction clears in same block (he/she would not be able to claim extraTokens)
+            fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
 
-            // Assign extra sell tokens (this is possible only after auction has cleared,
-            // because buyVolume could still increase before that)
-            uint extraTokensTotal = extraTokens[sellToken][buyToken][auctionIndex];
-            uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
+            uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
 
-            // closingPrices.num represents buyVolume
-            // 10^30 * 10^30 = 10^60
-            uint tokensExtra = buyerBalance * extraTokensTotal / closingPrices[sellToken][buyToken][auctionIndex].num;
-            returned += tokensExtra;
- 
-            if (approvedTokens[buyToken] == true && approvedTokens[sellToken] == true) {
-                address ETHmem = ETH;
-                // Get tulips issued based on ETH price of returned tokens
-                if (buyToken == ETHmem) {
-                    tulipsIssued = buyerBalance;
-                } else if (sellToken == ETHmem) {
-                    // 10^30 * 10^39 = 10^66
-                    tulipsIssued = buyerBalance * price.den / price.num;
-                } else {
-                    // Neither token is ETH, so we use historicalPriceOracle()
-                    fraction memory priceETH = historicalPriceOracle(buyToken, auctionIndex);
-                    // 10^30 * 10^28 = 10^58
-                    tulipsIssued = buyerBalance * priceETH.num / priceETH.den;
-                }
+            // 10^39 * 10^27 = 10^66
+            if (price.num * sellVolume <= price.den * buyVolumes[sellToken][buyToken]) {
+                clearAuction(sellToken, buyToken, auctionIndex, sellVolume);
+                closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
+                
+                (returned, tulipsIssued) = claimBuyerFunds2(sellToken, buyToken, user, auctionIndex,
+                    buyerBalance, claimedAmount, closingPrice.num, closingPrice.den);
+            } else {
+                // 10^30 * 10^39 = 10^66
+                returned = Math.atleastZero(int(buyerBalance * price.den / price.num - claimedAmount));
 
-                if (tulipsIssued > 0) {
-                    // Issue TUL
-                    TokenTUL(TUL).mintTokens(user, tulipsIssued);
-                }
+                claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
             }
-
-            // Auction has closed
-            // Reset buyerBalances and claimedAmounts
-            buyerBalances[sellToken][buyToken][auctionIndex][user] = 0;
-            claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0; 
+        } else {
+            (returned, tulipsIssued) = claimBuyerFunds2(sellToken, buyToken, user, auctionIndex,
+                buyerBalance, claimedAmount, price.num, price.den);
         }
 
         // Claim tokens
@@ -646,38 +635,60 @@ contract DutchExchange {
         ClaimBuyerFunds(returned, tulipsIssued);
     }
 
-    // > getUnclaimedBuyerFunds()
-    /// @dev Claim buyer funds for one auction
-    function getUnclaimedBuyerFunds(
+    function claimBuyerFunds2(
         address sellToken,
         address buyToken,
         address user,
-        uint auctionIndex
+        uint auctionIndex,
+        uint buyerBalance,
+        uint claimedAmount,
+        uint num,
+        uint den
     )
-        public
-        view
-        returns (uint unclaimedBuyerFunds, fraction memory price)
+        internal
+        returns (uint returned, uint tulipsIssued)
     {
-        // R1: checks if particular auction has ever run
-        // require(auctionIndex <= getAuctionIndex(sellToken, buyToken));
-        if (auctionIndex > getAuctionIndex(sellToken, buyToken)) {
-            Log('getUnclaimedBuyerFunds R1');
-            return;
+        // Auction has closed
+
+        returned = Math.atleastZero(int(buyerBalance * den / num - claimedAmount));
+
+        // We DON'T want to check for returned > 0, because that would fail if a user claims
+        // intermediate funds & auction clears in same block (he/she would not be able to claim extraTokens)
+
+
+        // Assign extra sell tokens (this is possible only after auction has cleared,
+        // because buyVolume could still increase before that)
+        // closingPrices.num represents buyVolume
+        // 10^30 * 10^30 = 10^60
+        uint tokensExtra = buyerBalance * extraTokens[sellToken][buyToken][auctionIndex] / num;
+        returned += tokensExtra;
+
+        if (approvedTokens[buyToken] == true && approvedTokens[sellToken] == true) {
+            address ETHmem = ETH;
+            // Get tulips issued based on ETH price of returned tokens
+            if (buyToken == ETHmem) {
+                tulipsIssued = buyerBalance;
+            } else if (sellToken == ETHmem) {
+                // 10^30 * 10^39 = 10^66
+                tulipsIssued = buyerBalance * den / num;
+            } else {
+                // Neither token is ETH, so we use historicalPriceOracle()
+                fraction memory priceETH = historicalPriceOracle(buyToken, auctionIndex);
+                // 10^30 * 10^28 = 10^58
+                tulipsIssued = buyerBalance * priceETH.num / priceETH.den;
+            }
+
+            if (tulipsIssued > 0) {
+                // Issue TUL
+                TokenTUL(TUL).mintTokens(user, tulipsIssued);
+            }
         }
 
-        price = getPrice(sellToken, buyToken, auctionIndex);
-
-        if (price.num == 0) {
-            // This should rarely happen - as long as there is >= 1 buy order,
-            // auction will clear before price = 0. So this is just fail-safe
-            unclaimedBuyerFunds = 0;
-        } else {
-            uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
-            // 10^30 * 10^39 = 10^66
-            unclaimedBuyerFunds = Math.atleastZero(int(
-                buyerBalance * price.den / price.num - 
-                claimedAmounts[sellToken][buyToken][auctionIndex][user]
-            ));
+        // Auction has closed
+        // Reset buyerBalances and claimedAmounts
+        buyerBalances[sellToken][buyToken][auctionIndex][user] = 0;
+        if (claimedAmount > 0) {
+            claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0; 
         }
     }
 
@@ -713,12 +724,6 @@ contract DutchExchange {
             price.num = Math.atleastZero(int((86400 - timeElapsed) * ratioOfPriceOracles.num));
             // 10^4 * 10^35 = 10^39
             price.den = (timeElapsed + 43200) * ratioOfPriceOracles.den;
-
-            // 10^39 * 10^27 = 10^66
-            if (price.num * sellVolumesCurrent[sellToken][buyToken] <= price.den * buyVolumes[sellToken][buyToken]) {
-                price.num = buyVolumes[sellToken][buyToken];
-                price.den = sellVolumesCurrent[sellToken][buyToken];
-            }
         }
     }
 
@@ -835,8 +840,6 @@ contract DutchExchange {
             extraTokens[primaryToken][secondaryToken][auctionIndex + 1] += fee;
         }
         amountAfterFee = amount - fee;
-        // DAVID CODE
-        LogNumber("Amount after Settle Fee", amountAfterFee);
     }
     
     // > calculateFeeRatio()
