@@ -16,7 +16,6 @@ let owl
 let dx
 let oracle
 
-
 let contracts
 
 const separateLogs = () => log('\n    ----------------------------------')
@@ -201,6 +200,9 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
     } = contracts)
 
     await setupTest(accounts, contracts, startBal)
+
+    // allow the start of an auction w/no threshold
+    await dx.updateExchangeParams(master, oracle.address, 0, 0, { from: master })
 
     // add tokenPair ETH GNO
     await dx.addTokenPair(
