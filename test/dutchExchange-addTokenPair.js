@@ -301,5 +301,11 @@ contract('DutchExchange - addTokenPair', (accounts) => {
     log('tx was rejected')
   })
 
+  it('rejects if initialClosingPriceDen == 0', async () => {
+    log('adding ETH -> GNO token pair with initialClosingPriceDen == 0')
+    await assertRejects(addTokenPair(seller1, { initialClosingPriceDen: 0 }))
+    log('tx was rejected')
+  })
+
   })
 })
