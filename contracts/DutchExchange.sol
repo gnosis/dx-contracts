@@ -504,7 +504,7 @@ contract DutchExchange {
         // Checking for equality would suffice here. nevertheless:
         if (amount >= outstandingVolume) {
             // Clear auction
-            clearAuction(sellToken, buyToken, auctionIndex, sellVolume, price.num, price.den);
+            clearAuction(sellToken, buyToken, auctionIndex, sellVolume);
         }
     }
 
@@ -611,7 +611,7 @@ contract DutchExchange {
 
             // 10^39 * 10^30 = 10^69
             if (price.num * sellVolume <= price.den * buyVolumes[sellToken][buyToken]) {
-                clearAuction(sellToken, buyToken, auctionIndex, sellVolume, price.num, price.den);
+                clearAuction(sellToken, buyToken, auctionIndex, sellVolume);
                 closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
 
                 (returned, tulipsIssued) = claimBuyerFunds2(sellToken, buyToken, user, auctionIndex,
@@ -752,60 +752,52 @@ contract DutchExchange {
         address sellToken,
         address buyToken,
         uint auctionIndex,
-        uint sellVolume,
-        uint num,
-        uint den
+        uint sellVolume
     )
         internal
     {
         // Get variables
         uint buyVolume = buyVolumes[sellToken][buyToken];
         uint sellVolumeOpp = sellVolumesCurrent[buyToken][sellToken];
-
-        fraction memory closingPriceOpp = closingPrices[buyToken][sellToken][auctionIndex];
-        fraction memory priceOpp = getPrice(buyToken, sellToken, auctionIndex);
-
-        uint sellVolumeNextOpp = sellVolumesNext[buyToken][sellToken];
-        uint addToSellVolumeNextOpp;
+        uint closingPriceOppDen = closingPrices[buyToken][sellToken][auctionIndex].den;
+        uint auctionStart = getAuctionStart(sellToken, buyToken);
 
         // Update closing price
-        closingPrices[sellToken][buyToken][auctionIndex] = fraction(buyVolume, sellVolume);
+        if (sellVolume > 0) {
+            closingPrices[sellToken][buyToken][auctionIndex] = fraction(buyVolume, sellVolume);
+        }
 
-        if (num == 0) {
-            if (den > 0 && sellVolume > 0) {
-                // 3a in DOCS
-                sellVolumesNext[sellToken][buyToken] += sellVolume;
+        // if (opposite is 0 auction OR price = 0 OR opposite auction cleared)
+        // price = 0 happens if auction pair has been running for >= 24 hrs = 86400
+        if (sellVolumeOpp == 0 || now >= auctionStart + 86400 || closingPriceOppDen > 0) {
+            uint buyVolumeOpp = buyVolumes[buyToken][sellToken];
+
+            // Close auction pair
+            if (closingPriceOppDen == 0 && sellVolumeOpp > 0) {
+                // Save opposite price
+                closingPrices[buyToken][sellToken][auctionIndex] = fraction(buyVolumeOpp, sellVolumeOpp);
             }
 
-            // 2a in DOCS
-            extraTokens[sellToken][buyToken][auctionIndex + 1] = extraTokens[sellToken][buyToken][auctionIndex];
-        }
+            uint sellVolumeNext = sellVolumesNext[sellToken][buyToken];
+            uint sellVolumeNextOpp = sellVolumesNext[buyToken][sellToken];
 
-        if (priceOpp.num == 0) {
-            // 2b in DOCS
-            extraTokens[buyToken][sellToken][auctionIndex + 1] = extraTokens[buyToken][sellToken][auctionIndex];
-            // 3b in DOCS
-            addToSellVolumeNextOpp += sellVolumeOpp;
-        }
-
-        // if (opposite is 0 auction OR opposite price reached 0 OR opposite auction cleared)
-        if (sellVolumeOpp == 0 || priceOpp.num == 0 || closingPriceOpp.den > 0) {
-            // 4 in DOCS
-            // TODO SAVE CLOSING PRICE POSSIBLE OF OPP AUCTION
             // Update state variables for both auctions
-            sellVolumesCurrent[sellToken][buyToken] = sellVolumesNext[sellToken][buyToken];
-            sellVolumesNext[sellToken][buyToken] = 0;
+            sellVolumesCurrent[sellToken][buyToken] = sellVolumeNext;
+            if (sellVolumeNext > 0) {
+                sellVolumesNext[sellToken][buyToken] = 0;
+            }
             if (buyVolume > 0) {
                 buyVolumes[sellToken][buyToken] = 0;
             }
 
-            sellVolumesCurrent[buyToken][sellToken] = sellVolumeNextOpp + addToSellVolumeNextOpp;
+            sellVolumesCurrent[buyToken][sellToken] = sellVolumeNextOpp;
             if (sellVolumeNextOpp > 0) {
                 sellVolumesNext[buyToken][sellToken] = 0;
             }
-            if (buyVolumes[buyToken][sellToken] > 0) {
+            if (buyVolumeOpp > 0) {
                 buyVolumes[buyToken][sellToken] = 0;
             }
+
             // Increment auction index
             setAuctionIndex(sellToken, buyToken);
             // Check if next auction can be scheduled
