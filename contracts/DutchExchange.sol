@@ -68,11 +68,11 @@ contract DutchExchange {
     // > Modifiers
     modifier onlyAuctioneer() {
         // R1
-        // require(msg.sender == auctioneer);
-        if (msg.sender != auctioneer) {
-            Log('onlyAuctioneer R1');
-            return;
-        }
+        require(msg.sender == auctioneer);
+        // if (msg.sender != auctioneer) {
+        //     Log('onlyAuctioneer R1');
+        //     return;
+        // }
 
         _;
     }
@@ -143,42 +143,45 @@ contract DutchExchange {
         public
     {
         // R1
-        // require(token1 != token2);
-        if (token1 == token2) {
-            Log('addTokenPair R1');
-            return;
-        }
+        require(token1 != token2);
+        // if (token1 == token2) {
+        //     Log('addTokenPair R1');
+        //     return;
+        // }
+
         // R2
-        // require(initialClosingPriceNum != 0);
-        if (initialClosingPriceNum == 0) {
-            Log('addTokenPair R2');
-            return;
-        }
+        require(initialClosingPriceNum != 0);
+        // if (initialClosingPriceNum == 0) {
+        //     Log('addTokenPair R2');
+        //     return;
+        // }
+
         // R3
-        // require(initialClosingPriceDen != 0);
-        if (initialClosingPriceDen == 0) {
-            Log('addTokenPair R3');
-            return;
-        }
+        require(initialClosingPriceDen != 0);
+        // if (initialClosingPriceDen == 0) {
+        //     Log('addTokenPair R3');
+        //     return;
+        // }
+
         // R4
-        // require(getAuctionIndex(token1, token2) == 0);
-        if (getAuctionIndex(token1, token2) != 0) {
-            Log('addTokenPair R4');
-            return;
-        }
+        require(getAuctionIndex(token1, token2) == 0);
+        // if (getAuctionIndex(token1, token2) != 0) {
+        //     Log('addTokenPair R4');
+        //     return;
+        // }
 
         // R5: to prevent overflow
-        // require(initialClosingPriceNum < 10 ** 18);
-        if (initialClosingPriceNum >= 10 ** 18) {
-            Log('addTokenPair R5');
-            return;
-        }
+        require(initialClosingPriceNum < 10 ** 18);
+        // if (initialClosingPriceNum >= 10 ** 18) {
+        //     Log('addTokenPair R5');
+        //     return;
+        // }
         // R6
-        // require(initialClosingPriceDen < 10 ** 18);
-        if (initialClosingPriceDen >= 10 ** 18) {
-            Log('addTokenPair R6');
-            return;
-        }
+        require(initialClosingPriceDen < 10 ** 18);
+        // if (initialClosingPriceDen >= 10 ** 18) {
+        //     Log('addTokenPair R6');
+        //     return;
+        // }
 
         setAuctionIndex(token1, token2);
 
@@ -186,18 +189,18 @@ contract DutchExchange {
         token2Funding = Math.min(token2Funding, balances[token2][msg.sender]);
 
         // R7
-        // require(token1Funding < 10 ** 30);
-        if (token1Funding >= 10 ** 30) {
-            Log('addTokenPair R7');
-            return;
-        }
+        require(token1Funding < 10 ** 30);
+        // if (token1Funding >= 10 ** 30) {
+        //     Log('addTokenPair R7');
+        //     return;
+        // }
 
         // R8
-        // require(token2Funding < 10 ** 30);
-        if (token2Funding >= 10 ** 30) {
-            Log('addTokenPair R8');
-            return;
-        }
+        require(token2Funding < 10 ** 30);
+        // if (token2Funding >= 10 ** 30) {
+        //     Log('addTokenPair R8');
+        //     return;
+        // }
 
         uint fundedValueUSD;
         uint ETHUSDPrice = PriceOracleInterface(ETHUSDOracle).getUSDETHPrice();
@@ -216,17 +219,17 @@ contract DutchExchange {
             // C3: Neither token is ETH
             // We require there to exist ETH-Token auctions
             // R3.1
-            // require(getAuctionIndex(token1, ETHmem) > 0);
-            if (getAuctionIndex(token1, ETHmem) == 0) {
-                Log('addTokenPair R3.1');
-                return;
-            }
+            require(getAuctionIndex(token1, ETHmem) > 0);
+            // if (getAuctionIndex(token1, ETHmem) == 0) {
+            //     Log('addTokenPair R3.1');
+            //     return;
+            // }
             // R3.2
-            // require(getAuctionIndex(token2, ETHmem) > 0);
-            if (getAuctionIndex(token2, ETHmem) == 0) {
-                Log('addTokenPair R3.2');
-                return;
-            }
+            require(getAuctionIndex(token2, ETHmem) > 0);
+            // if (getAuctionIndex(token2, ETHmem) == 0) {
+            //     Log('addTokenPair R3.2');
+            //     return;
+            // }
 
             // Price of Token 1
             fraction memory priceToken1 = priceOracle(token1);
@@ -241,11 +244,11 @@ contract DutchExchange {
         }
 
         // R9
-        // require(fundedValueUSD >= thresholdNewTokenPair);
-        if (fundedValueUSD < thresholdNewTokenPair) {
-            Log('addTokenPair R9');
-            return;
-        }
+        require(fundedValueUSD >= thresholdNewTokenPair);
+        // if (fundedValueUSD < thresholdNewTokenPair) {
+        //     Log('addTokenPair R9');
+        //     return;
+        // }
 
         // Save prices of opposite auctions
         closingPrices[token1][token2][0] = fraction(initialClosingPriceNum, initialClosingPriceDen);
@@ -288,18 +291,18 @@ contract DutchExchange {
         public
     {
         // R1
-        // require(amount > 0);
-        if (amount == 0) {
-            Log('deposit R1');
-            return;
-        }
+        require(amount > 0);
+        // if (amount == 0) {
+        //     Log('deposit R1');
+        //     return;
+        // }
 
         // R2
-        // require(Token(tokenAddress).transferFrom(msg.sender, this, amount));
-        if (!Token(tokenAddress).transferFrom(msg.sender, this, amount)) {
-            Log('deposit R2');
-            return;
-        }
+        require(Token(tokenAddress).transferFrom(msg.sender, this, amount));
+        // if (!Token(tokenAddress).transferFrom(msg.sender, this, amount)) {
+        //     Log('deposit R2');
+        //     return;
+        // }
         balances[tokenAddress][msg.sender] += amount;
         // NewDeposit(tokenAddress, amount);
     }
@@ -313,20 +316,20 @@ contract DutchExchange {
     {
         // R1
         amount = Math.min(amount, balances[tokenAddress][msg.sender]);
-        // require(amount > 0);
-        if (amount == 0) {
-            Log('withdraw R1');
-            return;
-        }
+        require(amount > 0);
+        // if (amount == 0) {
+        //     Log('withdraw R1');
+        //     return;
+        // }
 
         balances[tokenAddress][msg.sender] -= amount;
 
         // R2
-        // require(Token(tokenAddress).transfer(msg.sender, amount));
-        if (!Token(tokenAddress).transfer(msg.sender, amount)) {
-            Log('withdraw R2');
-            return;
-        }
+        require(Token(tokenAddress).transfer(msg.sender, amount));
+        // if (!Token(tokenAddress).transfer(msg.sender, amount)) {
+        //     Log('withdraw R2');
+        //     return;
+        // }
         NewWithdrawal(tokenAddress, amount);
     }
 
@@ -345,19 +348,19 @@ contract DutchExchange {
         amount = Math.min(amount, balances[sellToken][msg.sender]);
 
         // R1
-        // require(amount > 0);
-        if (amount == 0) {
-            Log('postSellOrder R1');
-            return;
-        }
+        require(amount > 0);
+        // if (amount == 0) {
+        //     Log('postSellOrder R1');
+        //     return;
+        // }
 
         // R2
         uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
-        // require(latestAuctionIndex > 0);
-        if (latestAuctionIndex == 0) {
-            Log('postSellOrder R2');
-            return;
-        }
+        require(latestAuctionIndex > 0);
+        // if (latestAuctionIndex == 0) {
+        //     Log('postSellOrder R2');
+        //     return;
+        // }
 
         // R3
         uint auctionStart = getAuctionStart(sellToken, buyToken);
@@ -370,36 +373,36 @@ contract DutchExchange {
             if (auctionIndex == 0) {
                 auctionIndex = latestAuctionIndex;
             }
-            // require(auctionIndex == latestAuctionIndex); 
-            if (auctionIndex != latestAuctionIndex) {
-                Log('postSellOrder R1.1');
-                return;
-            }
+            require(auctionIndex == latestAuctionIndex); 
+            // if (auctionIndex != latestAuctionIndex) {
+            //     Log('postSellOrder R1.1');
+            //     return;
+            // }
 
             // R1.2
-            // require(sellVolumeCurrent + amount < 10 ** 30);
-            if (sellVolumesCurrent[sellToken][buyToken] + amount >= 10 ** 30) {
-                Log('postSellOrder R1.2');
-                return;
-            }
+            require(sellVolumeCurrent + amount < 10 ** 30);
+            // if (sellVolumesCurrent[sellToken][buyToken] + amount >= 10 ** 30) {
+            //     Log('postSellOrder R1.2');
+            //     return;
+            // }
         } else {
             // C2
             // R2.1: Sell orders must go to next auction
             if (auctionIndex == 0) {
                 auctionIndex = latestAuctionIndex + 1;
             }
-            // require(auctionIndex == latestAuctionIndex + 1);
-            if (auctionIndex != latestAuctionIndex + 1) {
-                Log('postSellOrder R2.1');
-                return;
-            }
+            require(auctionIndex == latestAuctionIndex + 1);
+            // if (auctionIndex != latestAuctionIndex + 1) {
+            //     Log('postSellOrder R2.1');
+            //     return;
+            // }
 
             // R2.2
-            // require(sellVolumeNext + amount < 10 ** 30);
-            if (sellVolumesNext[sellToken][buyToken] + amount >= 10 ** 30) {
-                Log('postSellOrder R2.2');
-                return;
-            }
+            require(sellVolumeNext + amount < 10 ** 30);
+            // if (sellVolumesNext[sellToken][buyToken] + amount >= 10 ** 30) {
+            //     Log('postSellOrder R2.2');
+            //     return;
+            // }
         }
 
         // Fee mechanism, fees are added to extraTokens
@@ -435,41 +438,41 @@ contract DutchExchange {
         uint auctionStart = getAuctionStart(sellToken, buyToken);
 
         // R1: auction must not have cleared
-        // require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
-        if (closingPrices[sellToken][buyToken][auctionIndex].den > 0) {
-            Log('postBuyOrder R1');
-            return;
-        }
+        require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
+        // if (closingPrices[sellToken][buyToken][auctionIndex].den > 0) {
+        //     Log('postBuyOrder R1');
+        //     return;
+        // }
 
         // R2
-        // require(getAuctionStart(sellToken, buyToken) <= now);
-        if (auctionStart > now) {
-            Log('postBuyOrder R2');
-            return;
-        }
+        require(getAuctionStart(sellToken, buyToken) <= now);
+        // if (auctionStart > now) {
+        //     Log('postBuyOrder R2');
+        //     return;
+        // }
         // R3
-        // require(auctionIndex == getAuctionIndex(sellToken, buyToken));
-        if (auctionIndex != getAuctionIndex(sellToken, buyToken)) {
-            Log('postBuyOrder R3');
-            return;
-        }
+        require(auctionIndex == getAuctionIndex(sellToken, buyToken));
+        // if (auctionIndex != getAuctionIndex(sellToken, buyToken)) {
+        //     Log('postBuyOrder R3');
+        //     return;
+        // }
 
         // R4: auction must not be in waiting period
-        // require(auctionStart > 1);
-        if (auctionStart <= 1) {
-            Log('postBuyOrder R4');
-            return;
-        }
+        require(auctionStart > 1);
+        // if (auctionStart <= 1) {
+        //     Log('postBuyOrder R4');
+        //     return;
+        // }
 
         uint buyVolume = buyVolumes[sellToken][buyToken];
         amount = Math.min(amount, balances[buyToken][msg.sender]);
 
         // R5
-        // require(buyVolume + amount < 10 ** 30);
-        if (buyVolume + amount >= 10 ** 30) {
-            Log('postSellOrder R5');
-            return;
-        }
+        require(buyVolume + amount < 10 ** 30);
+        // if (buyVolume + amount >= 10 ** 30) {
+        //     Log('postSellOrder R5');
+        //     return;
+        // }
 
         
         // Overbuy is when a part of a buy order clears an auction
@@ -521,11 +524,11 @@ contract DutchExchange {
         uint sellerBalance = sellerBalances[sellToken][buyToken][auctionIndex][user];
 
         // R1
-        // require(sellerBalance > 0);
-        if (sellerBalance == 0) {
-            Log('claimSellerFunds R1');
-            return;
-        }
+        require(sellerBalance > 0);
+        // if (sellerBalance == 0) {
+        //     Log('claimSellerFunds R1');
+        //     return;
+        // }
 
         // Get closing price for said auction
         fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
@@ -533,11 +536,11 @@ contract DutchExchange {
         uint den = closingPrice.den;
 
         // R2: require auction to have cleared
-        // require(den > 0);
-        if (den == 0) {
-            Log('claimSellerFunds R2');
-            return;
-        }
+        require(den > 0);
+        // if (den == 0) {
+        //     Log('claimSellerFunds R2');
+        //     return;
+        // }
 
         // Calculate return
         // 10^30 * 10^30 = 10^60
@@ -586,22 +589,22 @@ contract DutchExchange {
     {
         fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
 
-       // R1: checks if particular auction has ever run
-        // require(auctionIndex <= getAuctionIndex(sellToken, buyToken));
-        if (auctionIndex > getAuctionIndex(sellToken, buyToken)) {
-            Log('claimBuyerFunds R1');
-            return;
-        }
+        // R1: checks if particular auction has ever run
+        require(auctionIndex <= getAuctionIndex(sellToken, buyToken));
+        // if (auctionIndex > getAuctionIndex(sellToken, buyToken)) {
+        //     Log('claimBuyerFunds R1');
+        //     return;
+        // }
 
         uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
         uint claimedAmount = claimedAmounts[sellToken][buyToken][auctionIndex][user];
 
         // R2
-        // require(buyerBalance > 0);
-        if (buyerBalance == 0) {
-            Log('claimBuyerFunds R2');
-            return;
-        }
+        require(buyerBalance > 0);
+        // if (buyerBalance == 0) {
+        //     Log('claimBuyerFunds R2');
+        //     return;
+        // }
 
         if (closingPrice.den == 0) {
             // Auction is running
@@ -770,9 +773,9 @@ contract DutchExchange {
         // if (opposite is 0 auction OR price = 0 OR opposite auction cleared)
         // price = 0 happens if auction pair has been running for >= 24 hrs = 86400
         if (sellVolumeOpp == 0 || now >= auctionStart + 86400 || closingPriceOppDen > 0) {
+            // Close auction pair
             uint buyVolumeOpp = buyVolumes[buyToken][sellToken];
 
-            // Close auction pair
             if (closingPriceOppDen == 0 && sellVolumeOpp > 0) {
                 // Save opposite price
                 closingPrices[buyToken][sellToken][auctionIndex] = fraction(buyVolumeOpp, sellVolumeOpp);
@@ -928,11 +931,11 @@ contract DutchExchange {
         }
 
         // R1
-        // require(price.num <= 10 ** 35 || price.den <= 10 ** 35);
-        if (price.num > 10 ** 35 || price.den > 10 ** 35) {
-            Log('computeRatioOfHistoricalPriceOracles R1');
-            return;
-        }
+        require(price.num <= 10 ** 35 || price.den <= 10 ** 35);
+        // if (price.num > 10 ** 35 || price.den > 10 ** 35) {
+        //     Log('computeRatioOfHistoricalPriceOracles R1');
+        //     return;
+        // }
     }
 
     // > historicalPriceOracle()
@@ -953,11 +956,11 @@ contract DutchExchange {
         } else {
             // C2
             // R2.1
-            // require(auctionIndex > 0);
-            if (auctionIndex == 0) {
-                Log('historicalPriceOracle R2.1');
-                return;
-            }
+            require(auctionIndex > 0);
+            // if (auctionIndex == 0) {
+            //     Log('historicalPriceOracle R2.1');
+            //     return;
+            // }
 
             uint i = 0;
             bool correctPair = false;
