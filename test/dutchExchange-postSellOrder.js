@@ -13,6 +13,7 @@ let eth
 let gno
 let tul
 let dx
+let oracle
 
 let feeRatio
 
@@ -44,6 +45,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
       TokenGNO: gno,
       TokenTUL: tul,
       DutchExchange: dx,
+      PriceOracleInterface: oracle,
     } = contracts)
 
     await setupTest(accounts, contracts, startBal)
@@ -189,6 +191,8 @@ contract('DutchExchange - postSellOrder', (accounts) => {
   })
 
   it('rejects when auction isn\'t started and order is posted not to that auction', async () => {
+    // allow the start of an auction w/no threshold
+    await dx.updateExchangeParams(accounts[0], oracle.address, 0, 0, { from: accounts[0] })
     // add tokenPair ETH GNO
     await dx.addTokenPair(
       eth.address,
