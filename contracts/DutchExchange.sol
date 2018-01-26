@@ -235,7 +235,7 @@ contract DutchExchange {
             fraction memory priceToken2 = priceOracle(token2);
 
             // Compute funded value in ETH and USD
-            // 10^30 * 10^28 = 10^58
+            // 10^30 * 10^30 = 10^60
             fundedValueUSD = (token1Funding * priceToken1.num / priceToken1.den + 
                 token2Funding * priceToken2.num / priceToken2.den) * ETHUSDPrice;
         }
@@ -477,7 +477,7 @@ contract DutchExchange {
         // To calculate overbuy, we first get current price
         uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
         fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
-        // 10^30 * 10^39 = 10^66
+        // 10^30 * 10^39 = 10^69
         uint outstandingVolume = Math.atleastZero(int(sellVolume * price.num / price.den - buyVolume));
 
         LogOustandingVolume(outstandingVolume);
@@ -556,7 +556,7 @@ contract DutchExchange {
                 // i.e. if a user claims tokens later in the future,
                 // he/she is likely to get slightly different number
                 fraction memory price = historicalPriceOracle(sellToken, auctionIndex);
-                // 10^30 * 10^28 = 10^58
+                // 10^30 * 10^30 = 10^60
                 tulipsIssued = sellerBalance * price.num / price.den;
             }
 
@@ -609,7 +609,7 @@ contract DutchExchange {
 
             uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
 
-            // 10^39 * 10^27 = 10^66
+            // 10^39 * 10^30 = 10^69
             if (price.num * sellVolume <= price.den * buyVolumes[sellToken][buyToken]) {
                 clearAuction(sellToken, buyToken, auctionIndex, sellVolume, price.num, price.den);
                 closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
@@ -617,12 +617,13 @@ contract DutchExchange {
                 (returned, tulipsIssued) = claimBuyerFunds2(sellToken, buyToken, user, auctionIndex,
                     buyerBalance, claimedAmount, closingPrice.num, closingPrice.den);
             } else {
-                // 10^30 * 10^39 = 10^66
+                // 10^30 * 10^39 = 10^69
                 returned = Math.atleastZero(int(buyerBalance * price.den / price.num - claimedAmount));
 
                 claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
             }
         } else {
+            // Auction has closed
             (returned, tulipsIssued) = claimBuyerFunds2(sellToken, buyToken, user, auctionIndex,
                 buyerBalance, claimedAmount, price.num, price.den);
         }
@@ -674,7 +675,7 @@ contract DutchExchange {
             } else {
                 // Neither token is ETH, so we use historicalPriceOracle()
                 fraction memory priceETH = historicalPriceOracle(buyToken, auctionIndex);
-                // 10^30 * 10^28 = 10^58
+                // 10^30 * 10^30 = 10^60
                 tulipsIssued = buyerBalance * priceETH.num / priceETH.den;
             }
 
@@ -700,6 +701,7 @@ contract DutchExchange {
     )
         public
         view
+        // price < 10^39
         returns (fraction memory price)
     {
         fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
@@ -789,6 +791,7 @@ contract DutchExchange {
         // if (opposite is 0 auction OR opposite price reached 0 OR opposite auction cleared)
         if (sellVolumeOpp == 0 || priceOpp.num == 0 || closingPriceOpp.den > 0) {
             // 4 in DOCS
+            // TODO SAVE CLOSING PRICE POSSIBLE OF OPP AUCTION
             // Update state variables for both auctions
             sellVolumesCurrent[sellToken][buyToken] = sellVolumesNext[sellToken][buyToken];
             sellVolumesNext[sellToken][buyToken] = 0;
@@ -834,7 +837,7 @@ contract DutchExchange {
             fraction memory price = priceOracle(primaryToken);
 
             // Convert fee to ETH, then USD
-            // 10^29 * 10^28 / 10^28 = 10^29
+            // 10^29 * 10^30 / 10^30 = 10^29
             uint feeInETH = fee * price.num / price.den;
 
             // 10^29 * 10^4 = 10^33
@@ -898,7 +901,7 @@ contract DutchExchange {
         // (this is so that we don't need case work,
         // since it might also be called from postSellOrder())
 
-        // 10^30 * 10^28 * 10^4 = 10^62
+        // 10^30 * 10^30 * 10^4 = 10^64
         uint sellVolume = sellVolumesCurrent[sellToken][buyToken] * priceTs.num * ETHUSDPrice / priceTs.den;
         uint sellVolumeOpp = sellVolumesCurrent[buyToken][sellToken] * priceTb.num * ETHUSDPrice / priceTb.den;
         if (sellVolume >= thresholdNewAuction || sellVolumeOpp >= thresholdNewAuction) {
@@ -923,13 +926,13 @@ contract DutchExchange {
         fraction memory sellTokenPrice = historicalPriceOracle(sellToken, auctionIndex);
         fraction memory buyTokenPrice = historicalPriceOracle(buyToken, auctionIndex);
 
-        // 10^28 * 10^28 = 10^54
+        // 10^30 * 10^30 = 10^60
         price.num = sellTokenPrice.num * buyTokenPrice.den;
         price.den = sellTokenPrice.den * buyTokenPrice.num;
 
-        while (price.num > 10 ** 10 && price.den > 10 ** 10) {
-            price.num = price.num / 10 ** 5;
-            price.den = price.den / 10 ** 5;
+        while (price.num > 10 ** 12 && price.den > 10 ** 12) {
+            price.num = price.num / 10 ** 6;
+            price.den = price.den / 10 ** 6;
         }
 
         // R1
@@ -947,7 +950,7 @@ contract DutchExchange {
     )
         public
         view
-        // price < 10^28
+        // price < 10^30
         returns (fraction memory price)
     {
         address ETHmem = ETH;
@@ -964,8 +967,6 @@ contract DutchExchange {
                 return;
             }
 
-            uint div = 10 ** 8;
-
             uint i = 0;
             bool correctPair = false;
             fraction memory closingPriceETH;
@@ -975,14 +976,10 @@ contract DutchExchange {
                 i++;
                 closingPriceETH = closingPrices[ETHmem][token][auctionIndex - i];
                 closingPriceToken = closingPrices[token][ETHmem][auctionIndex - i];
-
-                if (i < auctionIndex) {
-                    closingPriceETH = fraction(closingPriceETH.num / div, closingPriceETH.den / div);
-                    closingPriceToken = fraction(closingPriceToken.den / div, closingPriceToken.num / div);
-                }
                 
                 if (closingPriceETH.num > 0 && closingPriceETH.den > 0 || 
-                    closingPriceToken.num > 0 && closingPriceToken.den > 0) {
+                    closingPriceToken.num > 0 && closingPriceToken.den > 0)
+                {
                     correctPair = true;
                 }
             }
@@ -997,15 +994,8 @@ contract DutchExchange {
                 price.den = closingPriceETH.num;
             } else {
                 // If both prices are positive, output weighted average
-                // MUL: (10^30 / div )^2 * (10^30 / div) = 10^66
-                price.num = closingPriceETH.den ** 2 * closingPriceToken.den + closingPriceToken.num ** 2 * closingPriceETH.num;
-                // MUL: (10^30 / div )^3 = 10^66
-                price.den = closingPriceETH.num * closingPriceToken.den * (closingPriceETH.den + closingPriceToken.num);
-
-                while (price.num > 10 ** 7 && price.den > 10 ** 7) {
-                    price.num = price.num / 10 ** 4;
-                    price.den = price.den / 10 ** 4;
-                }
+                price.num = closingPriceETH.den + closingPriceToken.num;
+                price.den = closingPriceETH.num + closingPriceToken.den;
             }
         } 
     }
@@ -1019,11 +1009,11 @@ contract DutchExchange {
     )
         public
         view
-        // price < 10^25
+        // price < 10^30
         returns (fraction memory price)
     {
         uint latestAuctionIndex = getAuctionIndex(token, ETH);
-        // historicalPriceOracle < 10^25
+        // historicalPriceOracle < 10^30
         price = historicalPriceOracle(token, latestAuctionIndex);
     }
 
