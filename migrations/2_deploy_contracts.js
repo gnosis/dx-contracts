@@ -12,7 +12,7 @@ const TokenTUL = artifacts.require('TokenTUL')
 const Medianizer = artifacts.require('Medianizer')
 
 // ETH price as reported by MakerDAO with 18 decimal places
-const currentETHPrice = (902 * (10 ** 18))
+const currentETHPrice = (1100 * (10 ** 18))
 
 module.exports = function deploy(deployer, networks, accounts) {
   // let TULInstance;
