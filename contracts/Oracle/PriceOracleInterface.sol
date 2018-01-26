@@ -19,7 +19,9 @@ contract PriceOracleInterface {
         _;
     }
 
-    ///@dev constructor of the contract, 
+    /// @dev constructor of the contract
+    /// @param address of owner
+    /// @param address of price Feed Source -> should be maker feeds
     function PriceOracleInterface(
         address _owner,
         address _priceFeedSource
@@ -30,6 +32,8 @@ contract PriceOracleInterface {
         priceFeedSource = _priceFeedSource;
     }
    
+    /// @dev updates the priceFeedSource
+    /// @param address of price Feed Source -> should be maker feeds
     function updatePriceFeedSource(
         address _priceFeedSource
     )
@@ -39,6 +43,8 @@ contract PriceOracleInterface {
         priceFeedSource = _priceFeedSource;
     }
 
+    /// @dev updates the priceFeedSource
+    /// @param address of owner
     function updateCurator(
         address _owner
     )
@@ -48,7 +54,8 @@ contract PriceOracleInterface {
         owner = _owner;
     }
 
-    /// @dev returns the USDETH price, ie current value would be 45034 == 450 USD and 34 Cents
+    /// @dev returns the USDETH price, ie gets the USD price from Maker feed with 18 digits, but last 18 digits are cut off
+    /// @returns Floor(price in USD)
     function getUSDETHPrice() 
         public
         view
@@ -62,34 +69,4 @@ contract PriceOracleInterface {
         }
         return uint256(price)/(1 ether);
     }  
-/* 
-    /// @dev returns the amount of Wei equal to 1 USD
-    function getWEIUSDPrice() 
-        public
-        view
-        returns (uint256)
-    {
-        bytes32 price;
-        bool valid=true;
-        (price, valid) = Medianizer(priceFeedSource).peek();
-        if (!valid) {
-            NonValidPriceFeed(priceFeedSource);
-        }
-        return uint(10**18 * 10000) / uint256(price);
-    }    
-
-    /// @dev returns the USDETH price in Cents, ie current value would be 45034 == 450 USD and 34 Cents
-    function getUSDETHPrice2() 
-        public
-        view
-        returns (uint128)
-    {
-        bytes32 price;
-        bool valid=true;
-        (price, valid) = Medianizer(priceFeedSource).peek();
-        if (!valid) {
-            NonValidPriceFeed(priceFeedSource);
-        }
-        return uint128(price);
-    }    */  
 }
