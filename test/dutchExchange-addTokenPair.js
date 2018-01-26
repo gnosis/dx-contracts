@@ -90,6 +90,7 @@ contract('DutchExchange - addTokenPair', (accounts) => {
   const symb = token => symbols[token.address || token]
 
   after(eventWatcher.stopWatching)
+
   const getTokenBalance = async (account, token) => {
     const balance = (await dx.balances.call(token.address || token, account)).toNumber()
     log(`
@@ -348,5 +349,13 @@ contract('DutchExchange - addTokenPair', (accounts) => {
     await assertAfterTx(seller1, tx, balances1, eth, gno2)
   })
 
+  it('all amounts and balances are set correctly when adding GNO -> GNO2 pair', async () => {
+    await assertFundingAboveThreshold(gno, gno2)
+    const balances1 = await getTokenBalances(seller1, gno, gno2)
+
+    log('adding GNO2 -> ETH token pair')
+    const tx = await addTokenPair(seller1, { token1: gno, token2: gno2 })
+
+    await assertAfterTx(seller1, tx, balances1, gno, gno2)
   })
 })
