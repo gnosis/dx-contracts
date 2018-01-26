@@ -318,5 +318,18 @@ contract('DutchExchange - addTokenPair', (accounts) => {
     await assertRejects(addTokenPair(seller1, { token1Funding }))
     log('tx was rejected')
   })
+
+  it('all amounts and balances are set correctly when adding ETH -> GNO pair', async () => {
+    await dx.updateExchangeParams(master, oracle.address, 0, 0, { from: master })
+
+    await assertFundingAboveThreshold(eth, gno)
+
+    const balances1 = await getTokenBalances(seller1, eth, gno)
+
+    log('adding ETH -> GNO token pair')
+    const tx = await addTokenPair(seller1)
+
+    await assertAfterTx(seller1, tx, balances1, eth, gno)
+  })
   })
 })
