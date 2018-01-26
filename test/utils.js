@@ -9,6 +9,7 @@ const {
   contract: contractFlag,
   gas: gasLog,
   gasTx,
+  noevents,
 } = require('minimist')(process.argv.slice(2), { alias: { silent: 's', contract: 'c', gas: 'g', gasTx: 'gtx' } })
 
 const log = silent ? () => {} : console.log.bind(console)
@@ -36,8 +37,8 @@ const gasLogWrapper = (contracts) => {
         // called if @transaction function
         async apply(target, thisArg, argumentsList) {
           const result = await Reflect.apply(target, thisArg, argumentsList)
-          // safeguards against constant functions
-          if (typeof result !== 'object') return result
+          // safeguards against constant functions and BigNumber returns
+          if (typeof result !== 'object' || !result.receipt) return result
           const { receipt: { gasUsed } } = result
           // check that BOTH gas flags are used
           gasLog && gasTx && console.info(`
@@ -99,7 +100,7 @@ let stopWatching = {}
  * @param {Object} args?       - not required, args to look for
  * @returns stopWatching function
  */
-const eventWatcher = (contract, eventName, argum = {}) => {
+const eventWatcher = noevents ? () => {} : (contract, eventName, argum = {}) => {
   const eventFunc = contract[eventName]
   if (!eventFunc) {
     log(`No event ${eventName} available in the contract`)
@@ -152,7 +153,7 @@ const eventWatcher = (contract, eventName, argum = {}) => {
  * @param {string} event?       - name of event to stop watching,
  *                                if none specified stops watching all events for this contract
  */
-eventWatcher.stopWatching = (contract, event) => {
+eventWatcher.stopWatching = noevents ? () => {} : (contract, event) => {
   // if given particular event name, stop watching it
   if (contract && typeof contract === 'object' && contract.address) {
     const contractEvents = stopWatching[contract.address]
