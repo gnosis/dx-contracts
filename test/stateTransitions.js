@@ -28,6 +28,7 @@ const {
 let eth
 let gno
 let dx
+let oracle
 let balanceInvariant
 const ether = 10 ** 18
 
@@ -118,10 +119,12 @@ const getState = async (ST, BT) => { // eslint-disable-line
 }
 
 const getIntoState = async (state, accounts, ST, BT) => {
-  const [, seller1, buyer1] = accounts
+  const [master, seller1, buyer1] = accounts
   switch (state) {
     case 0:
     {
+      // allow the start of an auction w/no threshold
+      await dx.updateExchangeParams(master, oracle.address, 0, 0, { from: master })
       await dx.addTokenPair(
         ST.address,
         BT.address,
@@ -137,6 +140,8 @@ const getIntoState = async (state, accounts, ST, BT) => {
     }
     case 1:
     {
+      // allow the start of an auction w/no threshold
+      await dx.updateExchangeParams(master, oracle.address, 0, 0, { from: master })
       await dx.addTokenPair(
         ST.address,
         BT.address,
@@ -280,6 +285,7 @@ const setupContracts = async () => {
     DutchExchange: dx,
     EtherToken: eth,
     TokenGNO: gno,
+    PriceOracleInterface: oracle,
   } = contracts)
 }
 const startBal = {
@@ -465,7 +471,7 @@ const c4 = () => contract('DutchExchange - Stage S1 - Auction is running with v 
       
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
     // clearing first auction
-    await assertRejects(await postBuyOrder(gno, eth, auctionIndex, 10 * ether * 3, buyer1))
+    await assertRejects(postBuyOrder(gno, eth, auctionIndex, 10 * ether * 3, buyer1))
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
     await checkState(1, auctionStart, 0, 0, 0, 0, 0, gno, eth, 10 ** 16)
     assert.equal(1, await getState(eth, gno))
