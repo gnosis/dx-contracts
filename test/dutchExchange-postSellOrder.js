@@ -108,7 +108,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     }
   }
 
-  const assertChangedAmounts = async (oldAmounts, newAmounts, amount, amountAfterFee, postedToCurrentAuction) =>
+  const assertChangedAmounts = (oldAmounts, newAmounts, amount, amountAfterFee, postedToCurrentAuction) =>
     Object.keys(newAmounts).forEach((key) => {
       const oldVal = oldAmounts[key]
       const newVal = newAmounts[key]
