@@ -58,15 +58,14 @@ const setupContracts = async () => {
 
 const c1 = () => contract('DX Tulip Flow --> 1 Seller + 1 Buyer', (accounts) => {
   const [master, seller1, , buyer1] = accounts
-  // const user = seller1
-  // let userTulips
+
   let seller1Balance, sellVolumes
   
   const startBal = {
     startingETH: 1000..toWei(),
     startingGNO: 1000..toWei(),
     ethUSDPrice: 6000..toWei(),   // 400 ETH @ $6000/ETH = $2,400,000 USD
-    sellingAmount: 100..toWei(), // Same as web3.toWei(50, 'ether')
+    sellingAmount: 100..toWei(), // Same as web3.toWei(50, 'ether') - $60,000USD
   }
   const { 
     startingETH,
