@@ -307,5 +307,16 @@ contract('DutchExchange - addTokenPair', (accounts) => {
     log('tx was rejected')
   })
 
+  // TODO: when require is returned will pass
+  xit('rejects if fundedValueUSD < thresholdNewTokenPair', async () => {
+    const thresholdNewTokenPair = await getThresholdNewTokenPair()
+    const token1Funding = 100
+
+    assert.isBelow(await getFundedValueUSD(eth, gno, token1Funding), thresholdNewTokenPair, 'fundedValueUSD < thresholdNewTokenPair')
+
+    log('adding ETH -> GNO token pair with fundedValueUSD < thresholdNewTokenPair')
+    await assertRejects(addTokenPair(seller1, { token1Funding }))
+    log('tx was rejected')
+  })
   })
 })
