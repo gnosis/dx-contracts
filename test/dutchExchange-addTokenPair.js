@@ -288,4 +288,10 @@ contract('DutchExchange - addTokenPair', (accounts) => {
     await assertTokenBalances(oldBalances, await getTokenBalances(account, sellToken, buyToken))
     await assertAuctionStart(sellToken, buyToken)
   }
+
+  it('rejects if both tokens in a pair are the same', async () => {
+    log('adding ETH -> ETH token pair')
+    await assertRejects(addTokenPair(seller1, { token1: eth, token2: eth }))
+    log('tx was rejected')
+  })
 })
