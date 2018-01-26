@@ -337,5 +337,16 @@ contract('DutchExchange - addTokenPair', (accounts) => {
     await assertRejects(addTokenPair(seller1, { token1: gno, token2: eth }))
     log('tx was rejected')
   })
+
+  it('all amounts and balances are set correctly when adding GNO2 -> ETH pair', async () => {
+    await assertFundingAboveThreshold(eth, gno2)
+    const balances1 = await getTokenBalances(seller1, eth, gno2)
+
+    log('adding GNO2 -> ETH token pair')
+    const tx = await addTokenPair(seller1, { token1: eth, token2: gno2 })
+
+    await assertAfterTx(seller1, tx, balances1, eth, gno2)
+  })
+
   })
 })
