@@ -587,48 +587,54 @@ contract DutchExchange {
         public
         returns (uint returned, uint tulipsIssued)
     {
-        fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
+        fraction memory price;
+        (returned, price) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
 
-        // R1: checks if particular auction has ever run
-        require(auctionIndex <= getAuctionIndex(sellToken, buyToken));
-        // if (auctionIndex > getAuctionIndex(sellToken, buyToken)) {
-        //     Log('claimBuyerFunds R1');
-        //     return;
-        // }
+        uint den = closingPrices[sellToken][buyToken][auctionIndex].den;
 
-        uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
-        uint claimedAmount = claimedAmounts[sellToken][buyToken][auctionIndex][user];
-
-        // R2
-        require(buyerBalance > 0);
-        // if (buyerBalance == 0) {
-        //     Log('claimBuyerFunds R2');
-        //     return;
-        // }
-
-        if (closingPrice.den == 0) {
+        if (den == 0 && returned > 0) {
             // Auction is running
-            fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
-
-            uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
-
-            // 10^39 * 10^30 = 10^69
-            if (price.num * sellVolume <= price.den * buyVolumes[sellToken][buyToken]) {
-                clearAuction(sellToken, buyToken, auctionIndex, sellVolume);
-                closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
-
-                (returned, tulipsIssued) = claimBuyerFunds2(sellToken, buyToken, user, auctionIndex,
-                    buyerBalance, claimedAmount, closingPrice.num, closingPrice.den);
-            } else {
-                // 10^30 * 10^39 = 10^69
-                returned = Math.atleastZero(int(buyerBalance * price.den / price.num - claimedAmount));
-
-                claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
-            }
+            claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
         } else {
             // Auction has closed
-            (returned, tulipsIssued) = claimBuyerFunds2(sellToken, buyToken, user, auctionIndex,
-                buyerBalance, claimedAmount, price.num, price.den);
+            // We DON'T want to check for returned > 0, because that would fail if a user claims
+            // intermediate funds & auction clears in same block (he/she would not be able to claim extraTokens)
+
+            // Assign extra sell tokens (this is possible only after auction has cleared,
+            // because buyVolume could still increase before that)
+            uint extraTokensTotal = extraTokens[sellToken][buyToken][auctionIndex];
+            uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
+
+            // closingPrices.num represents buyVolume
+            // 10^30 * 10^30 = 10^60
+            uint tokensExtra = buyerBalance * extraTokensTotal / closingPrices[sellToken][buyToken][auctionIndex].num;
+            returned += tokensExtra;
+ 
+            if (approvedTokens[buyToken] == true && approvedTokens[sellToken] == true) {
+                address ETHmem = ETH;
+                // Get tulips issued based on ETH price of returned tokens
+                if (buyToken == ETHmem) {
+                    tulipsIssued = buyerBalance;
+                } else if (sellToken == ETHmem) {
+                    // 10^30 * 10^39 = 10^66
+                    tulipsIssued = buyerBalance * price.den / price.num;
+                } else {
+                    // Neither token is ETH, so we use historicalPriceOracle()
+                    fraction memory priceETH = historicalPriceOracle(buyToken, auctionIndex);
+                    // 10^30 * 10^28 = 10^58
+                    tulipsIssued = buyerBalance * priceETH.num / priceETH.den;
+                }
+
+                if (tulipsIssued > 0) {
+                    // Issue TUL
+                    TokenTUL(TUL).mintTokens(user, tulipsIssued);
+                }
+            }
+
+            // Auction has closed
+            // Reset buyerBalances and claimedAmounts
+            buyerBalances[sellToken][buyToken][auctionIndex][user] = 0;
+            claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0; 
         }
 
         // Claim tokens
@@ -639,60 +645,38 @@ contract DutchExchange {
         ClaimBuyerFunds(returned, tulipsIssued);
     }
 
-    function claimBuyerFunds2(
+    // > getUnclaimedBuyerFunds()
+    /// @dev Claim buyer funds for one auction
+    function getUnclaimedBuyerFunds(
         address sellToken,
         address buyToken,
         address user,
-        uint auctionIndex,
-        uint buyerBalance,
-        uint claimedAmount,
-        uint num,
-        uint den
+        uint auctionIndex
     )
-        internal
-        returns (uint returned, uint tulipsIssued)
+        public
+        view
+        returns (uint unclaimedBuyerFunds, fraction memory price)
     {
-        // Auction has closed
+        // R1: checks if particular auction has ever run
+        require(auctionIndex <= getAuctionIndex(sellToken, buyToken));
+        // if (auctionIndex > getAuctionIndex(sellToken, buyToken)) {
+        //     Log('getUnclaimedBuyerFunds R1');
+        //     return;
+        // }
 
-        returned = Math.atleastZero(int(buyerBalance * den / num - claimedAmount));
+        price = getPrice(sellToken, buyToken, auctionIndex);
 
-        // We DON'T want to check for returned > 0, because that would fail if a user claims
-        // intermediate funds & auction clears in same block (he/she would not be able to claim extraTokens)
-
-
-        // Assign extra sell tokens (this is possible only after auction has cleared,
-        // because buyVolume could still increase before that)
-        // closingPrices.num represents buyVolume
-        // 10^30 * 10^30 = 10^60
-        uint tokensExtra = buyerBalance * extraTokens[sellToken][buyToken][auctionIndex] / num;
-        returned += tokensExtra;
-
-        if (approvedTokens[buyToken] == true && approvedTokens[sellToken] == true) {
-            address ETHmem = ETH;
-            // Get tulips issued based on ETH price of returned tokens
-            if (buyToken == ETHmem) {
-                tulipsIssued = buyerBalance;
-            } else if (sellToken == ETHmem) {
-                // 10^30 * 10^39 = 10^66
-                tulipsIssued = buyerBalance * den / num;
-            } else {
-                // Neither token is ETH, so we use historicalPriceOracle()
-                fraction memory priceETH = historicalPriceOracle(buyToken, auctionIndex);
-                // 10^30 * 10^30 = 10^60
-                tulipsIssued = buyerBalance * priceETH.num / priceETH.den;
-            }
-
-            if (tulipsIssued > 0) {
-                // Issue TUL
-                TokenTUL(TUL).mintTokens(user, tulipsIssued);
-            }
-        }
-
-        // Auction has closed
-        // Reset buyerBalances and claimedAmounts
-        buyerBalances[sellToken][buyToken][auctionIndex][user] = 0;
-        if (claimedAmount > 0) {
-            claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0; 
+        if (price.num == 0) {
+            // This should rarely happen - as long as there is >= 1 buy order,
+            // auction will clear before price = 0. So this is just fail-safe
+            unclaimedBuyerFunds = 0;
+        } else {
+            uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
+            // 10^30 * 10^39 = 10^69
+            unclaimedBuyerFunds = Math.atleastZero(int(
+                buyerBalance * price.den / price.num - 
+                claimedAmounts[sellToken][buyToken][auctionIndex][user]
+            ));
         }
     }
 
