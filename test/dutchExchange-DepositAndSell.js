@@ -14,11 +14,12 @@ const {
 let eth
 let gno
 let dx
-
+let oracle
 
 let contracts
 
 contract('DutchExchange deposit/withdraw tests', (accounts) => {
+  const master = accounts[0]
   const testingAccs = accounts.slice(1, 5)
 
   const ETHBalance = 10..toWei()
@@ -33,6 +34,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
+      PriceOracleInterface: oracle,
     } = contracts)
 
     await Promise.all(testingAccs.map(acc => Promise.all([
@@ -42,6 +44,8 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
 
     await Promise.all(testingAccs.map(acc => dx.deposit(eth.address, ETHBalance / 2, { from: acc })))
   })
+
+  it('Reset updateXChangeParameters', async () => dx.updateExchangeParams(master, oracle.address, 0, 0, { from: master }))
 
   it('Adds Token Pair', () => dx.addTokenPair(eth.address, gno.address, 0, 0, 2, 1, { from: accounts[1] }))
 

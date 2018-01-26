@@ -41,7 +41,6 @@ const contractNames = [
   'PriceFeed',
   'Medianizer',
   'InternalTests',
-  'TokenOWL',
 ]
 
 /**
