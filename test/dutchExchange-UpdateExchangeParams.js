@@ -30,7 +30,8 @@ contract('DutchExchange updating exchange params', (accounts) => {
     } = contracts)
 
     // a new deployed PriceOracleInterface to replace the old with
-    newPO = await PriceOracleInterface.new(master, medianizer.address)
+    contracts.newPO = await PriceOracleInterface.new(master, medianizer.address);
+    ({ newPO } = contracts)
   })
 
   const getExchangeParams = async () => {
