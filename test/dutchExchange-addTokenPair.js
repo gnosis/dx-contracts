@@ -331,5 +331,11 @@ contract('DutchExchange - addTokenPair', (accounts) => {
 
     await assertAfterTx(seller1, tx, balances1, eth, gno)
   })
+
+  it('rejects when adding an existing pair', async () => {
+    log('adding GNO -> ETH token pair')
+    await assertRejects(addTokenPair(seller1, { token1: gno, token2: eth }))
+    log('tx was rejected')
+  })
   })
 })
