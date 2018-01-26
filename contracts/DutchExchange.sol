@@ -380,7 +380,7 @@ contract DutchExchange {
             // }
 
             // R1.2
-            require(sellVolumeCurrent + amount < 10 ** 30);
+            require(sellVolumesCurrent[sellToken][buyToken] + amount < 10 ** 30);
             // if (sellVolumesCurrent[sellToken][buyToken] + amount >= 10 ** 30) {
             //     Log('postSellOrder R1.2');
             //     return;
@@ -398,7 +398,7 @@ contract DutchExchange {
             // }
 
             // R2.2
-            require(sellVolumeNext + amount < 10 ** 30);
+            require(sellVolumesNext[sellToken][buyToken] + amount < 10 ** 30);
             // if (sellVolumesNext[sellToken][buyToken] + amount >= 10 ** 30) {
             //     Log('postSellOrder R2.2');
             //     return;
