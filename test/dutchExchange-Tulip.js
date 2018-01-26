@@ -1267,6 +1267,7 @@ const c6 = () => contract('DX Tulip Flow --> 1 SellOrder && 1 BuyOrder', (accoun
 
     assert.equal(await dx.approvedTokens.call(eth.address), true, 'ETH is approved by DX')
     assert.equal(await dx.approvedTokens.call(gno.address), true, 'GNO is approved by DX')
+    
     // allow the start of an auction w/no threshold
     await dx.updateExchangeParams(master, oracle.address, 0, 0, { from: master })
 
