@@ -55,7 +55,7 @@ contract('DutchExchange - claimSellerFunds', (accounts) => {
     await dx.addTokenPair(
       eth.address,
       gno.address,
-      10e18,
+      10.0.toWei(),
       0,
       2,
       1,
