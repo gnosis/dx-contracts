@@ -13,7 +13,7 @@ contract PriceOracleInterface {
     
     event NonValidPriceFeed(address priceFeedSource);
 
-     // Modifiers
+    // Modifiers
     modifier onlyOwner() {
         require(msg.sender == owner);
         _;
