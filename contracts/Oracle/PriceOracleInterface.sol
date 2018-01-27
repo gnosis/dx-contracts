@@ -13,15 +13,15 @@ contract PriceOracleInterface {
     
     event NonValidPriceFeed(address priceFeedSource);
 
-     // Modifiers
+    // Modifiers
     modifier onlyOwner() {
         require(msg.sender == owner);
         _;
     }
 
     /// @dev constructor of the contract
-    /// @param address of owner
-    /// @param address of price Feed Source -> should be maker feeds
+    // @param address of owner
+    // @param address of price Feed Source -> should be maker feeds
     function PriceOracleInterface(
         address _owner,
         address _priceFeedSource
@@ -33,7 +33,7 @@ contract PriceOracleInterface {
     }
    
     /// @dev updates the priceFeedSource
-    /// @param address of price Feed Source -> should be maker feeds
+    // @param address of price Feed Source -> should be maker feeds
     function updatePriceFeedSource(
         address _priceFeedSource
     )
@@ -44,7 +44,7 @@ contract PriceOracleInterface {
     }
 
     /// @dev updates the priceFeedSource
-    /// @param address of owner
+    // @param address of owner
     function updateCurator(
         address _owner
     )
@@ -55,7 +55,7 @@ contract PriceOracleInterface {
     }
 
     /// @dev returns the USDETH price, ie gets the USD price from Maker feed with 18 digits, but last 18 digits are cut off
-    /// @returns Floor(price in USD)
+    // @returns Floor(price in USD)
     function getUSDETHPrice() 
         public
         view
