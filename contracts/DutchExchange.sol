@@ -488,7 +488,7 @@ contract DutchExchange {
 
         uint den = closingPrices[sellToken][buyToken][auctionIndex].den;
 
-        if (den == 0 && returned > 0) {
+        if (den == 0) {
             // Auction is running
             claimedAmounts[sellToken][buyToken][auctionIndex][user] += returned;
         } else {
@@ -534,9 +534,8 @@ contract DutchExchange {
         }
 
         // Claim tokens
-        if (returned > 0){
-            balances[sellToken][user] += returned;
-        }
+        balances[sellToken][user] += returned;
+        
         NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned);
         ClaimBuyerFunds(returned, tulipsIssued);
     }
@@ -605,6 +604,11 @@ contract DutchExchange {
             price.num = Math.atleastZero(int((86400 - timeElapsed) * ratioOfPriceOracles.num));
             // 10^4 * 10^35 = 10^39
             price.den = (timeElapsed + 43200) * ratioOfPriceOracles.den;
+
+            if (price.num * sellVolumesCurrent[sellToken][buyToken] <= price.den * buyVolumes[sellToken][buyToken]) {
+                price.num = buyVolumes[sellToken][buyToken];
+                price.den = sellVolumesCurrent[sellToken][buyToken];
+            }
         }
     }
 
