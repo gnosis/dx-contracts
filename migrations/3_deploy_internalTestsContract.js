@@ -11,7 +11,7 @@ module.exports = function deploy(deployer) {
       const initParams = Promise.all([
         dx.TUL.call(),
         dx.OWL.call(),
-        dx.owner.call(),
+        dx.auctioneer.call(),
         dx.ETH.call(),
         dx.ETHUSDOracle.call(),
         dx.thresholdNewTokenPair.call(),

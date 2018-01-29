@@ -41,7 +41,6 @@ const contractNames = [
   'PriceFeed',
   'Medianizer',
   'InternalTests',
-  'TokenOWL',
 ]
 
 /**
@@ -89,9 +88,9 @@ const setupTest = async (
     Medianizer: medianizer,
   },
   {
-    startingETH = 50..toWei(),
-    startingGNO = 50..toWei(),
-    ethUSDPrice = 1008..toWei(),
+    startingETH = 50.0.toWei(),
+    startingGNO = 50.0.toWei(),
+    ethUSDPrice = 1100.0.toWei(),
   }) => {
   // Await ALL Promises for each account setup
   await Promise.all(accounts.map((acct) => {

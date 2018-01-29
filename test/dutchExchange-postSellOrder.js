@@ -160,7 +160,9 @@ contract('DutchExchange - postSellOrder', (accounts) => {
   })
 
   it('rejects when sellToken amount == 0', async () => {
-    await depositETH(seller1, 5 * (10 ** 7))
+    // deposit 20 ETH into DX
+    const eth20 = 20 * (10 ** 18)
+    await depositETH(seller1, eth20)
 
     const ethBalance = await getTokenBalance(seller1, eth)
 
@@ -193,7 +195,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     await dx.addTokenPair(
       eth.address,
       gno.address,
-      10 ** 6,
+      10.0.toWei(),
       0,
       2,
       1,

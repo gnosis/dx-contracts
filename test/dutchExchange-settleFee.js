@@ -16,7 +16,6 @@ let owl
 let dx
 let oracle
 
-
 let contracts
 
 const separateLogs = () => log('\n    ----------------------------------')
@@ -82,9 +81,9 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
   const [master, seller1] = accounts
   const testingAccs = accounts.slice(1, 5)
 
-  const ETHBalance = 10 ** 9
+  const ETHBalance = 20.0.toWei()
 
-  const GNOBalance = 10 ** 15
+  const GNOBalance = 15.0.toWei()
 
   beforeEach(separateLogs)
 
@@ -183,6 +182,8 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
     sellingAmount: 50.0.toWei(),
   }
 
+  const ETHBalance = 20.0.toWei()
+
   beforeEach(separateLogs)
 
   before(async () => {
@@ -202,11 +203,22 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
     await setupTest(accounts, contracts, startBal)
 
+    const depositETH = async (amt, acct) => {
+      await eth.deposit({ from: acct, value: amt })
+      await eth.approve(dx.address, amt, { from: acct })
+
+      await dx.deposit(eth.address, amt, { from: acct })
+    }
+
+    // deposit ETHER into EtherToken, approve DX and ..
+    // deposit ETHER into DX
+    await depositETH(ETHBalance, seller1)
+
     // add tokenPair ETH GNO
     await dx.addTokenPair(
       eth.address,
       gno.address,
-      10 * (10 ** 18),
+      (ETHBalance / 2), // 10 ETH
       0,
       2,
       1,
