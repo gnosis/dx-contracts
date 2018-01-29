@@ -300,8 +300,7 @@ contract('DutchExchange - addTokenPair', (accounts) => {
     log('tx was rejected')
   })
 
-  // TODO: when require is returned will pass
-  xit('rejects if fundedValueUSD < thresholdNewTokenPair', async () => {
+  it('rejects if fundedValueUSD < thresholdNewTokenPair', async () => {
     const thresholdNewTokenPair = await getThresholdNewTokenPair()
     const token1Funding = 100
 
