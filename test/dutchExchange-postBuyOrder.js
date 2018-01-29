@@ -192,7 +192,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
     assert.equal(1, auctionStart)
     // checking rejection
-    assertRejects(postBuyOrder(eth, gno, 1, 10, buyer1))
+    await assertRejects(postBuyOrder(eth, gno, 1, 10, buyer1))
   })
   it('rejects when auction is already closed: den != 0', async () => {
     await postSellOrder(eth, gno, 0, 1e18, seller1)
@@ -203,13 +203,13 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     const [, den] = await dx.closingPrices(eth.address, gno.address, 1)
     assert.equal(den.toNumber() !== 0, true)
     // checking rejection
-    assertRejects(postBuyOrder(eth, gno, 1, 10, buyer1))
+    await assertRejects(postBuyOrder(eth, gno, 1, 10, buyer1))
   })
 
   it('rejects when auction is not latest auction', async () => {
     // checking condition:
     assert.equal(2, await getAuctionIndex(eth, gno))
     // checking rejection
-    assertRejects(postBuyOrder(eth, gno, 1, 10, buyer1))
+    await assertRejects(postBuyOrder(eth, gno, 1, 10, buyer1))
   })
 })
