@@ -263,16 +263,8 @@ contract('DutchExchange - addTokenPair', (accounts) => {
     const closingPrice1 = await getInitClosingPrice(sellToken, buyToken)
     const closingPrice2 = await getInitClosingPrice(buyToken, sellToken)
 
-    if (sellToken === eth || sellToken === eth.address || buyToken === eth || buyToken === eth.address) {
-      assert.deepEqual(closingPrice1, [initialClosingPriceNum, initialClosingPriceDen], 'closing price for ETH->GNO is correct')
-      assert.deepEqual(closingPrice2, [initialClosingPriceDen, initialClosingPriceNum], 'closing price for GNO->ETH is correct')
-    } else {
-      const [num1, den1] = await dx.getPriceOracleForJS(sellToken.address || sellToken)
-      const [num2, den2] = await dx.getPriceOracleForJS(buyToken.address || buyToken)
-
-      assert.deepEqual(closingPrice1, [num2.mul(den1).toNumber(), den2.mul(num1).toNumber()], 'closing price for GNO1->GNO2 is correct')
-      assert.deepEqual(closingPrice2, [den2.mul(num1).toNumber(), num2.mul(den1).toNumber()], 'closing price for GNO1->GNO2 is correct')
-    }
+    assert.deepEqual(closingPrice1, [initialClosingPriceNum, initialClosingPriceDen], `closing price for ${symb(sellToken)}->${symb(buyToken)} is correct`)
+    assert.deepEqual(closingPrice2, [initialClosingPriceDen, initialClosingPriceNum], `closing price for ${symb(buyToken)}->${symb(sellToken)} is correct`)
   }
 
   const assertAuctionStart = async (sellToken, buyToken) => {
