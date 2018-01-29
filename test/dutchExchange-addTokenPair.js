@@ -331,13 +331,13 @@ contract('DutchExchange - addTokenPair', (accounts) => {
   })
 
   it('all amounts and balances are set correctly when adding GNO2 -> ETH pair', async () => {
-    await assertFundingAboveThreshold(eth, gno2)
-    const balances1 = await getTokenBalances(seller1, eth, gno2)
+    await assertFundingAboveThreshold(gno2, eth)
+    const balances1 = await getTokenBalances(seller1, gno2, eth)
 
     log('adding GNO2 -> ETH token pair')
-    const tx = await addTokenPair(seller1, { token1: eth, token2: gno2 })
+    const tx = await addTokenPair(seller1, { token1: gno2, token2: eth })
 
-    await assertAfterTx(seller1, tx, balances1, eth, gno2)
+    await assertAfterTx(seller1, tx, balances1, gno2, eth)
   })
 
   it('all amounts and balances are set correctly when adding GNO -> GNO2 pair', async () => {
