@@ -41,7 +41,7 @@ const valMinusFee = amount => amount - (amount / 200)
 
 // checkState is only a rough check for right updates of the numbers in the smart contract. It allows a big tolerance (MaxroundingError)
 // since there are unpredicted timejumps with an evm_increase time, which are not caught. 
-// This shoud not be a issue, because the focus within these tests is system testing instead of unit testing.
+// This should not be a issue, because the focus within these tests is system testing instead of unit testing.
 // Testing exact amounts is not needed, since the correct execution of number updates is checked 
 // with our unit tests within dutchExchange-postBuyOrder/dutchExchange-postSellOrder
 const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
@@ -248,7 +248,7 @@ const c2 = () => contract('DutchExchange - Flow 6', (accounts) => {
 
     // check conditions in flow
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-    await checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether), 0, valMinusFee(10 * ether * 2), 0, 0, eth, gno, 100000)
+    await checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether), 0, valMinusFee(10 * ether * 2), 0, 0, eth, gno, 0)
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
     // TODO testing for extra tokens
   })
@@ -322,7 +322,7 @@ const c3 = () => contract('DutchExchange - Flow 4', (accounts) => {
     logger('current sell volume', (await dx.sellVolumesCurrent.call(gno.address, eth.address)).toNumber())
     await postBuyOrder(gno, eth, auctionIndex, 10 ** 18 * 5 / 2, buyer2)
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-    await checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether * 2), 0, 0, 0, 0, eth, gno, 100000)
+    await checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether * 2), 0, 0, 0, 0, eth, gno, 0)
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
   })  
   it('step 3 - just claiming', async () => {
