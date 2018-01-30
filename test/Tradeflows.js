@@ -1,6 +1,12 @@
 /* eslint no-console:0, max-len:0, no-plusplus:0, no-mixed-operators:0, no-trailing-spaces:0 */
 
-// const PriceOracleInterface = artifacts.require('PriceOracleInterface')
+
+//
+// All tradeflows are desribed in the excel file: 
+// https://docs.google.com/spreadsheets/d/1H-NXEvuxGKFW8azXtyQC26WQQuI5jmSxR7zK9tHDqSs/edit#gid=394399433
+// They are intended as system tests for running through different auction in different patterns
+//  
+
 
 const { 
   eventWatcher,
@@ -34,6 +40,11 @@ let contracts
 
 const valMinusFee = amount => amount - (amount / 200)
 
+// checkState is only a rough check for right updates of the numbers in the smart contract. It allows a big tolerance (MaxroundingError)
+// since there are unpredicted timejumps with an evm_increase time, which are not caught. 
+// This shoud not be a issue, because the focus within these tests is system testing instead of unit testing.
+// Testing exact amounts is not needed, since the correct execution of number updates is checked 
+// with our unit tests within dutchExchange-postBuyOrder/dutchExchange-postSellOrder
 const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
   assert.equal((await dx.getAuctionIndex.call(ST.address, BT.address)).toNumber(), auctionIndex, 'auction Index not correct')
   assert.equal((await dx.getAuctionIndex.call(BT.address, ST.address)).toNumber(), auctionIndex)
@@ -327,7 +338,6 @@ const c3 = () => contract('DutchExchange - Flow 4', (accounts) => {
     await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', gno, eth, valMinusFee(ether * 5 / 2), 10 ** 16)
   })
 
-   
   it('step 3 - restarting auction', async () => {
     let auctionIndex = await getAuctionIndex()  
 

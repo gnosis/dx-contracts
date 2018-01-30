@@ -1,8 +1,15 @@
-// This file tests all the states and their interaction as outlined here: https://drive.google.com/drive/folders/0ByHhiGx-ltJZczhjZHhHeGpHcHM
+//
+// This file tests all the states and their interaction as outlined here:
+// https://drive.google.com/drive/folders/0ByHhiGx-ltJZczhjZHhHeGpHcHM
+// States are generated with the function getIntoState and 
+// right state transitions are asserted with the function getState() == expectation
+
+// checkState is only a rough check for right updates of the numbers in the smart contract. It allows a big tolerance (Maxrounding error)
+// since there are unpredicted timejumps with an evm_increase time
+
 
 /* eslint no-console:0, max-len:0, no-plusplus:0, no-mixed-operators:0, no-trailing-spaces:0 */
 
-// const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 
 const { 
   eventWatcher,
@@ -35,6 +42,11 @@ let contracts
 
 const valMinusFee = amount => amount - (amount / 200)
 
+// checkState is only a rough check for right updates of the numbers in the smart contract. It allows a big tolerance (MaxroundingError)
+// since there are unpredicted timejumps with an evm_increase time, which are not caught. 
+// This shoud not be a issue, because the focus within these tests is system testing instead of unit testing.
+// Testing exact amounts is not needed, since the correct execution of number updates is checked 
+// with our unit tests within dutchExchange-postBuyOrder/dutchExchange-postSellOrder
 const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
   assert.equal((await dx.getAuctionIndex.call(ST.address, BT.address)).toNumber(), auctionIndex, 'auction Index not correct')
   assert.equal((await dx.getAuctionIndex.call(BT.address, ST.address)).toNumber(), auctionIndex)
@@ -53,6 +65,7 @@ const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVo
   assert.equal(closingPriceDenReal, closingPriceDen, 'ClosingPriceDen not okay')
 }
 
+// getState returns the current state for a SellToken(ST) - BuyToken(BT) pair
 const getState = async (ST, BT) => { // eslint-disable-line
   const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
   if (auctionStart === 1) { return 5 }
@@ -117,6 +130,7 @@ const getState = async (ST, BT) => { // eslint-disable-line
   return 0
 }
 
+// getIntoState pushes the current state of a pair SellToken(ST)-BuyToken(BT) into a specific state
 const getIntoState = async (state, accounts, ST, BT) => {
   const [, seller1, buyer1] = accounts
   switch (state) {
@@ -263,13 +277,14 @@ const getIntoState = async (state, accounts, ST, BT) => {
   }
 }
 
-
+// checkInvariants tests that the total balance of tokens held by the dutchExchange 
+// by all users and all auctions is staying constant
 const checkInvariants = async (invariant, accounts, tokens, allowedRoundingErrors = 1) => {
   const newBalanceInvariant = await calculateTokensInExchange(accounts, tokens)
   logger('invariant before', invariant.map(v => v.toNumber()))
   logger('invariant after', newBalanceInvariant.map(v => v.toNumber()))
   for (let i = 0; i < tokens.length; i += 1) {
-    assert.isAtMost(balanceInvariant[i].minus(newBalanceInvariant[i]).abs(), allowedRoundingErrors, `issue with Token${i}`)
+    assert.isAtMost(balanceInvariant[i].minus(newBalanceInvariant[i]).abs().toNumber(), allowedRoundingErrors, `issue with Token${i}`)
   }
 }
 
@@ -466,7 +481,7 @@ const c4 = () => contract('DutchExchange - Stage S1 - Auction is running with v 
     // clearing first auction
     await assertRejects(postBuyOrder(gno, eth, auctionIndex, 10.0.toWei() * 3, buyer1))
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-    await checkState(1, auctionStart, 0, 0, 0, 0, 0, gno, eth, 10 ** 16)
+    await checkState(1, auctionStart, 0, 0, 0, 0, 0, gno, eth, 0)
     assert.equal(1, await getState(eth, gno))
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
   })
@@ -569,7 +584,7 @@ const c6 = () => contract('DutchExchange - Stage S1 - Auction is running with v 
     await assertRejects(postSellOrder(eth, gno, auctionIndex, 10.0.toWei() * 3, seller1))
     await assertRejects(postSellOrder(eth, gno, auctionIndex + 2, 10.0.toWei() * 3, seller1))
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-    await checkState(1, auctionStart, valMinusFee(10.0.toWei()), valMinusFee(10.0.toWei() * 6), 0, 0, 0, eth, gno, 10 ** 16)
+    await checkState(1, auctionStart, valMinusFee(10.0.toWei()), valMinusFee(10.0.toWei() * 6), 0, 0, 0, eth, gno, 0)
     assert.equal(1, await getState(eth, gno))
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
   })
@@ -1270,7 +1285,7 @@ const c22 = () => contract('DutchExchange - Stage S6 -  one auction closed, othe
     // clearing first auction
     await assertRejects(postBuyOrder(eth, gno, auctionIndex, 10.0.toWei() * 3, buyer1))
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-    await checkState(1, auctionStart, valMinusFee(5.0.toWei()), 0, valMinusFee(2.0.toWei()), 0, 0, gno, eth, 10 ** 18)
+    await checkState(1, auctionStart, valMinusFee(5.0.toWei()), 0, valMinusFee(2.0.toWei()), 0, 0, gno, eth, 0)
     assert.equal(6, await getState(eth, gno))
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
   })
