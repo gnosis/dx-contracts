@@ -32,6 +32,7 @@ Number.prototype.toEth = function toEth() {
 const MaxRoundingError = 100
 
 const contractNames = [
+  'Proxy',
   'DutchExchange',
   'EtherToken',
   'TokenGNO',
@@ -58,7 +59,8 @@ const getContracts = async () => {
     acc[name] = gasLoggedContracts[i]
     return acc
   }, {})
-
+  const p = await artifacts.require('Proxy').deployed()
+  deployedContracts.DutchExchange = artifacts.require('DutchExchange').at(p.address)
   return deployedContracts
 }
 

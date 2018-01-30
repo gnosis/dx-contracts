@@ -73,6 +73,7 @@ contract DutchExchange {
     mapping (address => mapping (address => mapping (uint => mapping (address => uint)))) public buyerBalances;
     mapping (address => mapping (address => mapping (uint => mapping (address => uint)))) public claimedAmounts;
 
+    bool public isInitialised;
     // > Modifiers
     modifier onlyAuctioneer() {
         // R1
@@ -84,14 +85,14 @@ contract DutchExchange {
         _;
     }
 
-    /// @dev Constructor creates exchange
+    /// @dev Constructor-Function creates exchange
     /// @param _TUL - address of TUL ERC-20 token
     /// @param _OWL - address of OWL ERC-20 token
     /// @param _auctioneer - auctioneer for managing interfaces
     /// @param _ETH - address of ETH ERC-20 token
     /// @param _ETHUSDOracle - address of the oracle contract for fetching feeds
     /// @param _thresholdNewTokenPair - Minimum required sell funding for adding a new token pair, in USD
-    function DutchExchange(
+    function setupDutchExchange(
         address _TUL,
         address _OWL,
         address _auctioneer, 
@@ -102,6 +103,7 @@ contract DutchExchange {
     )
         public
     {
+        require(!isInitialised);
         TUL = _TUL;
         OWL = _OWL;
         auctioneer = _auctioneer;
@@ -109,6 +111,7 @@ contract DutchExchange {
         ETHUSDOracle = _ETHUSDOracle;
         thresholdNewTokenPair = _thresholdNewTokenPair;
         thresholdNewAuction = _thresholdNewAuction;
+        isInitialised = true;
     }
 
     function updateExchangeParams(

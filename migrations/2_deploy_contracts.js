@@ -10,6 +10,7 @@ const TokenGNO = artifacts.require('TokenGNO')
 const TokenOWL = artifacts.require('TokenOWL')
 const TokenTUL = artifacts.require('TokenTUL')
 const Medianizer = artifacts.require('Medianizer')
+const Proxy = artifacts.require('Proxy')
 
 // ETH price as reported by MakerDAO with 18 decimal places
 const currentETHPrice = (1100 * (10 ** 18))
@@ -29,9 +30,11 @@ module.exports = function deploy(deployer, networks, accounts) {
     .then(() => deployer.deploy(Medianizer))
     .then(() => deployer.deploy(PriceOracleInterface, accounts[0], Medianizer.address))
     .then(() => deployer.deploy(TokenOWL))
+    .then(() => deployer.deploy(DutchExchange))
+    .then(() => deployer.deploy(Proxy, DutchExchange.address))  
     // @dev DX Constructor creates exchange
-    .then(() => deployer.deploy(
-      DutchExchange,                            // Contract Name
+    .then(() => Proxy.deployed())
+    .then((p) => DutchExchange.at(p.address).setupDutchExchange(
       TokenTUL.address,
       TokenOWL.address,
       accounts[0],                           // @param _owner will be the admin of the contract
@@ -45,5 +48,5 @@ module.exports = function deploy(deployer, networks, accounts) {
     .then(() => PriceFeed.deployed())
     .then(P => P.post(currentETHPrice, 1516168838 * 2, Medianizer.address, { from: accounts[0] }))
     .then(() => TokenTUL.deployed())
-    .then(T => T.updateMinter(DutchExchange.address))
+    .then(T => T.updateMinter(Proxy.address))
 }
