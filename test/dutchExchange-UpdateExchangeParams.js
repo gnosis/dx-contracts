@@ -1,6 +1,7 @@
 const {
   logger,
   assertRejects,
+  gasLogger,
 } = require('./utils')
 
 const { getContracts } = require('./testFunctions')
@@ -17,6 +18,8 @@ let contracts
 contract('DutchExchange updating exchange params', (accounts) => {
   const [master, seller1] = accounts
 
+  afterEach(() => gasLogger())
+
   before(async () => {
     // get contractsU
     contracts = await getContracts();
@@ -27,19 +30,20 @@ contract('DutchExchange updating exchange params', (accounts) => {
     } = contracts)
 
     // a new deployed PriceOracleInterface to replace the old with
-    newPO = await PriceOracleInterface.new(master, medianizer.address)
+    contracts.newPO = await PriceOracleInterface.new(master, medianizer.address);
+    ({ newPO } = contracts)
   })
 
   const getExchangeParams = async () => {
-    const [owner, ETHUSDOracle, thresholdNewTokenPair, thresholdNewAuction] = await Promise.all([
-      dx.owner.call(),
+    const [auctioneer, ETHUSDOracle, thresholdNewTokenPair, thresholdNewAuction] = await Promise.all([
+      dx.auctioneer.call(),
       dx.ETHUSDOracle.call(),
       dx.thresholdNewTokenPair.call(),
       dx.thresholdNewAuction.call(),
     ])
 
     return {
-      owner,
+      auctioneer,
       ETHUSDOracle,
       thresholdNewTokenPair: thresholdNewTokenPair.toNumber(),
       thresholdNewAuction: thresholdNewAuction.toNumber(),
@@ -49,14 +53,14 @@ contract('DutchExchange updating exchange params', (accounts) => {
   const getAndPrintExchangeParams = async () => {
     const params = await getExchangeParams()
     const {
-      owner,
+      auctioneer,
       ETHUSDOracle,
       thresholdNewTokenPair,
       thresholdNewAuction,
     } = params
 
     logger(`DutchExchange parameters:
-      owner: ${owner},
+      auctioneer: ${auctioneer},
       ETHUSDOracle: ${ETHUSDOracle},
       thresholdNewTokenPair: ${thresholdNewTokenPair},
       thresholdNewAuction: ${thresholdNewAuction}
@@ -66,29 +70,29 @@ contract('DutchExchange updating exchange params', (accounts) => {
   }
 
   const updateExchangeParams = (account, {
-    owner,
+    auctioneer,
     ETHUSDOracle,
     thresholdNewTokenPair,
     thresholdNewAuction,
-  }) => dx.updateExchangeParams(owner, ETHUSDOracle, thresholdNewTokenPair, thresholdNewAuction, { from: account })
+  }) => dx.updateExchangeParams(auctioneer, ETHUSDOracle, thresholdNewTokenPair, thresholdNewAuction, { from: account })
 
-  const assertIsOwner = async (acc) => {
-    const owner = await dx.owner.call()
-    assert.strictEqual(owner, acc, 'account should be DutchExchange contract owner')
+  const assertIsAuctioneer = async (acc) => {
+    const auctioneer = await dx.auctioneer.call()
+    assert.strictEqual(auctioneer, acc, 'account should be DutchExchange contract auctioneer')
   }
 
-  const assertIsNotOwner = async (acc) => {
-    const owner = await dx.owner.call()
-    assert.notStrictEqual(owner, acc, 'account should not be DutchExchange contract owner')
+  const assertIsNotAuctioneer = async (acc) => {
+    const auctioneer = await dx.auctioneer.call()
+    assert.notStrictEqual(auctioneer, acc, 'account should not be DutchExchange contract auctioneer')
   }
 
-  it('not owner can\'t change params', async () => {
+  it('not auctioneer can\'t change params', async () => {
     const params1 = await getAndPrintExchangeParams()
 
-    await assertIsNotOwner(seller1)
+    await assertIsNotAuctioneer(seller1)
 
     const params2 = {
-      owner: seller1,
+      auctioneer: seller1,
       ETHUSDOracle: newPO.address,
       thresholdNewTokenPair: 5000,
       thresholdNewAuction: 500,
@@ -96,20 +100,20 @@ contract('DutchExchange updating exchange params', (accounts) => {
 
     assert.notDeepEqual(params1, params2, 'parameters must be different')
 
-    logger(`Not owner tries to change params to ${JSON.stringify(params2, null, 5)}`)
+    logger(`Not auctioneer tries to change params to ${JSON.stringify(params2, null, 5)}`)
 
-    await assertRejects(updateExchangeParams(seller1, params2), 'not owner can\'t change params')
+    await assertRejects(updateExchangeParams(seller1, params2), 'not auctioneer can\'t change params')
 
     assert.deepEqual(params1, await getAndPrintExchangeParams(), 'exchange params should stay the same')
   })
 
-  it('owner can change params', async () => {
+  it('auctioneer can change params', async () => {
     const params1 = await getAndPrintExchangeParams()
 
-    await assertIsOwner(master)
+    await assertIsAuctioneer(master)
 
     const params2 = {
-      owner: seller1,
+      auctioneer: seller1,
       ETHUSDOracle: newPO.address,
       thresholdNewTokenPair: 4000,
       thresholdNewAuction: 400,
@@ -117,7 +121,7 @@ contract('DutchExchange updating exchange params', (accounts) => {
 
     assert.notDeepEqual(params1, params2, 'parameters must be different')
 
-    logger(`Owner changes params to ${JSON.stringify(params2, null, 5)}`)
+    logger(`auctioneer changes params to ${JSON.stringify(params2, null, 5)}`)
 
     await updateExchangeParams(master, params2)
 

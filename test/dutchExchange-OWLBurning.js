@@ -9,15 +9,11 @@
   no-trailing-spaces: 0,
   no-multi-spaces: 0,
 */
-const argv = require('minimist')(process.argv.slice(2), { alias: { selector: 'sel' } })
+
 const { 
-  eventWatcher,
-  log,
+  gasLogger,
   assertRejects,
 } = require('./utils')
-
-const TokenOWL = artifacts.require('TokenOWL')
-
 
 const {
   getContracts,
@@ -39,11 +35,11 @@ const setupContracts = async () => {
 contract('TokenOWL - BurnTesting', (accounts) => {
   const [master, OWLHolder, , NoOWLHolder] = accounts
 
+  afterEach(() => gasLogger())
 
   before(async () => {
     // get contracts
     await setupContracts()
-    tokenOWL = await TokenOWL.deployed()
     await tokenOWL.transfer(OWLHolder, 10 ** 18, { from: master })
   })
 

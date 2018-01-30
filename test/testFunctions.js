@@ -6,10 +6,17 @@
   no-console: 0,
   no-mixed-operators: 0,
   no-floating-decimal: 0,
+  no-underscore-dangle:0,
+  no-return-assign:0,
 */
 const bn = require('bignumber.js')
 const { wait } = require('@digix/tempo')(web3)
-const { timestamp, varLogger, log } = require('./utils')
+const {
+  gasLogWrapper,
+  log,
+  timestamp,
+  varLogger,
+} = require('./utils')
 
 // I know, it's gross
 // add wei converter
@@ -25,6 +32,7 @@ Number.prototype.toEth = function toEth() {
 const MaxRoundingError = 100
 
 const contractNames = [
+  'Proxy',
   'DutchExchange',
   'EtherToken',
   'TokenGNO',
@@ -34,7 +42,6 @@ const contractNames = [
   'PriceFeed',
   'Medianizer',
   'InternalTests',
-  'TokenOWL',
 ]
 
 /**
@@ -46,11 +53,14 @@ const getContracts = async () => {
   const depContracts = contractNames.map(c => artifacts.require(c)).map(cc => cc.deployed())
   const contractInstances = await Promise.all(depContracts)
 
+  const gasLoggedContracts = gasLogWrapper(contractInstances)
+
   const deployedContracts = contractNames.reduce((acc, name, i) => {
-    acc[name] = contractInstances[i]
+    acc[name] = gasLoggedContracts[i]
     return acc
   }, {})
-
+  const p = await artifacts.require('Proxy').deployed()
+  deployedContracts.DutchExchange = artifacts.require('DutchExchange').at(p.address)
   return deployedContracts
 }
 
@@ -80,9 +90,9 @@ const setupTest = async (
     Medianizer: medianizer,
   },
   {
-    startingETH = 50..toWei(),
-    startingGNO = 50..toWei(),
-    ethUSDPrice = 1008..toWei(),
+    startingETH = 50.0.toWei(),
+    startingGNO = 50.0.toWei(),
+    ethUSDPrice = 1100.0.toWei(),
   }) => {
   // Await ALL Promises for each account setup
   await Promise.all(accounts.map((acct) => {
@@ -144,7 +154,7 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const { DutchExchange: dx } = await getContracts()
   const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
   const timeToWaitFor = Math.ceil((86400 - p * 43200) / (1 + p)) + startingTimeOfAuction
-  let [num, den] = (await dx.getPriceForJS(ST.address, BT.address, 1))
+  let [num, den] = (await dx.getPriceForJS.call(ST.address, BT.address, 1))
   const priceBefore = num.div(den)
   log(`
   Price BEFORE waiting until Price = initial Closing Price (2) * 2
@@ -156,7 +166,7 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   `)
   // wait until the price is good
   await wait(timeToWaitFor - timestamp());
-  ([num, den] = (await dx.getPriceForJS(ST.address, BT.address, 1)))
+  ([num, den] = (await dx.getPriceForJS.call(ST.address, BT.address, 1)))
   const priceAfter = num.div(den)
   log(`
   Price AFTER waiting until Price = ${p * 100}% of ${priceBefore / 2} (initial Closing Price)
@@ -473,11 +483,11 @@ const calculateTokensInExchange = async (Accounts, Tokens) => {
         // check old auctions balances
         for (let auctionIndex = 1; auctionIndex < lastAuctionIndex; auctionIndex += 1) {
           for (let acct of Accounts) {
-            if ((await dx.buyerBalances(token.address, tokenPartner.address, auctionIndex, acct)).toNumber() > 0) {
+            if ((await dx.buyerBalances.call(token.address, tokenPartner.address, auctionIndex, acct)).toNumber() > 0) {
               const [w] = (await dx.claimBuyerFunds.call(token.address, tokenPartner.address, acct, auctionIndex))
               balance = balance.add(w)
             }
-            if ((await dx.sellerBalances(tokenPartner.address, token.address, auctionIndex, acct)).toNumber() > 0) {
+            if ((await dx.sellerBalances.call(tokenPartner.address, token.address, auctionIndex, acct)).toNumber() > 0) {
               const [w] = await dx.claimSellerFunds.call(tokenPartner.address, token.address, acct, auctionIndex)
               balance = balance.add(w)
             }

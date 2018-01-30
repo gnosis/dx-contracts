@@ -93,5 +93,4 @@ contract Medianizer is DSValue {
 
         return (value, true);
     }
-
 }
