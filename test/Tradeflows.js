@@ -4,7 +4,7 @@
 //
 // All tradeflows are desribed in the excel file: 
 // https://docs.google.com/spreadsheets/d/1H-NXEvuxGKFW8azXtyQC26WQQuI5jmSxR7zK9tHDqSs/edit#gid=394399433
-// They are intended as system tests for running through different auction in different patterns
+// They are intended as system tests for running through different auction with different patterns
 //  
 
 
@@ -34,8 +34,7 @@ let dx
 let oracle
 let tokenTUL
 let balanceInvariant
-const ether = 10 ** 18
-
+const ether = 1.0.toWei()
 let contracts
 
 const valMinusFee = amount => amount - (amount / 200)
