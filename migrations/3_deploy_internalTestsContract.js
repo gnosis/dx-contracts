@@ -3,19 +3,21 @@
 const Math2 = artifacts.require('Math2')
 const DutchExchange = artifacts.require('DutchExchange')
 const InternalTests = artifacts.require('InternalTests')
+const Proxy = artifacts.require('Proxy')
+
 
 module.exports = function deploy(deployer) {
   deployer.link(Math2, InternalTests)
-    .then(() => DutchExchange.deployed())
-    .then((dx) => {
+    .then(() => Proxy.deployed())
+    .then((p) => {
       const initParams = Promise.all([
-        dx.TUL.call(),
-        dx.OWL.call(),
-        dx.auctioneer.call(),
-        dx.ETH.call(),
-        dx.ETHUSDOracle.call(),
-        dx.thresholdNewTokenPair.call(),
-        dx.thresholdNewAuction.call(),
+        DutchExchange.at(p.address).TUL.call(),
+        DutchExchange.at(p.address).OWL.call(),
+        DutchExchange.at(p.address).auctioneer.call(),
+        DutchExchange.at(p.address).ETH.call(),
+        DutchExchange.at(p.address).ETHUSDOracle.call(),
+        DutchExchange.at(p.address).thresholdNewTokenPair.call(),
+        DutchExchange.at(p.address).thresholdNewAuction.call(),
       ])
 
 
