@@ -32,7 +32,7 @@ Number.prototype.toEth = function toEth() {
 const MaxRoundingError = 100
 
 const contractNames = [
-  'DutchExchange',
+  'Proxy',
   'EtherToken',
   'TokenGNO',
   'TokenOWL',
@@ -42,6 +42,7 @@ const contractNames = [
   'Medianizer',
   'InternalTests',
 ]
+// DutchExchange is added after Proxy is deployed
 
 /**
  * getContracts - async loads contracts and instances
@@ -57,8 +58,9 @@ const getContracts = async () => {
   const deployedContracts = contractNames.reduce((acc, name, i) => {
     acc[name] = gasLoggedContracts[i]
     return acc
-  }, {})
+  }, {});
 
+  [deployedContracts.DutchExchange] = gasLogWrapper([artifacts.require('DutchExchange').at(deployedContracts.Proxy.address)])
   return deployedContracts
 }
 
@@ -93,6 +95,7 @@ const setupTest = async (
     ethUSDPrice = 1100.0.toWei(),
   }) => {
   // Await ALL Promises for each account setup
+
   await Promise.all(accounts.map((acct) => {
     /* eslint array-callback-return:0 */
     if (acct === accounts[0]) return
@@ -281,7 +284,7 @@ const postSellOrder = async (ST, BT, aucIdx, amt, acct) => {
     Current Buy Volume BEFORE Posting => ${buyVolumes.toEth()}
     Current Sell Volume               => ${sellVolumes.toEth()}
     ----
-    Posting Sell Amt -------------------> ${amt.toEth()} in ${ST} for ${BT} in auction ${auctionIdx}
+    Posting Sell Amt -------------------> ${amt.toEth()} in ${await ST.symbol()} for ${await BT.symbol()} in auction ${auctionIdx}
   `)
   // log('POSTBUYORDER TX RECEIPT ==', await dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct }))
   return dx.postSellOrder(ST.address, BT.address, auctionIdx, amt, { from: acct })

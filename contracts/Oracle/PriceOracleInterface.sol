@@ -2,8 +2,7 @@ pragma solidity ^0.4.18;
 
 import "../Oracle/PriceFeed.sol";
 import "../Oracle/Medianizer.sol";
-import "../Utils/Math.sol";
-
+import "@gnosis.pm/gnosis-core-contracts/contracts/Utils/Math.sol";
 
 contract PriceOracleInterface {
     using Math for *;

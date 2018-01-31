@@ -1,5 +1,5 @@
-pragma solidity 0.4.18;
-import "./StandardToken.sol";
+	pragma solidity 0.4.18;
+import "@gnosis.pm/gnosis-core-contracts/contracts/Tokens/StandardToken.sol";
 
 
 /// @title Token contract - Token exchanging Ether 1:1

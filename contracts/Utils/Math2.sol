@@ -4,7 +4,7 @@ pragma solidity 0.4.18;
 /// @title Math library - Allows calculation of logarithmic and exponential functions
 /// @author Alan Lu - <alan.lu@gnosis.pm>
 /// @author Stefan George - <stefan@gnosis.pm>
-library Math {
+library Math2 {
 
     /*
      *  Constants

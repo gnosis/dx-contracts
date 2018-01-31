@@ -41,7 +41,6 @@ let gno
 let dx
 let tokenTUL
 let oracle
-
 let contracts
 
 const setupContracts = async () => {
@@ -963,7 +962,7 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
      * Sub Test 2:
      * assert balance[user] of TUL != 0
      */
-    const userTULBalance = (await tokenTUL.balances.call(buyer1)).toNumber()
+    const userTULBalance = (await tokenTUL.balanceOf.call(buyer1)).toNumber()
     log(`
     BUYER1 TUL Balance ===> ${userTULBalance.toEth()}
     `)
@@ -993,7 +992,7 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
      * Sub Test 2:
      * assert balance[user] of TUL != 0
      */
-    const userTULBalance = (await tokenTUL.balances.call(seller1)).toNumber()
+    const userTULBalance = (await tokenTUL.balanceOf.call(seller1)).toNumber()
     log(`
     seller1 TUL Balance ===> ${userTULBalance.toEth()}
     `)
