@@ -82,4 +82,11 @@ contract('DutchExchange - Proxy', (accounts) => {
     const params = await getExchangeParams()
     assert.isTrue(Object.values(params).every(param => !!+param), 'No zero-initialized parameters')
   })
+
+  it('masterCopy can\'t be updated before masterCopyCountdown was started', async () => {
+    assertIsAuctioneer(master)
+    log('calling dx.updateMasterCopy() as auctioneer')
+    await assertRejects(dx.updateMasterCopy({ from: master }), 'should reject as startMasterCopyCountdown wasn\'t yet called')
+    log('tx was rejected')
+  })
 })
