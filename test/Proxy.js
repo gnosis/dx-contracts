@@ -109,4 +109,11 @@ contract('DutchExchange - Proxy', (accounts) => {
     log('calling dx.startMasterCopyCountdown() as auctioneer with valid dx address')
     await dx.startMasterCopyCountdown(dxNew.address, { from: master })
   })
+
+  it('auctioneer can\'t update masterCopy before time limit', async () => {
+    assertIsAuctioneer(master)
+    log('calling dx.updateMasterCopy() as auctioneer before time limit')
+    await assertRejects(dx.updateMasterCopy({ from: master }), 'should reject as time hasn\t passed')
+    log('tx was rejected')
+  })
 })
