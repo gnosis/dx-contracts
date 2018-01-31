@@ -11,6 +11,7 @@ const {
   eventWatcher,
   assertRejects,
   logger,
+  gasLogger,
 } = require('./utils')
 
 const {
@@ -75,6 +76,7 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
   })
 
   after(eventWatcher.stopWatching)
+  afterEach(gasLogger)
 
   it('1. check for a throw, if auctionIndex is bigger than the latest auctionIndex', async () => {
     const auctionIndex = await getAuctionIndex()
@@ -178,6 +180,7 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
   })
 
   after(eventWatcher.stopWatching)
+  afterEach(gasLogger)
 
   it('5. check right amount of coins is returned by claimBuyerFunds if auction is  not closed, but closed theoretical ', async () => {
     // prepare test by starting and clearning new auction
@@ -190,7 +193,7 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.4)
 
     // checking that closingPriceToken.num == 0
-    const [closingPriceNumToken] = (await dx.closingPrices(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
+    const [closingPriceNumToken] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
     assert.equal(closingPriceNumToken, 0)
     
     // actual testing
@@ -226,6 +229,7 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
   })
 
   after(eventWatcher.stopWatching)
+  afterEach(gasLogger)
 
   it('6. check that already claimedBuyerfunds are substracted properly', async () => {
     // prepare test by starting and clearning new auction
@@ -279,6 +283,7 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
   })
 
   after(eventWatcher.stopWatching)
+  afterEach(gasLogger)
 
   it('7. check that extraTokens are distributed correctly', async () => {
     // prepare test by starting and clearning new auction
@@ -331,6 +336,8 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
   })
 
   after(eventWatcher.stopWatching)
+  afterEach(gasLogger)
+
   it('8. check that the acutal accounting of balances is done correctly', async () => {
     // prepare test by starting and clearning new auction
     let auctionIndex = await getAuctionIndex()

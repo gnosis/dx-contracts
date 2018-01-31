@@ -5,6 +5,7 @@
 const { 
   eventWatcher,
   assertRejects,
+  gasLogger,
 } = require('./utils')
 
 const {
@@ -66,6 +67,7 @@ contract('DutchExchange - claimSellerFunds', (accounts) => {
   })
 
   after(eventWatcher.stopWatching)
+  afterEach(gasLogger)
 
   it('1. check for a throw, if auction is not yet ended', async () => {
     const auctionIndex = await getAuctionIndex()
@@ -84,7 +86,7 @@ contract('DutchExchange - claimSellerFunds', (accounts) => {
     await setAndCheckAuctionStarted(eth, gno)
     assert.equal(2, auctionIndex)
     // check condition
-    assert.equal((await dx.sellerBalances(eth.address, gno.address, 1, seller2)).toNumber(), 0)
+    assert.equal((await dx.sellerBalances.call(eth.address, gno.address, 1, seller2)).toNumber(), 0)
     // now claiming should not be possible and return == 0
     await assertRejects(dx.claimSellerFunds(eth.address, gno.address, seller2, 1))
   })
@@ -107,12 +109,12 @@ contract('DutchExchange - claimSellerFunds', (accounts) => {
     await postBuyOrder(gno, eth, auctionIndex, totalBuyAmount, buyer2)
     
     // withdraw and check the balance change
-    const seller1BalanceBefore = await dx.balances(eth.address, seller1)  
-    const seller2BalanceBefore = await dx.balances(eth.address, seller2)
+    const seller1BalanceBefore = await dx.balances.call(eth.address, seller1)  
+    const seller2BalanceBefore = await dx.balances.call(eth.address, seller2)
     await dx.claimSellerFunds(gno.address, eth.address, seller2, auctionIndex)
     await dx.claimSellerFunds(gno.address, eth.address, seller1, auctionIndex)
-    const seller1BalanceAfter = await dx.balances(eth.address, seller1)  
-    const seller2BalanceAfter = await dx.balances(eth.address, seller2)
+    const seller1BalanceAfter = await dx.balances.call(eth.address, seller1)  
+    const seller2BalanceAfter = await dx.balances.call(eth.address, seller2)
     const [closingPriceNum] = await dx.closingPrices.call(gno.address, eth.address, auctionIndex)
     assert.equal(seller1BalanceBefore.add(closingPriceNum.mul(3).div(5)).toNumber(), seller1BalanceAfter.toNumber())
     assert.equal(seller2BalanceBefore.add(closingPriceNum.mul(2).div(5)).toNumber(), seller2BalanceAfter.toNumber())

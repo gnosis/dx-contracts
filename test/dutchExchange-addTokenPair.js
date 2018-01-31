@@ -38,7 +38,7 @@ contract('DutchExchange - addTokenPair', (accounts) => {
   let addTokenPairDefaults
 
   beforeEach(separateLogs)
-  afterEach(() => gasLogger())
+  afterEach(gasLogger)
 
   before(async () => {
     // get contracts
@@ -226,8 +226,8 @@ contract('DutchExchange - addTokenPair', (accounts) => {
     } else if (buyToken === eth || buyToken === eth.address) {
       fundedValueETH = token2Funding
     } else {
-      const [num1, den1] = await dx.getPriceOracleForJS(sellToken.address || sellToken)
-      const [num2, den2] = await dx.getPriceOracleForJS(buyToken.address || buyToken)
+      const [num1, den1] = await dx.getPriceOracleForJS.call(sellToken.address || sellToken)
+      const [num2, den2] = await dx.getPriceOracleForJS.call(buyToken.address || buyToken)
 
       fundedValueETH = num1.mul(token1Funding).div(den1).add(num2.mul(token2Funding).div(den2))
     }

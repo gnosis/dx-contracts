@@ -35,7 +35,7 @@ const setupContracts = async () => {
 contract('TokenOWL - BurnTesting', (accounts) => {
   const [master, OWLHolder, , NoOWLHolder] = accounts
 
-  afterEach(() => gasLogger())
+  afterEach(gasLogger)
 
   before(async () => {
     // get contracts

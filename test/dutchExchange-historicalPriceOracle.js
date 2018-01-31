@@ -5,6 +5,7 @@ const {
   eventWatcher,
   assertRejects,
   enableContractFlag,
+  gasLogger,
 } = require('./utils')
 
 const {
@@ -67,15 +68,17 @@ const c1 = () => contract('DutchExchange - historicalPriceOracleForJS', (account
   })
 
   after(eventWatcher.stopWatching)
+  afterEach(gasLogger)
+
   it('0. throws for auctionIndex == 0', async () => {
-    await assertRejects(dx.historicalPriceOracleForJS(gno.address, 0))
+    await assertRejects(dx.historicalPriceOracleForJS.call(gno.address, 0))
   })
 
   it('1. check that price for ETH is (1,1)', async () => {
     const auctionIndex = await getAuctionIndex()
     await setAndCheckAuctionStarted(eth, gno)
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
-    const [num, den] = (await dx.historicalPriceOracleForJS(eth.address, auctionIndex)).map(i => i.toNumber())
+    const [num, den] = (await dx.historicalPriceOracleForJS.call(eth.address, auctionIndex)).map(i => i.toNumber())
 
     assert.equal(num, 1)
     assert.equal(den, 1)
@@ -95,12 +98,12 @@ const c1 = () => contract('DutchExchange - historicalPriceOracleForJS', (account
     assert.equal(2, auctionIndex)
 
     // checking that closingPriceToken.num == 0
-    const [closingPriceNumToken] = (await dx.closingPrices(gno.address, eth.address, auctionIndex - 1)).map(i => i.toNumber())
+    const [closingPriceNumToken] = (await dx.closingPrices.call(gno.address, eth.address, auctionIndex - 1)).map(i => i.toNumber())
     assert.equal(closingPriceNumToken, 0)
 
     // actual testing
-    const [closingPriceNum, closingPriceDen] = (await dx.closingPrices(eth.address, gno.address, auctionIndex - 1)).map(i => i.toNumber())
-    const [num, den] = (await dx.historicalPriceOracleForJS(gno.address, auctionIndex)).map(i => i.toNumber())
+    const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex - 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.historicalPriceOracleForJS.call(gno.address, auctionIndex)).map(i => i.toNumber())
     // We need to check the inverse closingPrices, since we have eth, gno prices
     assert.equal(closingPriceDen, num)
     assert.equal(closingPriceNum, den)
@@ -120,12 +123,12 @@ const c1 = () => contract('DutchExchange - historicalPriceOracleForJS', (account
     assert.equal(3, auctionIndex)
 
     // checking that closingPriceETH.num == 0
-    const [closingPriceNumToken] = (await dx.closingPrices(eth.address, gno.address, auctionIndex - 1)).map(i => i.toNumber())
+    const [closingPriceNumToken] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex - 1)).map(i => i.toNumber())
     assert.equal(closingPriceNumToken, 0)
     
     // actual testing
-    const [closingPriceNum, closingPriceDen] = (await dx.closingPrices(gno.address, eth.address, auctionIndex - 1)).map(i => i.toNumber())
-    const [num, den] = (await dx.historicalPriceOracleForJS(gno.address, auctionIndex)).map(i => i.toNumber())
+    const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(gno.address, eth.address, auctionIndex - 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.historicalPriceOracleForJS.call(gno.address, auctionIndex)).map(i => i.toNumber())
     assert.equal(closingPriceNum, num)
     assert.equal(closingPriceDen, den)
   })
@@ -145,9 +148,9 @@ const c1 = () => contract('DutchExchange - historicalPriceOracleForJS', (account
     auctionIndex = await getAuctionIndex()
     assert.equal(4, auctionIndex)
 
-    const [closingPriceNum, closingPriceDen] = await dx.closingPrices(eth.address, gno.address, auctionIndex - 1)
-    const [closingPriceNumOpp, closingPriceDenOpp] = await dx.closingPrices(gno.address, eth.address, auctionIndex - 1)
-    const [num, den] = (await dx.historicalPriceOracleForJS(gno.address, auctionIndex)).map(i => i.toNumber())
+    const [closingPriceNum, closingPriceDen] = await dx.closingPrices.call(eth.address, gno.address, auctionIndex - 1)
+    const [closingPriceNumOpp, closingPriceDenOpp] = await dx.closingPrices.call(gno.address, eth.address, auctionIndex - 1)
+    const [num, den] = (await dx.historicalPriceOracleForJS.call(gno.address, auctionIndex)).map(i => i.toNumber())
 
     // check that the tests is in correct state:
     assert.equal(closingPriceNum.toNumber() > 0, true)

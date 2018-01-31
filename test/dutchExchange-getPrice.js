@@ -71,10 +71,10 @@ contract('DutchExchange - getPrice', (accounts) => {
   it('1. check that getPrice returns the right value according to time for a normal running auction', async () => {
     const auctionIndex = await getAuctionIndex()
     await setAndCheckAuctionStarted(eth, gno)
-    const auctionStart = (await dx.getAuctionStart(eth.address, gno.address)).toNumber()
+    const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
 
-    const [num, den] = (await dx.getPriceForJS(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceForJS.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
     const currenttime = timestamp()
     const [numPrevious, denPrevious] = (await dx.computeRatioOfHistoricalPriceOraclesForJS.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
     const timeElapsed = currenttime - auctionStart 
@@ -94,9 +94,9 @@ contract('DutchExchange - getPrice', (accounts) => {
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.4)
     
     // check prices:  - actually reduantant with tests postBuyOrder
-    const closingPriceNum = (await dx.buyVolumes(eth.address, gno.address)).toNumber()
-    const closingPriceDen = (await dx.sellVolumesCurrent(eth.address, gno.address)).toNumber()
-    const [num, den] = (await dx.getPriceForJS(eth.address, gno.address, auctionIndex))
+    const closingPriceNum = (await dx.buyVolumes.call(eth.address, gno.address)).toNumber()
+    const closingPriceDen = (await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber()
+    const [num, den] = (await dx.getPriceForJS.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
     assert.equal(closingPriceNum, num)
     assert.equal(closingPriceDen, den)
   })
@@ -104,7 +104,7 @@ contract('DutchExchange - getPrice', (accounts) => {
 
   it('3. check that getPrice returns the (0,0) for future auctions', async () => {
     const auctionIndex = await getAuctionIndex()
-    const [num, den] = (await dx.getPriceForJS(eth.address, gno.address, auctionIndex + 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceForJS.call(eth.address, gno.address, auctionIndex + 1)).map(i => i.toNumber())
     assert.equal(0, num)
     assert.equal(0, den)
   })
@@ -115,8 +115,8 @@ contract('DutchExchange - getPrice', (accounts) => {
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     // clearning the auction
     await postBuyOrder(eth, gno, auctionIndex, 50 * 10e17, buyer2)
-    const [closingPriceNum, closingPriceDen] = (await dx.closingPrices(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
-    const [num, den] = (await dx.getPriceForJS(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
+    const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceForJS.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
     assert.equal(closingPriceNum, num)
     assert.equal(closingPriceDen, den)
   })

@@ -117,7 +117,7 @@ const c1 = () => contract('DutchExchange - Flow 3', (accounts) => {
     eventWatcher(dx, 'Log', {})
   })
 
-  afterEach(() => gasLogger())
+  afterEach(gasLogger)
   after(eventWatcher.stopWatching)
 
   it('step 1 - Buys tokens at the 3:1 price and clears both auctions', async () => {
@@ -191,7 +191,7 @@ const c2 = () => contract('DutchExchange - Flow 6', (accounts) => {
       { from: seller1 },
     )
   })
-  afterEach(() => gasLogger())
+  afterEach(gasLogger)
   after(eventWatcher.stopWatching)
 
   it('step 1 - Buys tokens at the 3:1 price and clears both auctions', async () => {
@@ -286,7 +286,7 @@ const c3 = () => contract('DutchExchange - Flow 4', (accounts) => {
     )
   })
 
-  afterEach(() => gasLogger())
+  afterEach(gasLogger)
   after(eventWatcher.stopWatching)
 
   it('step 1 - clearing one auction', async () => {
@@ -390,7 +390,7 @@ const c4 = () => contract('DutchExchange - Flow 1', (accounts) => {
     )
   })
 
-  afterEach(() => gasLogger())
+  afterEach(gasLogger)
   after(eventWatcher.stopWatching)
 
   it('step 1 - clearing one auction', async () => {
@@ -483,7 +483,7 @@ const c5 = () => contract('DutchExchange - Flow 9', (accounts) => {
       { from: seller1 },
     )
   })
-  afterEach(() => gasLogger())
+  afterEach(gasLogger)
   after(eventWatcher.stopWatching)
 
   it('step 2 - closing theoretical', async () => {
@@ -565,7 +565,7 @@ const c6 = () => contract('DutchExchange - Flow 10', (accounts) => {
       { from: seller1 },
     )
   })
-  afterEach(() => gasLogger())
+  afterEach(gasLogger)
   after(eventWatcher.stopWatching)
 
   it('step 2 - clearing one auction theoretical', async () => {
@@ -675,7 +675,7 @@ const c7 = () => contract('DutchExchange - Flow 7', (accounts) => {
       { from: seller1 },
     )
   })
-  afterEach(() => gasLogger())
+  afterEach(gasLogger)
   after(eventWatcher.stopWatching)
 
   it('step 1 - clearing one auction theoretical', async () => {

@@ -40,11 +40,9 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
       gno.transfer(acct, GNOBalance, { from: master }),
       gno.approve(dx.address, GNOBalance, { from: acct }),
     ])))
-    // eventWatcher(dx, 'NewDeposit')
-    // eventWatcher(dx, 'NewWithdrawal')
   })
 
-  afterEach(() => gasLogger())
+  afterEach(gasLogger)
   after(eventWatcher.stopWatching)
 
   const getAccDeposits = async (acc) => {

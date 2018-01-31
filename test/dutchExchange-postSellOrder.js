@@ -33,7 +33,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
   }
 
   beforeEach(separateLogs)
-  afterEach(() => gasLogger())
+  afterEach(gasLogger)
 
   before(async () => {
     // get contracts

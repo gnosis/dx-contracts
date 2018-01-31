@@ -18,7 +18,7 @@ let contracts
 contract('DutchExchange updating exchange params', (accounts) => {
   const [master, seller1] = accounts
 
-  afterEach(() => gasLogger())
+  afterEach(gasLogger)
 
   before(async () => {
     // get contractsU
