@@ -10,14 +10,16 @@ module.exports = function deploy(deployer) {
   deployer.link(Math2, InternalTests)
     .then(() => Proxy.deployed())
     .then((p) => {
+      const dx = DutchExchange.at(p.address)
+
       const initParams = Promise.all([
-        DutchExchange.at(p.address).TUL.call(),
-        DutchExchange.at(p.address).OWL.call(),
-        DutchExchange.at(p.address).auctioneer.call(),
-        DutchExchange.at(p.address).ETH.call(),
-        DutchExchange.at(p.address).ETHUSDOracle.call(),
-        DutchExchange.at(p.address).thresholdNewTokenPair.call(),
-        DutchExchange.at(p.address).thresholdNewAuction.call(),
+        dx.TUL.call(),
+        dx.OWL.call(),
+        dx.auctioneer.call(),
+        dx.ETH.call(),
+        dx.ETHUSDOracle.call(),
+        dx.thresholdNewTokenPair.call(),
+        dx.thresholdNewAuction.call(),
       ])
 
 
