@@ -64,7 +64,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     eventWatcher(dx, 'ClearAuction')
     eventWatcher(dx, 'Log')
 
-    const totalTul = (await tul.totalTokens.call()).toNumber()
+    const totalTul = (await tul.totalSupply.call()).toNumber()
     assert.strictEqual(totalTul, 0, 'total TUL tokens should be 0')
     // then we know that feeRatio = 1 / 200
     feeRatio = 1 / 200
