@@ -147,7 +147,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
       { from: seller1 },
     )
     const auctionIndex = getAuctionIndex(eth, gno)
-    assertRejects(postBuyOrder(eth, gno, auctionIndex, 100, buyer1))
+    await assertRejects(postBuyOrder(eth, gno, auctionIndex, 100, buyer1))
   })
   it('balances are correctly changed when auction is running and order is not clearing order', async () => {
     const auctionIndex = await getAuctionIndex()

@@ -435,7 +435,7 @@ const c3 = () => contract('DutchExchange - Stage S0 - Auction is running with v>
     await assertRejects(postSellOrder(eth, gno, auctionIndex, 10.0.toWei() * 3, seller1))
     await assertRejects(postSellOrder(eth, gno, auctionIndex + 2, 10.0.toWei() * 3, seller1))
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-    await checkState(1, auctionStart, valMinusFee(10.0.toWei()), valMinusFee(10.0.toWei() * 6), 0, 0, 0, eth, gno, 10 ** 16)
+    await checkState(1, auctionStart, valMinusFee(10.0.toWei()), valMinusFee(10.0.toWei() * 6), 0, 0, 0, eth, gno, 1)
     assert.equal(0, await getState(eth, gno))
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
   })
@@ -481,6 +481,7 @@ const c4 = () => contract('DutchExchange - Stage S1 - Auction is running with v 
     // clearing first auction
     await assertRejects(postBuyOrder(gno, eth, auctionIndex, 10.0.toWei() * 3, buyer1))
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+
     await checkState(1, auctionStart, 0, 0, 0, 0, 0, gno, eth, 0)
     assert.equal(1, await getState(eth, gno))
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
@@ -1023,7 +1024,7 @@ const c16 = () => contract('DutchExchange - Stage S4 -  both Auction are closed 
   after(eventWatcher.stopWatching)
 
 
-  it('postBuyOrder - posting a buyOrder clearing non-theoretical closed auction getting into S6', async () => {
+  it('postBuyOrder - posting a buyOrder clearing theoretical closed auction getting into S6', async () => {
     const auctionIndex = await getAuctionIndex()
     const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
     await setAndCheckAuctionStarted(eth, gno)
@@ -1032,7 +1033,7 @@ const c16 = () => contract('DutchExchange - Stage S4 -  both Auction are closed 
     // clearing first auction
     await postBuyOrder(gno, eth, auctionIndex, 10.0.toWei() * 3, buyer1)
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-    await checkState(1, auctionStart, valMinusFee(5.0.toWei()), 0, valMinusFee(2.0.toWei()), valMinusFee(2.0.toWei()), valMinusFee(5.0.toWei()), gno, eth, 10 ** 18)
+    await checkState(1, auctionStart, valMinusFee(5.0.toWei()), 0, valMinusFee(2.0.toWei()), valMinusFee(2.0.toWei()), valMinusFee(5.0.toWei()), gno, eth, 1)
     assert.equal(6, await getState(eth, gno))
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
   })
