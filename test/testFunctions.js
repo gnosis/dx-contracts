@@ -95,6 +95,8 @@ const setupTest = async (
     ethUSDPrice = 1100.0.toWei(),
   }) => {
   // Await ALL Promises for each account setup
+  await
+
   await Promise.all(accounts.map((acct) => {
     /* eslint array-callback-return:0 */
     if (acct === accounts[0]) return

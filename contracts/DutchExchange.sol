@@ -1,9 +1,11 @@
 pragma solidity ^0.4.18;
 
-import "./Utils/Math.sol";
-import "./Tokens/Token.sol";
 import "./Tokens/TokenTUL.sol";
+//import "@gnosis.pm/gnosis-core-contracts/contracts/Tokens/Token.sol";
+import "./Utils/Math2.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
+import "@gnosis.pm/owl-token/contracts/OWLAirdrop.sol";
+
 import "./Oracle/PriceOracleInterface.sol";  
 
 /// @title Dutch Exchange - exchange token pairs with the clever mechanism of the dutch auction
@@ -11,7 +13,7 @@ import "./Oracle/PriceOracleInterface.sol";
 /// @author Dominik Teiml - <dominik@gnosis.pm>
 
 contract DutchExchange {
-    using Math for *;
+    using Math2 for *;
     
     // The price is a rational number, so we need a concept of a fraction
     struct fraction {
@@ -191,8 +193,8 @@ contract DutchExchange {
 
         setAuctionIndex(token1, token2);
 
-        token1Funding = Math.min(token1Funding, balances[token1][msg.sender]);
-        token2Funding = Math.min(token2Funding, balances[token2][msg.sender]);
+        token1Funding = Math2.min(token1Funding, balances[token1][msg.sender]);
+        token2Funding = Math2.min(token2Funding, balances[token2][msg.sender]);
 
         // R7
         require(token1Funding < 10 ** 30);
@@ -300,7 +302,7 @@ contract DutchExchange {
         public
     {
         // R1
-        amount = Math.min(amount, balances[tokenAddress][msg.sender]);
+        amount = Math2.min(amount, balances[tokenAddress][msg.sender]);
         require(amount > 0);
 
         balances[tokenAddress][msg.sender] -= amount;
@@ -323,7 +325,7 @@ contract DutchExchange {
         // Note: if a user specifies auctionIndex of 0, it
         // means he is agnostic which auction his sell order goes into
 
-        amount = Math.min(amount, balances[sellToken][msg.sender]);
+        amount = Math2.min(amount, balances[sellToken][msg.sender]);
 
         // R1
         require(amount > 0);
@@ -406,7 +408,7 @@ contract DutchExchange {
         require(sellVolumesCurrent[sellToken][buyToken] > 0);
         
         uint buyVolume = buyVolumes[sellToken][buyToken];
-        amount = Math.min(amount, balances[buyToken][msg.sender]);
+        amount = Math2.min(amount, balances[buyToken][msg.sender]);
         // R5
         require(buyVolume + amount < 10 ** 30);
         // if (buyVolume + amount >= 10 ** 30) {
@@ -421,7 +423,7 @@ contract DutchExchange {
         uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
         fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
         // 10^30 * 10^39 = 10^69
-        uint outstandingVolume = Math.atleastZero(int(sellVolume * price.num / price.den - buyVolume));
+        uint outstandingVolume = Math2.atleastZero(int(sellVolume * price.num / price.den - buyVolume));
 
         LogOustandingVolume(outstandingVolume);
 
@@ -599,7 +601,7 @@ contract DutchExchange {
         } else {
             uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
             // 10^30 * 10^39 = 10^69
-            unclaimedBuyerFunds = Math.atleastZero(int(
+            unclaimedBuyerFunds = Math2.atleastZero(int(
                 buyerBalance * price.den / price.num - 
                 claimedAmounts[sellToken][buyToken][auctionIndex][user]
             ));
@@ -630,13 +632,13 @@ contract DutchExchange {
 
             // If we're calling the function into an unstarted auction,
             // it will return the starting price of that auction
-            uint timeElapsed = Math.atleastZero(int(now - getAuctionStart(sellToken, buyToken)));
+            uint timeElapsed = Math2.atleastZero(int(now - getAuctionStart(sellToken, buyToken)));
 
             // The numbers below are chosen such that
             // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
 
             // 10^4 * 10^35 = 10^39
-            price.num = Math.atleastZero(int((86400 - timeElapsed) * ratioOfPriceOracles.num));
+            price.num = Math2.atleastZero(int((86400 - timeElapsed) * ratioOfPriceOracles.num));
             // 10^4 * 10^35 = 10^39
             price.den = (timeElapsed + 43200) * ratioOfPriceOracles.den;
 
@@ -753,7 +755,7 @@ contract DutchExchange {
             // 10^29 * 10^4 = 10^33
             // Uses 18 decimal places <> exactly as OWL tokens: 10**18 OWL == 1 USD 
             uint feeInUSD = feeInETH * ETHUSDPrice;
-            uint amountOfOWLBurned = Math.min(balances[OWL][msg.sender], feeInUSD / 2);
+            uint amountOfOWLBurned = Math2.min(balances[OWL][msg.sender], feeInUSD / 2);
 
             if (amountOfOWLBurned > 0) {
                 balances[OWL][msg.sender] -= amountOfOWLBurned;
@@ -778,7 +780,7 @@ contract DutchExchange {
         // feeRatio < 10^40
         returns (fraction memory feeRatio)
     {
-        uint totalTUL = TokenTUL(TUL).totalTokens();
+        uint totalTUL = TokenTUL(TUL).totalSupply();
 
         // The fee function is chosen such that
         // F(0) = 0.5%, F(1%) = 0.25%, F(>=10%) = 0
@@ -786,7 +788,7 @@ contract DutchExchange {
         // We premultiply by amount to get fee:
         if (totalTUL > 0) {
             uint balanceOfTUL = TokenTUL(TUL).lockedTULBalances(user);
-            feeRatio.num = Math.atleastZero(int(totalTUL - 10 * balanceOfTUL));
+            feeRatio.num = Math2.atleastZero(int(totalTUL - 10 * balanceOfTUL));
             feeRatio.den = 16000 * balanceOfTUL + 200 * totalTUL;
         } else {
             feeRatio.num = 1;

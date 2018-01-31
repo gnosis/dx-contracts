@@ -115,7 +115,7 @@ const c1 = () => contract('DutchExchange - Flow 3', (accounts) => {
     
     // general setup information
     logger('PRICE ORACLE', await oracle.getUSDETHPrice.call()) 
-    logger('tuliptoken', await tokenTUL.totalTokens.call())
+    logger('totalTulip amount', await tokenTUL.totalSupply.call()) 
 
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
@@ -191,8 +191,7 @@ const c2 = () => contract('DutchExchange - Flow 6', (accounts) => {
     
 
     // general setup information
-    logger('PRICE ORACLE', await oracle.getUSDETHPrice.call()) 
-    logger('tuliptoken', await tokenTUL.totalTokens.call())
+    logger('PRICE ORACLE', await oracle.getUSDETHPrice.call())
 
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)

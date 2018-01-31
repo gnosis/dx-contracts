@@ -1,11 +1,11 @@
 /* eslint no-multi-spaces: 0, no-console: 0 */
 
-const Math = artifacts.require('Math')
+const Math2 = artifacts.require('Math2')
 const DutchExchange = artifacts.require('DutchExchange')
 const InternalTests = artifacts.require('InternalTests')
 
 module.exports = function deploy(deployer) {
-  deployer.link(Math, InternalTests)
+  deployer.link(Math2, InternalTests)
     .then(() => DutchExchange.deployed())
     .then((dx) => {
       const initParams = Promise.all([

@@ -1,6 +1,8 @@
 /* eslint no-multi-spaces: 0, no-console: 0 */
 
+const Math2 = artifacts.require('Math2')
 const Math = artifacts.require('Math')
+
 const DutchExchange = artifacts.require('DutchExchange')
 const EtherToken = artifacts.require('EtherToken')
 const PriceFeed = artifacts.require('PriceFeed')
@@ -11,18 +13,20 @@ const TokenOWL = artifacts.require('TokenOWL')
 const TokenTUL = artifacts.require('TokenTUL')
 const Medianizer = artifacts.require('Medianizer')
 const Proxy = artifacts.require('Proxy')
-
+const OWLAirdrop = artifacts.require('OWLAirdrop')
 // ETH price as reported by MakerDAO with 18 decimal places
 const currentETHPrice = (1100 * (10 ** 18))
 
 module.exports = function deploy(deployer, networks, accounts) {
   // let TULInstance;
   deployer.deploy(Math)
-  // StandardToken is NECESSARRY to deploy here as it is LINKED w/Math
-  deployer.link(Math, [DutchExchange, StandardToken, EtherToken, TokenGNO, TokenTUL, TokenOWL])
+    .then(() => deployer.deploy(Math2))
 
-  deployer.deploy(EtherToken)
-    .then(() => deployer.deploy(TokenGNO, 10000 * (10 ** 18)))
+    // StandardToken is NECESSARRY to deploy here as it is LINKED w/Math
+    .then(() => deployer.link(Math2, [DutchExchange, TokenTUL]))
+    .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenTUL, TokenOWL, OWLAirdrop]))
+    .then(() => deployer.deploy(EtherToken))
+    .then(() => deployer.deploy(TokenGNO, 100000 * (10 ** 18)))
     .then(() => deployer.deploy(TokenTUL, accounts[0], accounts[0]))
     // StandardToken is NECESSARRY to deploy here as it is LINKED w/Math
     .then(() => deployer.deploy(StandardToken))
@@ -31,10 +35,10 @@ module.exports = function deploy(deployer, networks, accounts) {
     .then(() => deployer.deploy(PriceOracleInterface, accounts[0], Medianizer.address))
     .then(() => deployer.deploy(TokenOWL))
     .then(() => deployer.deploy(DutchExchange))
-    .then(() => deployer.deploy(Proxy, DutchExchange.address))  
+    .then(() => deployer.deploy(Proxy, DutchExchange.address))
     // @dev DX Constructor creates exchange
     .then(() => Proxy.deployed())
-    .then((p) => DutchExchange.at(p.address).setupDutchExchange(
+    .then(p => DutchExchange.at(p.address).setupDutchExchange(
       TokenTUL.address,
       TokenOWL.address,
       accounts[0],                           // @param _owner will be the admin of the contract
@@ -49,4 +53,12 @@ module.exports = function deploy(deployer, networks, accounts) {
     .then(P => P.post(currentETHPrice, 1516168838 * 2, Medianizer.address, { from: accounts[0] }))
     .then(() => TokenTUL.deployed())
     .then(T => T.updateMinter(Proxy.address))
+    .then(() => (web3.eth.getBlock('pending')).timestamp)
+    .then(t => deployer.deploy(OWLAirdrop, TokenOWL.address, TokenGNO.address, (t + 30 * 60 * 60)))
+    .then(() => TokenGNO.deployed())
+    .then(T => T.approve(OWLAirdrop.address, 50000 * (10 ** 18)))
+    .then(() => TokenOWL.deployed())
+    .then(T => T.setMinter(OWLAirdrop.address))
+    .then(() => OWLAirdrop.deployed())
+    .then(A => A.lockGNO(50000 * (10 ** 18)))
 }
