@@ -4,7 +4,7 @@ const {
   gasLogger,
 } = require('./utils')
 
-const { getContracts } = require('./testFunctions')
+const { getContracts, wait } = require('./testFunctions')
 
 const DutchExchange = artifacts.require('DutchExchange')
 
@@ -125,4 +125,14 @@ contract('DutchExchange - Proxy', (accounts) => {
     log('tx was rejected')
   })
 
+  it('auctioneer can update masterCopy after time limit', async () => {
+    assertIsAuctioneer(master)
+    const params1 = await getExchangeParams()
+
+    log('calling dx.updateMasterCopy() as auctioneer after time limit')
+    await dx.updateMasterCopy({ from: master })
+
+    const params2 = await getExchangeParams()
+    assert.deepEqual(params1, params2, 'exchange params should stay the same')
+  })
 })
