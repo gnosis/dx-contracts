@@ -97,4 +97,11 @@ contract('DutchExchange - Proxy', (accounts) => {
     log('tx was rejected')
   })
 
+  it('can\'t call startMasterCopyCountdown with zero dx address', async () => {
+    assertIsAuctioneer(master)
+    log('calling dx.startMasterCopyCountdown() with dx address == 0')
+    await assertRejects(dx.startMasterCopyCountdown(0, { from: master }), 'should reject as caller isn\'t the auctioneer')
+    log('tx was rejected')
+  })
+
 })
