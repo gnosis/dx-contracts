@@ -116,4 +116,13 @@ contract('DutchExchange - Proxy', (accounts) => {
     await assertRejects(dx.updateMasterCopy({ from: master }), 'should reject as time hasn\t passed')
     log('tx was rejected')
   })
+
+  it('not auctioneer can\'t update masterCopy', async () => {
+    await wait(60 * 60 * 24 * 30)
+    assertIsNotAuctioneer(seller1)
+    log('calling dx.updateMasterCopy() as not auctioneer after time limit')
+    await assertRejects(dx.updateMasterCopy({ from: seller1 }), 'should reject as caller isn\'t the auctioneer')
+    log('tx was rejected')
+  })
+
 })
