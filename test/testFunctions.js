@@ -284,7 +284,7 @@ const postSellOrder = async (ST, BT, aucIdx, amt, acct) => {
     Current Buy Volume BEFORE Posting => ${buyVolumes.toEth()}
     Current Sell Volume               => ${sellVolumes.toEth()}
     ----
-    Posting Sell Amt -------------------> ${amt.toEth()} in ${ST} for ${BT} in auction ${auctionIdx}
+    Posting Sell Amt -------------------> ${amt.toEth()} in ${await ST.symbol()} for ${await BT.symbol()} in auction ${auctionIdx}
   `)
   // log('POSTBUYORDER TX RECEIPT ==', await dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct }))
   return dx.postSellOrder(ST.address, BT.address, auctionIdx, amt, { from: acct })
