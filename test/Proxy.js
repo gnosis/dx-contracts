@@ -17,7 +17,7 @@ let contracts
 const separateLogs = () => utilsLog('\n    ----------------------------------')
 const log = (...args) => utilsLog('\t', ...args)
 
-contract('DutchExchange updating exchange params', (accounts) => {
+contract('DutchExchange - Proxy', (accounts) => {
   const [master, seller1] = accounts
 
   beforeEach(separateLogs)
@@ -37,8 +37,11 @@ contract('DutchExchange updating exchange params', (accounts) => {
   })
 
   const getExchangeParams = async () => {
-    const [auctioneer, ETHUSDOracle, thresholdNewTokenPair, thresholdNewAuction] = await Promise.all([
+    const [auctioneer, TUL, OWL, ETH, ETHUSDOracle, thresholdNewTokenPair, thresholdNewAuction] = await Promise.all([
       dx.auctioneer.call(),
+      dx.TUL.call(),
+      dx.OWL.call(),
+      dx.ETH.call(),
       dx.ETHUSDOracle.call(),
       dx.thresholdNewTokenPair.call(),
       dx.thresholdNewAuction.call(),
@@ -46,29 +49,13 @@ contract('DutchExchange updating exchange params', (accounts) => {
 
     return {
       auctioneer,
+      TUL,
+      OWL,
+      ETH,
       ETHUSDOracle,
       thresholdNewTokenPair: thresholdNewTokenPair.toNumber(),
       thresholdNewAuction: thresholdNewAuction.toNumber(),
     }
-  }
-
-  const getAndPrintExchangeParams = async () => {
-    const params = await getExchangeParams()
-    const {
-      auctioneer,
-      ETHUSDOracle,
-      thresholdNewTokenPair,
-      thresholdNewAuction,
-    } = params
-
-    log(`DutchExchange parameters:
-      auctioneer: ${auctioneer},
-      ETHUSDOracle: ${ETHUSDOracle},
-      thresholdNewTokenPair: ${thresholdNewTokenPair},
-      thresholdNewAuction: ${thresholdNewAuction}
-    `)
-
-    return params
   }
 
   const updateExchangeParams = (account, {
@@ -87,4 +74,12 @@ contract('DutchExchange updating exchange params', (accounts) => {
     const auctioneer = await dx.auctioneer.call()
     assert.notStrictEqual(auctioneer, acc, 'account should not be DutchExchange contract auctioneer')
   }
+
+  it('DutchExchange is initialized and params are set', async () => {
+    const isInitialised = await dx.isInitialised.call()
+    assert.isTrue(isInitialised, 'DutchExchange should be initialized')
+
+    const params = await getExchangeParams()
+    assert.isTrue(Object.values(params).every(param => !!+param), 'No zero-initialized parameters')
+  })
 })
