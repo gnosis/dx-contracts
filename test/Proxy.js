@@ -123,6 +123,8 @@ contract('DutchExchange - Proxy', (accounts) => {
 
     assert.isNotFunction(dx.getMasterCopy, 'dx doesn\'t have getMasterCopy method')
 
+    log(`DutchExchange contract is at the ${dx.address} address`)
+
     log('calling dx.updateMasterCopy() as auctioneer after time limit')
     await dx.updateMasterCopy({ from: master })
 
@@ -133,5 +135,6 @@ contract('DutchExchange - Proxy', (accounts) => {
 
     assert.isFunction(ndx.getMasterCopy, 'new updated dx does have getMasterCopy method')
     assert.strictEqual(await ndx.getMasterCopy.call(), dxNew.address, 'masterCopy address should have changed')
+    log(`DutchExchange contract is now at the ${dxNew.address} address`)
   })
 })
