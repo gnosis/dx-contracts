@@ -43,4 +43,8 @@ contract InternalTests is DutchExchange {
     fraction memory feeRatio = calculateFeeRatio(user);
     return (feeRatio.num, feeRatio.den);
   }
+
+  function getMasterCopy() public view returns (address) {
+    return address(masterCopy);
+  }
 }
