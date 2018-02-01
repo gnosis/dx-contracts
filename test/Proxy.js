@@ -84,34 +84,34 @@ contract('DutchExchange - Proxy', (accounts) => {
   })
 
   it('masterCopy can\'t be updated before masterCopyCountdown was started', async () => {
-    assertIsAuctioneer(master)
+    await assertIsAuctioneer(master)
     log('calling dx.updateMasterCopy() as auctioneer')
     await assertRejects(dx.updateMasterCopy({ from: master }), 'should reject as startMasterCopyCountdown wasn\'t yet called')
     log('tx was rejected')
   })
 
   it('not auctioneer can\'t call startMasterCopyCountdown', async () => {
-    assertIsNotAuctioneer(seller1)
+    await assertIsNotAuctioneer(seller1)
     log('calling dx.startMasterCopyCountdown() as not auctioneer')
     await assertRejects(dx.startMasterCopyCountdown(dxNew.address, { from: seller1 }), 'should reject as caller isn\'t the auctioneer')
     log('tx was rejected')
   })
 
   it('can\'t call startMasterCopyCountdown with zero dx address', async () => {
-    assertIsAuctioneer(master)
+    await assertIsAuctioneer(master)
     log('calling dx.startMasterCopyCountdown() with dx address == 0')
     await assertRejects(dx.startMasterCopyCountdown(0, { from: master }), 'should reject as caller isn\'t the auctioneer')
     log('tx was rejected')
   })
 
   it('auctioneer can call startMasterCopyCountdown', async () => {
-    assertIsAuctioneer(master)
+    await assertIsAuctioneer(master)
     log('calling dx.startMasterCopyCountdown() as auctioneer with valid dx address')
     await dx.startMasterCopyCountdown(dxNew.address, { from: master })
   })
 
   it('auctioneer can\'t update masterCopy before time limit', async () => {
-    assertIsAuctioneer(master)
+    await assertIsAuctioneer(master)
     log('calling dx.updateMasterCopy() as auctioneer before time limit')
     await assertRejects(dx.updateMasterCopy({ from: master }), 'should reject as time hasn\t passed')
     log('tx was rejected')
@@ -119,14 +119,14 @@ contract('DutchExchange - Proxy', (accounts) => {
 
   it('not auctioneer can\'t update masterCopy', async () => {
     await wait(60 * 60 * 24 * 30)
-    assertIsNotAuctioneer(seller1)
+    await assertIsNotAuctioneer(seller1)
     log('calling dx.updateMasterCopy() as not auctioneer after time limit')
     await assertRejects(dx.updateMasterCopy({ from: seller1 }), 'should reject as caller isn\'t the auctioneer')
     log('tx was rejected')
   })
 
   it('auctioneer can update masterCopy after time limit', async () => {
-    assertIsAuctioneer(master)
+    await assertIsAuctioneer(master)
     const params1 = await getExchangeParams()
 
     log('calling dx.updateMasterCopy() as auctioneer after time limit')
