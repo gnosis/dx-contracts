@@ -6,7 +6,7 @@ const {
 
 const { getContracts, wait } = require('./testFunctions')
 
-const DutchExchange = artifacts.require('DutchExchange')
+const InternalTests = artifacts.require('InternalTests')
 
 // Test VARS
 let dx, dxNew
@@ -29,22 +29,21 @@ contract('DutchExchange - Proxy', (accounts) => {
     // destructure contracts into upper state
     ({
       DutchExchange: dx,
+      // dxNew has new code as it is an InternalTests contract
+      InternalTests: dxNew,
       Proxy: pr,
     } = contracts)
-
-    // a new deployed PriceOracleInterface to replace the old with
-    dxNew = await DutchExchange.new()
   })
 
-  const getExchangeParams = async () => {
+  const getExchangeParams = async (dxContr = dx) => {
     const [auctioneer, TUL, OWL, ETH, ETHUSDOracle, thresholdNewTokenPair, thresholdNewAuction] = await Promise.all([
-      dx.auctioneer.call(),
-      dx.TUL.call(),
-      dx.OWL.call(),
-      dx.ETH.call(),
-      dx.ETHUSDOracle.call(),
-      dx.thresholdNewTokenPair.call(),
-      dx.thresholdNewAuction.call(),
+      dxContr.auctioneer.call(),
+      dxContr.TUL.call(),
+      dxContr.OWL.call(),
+      dxContr.ETH.call(),
+      dxContr.ETHUSDOracle.call(),
+      dxContr.thresholdNewTokenPair.call(),
+      dxContr.thresholdNewAuction.call(),
     ])
 
     return {
@@ -57,13 +56,6 @@ contract('DutchExchange - Proxy', (accounts) => {
       thresholdNewAuction: thresholdNewAuction.toNumber(),
     }
   }
-
-  const updateExchangeParams = (account, {
-    auctioneer,
-    ETHUSDOracle,
-    thresholdNewTokenPair,
-    thresholdNewAuction,
-  }) => dx.updateExchangeParams(auctioneer, ETHUSDOracle, thresholdNewTokenPair, thresholdNewAuction, { from: account })
 
   const assertIsAuctioneer = async (acc) => {
     const auctioneer = await dx.auctioneer.call()
@@ -129,10 +121,17 @@ contract('DutchExchange - Proxy', (accounts) => {
     await assertIsAuctioneer(master)
     const params1 = await getExchangeParams()
 
+    assert.isNotFunction(dx.getMasterCopy, 'dx doesn\'t have getMasterCopy method')
+
     log('calling dx.updateMasterCopy() as auctioneer after time limit')
     await dx.updateMasterCopy({ from: master })
 
-    const params2 = await getExchangeParams()
+    // using a new interface as masterCopy is an InternalTests now
+    const ndx = InternalTests.at(pr.address)
+    const params2 = await getExchangeParams(ndx)
     assert.deepEqual(params1, params2, 'exchange params should stay the same')
+
+    assert.isFunction(ndx.getMasterCopy, 'new updated dx does have getMasterCopy method')
+    assert.strictEqual(await ndx.getMasterCopy.call(), dxNew.address, 'masterCopy address should have changed')
   })
 })
