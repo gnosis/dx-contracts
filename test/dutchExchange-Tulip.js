@@ -1506,5 +1506,250 @@ const c7 = () => contract('DX Tulip Flow --> ERC20:ERC20 --> 1 S + 1B', (account
   })  
 })
 
+const c8 = () => contract('DX Tulip Flow --> Seller ERC20/ETH', (accounts) => {
+  const [master, seller1, , buyer1, buyer2] = accounts
+
+  let seller1Balance, sellVolumes
+  
+  const startBal = {
+    startingETH: 1000..toWei(),
+    startingGNO: 1000..toWei(),
+    ethUSDPrice: 6000..toWei(),   // 400 ETH @ $6000/ETH = $2,400,000 USD
+    sellingAmount: 100..toWei(), // Same as web3.toWei(50, 'ether') - $60,000USD
+  }
+  const { 
+    startingETH,
+    sellingAmount,
+    startingGNO,
+    // ethUSDPrice,
+  } = startBal
+  
+  afterEach(() => { 
+    gasLogger() 
+    eventWatcher.stopWatching()
+  })
+  
+  before('Before Hook', async () => {
+    // get contracts
+    await setupContracts()
+    /*
+     * SUB TEST 1: Check passed in ACCT has NO balances in DX for token passed in
+     */
+    seller1Balance = await getBalance(seller1, gno)
+    assert.equal(seller1Balance, 0, 'Seller1 should have 0 balance')
+
+    // set up accounts and tokens[contracts]
+    await setupTest(accounts, contracts, startBal)
+
+    /*
+     * SUB TEST 2: Check passed in ACCT has NO balances in DX for token passed in
+     */
+    seller1Balance = await getBalance(seller1, gno)
+    assert.equal(seller1Balance, startingGNO, `Seller1 should have balance of ${startingETH.toEth()}`)
+
+    /*
+     * SUB TEST 3: assert both eth and gno get approved by DX
+     */
+    // approve ETH
+    await dx.updateApprovalOfToken(eth.address, true, { from: master })
+    // approve GNO
+    await dx.updateApprovalOfToken(gno.address, true, { from: master })
+
+    assert.equal(await dx.approvedTokens.call(eth.address), true, 'ETH is approved by DX')
+    assert.equal(await dx.approvedTokens.call(gno.address), true, 'GNO is approved by DX')
+
+    /*
+     * SUB TEST 4: create new token pair and assert Seller1Balance = 0 after depositing more than Balance
+     */
+    // add tokenPair ETH GNO
+    log('Selling amt ', sellingAmount.toEth())
+    await dx.addTokenPair(
+      eth.address,
+      gno.address,
+      sellingAmount,  // 100 amt - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
+      sellingAmount / 4,              // buyVolume for GNO
+      2,              // lastClosingPrice NUM
+      1,              // lastClosingPrice DEN
+      { from: seller1 },
+    )
+  })
+  
+  it('Check sellVolume', async () => {
+    log(`
+    =====================================
+    T1: Check sellVolume
+    =====================================
+    `)
+
+    sellVolumes = (await dx.sellVolumesCurrent.call(gno.address, eth.address)).toNumber()
+    const svFee = f => (sellingAmount / 4) * (f / 100)
+    log(`
+    SELLVOLUMES === ${sellVolumes.toEth()}
+    FEE         === ${svFee(0.5).toEth()}
+    `)
+    assert.equal(sellVolumes, (sellingAmount / 4) - svFee(0.5), 'sellVolumes === seller1Balance')
+  })
+  
+  it('BUYER1: Non Auction clearing PostBuyOrder + Claim => Tulips = 0', async () => {
+    log(`
+    ============================================================================================
+    T2.5: Buyer1 PostBuyOrder => [[Non Auction clearing PostBuyOrder + Claim]] => [[Tulips = 0]]
+    ============================================================================================
+    `)
+    log(`
+    BUYER1 GNO BALANCE = ${(await getBalance(buyer1, gno)).toEth()}
+    BUYER1 ETH BALANCE = ${(await getBalance(buyer1, eth)).toEth()}
+    `)
+    /*
+     * SUB TEST 1: MOVE TIME AFTER SCHEDULED AUCTION START TIME && ASSERT AUCTION-START =TRUE
+     */
+    await setAndCheckAuctionStarted(gno, eth)    
+    
+    // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
+    const [closingNum, closingDen] = (await dx.closingPrices.call(gno.address, eth.address, 1))
+    // Should be 4 here as closing price starts @ 2 and we times by 2
+    const [num, den] = (await dx.getPriceForJS.call(gno.address, eth.address, 1)).map(i => i.toNumber())
+    log(`
+    Last Closing Prices:
+    closeN        = ${closingNum}
+    closeD        = ${closingDen}
+    closingPrice  = ${closingNum / closingDen}
+    ===========================================
+    Current Prices:
+    n             = ${num}
+    d             = ${den}
+    price         = ${num / den}
+    `)
+
+    /*
+     * SUB TEST 2: postBuyOrder => 20 GNO @ 4:1 price
+     * post buy order @ price 4:1 aka 1 GNO => 1/4 ETH && 1 ETH => 4 GNO
+     * @{return} ... 20GNO * 1/4 => 5 ETHER
+     */
+    await postBuyOrder(gno, eth, false, (20).toWei(), buyer1)
+    log(`
+    Buy Volume AFTER = ${((await dx.buyVolumes.call(gno.address, eth.address)).toNumber()).toEth()}
+    Left to clear auction = ${((await dx.sellVolumesCurrent.call(gno.address, eth.address)).toNumber() - ((await dx.buyVolumes.call(gno.address, eth.address)).toNumber()) * (den / num)).toEth()}
+    `)
+    let idx = await getAuctionIndex()
+    const [claimedFunds, tulipsIssued] = (await dx.claimBuyerFunds.call(gno.address, eth.address, buyer1, idx)).map(i => i.toNumber())
+    log(`
+    CLAIMED FUNDS => ${claimedFunds.toEth()}
+    TULIPS ISSUED => ${tulipsIssued.toEth()}
+    `)
+
+    assert.equal(tulipsIssued, 0, 'Tulips only issued / minted after auction Close so here = 0')
+  })
+
+  it(
+    'BUYER1: Tries to lock and unlock Tulips --> Auction NOT cleared --> asserts 0 Tulips minted and in mapping', 
+    () => unlockTulipTokens(buyer1, gno, eth),
+  )
+
+  it('BUYER1: Auction clearing PostBuyOrder + Claim => Tulips = sellVolume', async () => {
+    eventWatcher(dx, 'AuctionCleared')
+    log(`
+    ================================================================================================
+    T3: Buyer1 PostBuyOrder => Auction clearing PostBuyOrder + Claim => Tulips = 99.5 || sellVolume
+    ================================================================================================
+    `)
+    log(`
+    BUYER1 GNO BALANCE = ${(await getBalance(buyer1, gno)).toEth()}
+    BUYER1 ETH BALANCE = ${(await getBalance(buyer1, eth)).toEth()}
+    `) 
+    
+    // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
+    const [closingNum, closingDen] = (await dx.closingPrices.call(gno.address, eth.address, 1))
+    // Should be 4 here as closing price starts @ 2 and we times by 2
+    const [num, den] = (await dx.getPriceForJS.call(gno.address, eth.address, 1)).map(i => i.toNumber())
+    log(`
+    Last Closing Prices:
+    closeN        = ${closingNum}
+    closeD        = ${closingDen}
+    closingPrice  = ${closingNum / closingDen}
+    ===========================================
+    Current Prices:
+    n             = ${num}
+    d             = ${den}
+    price         = ${num / den}
+    `)
+    /*
+     * SUB TEST 2: postBuyOrder => 20 GNO @ 4:1 price
+     * post buy order @ price 4:1 aka 1 GNO => 1/4 ETH && 1 ETH => 4 GNO
+     * @{return} ... 20GNO * 1/4 => 5 ETHER
+     */
+    // post buy order that CLEARS auction - 400 / 4 = 100 + 5 from before clears
+    await postBuyOrder(gno, eth, false, 5..toWei(), buyer1)
+    log(`
+    Buy Volume AFTER = ${((await dx.buyVolumes.call(gno.address, eth.address)).toNumber()).toEth()}
+    Left to clear auction = ${((await dx.sellVolumesCurrent.call(gno.address, eth.address)).toNumber() - ((await dx.buyVolumes.call(gno.address, eth.address)).toNumber()) * (den / num)).toEth()}
+    `)
+    // drop it down 1 as Auction has cleared
+    let idx = await getAuctionIndex() - 1
+    
+    // clear RECIP auction via buyer2
+    await postBuyOrder(eth, gno, 1, 800..toWei(), buyer2)
+    
+    const [returned, tulipsIssued] = (await dx.claimBuyerFunds.call(gno.address, eth.address, buyer1, idx)).map(i => i.toNumber())
+    await assertClaimingFundsCreatesTulips(gno, eth, buyer1, 'buyer')
+    log(`
+    RETURNED//CLAIMED FUNDS => ${returned.toEth()}
+    TULIPS ISSUED           => ${tulipsIssued.toEth()}
+    `)
+
+    assert.equal(tulipsIssued.toEth(), returned, 'Tulips only issued / minted after auction Close and are equal to returned amount')
+  })
+
+  it('Clear Auction, assert auctionIndex increase', async () => {
+    log(`
+    ================================================================================================
+    T3.5: Buyer1 Check Auc Idx + Make sure Buyer1 has returned ETH in balance
+    ================================================================================================
+    `)
+    /*
+     * SUB TEST 1: clearAuction
+     */ 
+    log(`
+    BUYER1 GNO BALANCE = ${(await getBalance(buyer1, gno)).toEth()}
+    BUYER1 ETH BALANCE = ${(await getBalance(buyer1, eth)).toEth()}
+    `)
+    // just to close auction
+    log(`
+    New Auction Index -> ${await getAuctionIndex()}
+    `)
+    assert.equal((await getBalance(buyer1, gno)), startBal.startingGNO + sellVolumes, 'Buyer 1 has the returned value into GNO + original balance')
+    assert.isAtLeast(await getAuctionIndex(), 2)
+  })
+
+  it('BUYER1: GNO --> ETH: Buyer can lock tokens and only unlock them 24 hours later', async () => {
+    log(`
+    ============================================
+    T4: Buyer1 - Locking and Unlocking of Tokens
+    ============================================
+    `)
+    /*
+     * SUB TEST 1: Try getting Tulips
+     */ 
+    // Claim Buyer Funds from auctionIdx 1
+    await claimBuyerFunds(gno, eth, buyer1, 1)
+    // await checkUserReceivesTulipTokens(eth, gno, buyer1)
+    await unlockTulipTokens(buyer1)
+  })
+
+  it('SELLER: GNO --> ETH: seller can lock tokens and only unlock them 24 hours later', async () => {
+    log(`
+    ============================================
+    T5: Seller - Locking and Unlocking of Tokens
+    ============================================
+    `)
+    log('seller BALANCE = ', (await getBalance(seller1, gno)).toEth())
+    // await postBuyOrder(eth, gno, 1, 400..toWei(), buyer1)
+    // just to close auction
+    await claimSellerFunds(gno, eth, seller1, 1)
+    // await checkUserReceivesTulipTokens(eth, gno, buyer1)
+    await unlockTulipTokens(seller1)
+  })
+})
+
 // conditionally start contracts
-enableContractFlag(c1, c2, c3, c4, c5, c6, c7)
+enableContractFlag(c1, c2, c3, c4, c5, c6, c7, c8)
