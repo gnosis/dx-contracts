@@ -33,7 +33,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
   }
 
   beforeEach(separateLogs)
-  afterEach(() => gasLogger())
+  afterEach(gasLogger)
 
   before(async () => {
     // get contracts
@@ -51,7 +51,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     eventWatcher(dx, 'NewSellOrder')
     eventWatcher(dx, 'Log')
 
-    const totalTul = (await tul.totalTokens.call()).toNumber()
+    const totalTul = (await tul.totalSupply.call()).toNumber()
     assert.strictEqual(totalTul, 0, 'total TUL tokens should be 0')
     // then we know that feeRatio = 1 / 200
     feeRatio = 1 / 200
@@ -108,7 +108,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     }
   }
 
-  const assertChangedAmounts = async (oldAmounts, newAmounts, amount, amountAfterFee, postedToCurrentAuction) =>
+  const assertChangedAmounts = (oldAmounts, newAmounts, amount, amountAfterFee, postedToCurrentAuction) =>
     Object.keys(newAmounts).forEach((key) => {
       const oldVal = oldAmounts[key]
       const newVal = newAmounts[key]

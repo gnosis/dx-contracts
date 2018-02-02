@@ -22,7 +22,7 @@ const separateLogs = () => log('\n    ----------------------------------')
 
 const getHelperFunctions = (master) => {
   const getTotalTUL = async (print = true) => {
-    const totalTul = (await tul.totalTokens.call()).toNumber()
+    const totalTul = (await tul.totalSupply.call()).toNumber()
     if (print) log(`\taccount's total TUL == ${totalTul}`)
 
     return totalTul
@@ -111,7 +111,7 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
     await tul.updateMinter(master, { from: master })
   })
 
-  afterEach(() => gasLogger())
+  afterEach(gasLogger)
   after(eventWatcher.stopWatching)
 
   const {

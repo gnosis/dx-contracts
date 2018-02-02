@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.19;
 
 import "./DutchExchange.sol";
 
@@ -25,16 +25,16 @@ contract InternalTests is DutchExchange {
         uint _thresholdNewTokenPair,
         uint _thresholdNewAuction
     )
-        public DutchExchange(
+    {
+    setupDutchExchange( 
           _TUL,
           _OWL,
           _owner,
           _ETH,
           _ETHUSDOracle,
           _thresholdNewTokenPair,
-          _thresholdNewAuction
-        )
-    {}
+          _thresholdNewAuction);
+    }
 
   function calculateFeeRatioForJS(
     address user
@@ -42,5 +42,9 @@ contract InternalTests is DutchExchange {
   {
     fraction memory feeRatio = calculateFeeRatio(user);
     return (feeRatio.num, feeRatio.den);
+  }
+
+  function getMasterCopy() public view returns (address) {
+    return address(masterCopy);
   }
 }
