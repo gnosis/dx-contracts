@@ -1,4 +1,4 @@
-	pragma solidity ^0.4.18;
+pragma solidity ^0.4.19;
 import "@gnosis.pm/gnosis-core-contracts/contracts/Tokens/StandardToken.sol";
 
 
