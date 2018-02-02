@@ -1,11 +1,13 @@
 pragma solidity ^0.4.19;
 
+/*
+This contract is the interface between the MakerDAO priceFeed and our DX platform.
+*/
+
 import "../Oracle/PriceFeed.sol";
 import "../Oracle/Medianizer.sol";
-import "@gnosis.pm/gnosis-core-contracts/contracts/Utils/Math.sol";
 
 contract PriceOracleInterface {
-    using Math for *;
 
     address public priceFeedSource;
     address public owner;

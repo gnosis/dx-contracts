@@ -13,6 +13,7 @@
 const { 
   gasLogger,
   assertRejects,
+  enableContractFlag,
 } = require('./utils')
 
 const {
@@ -21,7 +22,6 @@ const {
 
 // Test VARS
 let tokenOWL
-
 let contracts
 
 const setupContracts = async () => {
@@ -32,7 +32,7 @@ const setupContracts = async () => {
   } = contracts)
 }
 
-contract('TokenOWL - BurnTesting', (accounts) => {
+const c1 = () => contract('TokenOWL - BurnTesting', (accounts) => {
   const [master, OWLHolder, , NoOWLHolder] = accounts
 
   afterEach(gasLogger)
@@ -40,6 +40,8 @@ contract('TokenOWL - BurnTesting', (accounts) => {
   before(async () => {
     // get contracts
     await setupContracts()
+    const balanceBefore = (await tokenOWL.balanceOf.call(master)).toNumber()
+    console.log(balanceBefore / 10e18)
     await tokenOWL.transfer(OWLHolder, 10 ** 18, { from: master })
   })
 
@@ -53,4 +55,4 @@ contract('TokenOWL - BurnTesting', (accounts) => {
     assert.equal(balanceBefore - 10 ** 18, (await tokenOWL.balanceOf.call(OWLHolder)).toNumber())
   })
 })
-
+enableContractFlag(c1)
