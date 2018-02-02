@@ -9,15 +9,12 @@
   no-trailing-spaces: 0,
   no-multi-spaces: 0,
 */
-const argv = require('minimist')(process.argv.slice(2), { alias: { selector: 'sel' } })
+
 const { 
-  log,
   gasLogger,
   assertRejects,
+  enableContractFlag,
 } = require('./utils')
-
-const TokenOWL = artifacts.require('TokenOWL')
-
 
 const {
   getContracts,
@@ -25,7 +22,6 @@ const {
 
 // Test VARS
 let tokenOWL
-
 let contracts
 
 const setupContracts = async () => {
@@ -36,15 +32,16 @@ const setupContracts = async () => {
   } = contracts)
 }
 
-contract('TokenOWL - BurnTesting', (accounts) => {
+const c1 = () => contract('TokenOWL - BurnTesting', (accounts) => {
   const [master, OWLHolder, , NoOWLHolder] = accounts
 
-  afterEach(() => gasLogger())
+  afterEach(gasLogger)
 
   before(async () => {
     // get contracts
     await setupContracts()
-    tokenOWL = await TokenOWL.deployed()
+    const balanceBefore = (await tokenOWL.balanceOf.call(master)).toNumber()
+    console.log(balanceBefore / 10e18)
     await tokenOWL.transfer(OWLHolder, 10 ** 18, { from: master })
   })
 
@@ -58,4 +55,4 @@ contract('TokenOWL - BurnTesting', (accounts) => {
     assert.equal(balanceBefore - 10 ** 18, (await tokenOWL.balanceOf.call(OWLHolder)).toNumber())
   })
 })
-
+enableContractFlag(c1)

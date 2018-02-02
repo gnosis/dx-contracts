@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.19;
 
 import "../Oracle/DSValue.sol";
 
@@ -93,5 +93,4 @@ contract Medianizer is DSValue {
 
         return (value, true);
     }
-
 }

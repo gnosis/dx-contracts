@@ -18,7 +18,7 @@ contract('DutchExchange updating token aprroval', (accounts) => {
   const [master, seller1] = accounts
   let testingTokens
 
-  afterEach(() => gasLogger())
+  afterEach(gasLogger)
   before(async () => {
     // get contracts
     contracts = await getContracts();
@@ -46,12 +46,12 @@ contract('DutchExchange updating token aprroval', (accounts) => {
   }
 
   const assertIsOwner = async (acc) => {
-    const owner = await dx.owner.call()
+    const owner = await dx.auctioneer.call()
     assert.strictEqual(owner, acc, 'account should be DutchExchange contract owner')
   }
 
   const assertIsNotOwner = async (acc) => {
-    const owner = await dx.owner.call()
+    const owner = await dx.auctioneer.call()
     assert.notStrictEqual(owner, acc, 'account should not be DutchExchange contract owner')
   }
 

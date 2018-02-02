@@ -33,7 +33,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
   }
 
   beforeEach(separateLogs)
-  afterEach(() => gasLogger())
+  afterEach(gasLogger)
 
   before(async () => {
     // get contracts
@@ -51,7 +51,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     eventWatcher(dx, 'NewSellOrder')
     eventWatcher(dx, 'Log')
 
-    const totalTul = (await tul.totalTokens.call()).toNumber()
+    const totalTul = (await tul.totalSupply.call()).toNumber()
     assert.strictEqual(totalTul, 0, 'total TUL tokens should be 0')
     // then we know that feeRatio = 1 / 200
     feeRatio = 1 / 200
@@ -108,7 +108,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     }
   }
 
-  const assertChangedAmounts = async (oldAmounts, newAmounts, amount, amountAfterFee, postedToCurrentAuction) =>
+  const assertChangedAmounts = (oldAmounts, newAmounts, amount, amountAfterFee, postedToCurrentAuction) =>
     Object.keys(newAmounts).forEach((key) => {
       const oldVal = oldAmounts[key]
       const newVal = newAmounts[key]
@@ -160,7 +160,9 @@ contract('DutchExchange - postSellOrder', (accounts) => {
   })
 
   it('rejects when sellToken amount == 0', async () => {
-    await depositETH(seller1, 5 * (10 ** 7))
+    // deposit 20 ETH into DX
+    const eth20 = 20 * (10 ** 18)
+    await depositETH(seller1, eth20)
 
     const ethBalance = await getTokenBalance(seller1, eth)
 
@@ -193,7 +195,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     await dx.addTokenPair(
       eth.address,
       gno.address,
-      10 ** 6,
+      10.0.toWei(),
       0,
       2,
       1,
