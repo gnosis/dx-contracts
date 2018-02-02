@@ -35,7 +35,6 @@ const contractNames = [
   'Proxy',
   'EtherToken',
   'TokenGNO',
-  'TokenOWL',
   'TokenOWLProxy',
   'TokenTUL',
   'PriceOracleInterface',
@@ -43,7 +42,7 @@ const contractNames = [
   'Medianizer',
   'InternalTests',
 ]
-// DutchExchange is added after Proxy is deployed
+// DutchExchange and TokenOWL are added after their respective Proxy contracts are deployed
 
 /**
  * getContracts - async loads contracts and instances
@@ -61,8 +60,10 @@ const getContracts = async () => {
     return acc
   }, {});
 
-  [deployedContracts.DutchExchange] = gasLogWrapper([artifacts.require('DutchExchange').at(deployedContracts.Proxy.address)])
-  deployedContracts.TokenOWL = artifacts.require('TokenOWL').at(deployedContracts.TokenOWLProxy.address)
+  [deployedContracts.DutchExchange, deployedContracts.TokenOWL] = gasLogWrapper([
+    artifacts.require('DutchExchange').at(deployedContracts.Proxy.address),
+    artifacts.require('TokenOWL').at(deployedContracts.TokenOWLProxy.address),
+  ])
   return deployedContracts
 }
 
