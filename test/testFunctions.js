@@ -36,6 +36,7 @@ const contractNames = [
   'EtherToken',
   'TokenGNO',
   'TokenOWL',
+  'TokenOWLProxy',
   'TokenTUL',
   'PriceOracleInterface',
   'PriceFeed',
@@ -61,6 +62,7 @@ const getContracts = async () => {
   }, {});
 
   [deployedContracts.DutchExchange] = gasLogWrapper([artifacts.require('DutchExchange').at(deployedContracts.Proxy.address)])
+  deployedContracts.TokenOWL = artifacts.require('TokenOWL').at(deployedContracts.TokenOWLProxy.address)
   return deployedContracts
 }
 
@@ -469,7 +471,7 @@ const assertReturnedPlusTulips = async (ST, BT, acc, type, idx = 1) => {
   const BTName = await BT.name.call()
 
   // check if current trade is an ETH:ERC20 trade or not
-  const nonETH = STName !== 'Ether Token' && BTName !== 'Ether Token' 
+  const nonETH = STName !== 'Ether Token' && BTName !== 'Ether Token'
 
   // calc closingPrices for both ETH/ERC20 and nonETH trades
   const [num, den] = (await dx.closingPrices.call(ST.address, BT.address, idx)).map(s => s.toNumber())

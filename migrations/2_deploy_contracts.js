@@ -26,7 +26,7 @@ module.exports = function deploy(deployer, networks, accounts) {
     //Linking
     .then(() => deployer.deploy(Math2))
     .then(() => deployer.link(Math2, [DutchExchange, TokenTUL]))
-    .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenTUL, TokenOWL, OWLAirdrop]))
+    .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenTUL, TokenOWL, TokenOWLProxy, OWLAirdrop]))
 
     //Deployment of Tokens
     .then(() => deployer.deploy(EtherToken))
@@ -70,8 +70,11 @@ module.exports = function deploy(deployer, networks, accounts) {
     .then(t => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, TokenGNO.address, (t + 30 * 60 * 60)))
     .then(() => TokenGNO.deployed())
     .then(T => T.approve(OWLAirdrop.address, 50000 * (10 ** 18)))
-    .then(() => TokenOWL.deployed())
-    .then(T => T.setMinter(OWLAirdrop.address))
+    .then(() => TokenOWLProxy.deployed())
+    .then(T => TokenOWL.at(T.address).setMinter(OWLAirdrop.address))
     .then(() => OWLAirdrop.deployed())
     .then(A => A.lockGNO(50000 * (10 ** 18)))
+    .then(() => TokenOWLProxy.deployed())
+    .then(T => TokenOWL.at(T.address).balanceOf(accounts[0]))
+    .then((m)=>console.log(m.toNumber()))
 }
