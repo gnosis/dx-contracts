@@ -1,6 +1,5 @@
 /* eslint no-multi-spaces: 0, no-console: 0 */
 
-const Math2 = artifacts.require('Math2')
 const Math = artifacts.require('Math')
 
 const DutchExchange = artifacts.require('DutchExchange')
@@ -23,8 +22,6 @@ module.exports = function deploy(deployer, networks, accounts) {
   deployer.deploy(Math)
 
     // Linking
-    .then(() => deployer.deploy(Math2))
-    .then(() => deployer.link(Math2, [DutchExchange, TokenTUL]))
     .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenTUL, TokenOWL, TokenOWLProxy, OWLAirdrop]))
 
     // Deployment of Tokens

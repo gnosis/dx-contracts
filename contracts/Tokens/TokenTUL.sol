@@ -1,11 +1,9 @@
 pragma solidity ^0.4.19;
 import "@gnosis.pm/gnosis-core-contracts/contracts/Tokens/StandardToken.sol";
-import "../Utils/Math2.sol";
 
 
 /// @title Standard token contract with overflow protection
 contract TokenTUL is StandardToken {
-    using Math2 for *;
 
     struct unlockedTUL {
         uint amountUnlocked;
@@ -77,7 +75,7 @@ contract TokenTUL is StandardToken {
         returns (uint totalAmountLocked)
     {
         // Adjust amount by balance
-        amount = Math2.min(amount, balances[msg.sender]);
+        amount = min(amount, balances[msg.sender]);
         
         // Update state variables
         balances[msg.sender] -= amount;
@@ -94,7 +92,7 @@ contract TokenTUL is StandardToken {
         returns (uint totalAmountUnlocked, uint withdrawalTime)
     {
         // Adjust amount by locked balances
-        amount = Math2.min(amount, lockedTULBalances[msg.sender]);
+        amount = min(amount, lockedTULBalances[msg.sender]);
 
         if (amount > 0) {
             // Update state variables
@@ -114,5 +112,17 @@ contract TokenTUL is StandardToken {
         require(unlockedTULs[msg.sender].withdrawalTime < now);
         balances[msg.sender] += unlockedTULs[msg.sender].amountUnlocked;
         unlockedTULs[msg.sender].amountUnlocked = 0;
+    }
+
+    function min(uint a, uint b) 
+        public
+        pure
+        returns (uint)
+    {
+        if (a < b) {
+            return a;
+        } else {
+            return b;
+        }
     }
 }

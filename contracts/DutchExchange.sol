@@ -1,7 +1,6 @@
 pragma solidity ^0.4.19;
 
 import "./Tokens/TokenTUL.sol";
-import "./Utils/Math2.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "@gnosis.pm/owl-token/contracts/OWLAirdrop.sol";
 import "./Oracle/PriceOracleInterface.sol";  
@@ -11,8 +10,7 @@ import "./Oracle/PriceOracleInterface.sol";
 /// @author Dominik Teiml - <dominik@gnosis.pm>
 
 contract DutchExchange {
-    using Math2 for *;
-    
+   
     // The price is a rational number, so we need a concept of a fraction
     struct fraction {
         uint num;
@@ -194,8 +192,8 @@ contract DutchExchange {
 
         setAuctionIndex(token1, token2);
 
-        token1Funding = Math2.min(token1Funding, balances[token1][msg.sender]);
-        token2Funding = Math2.min(token2Funding, balances[token2][msg.sender]);
+        token1Funding = min(token1Funding, balances[token1][msg.sender]);
+        token2Funding = min(token2Funding, balances[token2][msg.sender]);
 
         // R7
         require(token1Funding < 10 ** 30);
@@ -244,6 +242,7 @@ contract DutchExchange {
         closingPrices[token1][token2][0] = fraction(initialClosingPriceNum, initialClosingPriceDen);
         closingPrices[token2][token1][0] = fraction(initialClosingPriceDen, initialClosingPriceNum);
 
+        // Split into two fns because of 16 local-var cap
         addTokenPair2(token1, token2, token1Funding, token2Funding);
     }
 
@@ -298,7 +297,7 @@ contract DutchExchange {
         public
     {
         // R1
-        amount = Math2.min(amount, balances[tokenAddress][msg.sender]);
+        amount = min(amount, balances[tokenAddress][msg.sender]);
         require(amount > 0);
 
         balances[tokenAddress][msg.sender] -= amount;
@@ -321,7 +320,7 @@ contract DutchExchange {
         // Note: if a user specifies auctionIndex of 0, it
         // means he is agnostic which auction his sell order goes into
 
-        amount = Math2.min(amount, balances[sellToken][msg.sender]);
+        amount = min(amount, balances[sellToken][msg.sender]);
 
         // R1
         require(amount > 0);
@@ -407,7 +406,7 @@ contract DutchExchange {
         require(sellVolumesCurrent[sellToken][buyToken] > 0);
         
         uint buyVolume = buyVolumes[sellToken][buyToken];
-        amount = Math2.min(amount, balances[buyToken][msg.sender]);
+        amount = min(amount, balances[buyToken][msg.sender]);
 
         // R7
         require(buyVolume + amount < 10 ** 30);
@@ -418,7 +417,7 @@ contract DutchExchange {
         uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
         fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
         // 10^30 * 10^39 = 10^69
-        uint outstandingVolume = Math2.atleastZero(int(sellVolume * price.num / price.den - buyVolume));
+        uint outstandingVolume = atleastZero(int(sellVolume * price.num / price.den - buyVolume));
 
         uint amountAfterFee;
         if (amount < outstandingVolume) {
@@ -596,7 +595,7 @@ contract DutchExchange {
         } else {
             uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
             // 10^30 * 10^39 = 10^69
-            unclaimedBuyerFunds = Math2.atleastZero(int(
+            unclaimedBuyerFunds = atleastZero(int(
                 buyerBalance * price.den / price.num - 
                 claimedAmounts[sellToken][buyToken][auctionIndex][user]
             ));
@@ -631,7 +630,7 @@ contract DutchExchange {
             // 10^29 * 10^4 = 10^33
             // Uses 18 decimal places <> exactly as OWL tokens: 10**18 OWL == 1 USD 
             uint feeInUSD = feeInETH * ETHUSDPrice;
-            uint amountOfOWLBurned = Math2.min(balances[OWL][msg.sender], feeInUSD / 2);
+            uint amountOfOWLBurned = min(balances[OWL][msg.sender], feeInUSD / 2);
 
             if (amountOfOWLBurned > 0) {
                 balances[OWL][msg.sender] -= amountOfOWLBurned;
@@ -664,7 +663,7 @@ contract DutchExchange {
         // We premultiply by amount to get fee:
         if (totalTUL > 0) {
             uint balanceOfTUL = TokenTUL(TUL).lockedTULBalances(user);
-            feeRatio.num = Math2.atleastZero(int(totalTUL - 10 * balanceOfTUL));
+            feeRatio.num = atleastZero(int(totalTUL - 10 * balanceOfTUL));
             feeRatio.den = 16000 * balanceOfTUL + 200 * totalTUL;
         } else {
             feeRatio.num = 1;
@@ -885,13 +884,13 @@ contract DutchExchange {
 
             // If we're calling the function into an unstarted auction,
             // it will return the starting price of that auction
-            uint timeElapsed = Math2.atleastZero(int(now - getAuctionStart(sellToken, buyToken)));
+            uint timeElapsed = atleastZero(int(now - getAuctionStart(sellToken, buyToken)));
 
             // The numbers below are chosen such that
             // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
 
             // 10^4 * 10^35 = 10^39
-            price.num = Math2.atleastZero(int((86400 - timeElapsed) * ratioOfPriceOracles.num));
+            price.num = atleastZero(int((86400 - timeElapsed) * ratioOfPriceOracles.num));
             // 10^4 * 10^35 = 10^39
             price.den = (timeElapsed + 43200) * ratioOfPriceOracles.den;
 
@@ -1055,6 +1054,31 @@ contract DutchExchange {
     {
         (token1, token2) = getTokenOrder(token1, token2);
         auctionIndex = latestAuctionIndices[token1][token2];
+    }
+
+    // > Math fns
+    function min(uint a, uint b) 
+        public
+        pure
+        returns (uint)
+    {
+        if (a < b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
+
+    function atleastZero(int a)
+        public
+        pure
+        returns (uint)
+    {
+        if (a < 0) {
+            return 0;
+        } else {
+            return uint(a);
+        }
     }
 
     // > Events
