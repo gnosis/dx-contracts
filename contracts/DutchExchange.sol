@@ -280,9 +280,6 @@ contract DutchExchange {
         public
     {
         // R1
-        require(amount > 0);
-
-        // R2
         require(Token(tokenAddress).transferFrom(msg.sender, this, amount));
 
         balances[tokenAddress][msg.sender] += amount;

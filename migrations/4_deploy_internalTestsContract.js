@@ -2,11 +2,12 @@
 
 const DutchExchange = artifacts.require('DutchExchange')
 const InternalTests = artifacts.require('InternalTests')
-const Proxy = artifacts.require('Proxy')
+const proxy = artifacts.require('Proxy')
 
 
-module.exports = function deploy(deployer) {
-    Proxy.deployed()
+module.exports = function deploy(deployer, networks, accounts) {
+  deployer
+    .then(() => proxy.deployed())
     .then((p) => {
       const dx = DutchExchange.at(p.address)
 
@@ -19,10 +20,6 @@ module.exports = function deploy(deployer) {
         dx.thresholdNewTokenPair.call(),
         dx.thresholdNewAuction.call(),
       ])
-
-
       return initParams
-    }).then((initParams) => {
-      return  deployer.deploy(InternalTests, ...initParams)
-    })
+    }).then(initParams => deployer.deploy(InternalTests, ...initParams))
 }

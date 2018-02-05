@@ -2,7 +2,6 @@
 const {
   timestamp,
   gasLogger,
-  log,
 } = require('./utils')
 
 const {
@@ -14,12 +13,10 @@ const {
 let eth
 let gno
 let dx
-let oracle
 
 let contracts
 
 contract('DutchExchange deposit/withdraw tests', (accounts) => {
-  const master = accounts[0]
   const testingAccs = accounts.slice(1, 5)
 
   const ETHBalance = 50..toWei()
@@ -35,7 +32,6 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      PriceOracleInterface: oracle,
     } = contracts)
 
     await Promise.all(testingAccs.map(acc => Promise.all([

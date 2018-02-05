@@ -28,7 +28,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
   const startBal = {
     startingETH: 0,
     startingGNO: 90.0.toWei(),
-    ethUSDPrice: 1008.0.toWei(),
+    ethUSDPrice: 1100.0.toWei(),
     sellingAmount: 50.0.toWei(),
   }
 

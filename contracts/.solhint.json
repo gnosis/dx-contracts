@@ -1,4 +1,4 @@
-{                                              
+diud{                                              
     "extends": "default",                      
     "rules": {                                 
         "indent": ["error", 4],                
