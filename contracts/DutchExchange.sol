@@ -188,6 +188,11 @@ contract DutchExchange {
         // R4
         require(getAuctionIndex(token1, token2) == 0);
 
+        // R5: to prevent overflow
+        require(initialClosingPriceNum < 10 ** 18);
+
+        // R6
+        require(initialClosingPriceDen < 10 ** 18);
 
         setAuctionIndex(token1, token2);
 
@@ -225,10 +230,10 @@ contract DutchExchange {
             // C3: Neither token is ETH
             // We require there to exist ETH-Token auctions
             // R3.1
-            require(getAuctionIndex(token1, ETH) > 0);
+            require(getAuctionIndex(token1, ETHmem) > 0);
 
             // R3.2
-            require(getAuctionIndex(token2, ETH) > 0);
+            require(getAuctionIndex(token2, ETHmem) > 0);
 
             // Price of Token 1
             fraction memory priceToken1 = priceOracle(token1);
@@ -286,6 +291,9 @@ contract DutchExchange {
         public
     {
         // R1
+        require(amount > 0);
+
+        // R2
         require(Token(tokenAddress).transferFrom(msg.sender, this, amount));
 
         balances[tokenAddress][msg.sender] += amount;
@@ -342,20 +350,23 @@ contract DutchExchange {
             // R1.1
             if (auctionIndex == 0) {
                 auctionIndex = latestAuctionIndex;
-
             } else {
-              require(auctionIndex == latestAuctionIndex);
+                require(auctionIndex == latestAuctionIndex);
             }
 
+            // R1.2
+            require(sellVolumesCurrent[sellToken][buyToken] + amount < 10 ** 30);
         } else {
             // C2
             // R2.1: Sell orders must go to next auction
             if (auctionIndex == 0) {
                 auctionIndex = latestAuctionIndex + 1;
-
             } else {
-              require(auctionIndex == latestAuctionIndex + 1);
+                require(auctionIndex == latestAuctionIndex + 1);
             }
+
+            // R2.2
+            require(sellVolumesNext[sellToken][buyToken] + amount < 10 ** 30);
         }
 
         // Fee mechanism, fees are added to extraTokens
@@ -390,13 +401,13 @@ contract DutchExchange {
     {
         uint auctionStart = getAuctionStart(sellToken, buyToken);
 
-
-        // R4: auction must not have cleared
+        // R1: auction must not have cleared
         require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
 
-        // R1
+        // R2
         require(getAuctionStart(sellToken, buyToken) <= now);
-                // R3
+
+        // R4
         require(auctionIndex == getAuctionIndex(sellToken, buyToken));
         
         // R5: auction must not be in waiting period
@@ -407,13 +418,9 @@ contract DutchExchange {
         
         uint buyVolume = buyVolumes[sellToken][buyToken];
         amount = Math2.min(amount, balances[buyToken][msg.sender]);
-        // R5
-        require(buyVolume + amount < 10 ** 30);
-        // if (buyVolume + amount >= 10 ** 30) {
-        //     Log('postSellOrder R5');
-        //     return;
-        // }
 
+        // R7
+        require(buyVolume + amount < 10 ** 30);
         
         // Overbuy is when a part of a buy order clears an auction
         // In that case we only process the part before the overbuy
@@ -422,8 +429,6 @@ contract DutchExchange {
         fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
         // 10^30 * 10^39 = 10^69
         uint outstandingVolume = Math2.atleastZero(int(sellVolume * price.num / price.den - buyVolume));
-
-        LogOustandingVolume(outstandingVolume);
 
         uint amountAfterFee;
         if (amount < outstandingVolume) {
@@ -465,6 +470,7 @@ contract DutchExchange {
 
         // R1
         require(sellerBalance > 0);
+
         // Get closing price for said auction
         fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
         uint num = closingPrice.num;
@@ -569,7 +575,9 @@ contract DutchExchange {
         }
 
         // Claim tokens
-        balances[sellToken][user] += returned;
+        if (returned > 0) {
+            balances[sellToken][user] += returned;
+        }
         
         NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned);
         ClaimBuyerFunds(returned, tulipsIssued);
