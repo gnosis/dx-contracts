@@ -38,6 +38,7 @@ contract DutchExchange {
     uint public thresholdNewAuction;
     address public TUL;
     address public OWL;
+    bool public isInitialised;
 
     // Token => approved
     // Only tokens approved by auctioneer generate TUL tokens
@@ -73,15 +74,10 @@ contract DutchExchange {
     mapping (address => mapping (address => mapping (uint => mapping (address => uint)))) public buyerBalances;
     mapping (address => mapping (address => mapping (uint => mapping (address => uint)))) public claimedAmounts;
 
-    bool public isInitialised;
     // > Modifiers
     modifier onlyAuctioneer() {
         // R1
         require(msg.sender == auctioneer);
-        // if (msg.sender != auctioneer) {
-        //     Log('onlyAuctioneer R1');
-        //     return;
-        // }
         _;
     }
 
@@ -104,6 +100,7 @@ contract DutchExchange {
         public
     {
         require(!isInitialised);
+
         TUL = _TUL;
         OWL = _OWL;
         auctioneer = _auctioneer;
@@ -111,6 +108,7 @@ contract DutchExchange {
         ETHUSDOracle = _ETHUSDOracle;
         thresholdNewTokenPair = _thresholdNewTokenPair;
         thresholdNewAuction = _thresholdNewAuction;
+
         isInitialised = true;
     }
 
@@ -201,17 +199,9 @@ contract DutchExchange {
 
         // R7
         require(token1Funding < 10 ** 30);
-        // if (token1Funding >= 10 ** 30) {
-        //     Log('addTokenPair R7');
-        //     return;
-        // }
 
         // R8
         require(token2Funding < 10 ** 30);
-        // if (token2Funding >= 10 ** 30) {
-        //     Log('addTokenPair R8');
-        //     return;
-        // }
 
         uint fundedValueUSD;
         uint ETHUSDPrice = PriceOracleInterface(ETHUSDOracle).getUSDETHPrice();
@@ -511,7 +501,7 @@ contract DutchExchange {
         if (returned > 0) {
             balances[buyToken][user] += returned;
         }
-        NewSellerFundsClaim(sellToken, buyToken, user, auctionIndex, returned);
+        NewSellerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, tulipsIssued);
     }
 
     // > claimBuyerFunds()
@@ -579,8 +569,7 @@ contract DutchExchange {
             balances[sellToken][user] += returned;
         }
         
-        NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned);
-        ClaimBuyerFunds(returned, tulipsIssued);
+        NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, tulipsIssued);
     }
 
     // > getUnclaimedBuyerFunds()
@@ -855,10 +844,6 @@ contract DutchExchange {
 
         // R1
         require(price.num <= 10 ** 35 || price.den <= 10 ** 35);
-        // if (price.num > 10 ** 35 || price.den > 10 ** 35) {
-        //     Log('computeRatioOfHistoricalPriceOracles R1');
-        //     return;
-        // }
     }
 
     // > historicalPriceOracle()
@@ -1074,45 +1059,47 @@ contract DutchExchange {
 
     // > Events
     event NewDeposit(
-         address indexed token,
-         uint indexed amount
+         address token,
+         uint amount
     );
 
     event NewWithdrawal(
-        address indexed token,
-        uint indexed amount
+        address token,
+        uint amount
     );
     
     event NewSellOrder(
-        address indexed sellToken,
-        address indexed buyToken,
-        address indexed user,
+        address sellToken,
+        address buyToken,
+        address user,
         uint auctionIndex,
         uint amount
     );
 
     event NewBuyOrder(
-        address indexed sellToken,
-        address indexed buyToken,
-        address indexed user,
+        address sellToken,
+        address buyToken,
+        address user,
         uint auctionIndex,
         uint amount
     );
 
     event NewSellerFundsClaim(
-        address indexed sellToken,
-        address indexed buyToken,
-        address indexed user,
+        address sellToken,
+        address buyToken,
+        address user,
         uint auctionIndex,
-        uint amount
+        uint amount,
+        uint tulipsIssued
     );
 
     event NewBuyerFundsClaim(
-        address indexed sellToken,
-        address indexed buyToken,
-        address indexed user,
+        address sellToken,
+        address buyToken,
+        address user,
         uint auctionIndex,
-        uint amount
+        uint amount,
+        uint tulipsIssued
     );
 
     event NewTokenPair(
@@ -1132,17 +1119,8 @@ contract DutchExchange {
         string l
     );
 
-    event LogOustandingVolume(
-        uint l
-    );
-
     event LogNumber(
         string l,
         uint n
-    );
-
-    event ClaimBuyerFunds (
-        uint returned,
-        uint tulipsIssued
     );
 }
