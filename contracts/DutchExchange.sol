@@ -20,11 +20,11 @@ contract DutchExchange {
     }
 
     struct masterCopyCountdownType {
-        DutchExchange masterCopy;
+        address masterCopy;
         uint timeWhenAvailable;
     }
 
-    DutchExchange masterCopy;
+    address masterCopy;
     masterCopyCountdownType masterCopyCountdown;
 
     // > Storage
@@ -138,12 +138,12 @@ contract DutchExchange {
      }
 
      function startMasterCopyCountdown (
-        DutchExchange _masterCopy
+        address _masterCopy
      )
         public
         onlyAuctioneer()
     {
-        require(address(_masterCopy) != 0);
+        require(_masterCopy != 0);
 
         // Update masterCopyCountdown
         masterCopyCountdown.masterCopy = _masterCopy;
