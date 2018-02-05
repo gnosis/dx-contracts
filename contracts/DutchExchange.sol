@@ -603,125 +603,6 @@ contract DutchExchange {
         }
     }
 
-    // > getPrice()
-    function getPrice(
-        address sellToken,
-        address buyToken,
-        uint auctionIndex
-    )
-        public
-        view
-        // price < 10^39
-        returns (fraction memory price)
-    {
-        fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
-
-        if (closingPrice.den != 0) {
-            // Auction has closed
-            (price.num, price.den) = (closingPrice.num, closingPrice.den);
-        } else if (auctionIndex > getAuctionIndex(sellToken, buyToken)) {
-            (price.num, price.den) = (0, 0);
-        } else {
-            // Auction is running
-            fraction memory ratioOfPriceOracles = computeRatioOfHistoricalPriceOracles(sellToken, buyToken, auctionIndex);
-
-            // If we're calling the function into an unstarted auction,
-            // it will return the starting price of that auction
-            uint timeElapsed = Math2.atleastZero(int(now - getAuctionStart(sellToken, buyToken)));
-
-            // The numbers below are chosen such that
-            // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
-
-            // 10^4 * 10^35 = 10^39
-            price.num = Math2.atleastZero(int((86400 - timeElapsed) * ratioOfPriceOracles.num));
-            // 10^4 * 10^35 = 10^39
-            price.den = (timeElapsed + 43200) * ratioOfPriceOracles.den;
-
-            if (price.num * sellVolumesCurrent[sellToken][buyToken] <= price.den * buyVolumes[sellToken][buyToken]) {
-                price.num = buyVolumes[sellToken][buyToken];
-                price.den = sellVolumesCurrent[sellToken][buyToken];
-            }
-        }
-    }
-
-    // > getPriceForJs()
-    function getPriceForJS(
-        address sellToken,
-        address buyToken,
-        uint auctionIndex
-    )
-    public
-    view
-    returns (uint, uint) 
-    {
-        fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
-        return (price.num, price.den);
-    }
-
-    // > clearAuction()
-    /// @dev clears an Auction
-    /// @param sellToken sellToken of the auction
-    /// @param buyToken  buyToken of the auction
-    /// @param auctionIndex of the auction to be cleared.
-    function clearAuction(
-        address sellToken,
-        address buyToken,
-        uint auctionIndex,
-        uint sellVolume
-    )
-        internal
-    {
-        // Get variables
-        uint buyVolume = buyVolumes[sellToken][buyToken];
-        uint sellVolumeOpp = sellVolumesCurrent[buyToken][sellToken];
-        uint closingPriceOppDen = closingPrices[buyToken][sellToken][auctionIndex].den;
-        uint auctionStart = getAuctionStart(sellToken, buyToken);
-
-        // Update closing price
-        if (sellVolume > 0) {
-            closingPrices[sellToken][buyToken][auctionIndex] = fraction(buyVolume, sellVolume);
-        }
-
-        // if (opposite is 0 auction OR price = 0 OR opposite auction cleared)
-        // price = 0 happens if auction pair has been running for >= 24 hrs = 86400
-        if (sellVolumeOpp == 0 || now >= auctionStart + 86400 || closingPriceOppDen > 0) {
-            // Close auction pair
-            uint buyVolumeOpp = buyVolumes[buyToken][sellToken];
-
-            if (closingPriceOppDen == 0 && sellVolumeOpp > 0) {
-                // Save opposite price
-                closingPrices[buyToken][sellToken][auctionIndex] = fraction(buyVolumeOpp, sellVolumeOpp);
-            }
-
-            uint sellVolumeNext = sellVolumesNext[sellToken][buyToken];
-            uint sellVolumeNextOpp = sellVolumesNext[buyToken][sellToken];
-
-            // Update state variables for both auctions
-            sellVolumesCurrent[sellToken][buyToken] = sellVolumeNext;
-            if (sellVolumeNext > 0) {
-                sellVolumesNext[sellToken][buyToken] = 0;
-            }
-            if (buyVolume > 0) {
-                buyVolumes[sellToken][buyToken] = 0;
-            }
-
-            sellVolumesCurrent[buyToken][sellToken] = sellVolumeNextOpp;
-            if (sellVolumeNextOpp > 0) {
-                sellVolumesNext[buyToken][sellToken] = 0;
-            }
-            if (buyVolumeOpp > 0) {
-                buyVolumes[buyToken][sellToken] = 0;
-            }
-
-            // Increment auction index
-            setAuctionIndex(sellToken, buyToken);
-            // Check if next auction can be scheduled
-            scheduleNextAuction(sellToken, buyToken);
-        }
-
-        AuctionCleared(sellToken, buyToken, sellVolume, buyVolume, auctionIndex);
-    }
-
     // > settleFee()
     function settleFee(
         address primaryToken,
@@ -789,6 +670,70 @@ contract DutchExchange {
             feeRatio.num = 1;
             feeRatio.den = 200;
         }
+    }
+
+    // > clearAuction()
+    /// @dev clears an Auction
+    /// @param sellToken sellToken of the auction
+    /// @param buyToken  buyToken of the auction
+    /// @param auctionIndex of the auction to be cleared.
+    function clearAuction(
+        address sellToken,
+        address buyToken,
+        uint auctionIndex,
+        uint sellVolume
+    )
+        internal
+    {
+        // Get variables
+        uint buyVolume = buyVolumes[sellToken][buyToken];
+        uint sellVolumeOpp = sellVolumesCurrent[buyToken][sellToken];
+        uint closingPriceOppDen = closingPrices[buyToken][sellToken][auctionIndex].den;
+        uint auctionStart = getAuctionStart(sellToken, buyToken);
+
+        // Update closing price
+        if (sellVolume > 0) {
+            closingPrices[sellToken][buyToken][auctionIndex] = fraction(buyVolume, sellVolume);
+        }
+
+        // if (opposite is 0 auction OR price = 0 OR opposite auction cleared)
+        // price = 0 happens if auction pair has been running for >= 24 hrs = 86400
+        if (sellVolumeOpp == 0 || now >= auctionStart + 86400 || closingPriceOppDen > 0) {
+            // Close auction pair
+            uint buyVolumeOpp = buyVolumes[buyToken][sellToken];
+
+            if (closingPriceOppDen == 0 && sellVolumeOpp > 0) {
+                // Save opposite price
+                closingPrices[buyToken][sellToken][auctionIndex] = fraction(buyVolumeOpp, sellVolumeOpp);
+            }
+
+            uint sellVolumeNext = sellVolumesNext[sellToken][buyToken];
+            uint sellVolumeNextOpp = sellVolumesNext[buyToken][sellToken];
+
+            // Update state variables for both auctions
+            sellVolumesCurrent[sellToken][buyToken] = sellVolumeNext;
+            if (sellVolumeNext > 0) {
+                sellVolumesNext[sellToken][buyToken] = 0;
+            }
+            if (buyVolume > 0) {
+                buyVolumes[sellToken][buyToken] = 0;
+            }
+
+            sellVolumesCurrent[buyToken][sellToken] = sellVolumeNextOpp;
+            if (sellVolumeNextOpp > 0) {
+                sellVolumesNext[buyToken][sellToken] = 0;
+            }
+            if (buyVolumeOpp > 0) {
+                buyVolumes[buyToken][sellToken] = 0;
+            }
+
+            // Increment auction index
+            setAuctionIndex(sellToken, buyToken);
+            // Check if next auction can be scheduled
+            scheduleNextAuction(sellToken, buyToken);
+        }
+
+        AuctionCleared(sellToken, buyToken, sellVolume, buyVolume, auctionIndex);
     }
 
     // > scheduleNextAuction()
@@ -916,6 +861,47 @@ contract DutchExchange {
         price = historicalPriceOracle(token, latestAuctionIndex);
     }
 
+    // > getPrice()
+    function getPrice(
+        address sellToken,
+        address buyToken,
+        uint auctionIndex
+    )
+        public
+        view
+        // price < 10^39
+        returns (fraction memory price)
+    {
+        fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
+
+        if (closingPrice.den != 0) {
+            // Auction has closed
+            (price.num, price.den) = (closingPrice.num, closingPrice.den);
+        } else if (auctionIndex > getAuctionIndex(sellToken, buyToken)) {
+            (price.num, price.den) = (0, 0);
+        } else {
+            // Auction is running
+            fraction memory ratioOfPriceOracles = computeRatioOfHistoricalPriceOracles(sellToken, buyToken, auctionIndex);
+
+            // If we're calling the function into an unstarted auction,
+            // it will return the starting price of that auction
+            uint timeElapsed = Math2.atleastZero(int(now - getAuctionStart(sellToken, buyToken)));
+
+            // The numbers below are chosen such that
+            // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
+
+            // 10^4 * 10^35 = 10^39
+            price.num = Math2.atleastZero(int((86400 - timeElapsed) * ratioOfPriceOracles.num));
+            // 10^4 * 10^35 = 10^39
+            price.den = (timeElapsed + 43200) * ratioOfPriceOracles.den;
+
+            if (price.num * sellVolumesCurrent[sellToken][buyToken] <= price.den * buyVolumes[sellToken][buyToken]) {
+                price.num = buyVolumes[sellToken][buyToken];
+                price.den = sellVolumesCurrent[sellToken][buyToken];
+            }
+        }
+    }
+
     // > depositAndSell()
     function depositAndSell(
         address sellToken,
@@ -980,6 +966,20 @@ contract DutchExchange {
     returns (uint, uint) 
     {
         fraction memory price = computeRatioOfHistoricalPriceOracles(tokenA, tokenB, auctionIndex);
+        return (price.num, price.den);
+    }
+
+    // > getPriceForJs()
+    function getPriceForJS(
+        address sellToken,
+        address buyToken,
+        uint auctionIndex
+    )
+    public
+    view
+    returns (uint, uint) 
+    {
+        fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
         return (price.num, price.den);
     }
 
