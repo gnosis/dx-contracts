@@ -6,6 +6,12 @@ module.exports = {
       network_id: '*', // Match any network id
       gas: 6700000,
     },
+    kovan: {
+      host: "127.0.0.1",
+      port: 8545,
+      network_id: 'kovan', // Match any network id
+      gas: 6700000,
+    },
   },
   solc: {
     optimizer: {

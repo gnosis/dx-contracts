@@ -696,7 +696,6 @@ contract DutchExchange {
         if (sellVolumeOpp == 0 || now >= auctionStart + 86400 || closingPriceOppDen > 0) {
             // Close auction pair
             uint buyVolumeOpp = buyVolumes[buyToken][sellToken];
-
             if (closingPriceOppDen == 0 && sellVolumeOpp > 0) {
                 // Save opposite price
                 closingPrices[buyToken][sellToken][auctionIndex] = fraction(buyVolumeOpp, sellVolumeOpp);

@@ -20,7 +20,6 @@ const currentETHPrice = (1100 * (10 ** 18))
 
 module.exports = function deploy(deployer, networks, accounts) {
   deployer.deploy(Math)
-
     // Linking
     .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenTUL, TokenOWL, TokenOWLProxy, OWLAirdrop]))
 
@@ -32,17 +31,17 @@ module.exports = function deploy(deployer, networks, accounts) {
     .then(() => deployer.deploy(TokenOWLProxy, TokenOWL.address))
 
     // StandardToken is NECESSARRY to deploy here as it is LINKED w/Math
-    .then(() => deployer.deploy(StandardToken))
-
+    //.then(() => deployer.deploy(StandardToken))
+    
     // Deployment of PriceFeedInfrastructure
-    .then(() => deployer.deploy(PriceFeed))
-    .then(() => deployer.deploy(Medianizer))
-    .then(() => deployer.deploy(PriceOracleInterface, accounts[0], Medianizer.address))
-    .then(() => Medianizer.deployed())
-    .then(M => M.set(PriceFeed.address, { from: accounts[0] }))
-    .then(() => PriceFeed.deployed())
-    .then(P => P.post(currentETHPrice, 1516168838 * 2, Medianizer.address, { from: accounts[0] }))
-
+      .then(() => deployer.deploy(PriceFeed))
+      .then(() => deployer.deploy(Medianizer))
+      .then(() => deployer.deploy(PriceOracleInterface, accounts[0], Medianizer.address))
+      .then(() => Medianizer.deployed())
+      .then(M => M.set(PriceFeed.address, { from: accounts[0] }))
+      .then(() => PriceFeed.deployed())
+      .then(P => P.post(currentETHPrice, 1516168838 * 2, Medianizer.address, { from: accounts[0] }))
+    
     // Deployment of DutchExchange
     .then(() => deployer.deploy(DutchExchange))
     .then(() => deployer.deploy(Proxy, DutchExchange.address))
