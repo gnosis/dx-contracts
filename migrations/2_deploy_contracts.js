@@ -31,9 +31,6 @@ module.exports = function deploy(deployer, networks, accounts) {
     .then(() => deployer.deploy(TokenOWL))
     .then(() => deployer.deploy(TokenOWLProxy, TokenOWL.address))
 
-    // StandardToken is NECESSARRY to deploy here as it is LINKED w/Math
-    .then(() => deployer.deploy(StandardToken))
-
     // Deployment of PriceFeedInfrastructure
     .then(() => deployer.deploy(PriceFeed))
     .then(() => deployer.deploy(Medianizer))
