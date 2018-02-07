@@ -1,0 +1,518 @@
+{
+  "contractName": "ProxiedMaster",
+  "abi": [],
+  "bytecode": "0x60606040523415600e57600080fd5b603580601b6000396000f3006060604052600080fd00a165627a7a72305820214ab5f2e087e4ea8d83e8931fcea02af3518a6c5850f23b6a3adea5fc0b21550029",
+  "deployedBytecode": "0x6060604052600080fd00a165627a7a72305820214ab5f2e087e4ea8d83e8931fcea02af3518a6c5850f23b6a3adea5fc0b21550029",
+  "sourceMap": "1192:50:13:-;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "1192:50:13:-;;;;;",
+  "source": "pragma solidity ^0.4.18;\n\nimport \"@gnosis.pm/gnosis-core-contracts/contracts/Utils/Math.sol\";\nimport \"@gnosis.pm/gnosis-core-contracts/contracts/Tokens/StandardToken.sol\";\n\n/// @title Proxy - Generic proxy contract allows to execute all transactions applying the code of a master contract.\n/// @author Stefan George - <stefan@gnosis.pm>\ncontract ProxyMaster {\n    address masterCopy;\n\n    /// @dev Constructor function sets address of master copy contract.\n    /// @param _masterCopy Master copy address.\n    function ProxyMaster(address _masterCopy)\n        public\n    {\n        require(_masterCopy != 0);\n        masterCopy = _masterCopy;\n    }\n\n    /// @dev Fallback function forwards all transactions and returns all received return data.\n    function ()\n        external\n        payable\n    {\n        address _masterCopy = masterCopy;\n        assembly {\n            calldatacopy(0, 0, calldatasize())\n            let success := delegatecall(not(0), _masterCopy, 0, calldatasize(), 0, 0)\n            returndatacopy(0, 0, returndatasize())\n            switch success\n            case 0 { revert(0, returndatasize()) }\n            default { return(0, returndatasize()) }\n        }\n    }\n}\n\ncontract ProxiedMaster {\n    address masterCopy;\n}\n",
+  "sourcePath": "@gnosis.pm/owl-token/contracts/ProxyMaster.sol",
+  "ast": {
+    "attributes": {
+      "absolutePath": "@gnosis.pm/owl-token/contracts/ProxyMaster.sol",
+      "exportedSymbols": {
+        "ProxiedMaster": [
+          6084
+        ],
+        "ProxyMaster": [
+          6081
+        ]
+      }
+    },
+    "children": [
+      {
+        "attributes": {
+          "literals": [
+            "solidity",
+            "^",
+            "0.4",
+            ".18"
+          ]
+        },
+        "id": 6051,
+        "name": "PragmaDirective",
+        "src": "0:24:13"
+      },
+      {
+        "attributes": {
+          "SourceUnit": 6050,
+          "absolutePath": "@gnosis.pm/gnosis-core-contracts/contracts/Utils/Math.sol",
+          "file": "@gnosis.pm/gnosis-core-contracts/contracts/Utils/Math.sol",
+          "scope": 6085,
+          "symbolAliases": [
+            null
+          ],
+          "unitAlias": ""
+        },
+        "id": 6052,
+        "name": "ImportDirective",
+        "src": "26:67:13"
+      },
+      {
+        "attributes": {
+          "SourceUnit": 4852,
+          "absolutePath": "@gnosis.pm/gnosis-core-contracts/contracts/Tokens/StandardToken.sol",
+          "file": "@gnosis.pm/gnosis-core-contracts/contracts/Tokens/StandardToken.sol",
+          "scope": 6085,
+          "symbolAliases": [
+            null
+          ],
+          "unitAlias": ""
+        },
+        "id": 6053,
+        "name": "ImportDirective",
+        "src": "94:77:13"
+      },
+      {
+        "attributes": {
+          "baseContracts": [
+            null
+          ],
+          "contractDependencies": [
+            null
+          ],
+          "contractKind": "contract",
+          "documentation": "@title Proxy - Generic proxy contract allows to execute all transactions applying the code of a master contract.\n @author Stefan George - <stefan@gnosis.pm>",
+          "fullyImplemented": true,
+          "linearizedBaseContracts": [
+            6081
+          ],
+          "name": "ProxyMaster",
+          "scope": 6085
+        },
+        "children": [
+          {
+            "attributes": {
+              "constant": false,
+              "name": "masterCopy",
+              "scope": 6081,
+              "stateVariable": true,
+              "storageLocation": "default",
+              "type": "address",
+              "value": null,
+              "visibility": "internal"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "name": "address",
+                  "type": "address"
+                },
+                "id": 6054,
+                "name": "ElementaryTypeName",
+                "src": "364:7:13"
+              }
+            ],
+            "id": 6055,
+            "name": "VariableDeclaration",
+            "src": "364:18:13"
+          },
+          {
+            "attributes": {
+              "constant": false,
+              "implemented": true,
+              "isConstructor": true,
+              "modifiers": [
+                null
+              ],
+              "name": "ProxyMaster",
+              "payable": false,
+              "scope": 6081,
+              "stateMutability": "nonpayable",
+              "superFunction": null,
+              "visibility": "public"
+            },
+            "children": [
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "name": "_masterCopy",
+                      "scope": 6071,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "address",
+                      "value": null,
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "address",
+                          "type": "address"
+                        },
+                        "id": 6056,
+                        "name": "ElementaryTypeName",
+                        "src": "530:7:13"
+                      }
+                    ],
+                    "id": 6057,
+                    "name": "VariableDeclaration",
+                    "src": "530:19:13"
+                  }
+                ],
+                "id": 6058,
+                "name": "ParameterList",
+                "src": "529:21:13"
+              },
+              {
+                "attributes": {
+                  "parameters": [
+                    null
+                  ]
+                },
+                "children": [],
+                "id": 6059,
+                "name": "ParameterList",
+                "src": "570:0:13"
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "attributes": {
+                          "argumentTypes": null,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "isStructConstructorCall": false,
+                          "lValueRequested": false,
+                          "names": [
+                            null
+                          ],
+                          "type": "tuple()",
+                          "type_conversion": false
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "argumentTypes": [
+                                {
+                                  "typeIdentifier": "t_bool",
+                                  "typeString": "bool"
+                                }
+                              ],
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 6305,
+                              "type": "function (bool) pure",
+                              "value": "require"
+                            },
+                            "id": 6060,
+                            "name": "Identifier",
+                            "src": "580:7:13"
+                          },
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "commonType": {
+                                "typeIdentifier": "t_address",
+                                "typeString": "address"
+                              },
+                              "isConstant": false,
+                              "isLValue": false,
+                              "isPure": false,
+                              "lValueRequested": false,
+                              "operator": "!=",
+                              "type": "bool"
+                            },
+                            "children": [
+                              {
+                                "attributes": {
+                                  "argumentTypes": null,
+                                  "overloadedDeclarations": [
+                                    null
+                                  ],
+                                  "referencedDeclaration": 6057,
+                                  "type": "address",
+                                  "value": "_masterCopy"
+                                },
+                                "id": 6061,
+                                "name": "Identifier",
+                                "src": "588:11:13"
+                              },
+                              {
+                                "attributes": {
+                                  "argumentTypes": null,
+                                  "hexvalue": "30",
+                                  "isConstant": false,
+                                  "isLValue": false,
+                                  "isPure": true,
+                                  "lValueRequested": false,
+                                  "subdenomination": null,
+                                  "token": "number",
+                                  "type": "int_const 0",
+                                  "value": "0"
+                                },
+                                "id": 6062,
+                                "name": "Literal",
+                                "src": "603:1:13"
+                              }
+                            ],
+                            "id": 6063,
+                            "name": "BinaryOperation",
+                            "src": "588:16:13"
+                          }
+                        ],
+                        "id": 6064,
+                        "name": "FunctionCall",
+                        "src": "580:25:13"
+                      }
+                    ],
+                    "id": 6065,
+                    "name": "ExpressionStatement",
+                    "src": "580:25:13"
+                  },
+                  {
+                    "children": [
+                      {
+                        "attributes": {
+                          "argumentTypes": null,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "operator": "=",
+                          "type": "address"
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 6055,
+                              "type": "address",
+                              "value": "masterCopy"
+                            },
+                            "id": 6066,
+                            "name": "Identifier",
+                            "src": "615:10:13"
+                          },
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 6057,
+                              "type": "address",
+                              "value": "_masterCopy"
+                            },
+                            "id": 6067,
+                            "name": "Identifier",
+                            "src": "628:11:13"
+                          }
+                        ],
+                        "id": 6068,
+                        "name": "Assignment",
+                        "src": "615:24:13"
+                      }
+                    ],
+                    "id": 6069,
+                    "name": "ExpressionStatement",
+                    "src": "615:24:13"
+                  }
+                ],
+                "id": 6070,
+                "name": "Block",
+                "src": "570:76:13"
+              }
+            ],
+            "id": 6071,
+            "name": "FunctionDefinition",
+            "src": "509:137:13"
+          },
+          {
+            "attributes": {
+              "constant": false,
+              "implemented": true,
+              "isConstructor": false,
+              "modifiers": [
+                null
+              ],
+              "name": "",
+              "payable": true,
+              "scope": 6081,
+              "stateMutability": "payable",
+              "superFunction": null,
+              "visibility": "external"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "parameters": [
+                    null
+                  ]
+                },
+                "children": [],
+                "id": 6072,
+                "name": "ParameterList",
+                "src": "756:2:13"
+              },
+              {
+                "attributes": {
+                  "parameters": [
+                    null
+                  ]
+                },
+                "children": [],
+                "id": 6073,
+                "name": "ParameterList",
+                "src": "796:0:13"
+              },
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "assignments": [
+                        6075
+                      ]
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "constant": false,
+                          "name": "_masterCopy",
+                          "scope": 6080,
+                          "stateVariable": false,
+                          "storageLocation": "default",
+                          "type": "address",
+                          "value": null,
+                          "visibility": "internal"
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "name": "address",
+                              "type": "address"
+                            },
+                            "id": 6074,
+                            "name": "ElementaryTypeName",
+                            "src": "806:7:13"
+                          }
+                        ],
+                        "id": 6075,
+                        "name": "VariableDeclaration",
+                        "src": "806:19:13"
+                      },
+                      {
+                        "attributes": {
+                          "argumentTypes": null,
+                          "overloadedDeclarations": [
+                            null
+                          ],
+                          "referencedDeclaration": 6055,
+                          "type": "address",
+                          "value": "masterCopy"
+                        },
+                        "id": 6076,
+                        "name": "Identifier",
+                        "src": "828:10:13"
+                      }
+                    ],
+                    "id": 6077,
+                    "name": "VariableDeclarationStatement",
+                    "src": "806:32:13"
+                  },
+                  {
+                    "attributes": {
+                      "externalReferences": [
+                        {
+                          "_masterCopy": {
+                            "declaration": 6075,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "954:11:13",
+                            "valueSize": 1
+                          }
+                        }
+                      ],
+                      "operations": "{\n    calldatacopy(0, 0, calldatasize())\n    let success := delegatecall(not(0), _masterCopy, 0, calldatasize(), 0, 0)\n    returndatacopy(0, 0, returndatasize())\n    switch success\n    case 0 {\n        revert(0, returndatasize())\n    }\n    default {\n        return(0, returndatasize())\n    }\n}"
+                    },
+                    "children": [],
+                    "id": 6078,
+                    "name": "InlineAssembly",
+                    "src": "848:340:13"
+                  }
+                ],
+                "id": 6079,
+                "name": "Block",
+                "src": "796:392:13"
+              }
+            ],
+            "id": 6080,
+            "name": "FunctionDefinition",
+            "src": "747:441:13"
+          }
+        ],
+        "id": 6081,
+        "name": "ContractDefinition",
+        "src": "337:853:13"
+      },
+      {
+        "attributes": {
+          "baseContracts": [
+            null
+          ],
+          "contractDependencies": [
+            null
+          ],
+          "contractKind": "contract",
+          "documentation": null,
+          "fullyImplemented": true,
+          "linearizedBaseContracts": [
+            6084
+          ],
+          "name": "ProxiedMaster",
+          "scope": 6085
+        },
+        "children": [
+          {
+            "attributes": {
+              "constant": false,
+              "name": "masterCopy",
+              "scope": 6084,
+              "stateVariable": true,
+              "storageLocation": "default",
+              "type": "address",
+              "value": null,
+              "visibility": "internal"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "name": "address",
+                  "type": "address"
+                },
+                "id": 6082,
+                "name": "ElementaryTypeName",
+                "src": "1221:7:13"
+              }
+            ],
+            "id": 6083,
+            "name": "VariableDeclaration",
+            "src": "1221:18:13"
+          }
+        ],
+        "id": 6084,
+        "name": "ContractDefinition",
+        "src": "1192:50:13"
+      }
+    ],
+    "id": 6085,
+    "name": "SourceUnit",
+    "src": "0:1243:13"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.19+commit.c4cbbb05.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "1.0.1",
+  "updatedAt": "2018-02-07T10:20:40.787Z"
+}
