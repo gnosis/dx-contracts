@@ -3,8 +3,8 @@
   "abi": [],
   "bytecode": "0x60606040523415600e57600080fd5b603580601b6000396000f3006060604052600080fd00a165627a7a72305820214ab5f2e087e4ea8d83e8931fcea02af3518a6c5850f23b6a3adea5fc0b21550029",
   "deployedBytecode": "0x6060604052600080fd00a165627a7a72305820214ab5f2e087e4ea8d83e8931fcea02af3518a6c5850f23b6a3adea5fc0b21550029",
-  "sourceMap": "1192:50:13:-;;;;;;;;;;;;;;;;;",
-  "deployedSourceMap": "1192:50:13:-;;;;;",
+  "sourceMap": "1192:50:20:-;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "1192:50:20:-;;;;;",
   "source": "pragma solidity ^0.4.18;\n\nimport \"@gnosis.pm/gnosis-core-contracts/contracts/Utils/Math.sol\";\nimport \"@gnosis.pm/gnosis-core-contracts/contracts/Tokens/StandardToken.sol\";\n\n/// @title Proxy - Generic proxy contract allows to execute all transactions applying the code of a master contract.\n/// @author Stefan George - <stefan@gnosis.pm>\ncontract ProxyMaster {\n    address masterCopy;\n\n    /// @dev Constructor function sets address of master copy contract.\n    /// @param _masterCopy Master copy address.\n    function ProxyMaster(address _masterCopy)\n        public\n    {\n        require(_masterCopy != 0);\n        masterCopy = _masterCopy;\n    }\n\n    /// @dev Fallback function forwards all transactions and returns all received return data.\n    function ()\n        external\n        payable\n    {\n        address _masterCopy = masterCopy;\n        assembly {\n            calldatacopy(0, 0, calldatasize())\n            let success := delegatecall(not(0), _masterCopy, 0, calldatasize(), 0, 0)\n            returndatacopy(0, 0, returndatasize())\n            switch success\n            case 0 { revert(0, returndatasize()) }\n            default { return(0, returndatasize()) }\n        }\n    }\n}\n\ncontract ProxiedMaster {\n    address masterCopy;\n}\n",
   "sourcePath": "@gnosis.pm/owl-token/contracts/ProxyMaster.sol",
   "ast": {
@@ -12,10 +12,10 @@
       "absolutePath": "@gnosis.pm/owl-token/contracts/ProxyMaster.sol",
       "exportedSymbols": {
         "ProxiedMaster": [
-          6084
+          6510
         ],
         "ProxyMaster": [
-          6081
+          6507
         ]
       }
     },
@@ -29,39 +29,39 @@
             ".18"
           ]
         },
-        "id": 6051,
+        "id": 6477,
         "name": "PragmaDirective",
-        "src": "0:24:13"
+        "src": "0:24:20"
       },
       {
         "attributes": {
-          "SourceUnit": 6050,
+          "SourceUnit": 6360,
           "absolutePath": "@gnosis.pm/gnosis-core-contracts/contracts/Utils/Math.sol",
           "file": "@gnosis.pm/gnosis-core-contracts/contracts/Utils/Math.sol",
-          "scope": 6085,
+          "scope": 6511,
           "symbolAliases": [
             null
           ],
           "unitAlias": ""
         },
-        "id": 6052,
+        "id": 6478,
         "name": "ImportDirective",
-        "src": "26:67:13"
+        "src": "26:67:20"
       },
       {
         "attributes": {
-          "SourceUnit": 4852,
+          "SourceUnit": 5162,
           "absolutePath": "@gnosis.pm/gnosis-core-contracts/contracts/Tokens/StandardToken.sol",
           "file": "@gnosis.pm/gnosis-core-contracts/contracts/Tokens/StandardToken.sol",
-          "scope": 6085,
+          "scope": 6511,
           "symbolAliases": [
             null
           ],
           "unitAlias": ""
         },
-        "id": 6053,
+        "id": 6479,
         "name": "ImportDirective",
-        "src": "94:77:13"
+        "src": "94:77:20"
       },
       {
         "attributes": {
@@ -75,17 +75,17 @@
           "documentation": "@title Proxy - Generic proxy contract allows to execute all transactions applying the code of a master contract.\n @author Stefan George - <stefan@gnosis.pm>",
           "fullyImplemented": true,
           "linearizedBaseContracts": [
-            6081
+            6507
           ],
           "name": "ProxyMaster",
-          "scope": 6085
+          "scope": 6511
         },
         "children": [
           {
             "attributes": {
               "constant": false,
               "name": "masterCopy",
-              "scope": 6081,
+              "scope": 6507,
               "stateVariable": true,
               "storageLocation": "default",
               "type": "address",
@@ -98,14 +98,14 @@
                   "name": "address",
                   "type": "address"
                 },
-                "id": 6054,
+                "id": 6480,
                 "name": "ElementaryTypeName",
-                "src": "364:7:13"
+                "src": "364:7:20"
               }
             ],
-            "id": 6055,
+            "id": 6481,
             "name": "VariableDeclaration",
-            "src": "364:18:13"
+            "src": "364:18:20"
           },
           {
             "attributes": {
@@ -117,7 +117,7 @@
               ],
               "name": "ProxyMaster",
               "payable": false,
-              "scope": 6081,
+              "scope": 6507,
               "stateMutability": "nonpayable",
               "superFunction": null,
               "visibility": "public"
@@ -129,7 +129,7 @@
                     "attributes": {
                       "constant": false,
                       "name": "_masterCopy",
-                      "scope": 6071,
+                      "scope": 6497,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "address",
@@ -142,19 +142,19 @@
                           "name": "address",
                           "type": "address"
                         },
-                        "id": 6056,
+                        "id": 6482,
                         "name": "ElementaryTypeName",
-                        "src": "530:7:13"
+                        "src": "530:7:20"
                       }
                     ],
-                    "id": 6057,
+                    "id": 6483,
                     "name": "VariableDeclaration",
-                    "src": "530:19:13"
+                    "src": "530:19:20"
                   }
                 ],
-                "id": 6058,
+                "id": 6484,
                 "name": "ParameterList",
-                "src": "529:21:13"
+                "src": "529:21:20"
               },
               {
                 "attributes": {
@@ -163,9 +163,9 @@
                   ]
                 },
                 "children": [],
-                "id": 6059,
+                "id": 6485,
                 "name": "ParameterList",
-                "src": "570:0:13"
+                "src": "570:0:20"
               },
               {
                 "children": [
@@ -197,13 +197,13 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 6305,
+                              "referencedDeclaration": 6775,
                               "type": "function (bool) pure",
                               "value": "require"
                             },
-                            "id": 6060,
+                            "id": 6486,
                             "name": "Identifier",
-                            "src": "580:7:13"
+                            "src": "580:7:20"
                           },
                           {
                             "attributes": {
@@ -226,13 +226,13 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 6057,
+                                  "referencedDeclaration": 6483,
                                   "type": "address",
                                   "value": "_masterCopy"
                                 },
-                                "id": 6061,
+                                "id": 6487,
                                 "name": "Identifier",
-                                "src": "588:11:13"
+                                "src": "588:11:20"
                               },
                               {
                                 "attributes": {
@@ -247,24 +247,24 @@
                                   "type": "int_const 0",
                                   "value": "0"
                                 },
-                                "id": 6062,
+                                "id": 6488,
                                 "name": "Literal",
-                                "src": "603:1:13"
+                                "src": "603:1:20"
                               }
                             ],
-                            "id": 6063,
+                            "id": 6489,
                             "name": "BinaryOperation",
-                            "src": "588:16:13"
+                            "src": "588:16:20"
                           }
                         ],
-                        "id": 6064,
+                        "id": 6490,
                         "name": "FunctionCall",
-                        "src": "580:25:13"
+                        "src": "580:25:20"
                       }
                     ],
-                    "id": 6065,
+                    "id": 6491,
                     "name": "ExpressionStatement",
-                    "src": "580:25:13"
+                    "src": "580:25:20"
                   },
                   {
                     "children": [
@@ -285,13 +285,13 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 6055,
+                              "referencedDeclaration": 6481,
                               "type": "address",
                               "value": "masterCopy"
                             },
-                            "id": 6066,
+                            "id": 6492,
                             "name": "Identifier",
-                            "src": "615:10:13"
+                            "src": "615:10:20"
                           },
                           {
                             "attributes": {
@@ -299,33 +299,33 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 6057,
+                              "referencedDeclaration": 6483,
                               "type": "address",
                               "value": "_masterCopy"
                             },
-                            "id": 6067,
+                            "id": 6493,
                             "name": "Identifier",
-                            "src": "628:11:13"
+                            "src": "628:11:20"
                           }
                         ],
-                        "id": 6068,
+                        "id": 6494,
                         "name": "Assignment",
-                        "src": "615:24:13"
+                        "src": "615:24:20"
                       }
                     ],
-                    "id": 6069,
+                    "id": 6495,
                     "name": "ExpressionStatement",
-                    "src": "615:24:13"
+                    "src": "615:24:20"
                   }
                 ],
-                "id": 6070,
+                "id": 6496,
                 "name": "Block",
-                "src": "570:76:13"
+                "src": "570:76:20"
               }
             ],
-            "id": 6071,
+            "id": 6497,
             "name": "FunctionDefinition",
-            "src": "509:137:13"
+            "src": "509:137:20"
           },
           {
             "attributes": {
@@ -337,7 +337,7 @@
               ],
               "name": "",
               "payable": true,
-              "scope": 6081,
+              "scope": 6507,
               "stateMutability": "payable",
               "superFunction": null,
               "visibility": "external"
@@ -350,9 +350,9 @@
                   ]
                 },
                 "children": [],
-                "id": 6072,
+                "id": 6498,
                 "name": "ParameterList",
-                "src": "756:2:13"
+                "src": "756:2:20"
               },
               {
                 "attributes": {
@@ -361,16 +361,16 @@
                   ]
                 },
                 "children": [],
-                "id": 6073,
+                "id": 6499,
                 "name": "ParameterList",
-                "src": "796:0:13"
+                "src": "796:0:20"
               },
               {
                 "children": [
                   {
                     "attributes": {
                       "assignments": [
-                        6075
+                        6501
                       ]
                     },
                     "children": [
@@ -378,7 +378,7 @@
                         "attributes": {
                           "constant": false,
                           "name": "_masterCopy",
-                          "scope": 6080,
+                          "scope": 6506,
                           "stateVariable": false,
                           "storageLocation": "default",
                           "type": "address",
@@ -391,14 +391,14 @@
                               "name": "address",
                               "type": "address"
                             },
-                            "id": 6074,
+                            "id": 6500,
                             "name": "ElementaryTypeName",
-                            "src": "806:7:13"
+                            "src": "806:7:20"
                           }
                         ],
-                        "id": 6075,
+                        "id": 6501,
                         "name": "VariableDeclaration",
-                        "src": "806:19:13"
+                        "src": "806:19:20"
                       },
                       {
                         "attributes": {
@@ -406,28 +406,28 @@
                           "overloadedDeclarations": [
                             null
                           ],
-                          "referencedDeclaration": 6055,
+                          "referencedDeclaration": 6481,
                           "type": "address",
                           "value": "masterCopy"
                         },
-                        "id": 6076,
+                        "id": 6502,
                         "name": "Identifier",
-                        "src": "828:10:13"
+                        "src": "828:10:20"
                       }
                     ],
-                    "id": 6077,
+                    "id": 6503,
                     "name": "VariableDeclarationStatement",
-                    "src": "806:32:13"
+                    "src": "806:32:20"
                   },
                   {
                     "attributes": {
                       "externalReferences": [
                         {
                           "_masterCopy": {
-                            "declaration": 6075,
+                            "declaration": 6501,
                             "isOffset": false,
                             "isSlot": false,
-                            "src": "954:11:13",
+                            "src": "954:11:20",
                             "valueSize": 1
                           }
                         }
@@ -435,24 +435,24 @@
                       "operations": "{\n    calldatacopy(0, 0, calldatasize())\n    let success := delegatecall(not(0), _masterCopy, 0, calldatasize(), 0, 0)\n    returndatacopy(0, 0, returndatasize())\n    switch success\n    case 0 {\n        revert(0, returndatasize())\n    }\n    default {\n        return(0, returndatasize())\n    }\n}"
                     },
                     "children": [],
-                    "id": 6078,
+                    "id": 6504,
                     "name": "InlineAssembly",
-                    "src": "848:340:13"
+                    "src": "848:340:20"
                   }
                 ],
-                "id": 6079,
+                "id": 6505,
                 "name": "Block",
-                "src": "796:392:13"
+                "src": "796:392:20"
               }
             ],
-            "id": 6080,
+            "id": 6506,
             "name": "FunctionDefinition",
-            "src": "747:441:13"
+            "src": "747:441:20"
           }
         ],
-        "id": 6081,
+        "id": 6507,
         "name": "ContractDefinition",
-        "src": "337:853:13"
+        "src": "337:853:20"
       },
       {
         "attributes": {
@@ -466,17 +466,17 @@
           "documentation": null,
           "fullyImplemented": true,
           "linearizedBaseContracts": [
-            6084
+            6510
           ],
           "name": "ProxiedMaster",
-          "scope": 6085
+          "scope": 6511
         },
         "children": [
           {
             "attributes": {
               "constant": false,
               "name": "masterCopy",
-              "scope": 6084,
+              "scope": 6510,
               "stateVariable": true,
               "storageLocation": "default",
               "type": "address",
@@ -489,24 +489,24 @@
                   "name": "address",
                   "type": "address"
                 },
-                "id": 6082,
+                "id": 6508,
                 "name": "ElementaryTypeName",
-                "src": "1221:7:13"
+                "src": "1221:7:20"
               }
             ],
-            "id": 6083,
+            "id": 6509,
             "name": "VariableDeclaration",
-            "src": "1221:18:13"
+            "src": "1221:18:20"
           }
         ],
-        "id": 6084,
+        "id": 6510,
         "name": "ContractDefinition",
-        "src": "1192:50:13"
+        "src": "1192:50:20"
       }
     ],
-    "id": 6085,
+    "id": 6511,
     "name": "SourceUnit",
-    "src": "0:1243:13"
+    "src": "0:1243:20"
   },
   "compiler": {
     "name": "solc",
@@ -514,5 +514,5 @@
   },
   "networks": {},
   "schemaVersion": "1.0.1",
-  "updatedAt": "2018-02-07T10:20:40.787Z"
+  "updatedAt": "2018-02-08T10:41:43.489Z"
 }

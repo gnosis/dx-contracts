@@ -3,8 +3,8 @@
   "abi": [],
   "bytecode": "0x60606040523415600e57600080fd5b603580601b6000396000f3006060604052600080fd00a165627a7a72305820d368bf09c5051f7661302cf28a4b76da18fb9c4b677972cd890d9c38560644410029",
   "deployedBytecode": "0x6060604052600080fd00a165627a7a72305820d368bf09c5051f7661302cf28a4b76da18fb9c4b677972cd890d9c38560644410029",
-  "sourceMap": "406:19:13:-;;;;;;;;;;;;;;;;;",
-  "deployedSourceMap": "406:19:13:-;;;;;",
+  "sourceMap": "406:19:14:-;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "406:19:14:-;;;;;",
   "source": "pragma solidity ^0.4.19;\n\nimport \"@gnosis.pm/owl-token/contracts/OWLAirdrop.sol\";\nimport \"@gnosis.pm/owl-token/contracts/TokenOWLProxy.sol\";\nimport \"@gnosis.pm/gnosis-core-contracts/contracts/Tokens/EtherToken.sol\";\n\n/*\nDirty Solution for providing builds from imported code to truffle-suite.\nOther solutions would require new releases of the smartcontract with builds included and getting them via npm\n*/\ncontract Getter{\n\n}",
   "sourcePath": "/home/josojo/gnosis/dutch-exchange/contracts/Utils/Getter.sol",
   "ast": {
@@ -12,7 +12,7 @@
       "absolutePath": "/home/josojo/gnosis/dutch-exchange/contracts/Utils/Getter.sol",
       "exportedSymbols": {
         "Getter": [
-          4762
+          4853
         ]
       }
     },
@@ -26,54 +26,54 @@
             ".19"
           ]
         },
-        "id": 4758,
+        "id": 4849,
         "name": "PragmaDirective",
-        "src": "0:24:13"
+        "src": "0:24:14"
       },
       {
         "attributes": {
-          "SourceUnit": 6385,
+          "SourceUnit": 6476,
           "absolutePath": "@gnosis.pm/owl-token/contracts/OWLAirdrop.sol",
           "file": "@gnosis.pm/owl-token/contracts/OWLAirdrop.sol",
-          "scope": 4763,
+          "scope": 4854,
           "symbolAliases": [
             null
           ],
           "unitAlias": ""
         },
-        "id": 4759,
+        "id": 4850,
         "name": "ImportDirective",
-        "src": "26:55:13"
+        "src": "26:55:14"
       },
       {
         "attributes": {
-          "SourceUnit": 6670,
+          "SourceUnit": 6761,
           "absolutePath": "@gnosis.pm/owl-token/contracts/TokenOWLProxy.sol",
           "file": "@gnosis.pm/owl-token/contracts/TokenOWLProxy.sol",
-          "scope": 4763,
+          "scope": 4854,
           "symbolAliases": [
             null
           ],
           "unitAlias": ""
         },
-        "id": 4760,
+        "id": 4851,
         "name": "ImportDirective",
-        "src": "82:58:13"
+        "src": "82:58:14"
       },
       {
         "attributes": {
-          "SourceUnit": 4865,
+          "SourceUnit": 4956,
           "absolutePath": "@gnosis.pm/gnosis-core-contracts/contracts/Tokens/EtherToken.sol",
           "file": "@gnosis.pm/gnosis-core-contracts/contracts/Tokens/EtherToken.sol",
-          "scope": 4763,
+          "scope": 4854,
           "symbolAliases": [
             null
           ],
           "unitAlias": ""
         },
-        "id": 4761,
+        "id": 4852,
         "name": "ImportDirective",
-        "src": "141:74:13"
+        "src": "141:74:14"
       },
       {
         "attributes": {
@@ -87,22 +87,22 @@
           "documentation": null,
           "fullyImplemented": true,
           "linearizedBaseContracts": [
-            4762
+            4853
           ],
           "name": "Getter",
           "nodes": [
             null
           ],
-          "scope": 4763
+          "scope": 4854
         },
-        "id": 4762,
+        "id": 4853,
         "name": "ContractDefinition",
-        "src": "406:19:13"
+        "src": "406:19:14"
       }
     ],
-    "id": 4763,
+    "id": 4854,
     "name": "SourceUnit",
-    "src": "0:425:13"
+    "src": "0:425:14"
   },
   "compiler": {
     "name": "solc",
@@ -110,5 +110,5 @@
   },
   "networks": {},
   "schemaVersion": "1.0.1",
-  "updatedAt": "2018-02-06T08:21:58.924Z"
+  "updatedAt": "2018-02-08T10:41:43.483Z"
 }

@@ -1895,7 +1895,7 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 6441,
+                                  "referencedDeclaration": 6820,
                                   "type": "contract super InternalTests",
                                   "value": "super"
                                 },
@@ -2846,5 +2846,5 @@
   },
   "networks": {},
   "schemaVersion": "1.0.1",
-  "updatedAt": "2018-02-07T17:29:00.747Z"
+  "updatedAt": "2018-02-08T10:41:43.476Z"
 }

@@ -22,6 +22,7 @@ examples/shared/*.js
 examples/**/bundle.js
 test/the-files-to-test.generated.js
 *.log*
+
 chrome-user-data
 *.sublime-project
 *.sublime-workspace
