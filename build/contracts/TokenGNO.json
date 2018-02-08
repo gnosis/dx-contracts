@@ -623,7 +623,7 @@
     "version": "0.4.19+commit.c4cbbb05.Emscripten.clang"
   },
   "networks": {
-    "1517995298667": {
+    "42": {
       "events": {
         "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef": {
           "anonymous": false,
@@ -671,63 +671,11 @@
         }
       },
       "links": {
-        "Math": "0x21a59654176f2689d12e828b77a783072cd26680"
+        "Math": "0x1140717bb1b59a30543bb3273c05370bbd23fd41"
       },
-      "address": "0x4bf749ec68270027c5910220ceab30cc284c7ba2"
-    },
-    "kovan": {
-      "events": {
-        "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef": {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "name": "from",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "name": "to",
-              "type": "address"
-            },
-            {
-              "indexed": false,
-              "name": "value",
-              "type": "uint256"
-            }
-          ],
-          "name": "Transfer",
-          "type": "event"
-        },
-        "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925": {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "name": "owner",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "name": "spender",
-              "type": "address"
-            },
-            {
-              "indexed": false,
-              "name": "value",
-              "type": "uint256"
-            }
-          ],
-          "name": "Approval",
-          "type": "event"
-        }
-      },
-      "links": {
-        "Math": "0xa789bea2c9dc2f5dab14416f396e9a75909e9793"
-      },
-      "address": "0x9a98536cc51ca39eac8083528d5600956dd0f6bb"
+      "address": "0x78bf7c86400213a4e279ad019d2bf970eb11f3ce"
     }
   },
   "schemaVersion": "1.0.1",
-  "updatedAt": "2018-02-07T10:35:21.078Z"
+  "updatedAt": "2018-02-07T17:29:00.610Z"
 }

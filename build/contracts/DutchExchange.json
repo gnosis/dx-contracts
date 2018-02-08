@@ -43928,14 +43928,9 @@
     "42": {
       "events": {},
       "links": {},
-      "address": "0xc4832685f93bb8023fe8d47ef463a58894dd38df"
-    },
-    "1517995298667": {
-      "events": {},
-      "links": {},
-      "address": "0x5b9b42d6e4b2e4bf8d42eba32d46918e10899b66"
+      "address": "0x724392457fe155a098d76f43d160091ff182ef1a"
     }
   },
   "schemaVersion": "1.0.1",
-  "updatedAt": "2018-02-07T10:35:21.208Z"
+  "updatedAt": "2018-02-07T17:29:00.761Z"
 }

@@ -1734,21 +1734,14 @@
     "version": "0.4.19+commit.c4cbbb05.Emscripten.clang"
   },
   "networks": {
-    "1517995298667": {
+    "42": {
       "events": {},
       "links": {
-        "Math": "0x21a59654176f2689d12e828b77a783072cd26680"
+        "Math": "0x1140717bb1b59a30543bb3273c05370bbd23fd41"
       },
-      "address": "0xd86c8f0327494034f60e25074420bccf560d5610"
-    },
-    "kovan": {
-      "events": {},
-      "links": {
-        "Math": "0xa789bea2c9dc2f5dab14416f396e9a75909e9793"
-      },
-      "address": "0xb588c70a3b07ca20c2362858331d909666461673"
+      "address": "0xfa14e897cc9ca7eccada17c5063d8f718263313c"
     }
   },
   "schemaVersion": "1.0.1",
-  "updatedAt": "2018-02-07T10:34:24.830Z"
+  "updatedAt": "2018-02-07T17:28:28.914Z"
 }

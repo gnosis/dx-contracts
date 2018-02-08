@@ -3252,21 +3252,14 @@
     "version": "0.4.19+commit.c4cbbb05.Emscripten.clang"
   },
   "networks": {
-    "1517995298667": {
+    "42": {
       "events": {},
       "links": {
-        "Math": "0x21a59654176f2689d12e828b77a783072cd26680"
+        "Math": "0x1140717bb1b59a30543bb3273c05370bbd23fd41"
       },
-      "address": "0x7c728214be9a0049e6a86f2137ec61030d0aa964"
-    },
-    "kovan": {
-      "events": {},
-      "links": {
-        "Math": "0xa789bea2c9dc2f5dab14416f396e9a75909e9793"
-      },
-      "address": "0x8a11b1b090acac670ced67a586387f4f73d3e717"
+      "address": "0xec8401df7c715491d012a8b4f4a228e958a1f6ce"
     }
   },
   "schemaVersion": "1.0.1",
-  "updatedAt": "2018-02-07T10:35:21.082Z"
+  "updatedAt": "2018-02-07T17:29:00.618Z"
 }

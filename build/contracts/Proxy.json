@@ -391,14 +391,9 @@
     "42": {
       "events": {},
       "links": {},
-      "address": "0x3f25441b5568a38ec68bba5d86b2ae6d42a4be68"
-    },
-    "1517995298667": {
-      "events": {},
-      "links": {},
-      "address": "0xaf5c4c6c7920b4883bc6252e9d9b8fe27187cf68"
+      "address": "0xb6655ee11203ff30071b71dbf36e448b9413c558"
     }
   },
   "schemaVersion": "1.0.1",
-  "updatedAt": "2018-02-07T10:35:21.218Z"
+  "updatedAt": "2018-02-07T17:29:00.748Z"
 }
