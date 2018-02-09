@@ -155,7 +155,7 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
 
     const [num, den] = await calculateFeeRatio(seller1)
     // round feeRatio a bit
-    assert.equal((num / den).toFixed(4), 0.0025, 'feeRatio is 0.25% when total TUL tokens > 0 but account\'s TUL balance == 1% total TUL')
+    assert.equal((num / den).toFixed(4), 0.0020, 'feeRatio is 0.25% when total TUL tokens > 0 but account\'s TUL balance == 1% total TUL')
   })
 
   it('feeRatio == 0% when account has >= 10% of total TUL', async () => {
