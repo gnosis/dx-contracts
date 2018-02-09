@@ -653,6 +653,12 @@ contract DutchExchange {
         uint t = TokenTUL(TUL).totalSupply();
         uint b = TokenTUL(TUL).lockedTULBalances(user);
 
+        if (t == 0) {
+            // 0.5%
+            feeRatio.num = 1;
+            feeRatio.den = 200;
+        }
+
         if (b * 100000 < t) {
             // 0.5%
             feeRatio.num = 1;
