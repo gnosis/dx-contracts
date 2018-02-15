@@ -144,18 +144,62 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
     assert.strictEqual(num / den, 0.005, 'feeRatio is 0.5% when total TUL tokens > 0 but account\'s TUL balance == 0')
   })
 
-  it('feeRatio == 0.25% when account has 1% of total TUL', async () => {
-    await mintPercent(seller1, 0.01)
+  it('feeRatio == 0.4% when account has 0.00005 of total TUL', async () => {
+    await mintTokens(master, 1000000)
+
+    await mintPercent(seller1, 0.00005)
 
     const totalTul = await getTotalTUL()
     assert.isAbove(totalTul, 0, 'there are available total TUL tokens')
 
     const lockedTULBalance = await getLockedTUL(seller1)
-    assert.strictEqual(lockedTULBalance, Math.round(totalTul * 0.01), 'seller has 1% of total TUL')
+    assert.strictEqual(lockedTULBalance, Math.round(totalTul * 0.00005), 'seller has 1% of total TUL')
 
     const [num, den] = await calculateFeeRatio(seller1)
     // round feeRatio a bit
-    assert.equal((num / den).toFixed(4), 0.0025, 'feeRatio is 0.25% when total TUL tokens > 0 but account\'s TUL balance == 1% total TUL')
+    assert.equal((num / den).toFixed(4), 0.004, 'feeRatio is 0.4% when total TUL tokens > 0 ')
+  })
+
+  it('feeRatio == 0.3% when account has 0.0005 of total TUL', async () => {
+    await mintPercent(seller1, 0.0005)
+
+    const totalTul = await getTotalTUL()
+    assert.isAbove(totalTul, 0, 'there are available total TUL tokens')
+
+    const lockedTULBalance = await getLockedTUL(seller1)
+    assert.strictEqual(lockedTULBalance, Math.round(totalTul * 0.0005), 'seller has 1% of total TUL')
+
+    const [num, den] = await calculateFeeRatio(seller1)
+    // round feeRatio a bit
+    assert.equal((num / den).toFixed(4), 0.003, 'feeRatio is 0.3% when total TUL tokens > 0')
+  })
+
+  it('feeRatio == 0.2% when account has 0.005 of total TUL', async () => {
+    await mintPercent(seller1, 0.005)
+
+    const totalTul = await getTotalTUL()
+    assert.isAbove(totalTul, 0, 'there are available total TUL tokens')
+
+    const lockedTULBalance = await getLockedTUL(seller1)
+    assert.strictEqual(lockedTULBalance, Math.round(totalTul * 0.005), 'seller has 1% of total TUL')
+
+    const [num, den] = await calculateFeeRatio(seller1)
+    // round feeRatio a bit
+    assert.equal((num / den).toFixed(4), 0.0020, 'feeRatio is 0.20% when total TUL tokens > 0 ')
+  })
+
+  it('feeRatio == 0.1% when account has 0.05 of total TUL', async () => {
+    await mintPercent(seller1, 0.05)
+
+    const totalTul = await getTotalTUL()
+    assert.isAbove(totalTul, 0, 'there are available total TUL tokens')
+
+    const lockedTULBalance = await getLockedTUL(seller1)
+    assert.strictEqual(lockedTULBalance, Math.round(totalTul * 0.05), 'seller has 1% of total TUL')
+
+    const [num, den] = await calculateFeeRatio(seller1)
+    // round feeRatio a bit
+    assert.equal((num / den).toFixed(4), 0.0010, 'feeRatio is 0.10% when total TUL tokens > 0 ')
   })
 
   it('feeRatio == 0% when account has >= 10% of total TUL', async () => {

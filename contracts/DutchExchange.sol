@@ -610,8 +610,7 @@ contract DutchExchange {
         returns (uint amountAfterFee)
     {
         fraction memory feeRatio = calculateFeeRatio(user);
-        // 10^30 * 10^40 = 10^70
-        // 10^70 / 10^41 = 10^29
+        // 10^30 * 10^3 / 10^4 = 10^29
         uint fee = amount * feeRatio.num / feeRatio.den;
 
         if (fee > 0) {
@@ -648,22 +647,36 @@ contract DutchExchange {
     )
         public
         view
-        // feeRatio < 10^40
+        // feeRatio < 10^4
         returns (fraction memory feeRatio)
     {
-        uint totalTUL = TokenTUL(TUL).totalSupply();
+        uint t = TokenTUL(TUL).totalSupply();
+        uint b = TokenTUL(TUL).lockedTULBalances(user);
 
-        // The fee function is chosen such that
-        // F(0) = 0.5%, F(1%) = 0.25%, F(>=10%) = 0
-        // (Takes in a amount of user's TUL tokens as ration of all TUL tokens, outputs fee ratio)
-        // We premultiply by amount to get fee:
-        if (totalTUL > 0) {
-            uint balanceOfTUL = TokenTUL(TUL).lockedTULBalances(user);
-            feeRatio.num = atleastZero(int(totalTUL - 10 * balanceOfTUL));
-            feeRatio.den = 16000 * balanceOfTUL + 200 * totalTUL;
-        } else {
+        if (b * 100000 < t || t == 0) {
+            // 0.5%
             feeRatio.num = 1;
             feeRatio.den = 200;
+        } else if (b * 10000 < t) {
+            // 0.4%
+            feeRatio.num = 1;
+            feeRatio.den = 250;
+        } else if (b * 1000 < t) {
+            // 0.3%
+            feeRatio.num = 3;
+            feeRatio.den = 1000;
+        } else if (b * 100 < t) {
+            // 0.2%
+            feeRatio.num = 1;
+            feeRatio.den = 500;
+        } else if (b * 10 < t) {
+            // 0.1%
+            feeRatio.num = 1;
+            feeRatio.den = 1000;
+        } else {
+            // 0% 
+            feeRatio.num = 0; 
+            feeRatio.den = 1;
         }
     }
 

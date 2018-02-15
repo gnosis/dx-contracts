@@ -18,6 +18,7 @@ const OWLAirdrop = artifacts.require('OWLAirdrop')
 // ETH price as reported by MakerDAO with 18 decimal places
 const currentETHPrice = (1100 * (10 ** 18))
 
+
 module.exports = function deploy(deployer, network, accounts) {
   if (network === 'kovan') {
     deployer.deploy(Math)
