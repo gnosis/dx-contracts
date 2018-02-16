@@ -936,56 +936,67 @@ contract DutchExchange {
         withdraw(buyToken, amount);
     }
 
-    // > testing fns
+    // > External fns
+    // > calculateFeeRatioExt
+    function calculateFeeRatioExt(
+        address user
+    )
+        public
+        view
+        returns (uint, uint)
+    {
+        fraction memory feeRatio = calculateFeeRatio(user);
+        return (feeRatio.num, feeRatio.den);
+    }
 
-    // > getPriceOracleForJs()
-    function getPriceOracleForJS(
+    // > priceOracleExt
+    function priceOracleExt(
         address token
     )
-    public
-    view
-    returns (uint, uint) 
+        public
+        view
+        returns (uint, uint) 
     {
         fraction memory price = priceOracle(token);
         return (price.num, price.den);
     }
 
-    // > historicalPriceOracleForJs()
-    function historicalPriceOracleForJS(
+    // > historicalPriceOracleExt
+    function historicalPriceOracleExt(
         address token,
         uint auctionIndex
     )
-    public
-    constant
-    returns (uint, uint) 
+        public
+        view
+        returns (uint, uint) 
     {
         fraction memory price = historicalPriceOracle(token, auctionIndex);
         return (price.num, price.den);
     }
 
-     // > getPriceOracleForJs()
-    function computeRatioOfHistoricalPriceOraclesForJS(
-        address tokenA,
-        address tokenB,
-        uint auctionIndex
-    )
-    public
-    constant
-    returns (uint, uint) 
-    {
-        fraction memory price = computeRatioOfHistoricalPriceOracles(tokenA, tokenB, auctionIndex);
-        return (price.num, price.den);
-    }
-
-    // > getPriceForJs()
-    function getPriceForJS(
+     // > computeRatioOfHistoricalPriceOraclesExt
+    function computeRatioOfHistoricalPriceOraclesExt(
         address sellToken,
         address buyToken,
         uint auctionIndex
     )
-    public
-    view
-    returns (uint, uint) 
+        public
+        view
+        returns (uint, uint) 
+    {
+        fraction memory price = computeRatioOfHistoricalPriceOracles(sellToken, buyToken, auctionIndex);
+        return (price.num, price.den);
+    }
+
+    // > getPriceExt()
+    function getPriceExt(
+        address sellToken,
+        address buyToken,
+        uint auctionIndex
+    )
+        public
+        view
+        returns (uint, uint) 
     {
         fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
         return (price.num, price.den);
