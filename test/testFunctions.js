@@ -158,7 +158,7 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const { DutchExchange: dx } = await getContracts()
   const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
   const timeToWaitFor = Math.ceil((86400 - p * 43200) / (1 + p)) + startingTimeOfAuction
-  let [num, den] = (await dx.getPriceForJS.call(ST.address, BT.address, 1))
+  let [num, den] = (await dx.getPriceExt.call(ST.address, BT.address, 1))
   const priceBefore = num.div(den)
   log(`
   Price BEFORE waiting until Price = initial Closing Price (2) * 2
@@ -170,7 +170,7 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   `)
   // wait until the price is good
   await wait(timeToWaitFor - timestamp());
-  ([num, den] = (await dx.getPriceForJS.call(ST.address, BT.address, 1)))
+  ([num, den] = (await dx.getPriceExt.call(ST.address, BT.address, 1)))
   const priceAfter = num.div(den)
   log(`
   Price AFTER waiting until Price = ${p * 100}% of ${priceBefore / 2} (initial Closing Price)
@@ -476,7 +476,7 @@ const assertReturnedPlusTulips = async (ST, BT, acc, type, idx = 1) => {
 
   // calc closingPrices for both ETH/ERC20 and nonETH trades
   const [num, den] = (await dx.closingPrices.call(ST.address, BT.address, idx)).map(s => s.toNumber())
-  const [hNum, hDen] = (await dx.historicalPriceOracleForJS.call(type === 'seller' ? ST.address : BT.address, idx)).map(s => s.toNumber())
+  const [hNum, hDen] = (await dx.historicalPriceOracleExt.call(type === 'seller' ? ST.address : BT.address, idx)).map(s => s.toNumber())
 
   // conditionally check sellerBalances and returned/tulipIssued
   if (type === 'seller') {

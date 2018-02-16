@@ -272,7 +272,7 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
     await tul.updateMinter(master, { from: master })
     logger('PRICE ORACLE', await oracle.getUSDETHPrice.call())
 
-    const [num, den] = await dx.getPriceOracleForJS.call(eth.address)
+    const [num, den] = await dx.priceOracleExt.call(eth.address)
     logger('PRICE', `${num}/${den} == ${num / den}`)
 
     eventWatcher(dx, 'LogNumber')
@@ -415,7 +415,7 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
   const calculateFeeInUSD = async (fee, token) => {
     const [ETHUSDPrice, [num, den]] = await Promise.all([
       oracle.getUSDETHPrice.call(),
-      dx.getPriceOracleForJS.call(token),
+      dx.priceOracleExt.call(token),
     ])
 
     const feeInETH = calculateFee(fee, num.toNumber() / den.toNumber(), false)

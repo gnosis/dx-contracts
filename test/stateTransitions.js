@@ -77,7 +77,7 @@ const getState = async (ST, BT) => { // eslint-disable-line
   let numBasedOnVolume
   let denBasedOnVolume
   // calculate state of Auction
-  [numP, denP] = (await dx.getPriceForJS.call(ST.address, BT.address, auctionIndex)) // eslint-disable-line
+  [numP, denP] = (await dx.getPriceExt.call(ST.address, BT.address, auctionIndex)) // eslint-disable-line
   numBasedOnVolume = await dx.buyVolumes.call(ST.address, BT.address)
   denBasedOnVolume = await dx.sellVolumesCurrent.call(ST.address, BT.address)
   const isAuctionTheoreticalClosed = (numP.mul(denBasedOnVolume).sub(numBasedOnVolume.mul(denP)).toNumber() <= 0);
@@ -87,7 +87,7 @@ const getState = async (ST, BT) => { // eslint-disable-line
   // calculate state of OppAuction
   let numP2
   let denP2
-  [numP2, denP2] = (await dx.getPriceForJS.call(BT.address, ST.address, auctionIndex)) // eslint-disable-line
+  [numP2, denP2] = (await dx.getPriceExt.call(BT.address, ST.address, auctionIndex)) // eslint-disable-line
   numBasedOnVolume = await dx.buyVolumes.call(BT.address, ST.address) 
   denBasedOnVolume = await dx.sellVolumesCurrent.call(BT.address, ST.address)
   const isOppAuctionTheoreticalClosed = (numP2.mul(denBasedOnVolume).minus(numBasedOnVolume.mul(denP2)).toNumber() <= 0);
