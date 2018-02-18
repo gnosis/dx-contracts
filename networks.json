@@ -1,137 +1,509 @@
 {
   "DutchExchange": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0x0e38c7b01abe5bdb07a9b29548caf3c6ad626666"
+    },
     "42": {
       "events": {},
       "links": {},
-      "address": "0x724392457fe155a098d76f43d160091ff182ef1a"
+      "address": "0x60b0f124dd47e70202e89420c11c1d04899f78a9"
+    },
+    "1518958377327": {
+      "events": {},
+      "links": {},
+      "address": "0x86072cbff48da3c1f01824a6761a03f105bcc697"
     }
   },
   "EtherToken": {
+    "4": {
+      "events": {},
+      "links": {
+        "Math": "0x38f33d7ff3c61a95eee614cf39b8277e0fa311cf"
+      },
+      "address": "0xb6edbcb25b53ec29eae6ef593b14945544084ec9"
+    },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x1140717bb1b59a30543bb3273c05370bbd23fd41"
+        "Math": "0x0c8ca3e619f9bf0b0f1d6dc66bb4d0cf5c20805a"
       },
-      "address": "0xfa14e897cc9ca7eccada17c5063d8f718263313c"
+      "address": "0x750e01b61beaec40e39e0a712d976c94341e1d0b"
+    },
+    "1518958377327": {
+      "events": {},
+      "links": {
+        "Math": "0xa94b7f0465e98609391c623d0560c5720a3f2d33"
+      },
+      "address": "0x6ed79aa1c71fd7bdbc515efda3bd4e26394435cc"
+    }
+  },
+  "InternalTests": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0xf5106ea26c36f686c769e9ab741488736074883c"
+    },
+    "1518958377327": {
+      "events": {},
+      "links": {},
+      "address": "0x5b9b42d6e4b2e4bf8d42eba32d46918e10899b66"
     }
   },
   "Math": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0x38f33d7ff3c61a95eee614cf39b8277e0fa311cf"
+    },
     "42": {
       "events": {},
       "links": {},
-      "address": "0x1140717bb1b59a30543bb3273c05370bbd23fd41"
-    }
-  },
-  "OWLAirdrop": {
-    "42": {
-      "events": {},
-      "links": {
-        "Math": "0x1140717bb1b59a30543bb3273c05370bbd23fd41"
-      },
-      "address": "0x1e985066c3efeb1d046f2ece0a1b5c66dcfcdd67"
-    }
-  },
-  "PriceOracleInterface": {
-    "42": {
+      "address": "0x0c8ca3e619f9bf0b0f1d6dc66bb4d0cf5c20805a"
+    },
+    "1518958377327": {
       "events": {},
       "links": {},
-      "address": "0x183a79a1a8d487ef6ebbf23704a10cfe54b36298"
+      "address": "0xa94b7f0465e98609391c623d0560c5720a3f2d33"
     }
   },
-  "Proxy": {
-    "42": {
-      "events": {},
-      "links": {},
-      "address": "0xb6655ee11203ff30071b71dbf36e448b9413c558"
-    }
-  },
-  "StandardToken": {
-    "42": {
-      "events": {},
-      "links": {
-        "Math": "0x1140717bb1b59a30543bb3273c05370bbd23fd41"
-      }
-    }
-  },
-  "TokenGNO": {
-    "42": {
+  "Medianizer": {
+    "4": {
       "events": {
-        "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef": {
+        "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
+          "anonymous": true,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "sig",
+              "type": "bytes4"
+            },
+            {
+              "indexed": true,
+              "name": "guy",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "name": "foo",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "name": "bar",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "name": "wad",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "fax",
+              "type": "bytes"
+            }
+          ],
+          "name": "LogNote",
+          "type": "event"
+        },
+        "0x1abebea81bfa2637f28358c371278fb15ede7ea8dd28d2e03b112ff6d936ada4": {
           "anonymous": false,
           "inputs": [
             {
               "indexed": true,
-              "name": "from",
+              "name": "authority",
               "type": "address"
-            },
-            {
-              "indexed": true,
-              "name": "to",
-              "type": "address"
-            },
-            {
-              "indexed": false,
-              "name": "value",
-              "type": "uint256"
             }
           ],
-          "name": "Transfer",
+          "name": "LogSetAuthority",
           "type": "event"
         },
-        "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925": {
+        "0xce241d7ca1f669fee44b6fc00b8eba2df3bb514eed0f6f668f8f89096e81ed94": {
           "anonymous": false,
           "inputs": [
             {
               "indexed": true,
               "name": "owner",
               "type": "address"
-            },
-            {
-              "indexed": true,
-              "name": "spender",
-              "type": "address"
-            },
-            {
-              "indexed": false,
-              "name": "value",
-              "type": "uint256"
             }
           ],
-          "name": "Approval",
+          "name": "LogSetOwner",
           "type": "event"
         }
       },
-      "links": {
-        "Math": "0x1140717bb1b59a30543bb3273c05370bbd23fd41"
+      "links": {},
+      "address": "0x65d7097202c13340763bf9c54f80f1cd5e7b784d"
+    },
+    "1518958377327": {
+      "events": {
+        "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
+          "anonymous": true,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "sig",
+              "type": "bytes4"
+            },
+            {
+              "indexed": true,
+              "name": "guy",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "name": "foo",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "name": "bar",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "name": "wad",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "fax",
+              "type": "bytes"
+            }
+          ],
+          "name": "LogNote",
+          "type": "event"
+        },
+        "0x1abebea81bfa2637f28358c371278fb15ede7ea8dd28d2e03b112ff6d936ada4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "authority",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetAuthority",
+          "type": "event"
+        },
+        "0xce241d7ca1f669fee44b6fc00b8eba2df3bb514eed0f6f668f8f89096e81ed94": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetOwner",
+          "type": "event"
+        }
       },
-      "address": "0x78bf7c86400213a4e279ad019d2bf970eb11f3ce"
+      "links": {},
+      "address": "0x4bf749ec68270027c5910220ceab30cc284c7ba2"
+    }
+  },
+  "OWLAirdrop": {
+    "4": {
+      "events": {},
+      "links": {
+        "Math": "0x38f33d7ff3c61a95eee614cf39b8277e0fa311cf"
+      }
+    },
+    "42": {
+      "events": {},
+      "links": {
+        "Math": "0x0c8ca3e619f9bf0b0f1d6dc66bb4d0cf5c20805a"
+      }
+    },
+    "1518958377327": {
+      "events": {},
+      "links": {
+        "Math": "0xa94b7f0465e98609391c623d0560c5720a3f2d33"
+      }
+    }
+  },
+  "PriceFeed": {
+    "4": {
+      "events": {
+        "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
+          "anonymous": true,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "sig",
+              "type": "bytes4"
+            },
+            {
+              "indexed": true,
+              "name": "guy",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "name": "foo",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "name": "bar",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "name": "wad",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "fax",
+              "type": "bytes"
+            }
+          ],
+          "name": "LogNote",
+          "type": "event"
+        },
+        "0x1abebea81bfa2637f28358c371278fb15ede7ea8dd28d2e03b112ff6d936ada4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "authority",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetAuthority",
+          "type": "event"
+        },
+        "0xce241d7ca1f669fee44b6fc00b8eba2df3bb514eed0f6f668f8f89096e81ed94": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetOwner",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x7c3ceac7e67986bc1b1933aee0f55c73e4d7e7a4"
+    },
+    "1518958377327": {
+      "events": {
+        "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
+          "anonymous": true,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "sig",
+              "type": "bytes4"
+            },
+            {
+              "indexed": true,
+              "name": "guy",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "name": "foo",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "name": "bar",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "name": "wad",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "fax",
+              "type": "bytes"
+            }
+          ],
+          "name": "LogNote",
+          "type": "event"
+        },
+        "0x1abebea81bfa2637f28358c371278fb15ede7ea8dd28d2e03b112ff6d936ada4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "authority",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetAuthority",
+          "type": "event"
+        },
+        "0xce241d7ca1f669fee44b6fc00b8eba2df3bb514eed0f6f668f8f89096e81ed94": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetOwner",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xd86c8f0327494034f60e25074420bccf560d5610"
+    }
+  },
+  "PriceOracleInterface": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0x33c087c5c353b7489cdd51159d1af27c05e40813"
+    },
+    "42": {
+      "events": {},
+      "links": {},
+      "address": "0x1451e0ae1b003688577be4696f87d30ec943679a"
+    },
+    "1518958377327": {
+      "events": {},
+      "links": {},
+      "address": "0xad888d0ade988ebee74b8d4f39bf29a8d0fe8a8d"
+    }
+  },
+  "Proxy": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0x484338442ae97a1a5245c7b9e532c99cc473b3fe"
+    },
+    "42": {
+      "events": {},
+      "links": {},
+      "address": "0xaa27bad3907a01f0540aef3c127d0f16dccd7f8b"
+    },
+    "1518958377327": {
+      "events": {},
+      "links": {},
+      "address": "0xff6049b87215476abf744eaa3a476cbad46fb1ca"
+    }
+  },
+  "StandardToken": {
+    "4": {
+      "events": {},
+      "links": {
+        "Math": "0x38f33d7ff3c61a95eee614cf39b8277e0fa311cf"
+      }
+    },
+    "42": {
+      "events": {},
+      "links": {
+        "Math": "0x0c8ca3e619f9bf0b0f1d6dc66bb4d0cf5c20805a"
+      }
+    },
+    "1518958377327": {
+      "events": {},
+      "links": {
+        "Math": "0xa94b7f0465e98609391c623d0560c5720a3f2d33"
+      }
+    }
+  },
+  "TokenGNO": {
+    "4": {
+      "events": {},
+      "links": {
+        "Math": "0x38f33d7ff3c61a95eee614cf39b8277e0fa311cf"
+      },
+      "address": "0x02ee9401306506c903e8d0a1c05353180619dceb"
+    },
+    "42": {
+      "events": {},
+      "links": {
+        "Math": "0x0c8ca3e619f9bf0b0f1d6dc66bb4d0cf5c20805a"
+      },
+      "address": "0x1b7032e4d95c6e08187ba9adbccaa82cb2e623a4"
+    },
+    "1518958377327": {
+      "events": {},
+      "links": {
+        "Math": "0xa94b7f0465e98609391c623d0560c5720a3f2d33"
+      },
+      "address": "0xb09bcc172050fbd4562da8b229cf3e45dc3045a6"
     }
   },
   "TokenOWL": {
+    "4": {
+      "events": {},
+      "links": {
+        "Math": "0x38f33d7ff3c61a95eee614cf39b8277e0fa311cf"
+      },
+      "address": "0x99d9007c1ced435777b36166dfe952848498107a"
+    },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x1140717bb1b59a30543bb3273c05370bbd23fd41"
+        "Math": "0x0c8ca3e619f9bf0b0f1d6dc66bb4d0cf5c20805a"
       },
-      "address": "0xec8401df7c715491d012a8b4f4a228e958a1f6ce"
+      "address": "0x0f2f8fc5f0cf0b32f03e386108377c9e00f75e1b"
+    },
+    "1518958377327": {
+      "events": {},
+      "links": {
+        "Math": "0xa94b7f0465e98609391c623d0560c5720a3f2d33"
+      },
+      "address": "0x5f8e26facc23fa4cbd87b8d9dbbd33d5047abde1"
     }
   },
   "TokenOWLProxy": {
+    "4": {
+      "events": {},
+      "links": {
+        "Math": "0x38f33d7ff3c61a95eee614cf39b8277e0fa311cf"
+      },
+      "address": "0x214261d7d073fa7e797d2c9c3f9b2d1e5ffb164b"
+    },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x1140717bb1b59a30543bb3273c05370bbd23fd41"
+        "Math": "0x0c8ca3e619f9bf0b0f1d6dc66bb4d0cf5c20805a"
       },
-      "address": "0xb366d2ee401363c14f8a727da83ba1acdf2f5a08"
+      "address": "0xd620a32265bdccc304a71d679a4688c7280537c2"
+    },
+    "1518958377327": {
+      "events": {},
+      "links": {
+        "Math": "0xa94b7f0465e98609391c623d0560c5720a3f2d33"
+      },
+      "address": "0x21a59654176f2689d12e828b77a783072cd26680"
     }
   },
   "TokenTUL": {
+    "4": {
+      "events": {},
+      "links": {
+        "Math": "0x38f33d7ff3c61a95eee614cf39b8277e0fa311cf"
+      },
+      "address": "0x6c1de7cef0ae831df5b79017a5c4eb8956a9fcd3"
+    },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x1140717bb1b59a30543bb3273c05370bbd23fd41"
+        "Math": "0x0c8ca3e619f9bf0b0f1d6dc66bb4d0cf5c20805a"
       },
-      "address": "0x33d31b9bd0349c2aa579de575e0e7a002e242b63"
+      "address": "0x6d873e3229d19bee9aeb47806314ab6bf5030fa2"
+    },
+    "1518958377327": {
+      "events": {},
+      "links": {
+        "Math": "0xa94b7f0465e98609391c623d0560c5720a3f2d33"
+      },
+      "address": "0xfc628dd79137395f3c9744e33b1c5de554d94882"
     }
   }
 }
