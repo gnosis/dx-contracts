@@ -397,13 +397,6 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
     return extraTokens
   }
 
-  const getOWLinDX = async (account) => {
-    const owlAmount = (await dx.balances.call(owl.address, account)).toNumber()
-    log(`\taccount's OWL in DX == ${owlAmount}`)
-
-    return owlAmount
-  }
-
   // fee is uint, so use Math.floor
   const calculateFee = (amount, feeRatio, print = true) => {
     const fee = Math.floor(amount * feeRatio)
@@ -450,7 +443,7 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
   })
 
   it('amountAfterFee == amount - fee when fee > 0 and account\'s OWL == 0', async () => {
-    const owlBalance = await getOWLinDX(seller1)
+    const owlBalance = (await owl.balanceOf(seller1)).toNumber()
 
     assert.strictEqual(owlBalance, 0, 'initially OWL balance should be 0')
 
