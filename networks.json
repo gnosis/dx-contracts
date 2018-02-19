@@ -3,69 +3,47 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0x0e38c7b01abe5bdb07a9b29548caf3c6ad626666"
+      "address": "0x568e5ceb1c6cad1bc7d03a0162572e981e20f8e7"
     },
     "42": {
       "events": {},
       "links": {},
-      "address": "0x60b0f124dd47e70202e89420c11c1d04899f78a9"
-    },
-    "1518958377327": {
-      "events": {},
-      "links": {},
-      "address": "0x86072cbff48da3c1f01824a6761a03f105bcc697"
+      "address": "0x9df0f2f629e320375b90398de75cd792e9aeaa53"
     }
   },
   "EtherToken": {
     "4": {
       "events": {},
       "links": {
-        "Math": "0x38f33d7ff3c61a95eee614cf39b8277e0fa311cf"
+        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
       },
-      "address": "0xb6edbcb25b53ec29eae6ef593b14945544084ec9"
+      "address": "0xf046d2cee552cc274132e36bb54770072bec8433"
     },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x0c8ca3e619f9bf0b0f1d6dc66bb4d0cf5c20805a"
+        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
       },
-      "address": "0x750e01b61beaec40e39e0a712d976c94341e1d0b"
-    },
-    "1518958377327": {
-      "events": {},
-      "links": {
-        "Math": "0xa94b7f0465e98609391c623d0560c5720a3f2d33"
-      },
-      "address": "0x6ed79aa1c71fd7bdbc515efda3bd4e26394435cc"
+      "address": "0x1ae89d288caade83a779a75d3ce13d98a24ae24e"
     }
   },
   "InternalTests": {
     "4": {
       "events": {},
       "links": {},
-      "address": "0xf5106ea26c36f686c769e9ab741488736074883c"
-    },
-    "1518958377327": {
-      "events": {},
-      "links": {},
-      "address": "0x5b9b42d6e4b2e4bf8d42eba32d46918e10899b66"
+      "address": "0x59c051fe2507376ca32d5105ad8acf12feff64b1"
     }
   },
   "Math": {
     "4": {
       "events": {},
       "links": {},
-      "address": "0x38f33d7ff3c61a95eee614cf39b8277e0fa311cf"
+      "address": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
     },
     "42": {
       "events": {},
       "links": {},
-      "address": "0x0c8ca3e619f9bf0b0f1d6dc66bb4d0cf5c20805a"
-    },
-    "1518958377327": {
-      "events": {},
-      "links": {},
-      "address": "0xa94b7f0465e98609391c623d0560c5720a3f2d33"
+      "address": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
     }
   },
   "Medianizer": {
@@ -134,93 +112,20 @@
         }
       },
       "links": {},
-      "address": "0x65d7097202c13340763bf9c54f80f1cd5e7b784d"
-    },
-    "1518958377327": {
-      "events": {
-        "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
-          "anonymous": true,
-          "inputs": [
-            {
-              "indexed": true,
-              "name": "sig",
-              "type": "bytes4"
-            },
-            {
-              "indexed": true,
-              "name": "guy",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "name": "foo",
-              "type": "bytes32"
-            },
-            {
-              "indexed": true,
-              "name": "bar",
-              "type": "bytes32"
-            },
-            {
-              "indexed": false,
-              "name": "wad",
-              "type": "uint256"
-            },
-            {
-              "indexed": false,
-              "name": "fax",
-              "type": "bytes"
-            }
-          ],
-          "name": "LogNote",
-          "type": "event"
-        },
-        "0x1abebea81bfa2637f28358c371278fb15ede7ea8dd28d2e03b112ff6d936ada4": {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "name": "authority",
-              "type": "address"
-            }
-          ],
-          "name": "LogSetAuthority",
-          "type": "event"
-        },
-        "0xce241d7ca1f669fee44b6fc00b8eba2df3bb514eed0f6f668f8f89096e81ed94": {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "name": "owner",
-              "type": "address"
-            }
-          ],
-          "name": "LogSetOwner",
-          "type": "event"
-        }
-      },
-      "links": {},
-      "address": "0x4bf749ec68270027c5910220ceab30cc284c7ba2"
+      "address": "0xcc7b218f13c2000b01673d9fbc32d61da90a027a"
     }
   },
   "OWLAirdrop": {
     "4": {
       "events": {},
       "links": {
-        "Math": "0x38f33d7ff3c61a95eee614cf39b8277e0fa311cf"
+        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
       }
     },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x0c8ca3e619f9bf0b0f1d6dc66bb4d0cf5c20805a"
-      }
-    },
-    "1518958377327": {
-      "events": {},
-      "links": {
-        "Math": "0xa94b7f0465e98609391c623d0560c5720a3f2d33"
+        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
       }
     }
   },
@@ -290,127 +195,44 @@
         }
       },
       "links": {},
-      "address": "0x7c3ceac7e67986bc1b1933aee0f55c73e4d7e7a4"
-    },
-    "1518958377327": {
-      "events": {
-        "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
-          "anonymous": true,
-          "inputs": [
-            {
-              "indexed": true,
-              "name": "sig",
-              "type": "bytes4"
-            },
-            {
-              "indexed": true,
-              "name": "guy",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "name": "foo",
-              "type": "bytes32"
-            },
-            {
-              "indexed": true,
-              "name": "bar",
-              "type": "bytes32"
-            },
-            {
-              "indexed": false,
-              "name": "wad",
-              "type": "uint256"
-            },
-            {
-              "indexed": false,
-              "name": "fax",
-              "type": "bytes"
-            }
-          ],
-          "name": "LogNote",
-          "type": "event"
-        },
-        "0x1abebea81bfa2637f28358c371278fb15ede7ea8dd28d2e03b112ff6d936ada4": {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "name": "authority",
-              "type": "address"
-            }
-          ],
-          "name": "LogSetAuthority",
-          "type": "event"
-        },
-        "0xce241d7ca1f669fee44b6fc00b8eba2df3bb514eed0f6f668f8f89096e81ed94": {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "name": "owner",
-              "type": "address"
-            }
-          ],
-          "name": "LogSetOwner",
-          "type": "event"
-        }
-      },
-      "links": {},
-      "address": "0xd86c8f0327494034f60e25074420bccf560d5610"
+      "address": "0x480cf2dc0b0b2838ded0eae5ac5c64de69986b0c"
     }
   },
   "PriceOracleInterface": {
     "4": {
       "events": {},
       "links": {},
-      "address": "0x33c087c5c353b7489cdd51159d1af27c05e40813"
+      "address": "0x1675edbe4ca5a6787a7477a9f802e8bf7d270e7f"
     },
     "42": {
       "events": {},
       "links": {},
-      "address": "0x1451e0ae1b003688577be4696f87d30ec943679a"
-    },
-    "1518958377327": {
-      "events": {},
-      "links": {},
-      "address": "0xad888d0ade988ebee74b8d4f39bf29a8d0fe8a8d"
+      "address": "0x868718691294155538ecf8458c9fac30d370b1b0"
     }
   },
   "Proxy": {
     "4": {
       "events": {},
       "links": {},
-      "address": "0x484338442ae97a1a5245c7b9e532c99cc473b3fe"
+      "address": "0xc026b46daf1c8d9bbe694abb47872881a04b2385"
     },
     "42": {
       "events": {},
       "links": {},
-      "address": "0xaa27bad3907a01f0540aef3c127d0f16dccd7f8b"
-    },
-    "1518958377327": {
-      "events": {},
-      "links": {},
-      "address": "0xff6049b87215476abf744eaa3a476cbad46fb1ca"
+      "address": "0xe4ad47e2029ca5dcba1caa27a01d1d46f86b7770"
     }
   },
   "StandardToken": {
     "4": {
       "events": {},
       "links": {
-        "Math": "0x38f33d7ff3c61a95eee614cf39b8277e0fa311cf"
+        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
       }
     },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x0c8ca3e619f9bf0b0f1d6dc66bb4d0cf5c20805a"
-      }
-    },
-    "1518958377327": {
-      "events": {},
-      "links": {
-        "Math": "0xa94b7f0465e98609391c623d0560c5720a3f2d33"
+        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
       }
     }
   },
@@ -418,92 +240,96 @@
     "4": {
       "events": {},
       "links": {
-        "Math": "0x38f33d7ff3c61a95eee614cf39b8277e0fa311cf"
+        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
       },
-      "address": "0x02ee9401306506c903e8d0a1c05353180619dceb"
+      "address": "0x333ede87b78d89d8f7b670488efe96b9797db635"
     },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x0c8ca3e619f9bf0b0f1d6dc66bb4d0cf5c20805a"
+        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
       },
-      "address": "0x1b7032e4d95c6e08187ba9adbccaa82cb2e623a4"
-    },
-    "1518958377327": {
+      "address": "0x8eb1fc258ff788e6de02794cd0d6b2a3fa11681a"
+    }
+  },
+  "TokenOMG": {
+    "4": {
       "events": {},
       "links": {
-        "Math": "0xa94b7f0465e98609391c623d0560c5720a3f2d33"
+        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
       },
-      "address": "0xb09bcc172050fbd4562da8b229cf3e45dc3045a6"
+      "address": "0x68eab9a897ed92655a08171d4258537669befabe"
+    },
+    "42": {
+      "events": {},
+      "links": {
+        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
+      },
+      "address": "0x447d50c371bb4d2990df04e813b3d8d4220acdd2"
     }
   },
   "TokenOWL": {
     "4": {
       "events": {},
       "links": {
-        "Math": "0x38f33d7ff3c61a95eee614cf39b8277e0fa311cf"
+        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
       },
-      "address": "0x99d9007c1ced435777b36166dfe952848498107a"
+      "address": "0x056c3956cb9abaa124d329e72c9713b522d50d6a"
     },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x0c8ca3e619f9bf0b0f1d6dc66bb4d0cf5c20805a"
+        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
       },
-      "address": "0x0f2f8fc5f0cf0b32f03e386108377c9e00f75e1b"
-    },
-    "1518958377327": {
-      "events": {},
-      "links": {
-        "Math": "0xa94b7f0465e98609391c623d0560c5720a3f2d33"
-      },
-      "address": "0x5f8e26facc23fa4cbd87b8d9dbbd33d5047abde1"
+      "address": "0x39ca7a25b1618265a53f45145ae9fe2ddaa5c1b8"
     }
   },
   "TokenOWLProxy": {
     "4": {
       "events": {},
       "links": {
-        "Math": "0x38f33d7ff3c61a95eee614cf39b8277e0fa311cf"
+        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
       },
-      "address": "0x214261d7d073fa7e797d2c9c3f9b2d1e5ffb164b"
+      "address": "0xc249173d5e1703d96f2455cccfce41d7d02dbe36"
     },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x0c8ca3e619f9bf0b0f1d6dc66bb4d0cf5c20805a"
+        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
       },
-      "address": "0xd620a32265bdccc304a71d679a4688c7280537c2"
-    },
-    "1518958377327": {
+      "address": "0xea60befdd49463fe6808918c106689339d26ff6e"
+    }
+  },
+  "TokenRDN": {
+    "4": {
       "events": {},
       "links": {
-        "Math": "0xa94b7f0465e98609391c623d0560c5720a3f2d33"
+        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
       },
-      "address": "0x21a59654176f2689d12e828b77a783072cd26680"
+      "address": "0x7799dc527be765e1347cd635c3e78a2cbeb9cd00"
+    },
+    "42": {
+      "events": {},
+      "links": {
+        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
+      },
+      "address": "0x5e9fc659e6824ad6a21ab923825265f4fdb85046"
     }
   },
   "TokenTUL": {
     "4": {
       "events": {},
       "links": {
-        "Math": "0x38f33d7ff3c61a95eee614cf39b8277e0fa311cf"
+        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
       },
-      "address": "0x6c1de7cef0ae831df5b79017a5c4eb8956a9fcd3"
+      "address": "0xed9917e73217ef4f7860de019e14a6dcc1c1e857"
     },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x0c8ca3e619f9bf0b0f1d6dc66bb4d0cf5c20805a"
+        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
       },
-      "address": "0x6d873e3229d19bee9aeb47806314ab6bf5030fa2"
-    },
-    "1518958377327": {
-      "events": {},
-      "links": {
-        "Math": "0xa94b7f0465e98609391c623d0560c5720a3f2d33"
-      },
-      "address": "0xfc628dd79137395f3c9744e33b1c5de554d94882"
+      "address": "0x917076f5a7b61388e69d4f7475bde398c39032cd"
     }
   }
 }
