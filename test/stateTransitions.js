@@ -1405,7 +1405,7 @@ const c25 = () => contract('DutchExchange - Stage S6 -  one auction closed, othe
 
   after(eventWatcher.stopWatching)
 
-  it('postBuyOrder - posting a buyOrder clsoing the theoretical auction and switch to  S1', async () => {
+  it('postBuyOrder - posting a buyOrder closing the theoretical auction and switch to  S1', async () => {
     const auctionIndex = await getAuctionIndex()
     await setAndCheckAuctionStarted(eth, gno)
     await postSellOrder(eth, gno, 0, 10.0.toWei(), seller1)
