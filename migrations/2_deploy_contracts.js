@@ -8,6 +8,8 @@ const PriceFeed = artifacts.require('PriceFeed')
 const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 const StandardToken = artifacts.require('StandardToken')
 const TokenGNO = artifacts.require('TokenGNO')
+const TokenRDN = artifacts.require('TokenRDN')
+const TokenOMG = artifacts.require('TokenOMG')
 const TokenOWL = artifacts.require('TokenOWL')
 const TokenOWLProxy = artifacts.require('TokenOWLProxy')
 
@@ -22,12 +24,15 @@ const currentETHPrice = (1100 * (10 ** 18))
 module.exports = function deploy(deployer, network, accounts) {
   if (network === 'kovan') {
     deployer.deploy(Math)
+
       // Linking
       .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenTUL, TokenOWL, TokenOWLProxy, OWLAirdrop]))
 
       // Deployment of Tokens
       .then(() => deployer.deploy(EtherToken))
       .then(() => deployer.deploy(TokenGNO, 100000 * (10 ** 18)))
+      .then(() => deployer.deploy(TokenRDN, 100000 * (10 ** 18)))
+      .then(() => deployer.deploy(TokenOMG, 100000 * (10 ** 18)))
       .then(() => deployer.deploy(TokenTUL, accounts[0], accounts[0]))
       .then(() => deployer.deploy(TokenOWL))
       .then(() => deployer.deploy(TokenOWLProxy, TokenOWL.address))
@@ -61,6 +66,8 @@ module.exports = function deploy(deployer, network, accounts) {
       // Deployment of Tokens
       .then(() => deployer.deploy(EtherToken))
       .then(() => deployer.deploy(TokenGNO, 100000 * (10 ** 18)))
+      .then(() => deployer.deploy(TokenRDN, 100000 * (10 ** 18)))
+      .then(() => deployer.deploy(TokenOMG, 100000 * (10 ** 18)))
       .then(() => deployer.deploy(TokenTUL, accounts[0], accounts[0]))
       .then(() => deployer.deploy(TokenOWL))
       .then(() => deployer.deploy(TokenOWLProxy, TokenOWL.address))
