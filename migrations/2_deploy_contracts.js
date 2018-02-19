@@ -27,7 +27,7 @@ module.exports = function deploy(deployer, network, accounts) {
 
       // Linking
       .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenTUL, TokenOWL, TokenOWLProxy, OWLAirdrop]))
-
+      .then(() => deployer.link(Math, [TokenRDN, TokenOMG]))
       // Deployment of Tokens
       .then(() => deployer.deploy(EtherToken))
       .then(() => deployer.deploy(TokenGNO, 100000 * (10 ** 18)))
@@ -62,6 +62,7 @@ module.exports = function deploy(deployer, network, accounts) {
     deployer.deploy(Math)
       // Linking
       .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenTUL, TokenOWL, TokenOWLProxy, OWLAirdrop]))
+      .then(() => deployer.link(Math, [TokenRDN, TokenOMG]))
 
       // Deployment of Tokens
       .then(() => deployer.deploy(EtherToken))
