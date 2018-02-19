@@ -165,7 +165,7 @@ const c1 = () => contract('DX Tulip Flow --> 1 Seller + 1 Buyer', (accounts) => 
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceForJS.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -218,7 +218,7 @@ const c1 = () => contract('DX Tulip Flow --> 1 Seller + 1 Buyer', (accounts) => 
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceForJS.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -424,7 +424,7 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceForJS.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -463,7 +463,7 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceForJS.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -500,7 +500,7 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceForJS.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -546,7 +546,7 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceForJS.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -774,7 +774,7 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceForJS.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -827,7 +827,7 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceForJS.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -1414,7 +1414,7 @@ const c7 = () => contract('DX Tulip Flow --> ERC20:ERC20 --> 1 S + 1B', (account
     // clear recip
     await postBuyOrder(gno, eth, 1, 100.0.toWei(), buyer1)
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceForJS.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Buy Volume AFTER = ${((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()).toEth()}
     Left to clear auction = ${((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber() - ((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()) * (den / num)).toEth()}
@@ -1608,7 +1608,7 @@ const c8 = () => contract('DX Tulip Flow --> Seller ERC20/ETH', (accounts) => {
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(gno.address, eth.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceForJS.call(gno.address, eth.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceExt.call(gno.address, eth.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -1661,7 +1661,7 @@ const c8 = () => contract('DX Tulip Flow --> Seller ERC20/ETH', (accounts) => {
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(gno.address, eth.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceForJS.call(gno.address, eth.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceExt.call(gno.address, eth.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}

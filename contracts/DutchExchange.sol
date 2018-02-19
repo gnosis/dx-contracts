@@ -625,11 +625,10 @@ contract DutchExchange {
             // 10^29 * 10^4 = 10^33
             // Uses 18 decimal places <> exactly as OWL tokens: 10**18 OWL == 1 USD 
             uint feeInUSD = feeInETH * ETHUSDPrice;
-            uint amountOfOWLBurned = min(balances[OWL][msg.sender], feeInUSD / 2);
+            uint amountOfOWLBurned = min(TokenOWL(OWL).allowance(msg.sender, this), feeInUSD / 2);
 
             if (amountOfOWLBurned > 0) {
-                balances[OWL][msg.sender] -= amountOfOWLBurned;
-                TokenOWL(OWL).burnOWL(amountOfOWLBurned);
+                TokenOWL(OWL).burnOWL(msg.sender, amountOfOWLBurned);
 
                 // Adjust fee
                 // 10^33 * 10^29 = 10^62
@@ -638,6 +637,7 @@ contract DutchExchange {
 
             extraTokens[primaryToken][secondaryToken][auctionIndex + 1] += fee;
         }
+        
         amountAfterFee = amount - fee;
     }
     
@@ -936,56 +936,67 @@ contract DutchExchange {
         withdraw(buyToken, amount);
     }
 
-    // > testing fns
+    // > External fns
+    // > calculateFeeRatioExt
+    function calculateFeeRatioExt(
+        address user
+    )
+        public
+        view
+        returns (uint, uint)
+    {
+        fraction memory feeRatio = calculateFeeRatio(user);
+        return (feeRatio.num, feeRatio.den);
+    }
 
-    // > getPriceOracleForJs()
-    function getPriceOracleForJS(
+    // > priceOracleExt
+    function priceOracleExt(
         address token
     )
-    public
-    view
-    returns (uint, uint) 
+        public
+        view
+        returns (uint, uint) 
     {
         fraction memory price = priceOracle(token);
         return (price.num, price.den);
     }
 
-    // > historicalPriceOracleForJs()
-    function historicalPriceOracleForJS(
+    // > historicalPriceOracleExt
+    function historicalPriceOracleExt(
         address token,
         uint auctionIndex
     )
-    public
-    constant
-    returns (uint, uint) 
+        public
+        view
+        returns (uint, uint) 
     {
         fraction memory price = historicalPriceOracle(token, auctionIndex);
         return (price.num, price.den);
     }
 
-     // > getPriceOracleForJs()
-    function computeRatioOfHistoricalPriceOraclesForJS(
-        address tokenA,
-        address tokenB,
-        uint auctionIndex
-    )
-    public
-    constant
-    returns (uint, uint) 
-    {
-        fraction memory price = computeRatioOfHistoricalPriceOracles(tokenA, tokenB, auctionIndex);
-        return (price.num, price.den);
-    }
-
-    // > getPriceForJs()
-    function getPriceForJS(
+     // > computeRatioOfHistoricalPriceOraclesExt
+    function computeRatioOfHistoricalPriceOraclesExt(
         address sellToken,
         address buyToken,
         uint auctionIndex
     )
-    public
-    view
-    returns (uint, uint) 
+        public
+        view
+        returns (uint, uint) 
+    {
+        fraction memory price = computeRatioOfHistoricalPriceOracles(sellToken, buyToken, auctionIndex);
+        return (price.num, price.den);
+    }
+
+    // > getPriceExt()
+    function getPriceExt(
+        address sellToken,
+        address buyToken,
+        uint auctionIndex
+    )
+        public
+        view
+        returns (uint, uint) 
     {
         fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
         return (price.num, price.den);
