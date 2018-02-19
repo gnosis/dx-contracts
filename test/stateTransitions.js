@@ -335,7 +335,7 @@ const c1 = () => contract('DutchExchange - Stage S0 - Auction is running with v>
     eventWatcher(dx, 'Log', {})
   })
 
-  it('postBuyOrder - posting a buyOrdr to get into S2', async () => {
+  it('postBuyOrder - posting a buyOrder to get into S2', async () => {
     const auctionIndex = await getAuctionIndex()
     const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
     await setAndCheckAuctionStarted(eth, gno)
@@ -371,7 +371,7 @@ const c2 = () => contract('DutchExchange - Stage S0 - Auction is running with v>
     eventWatcher(dx, 'Log', {})
   })
 
-  it('postBuyOrder - posting a buyOrdr to and stay in S0', async () => {
+  it('postBuyOrder - posting a buyOrder and stay in S0', async () => {
     const auctionIndex = await getAuctionIndex()
     
 
@@ -522,7 +522,7 @@ const c5 = () => contract('DutchExchange - Stage S1 - Auction is running with v 
 
   after(eventWatcher.stopWatching)
 
-  it('postBuyOrder - posting a buyOrdr to and stay in S1', async () => {
+  it('postBuyOrder - posting a buyOrder and stay in S1', async () => {
     const auctionIndex = await getAuctionIndex()
     
 
@@ -673,7 +673,7 @@ const c8 = () => contract('DutchExchange - Stage S2 -  1 Auction is running with
 
   after(eventWatcher.stopWatching)
 
-  it('postBuyOrder - posting a buyOrdr to and stay in S2', async () => {
+  it('postBuyOrder - posting a buyOrder and stay in S2', async () => {
     const auctionIndex = await getAuctionIndex()
     
 
@@ -1405,7 +1405,7 @@ const c25 = () => contract('DutchExchange - Stage S6 -  one auction closed, othe
 
   after(eventWatcher.stopWatching)
 
-  it('postBuyOrder - posting a buyOrder clsoing the theoretical auction and switch to  S1', async () => {
+  it('postBuyOrder - posting a buyOrder closing the theoretical auction and switch to  S1', async () => {
     const auctionIndex = await getAuctionIndex()
     await setAndCheckAuctionStarted(eth, gno)
     await postSellOrder(eth, gno, 0, 10.0.toWei(), seller1)
