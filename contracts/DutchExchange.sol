@@ -625,11 +625,10 @@ contract DutchExchange {
             // 10^29 * 10^4 = 10^33
             // Uses 18 decimal places <> exactly as OWL tokens: 10**18 OWL == 1 USD 
             uint feeInUSD = feeInETH * ETHUSDPrice;
-            uint amountOfOWLBurned = min(balances[OWL][msg.sender], feeInUSD / 2);
+            uint amountOfOWLBurned = min(TokenOWL(OWL).allowance(msg.sender, this), feeInUSD / 2);
 
             if (amountOfOWLBurned > 0) {
-                balances[OWL][msg.sender] -= amountOfOWLBurned;
-                TokenOWL(OWL).burnOWL(amountOfOWLBurned);
+                TokenOWL(OWL).burnOWL(msg.sender, amountOfOWLBurned);
 
                 // Adjust fee
                 // 10^33 * 10^29 = 10^62
@@ -638,6 +637,7 @@ contract DutchExchange {
 
             extraTokens[primaryToken][secondaryToken][auctionIndex + 1] += fee;
         }
+        
         amountAfterFee = amount - fee;
     }
     

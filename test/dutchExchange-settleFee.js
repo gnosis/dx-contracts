@@ -397,13 +397,6 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
     return extraTokens
   }
 
-  const getOWLinDX = async (account) => {
-    const owlAmount = (await dx.balances.call(owl.address, account)).toNumber()
-    log(`\taccount's OWL in DX == ${owlAmount}`)
-
-    return owlAmount
-  }
-
   // fee is uint, so use Math.floor
   const calculateFee = (amount, feeRatio, print = true) => {
     const fee = Math.floor(amount * feeRatio)
@@ -429,11 +422,6 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
     return adjustedFee
   }
 
-  const depositOWL = async (account, amount) => {
-    await owl.transfer(account, amount, { from: master })
-    await owl.approve(dx.address, amount, { from: account })
-    return dx.deposit(owl.address, amount, { from: account })
-  }
 
   it('amountAfterFee == amount when fee == 0', async () => {
     await makeFeeRatioPercent(0, seller1)
@@ -455,7 +443,7 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
   })
 
   it('amountAfterFee == amount - fee when fee > 0 and account\'s OWL == 0', async () => {
-    const owlBalance = await getOWLinDX(seller1)
+    const owlBalance = (await owl.balanceOf(seller1)).toNumber()
 
     assert.strictEqual(owlBalance, 0, 'initially OWL balance should be 0')
 
@@ -491,13 +479,13 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
     const owlAmount = Math.floor(feeInUSD / 2) - 1
 
-    await depositOWL(seller1, owlAmount)
+    await owl.transfer(seller1, owlAmount, { from: master })
 
-    const owlBalance1 = await getOWLinDX(seller1)
-
+    const owlBalance1 = (await owl.balanceOf(seller1)).toNumber()
     assert.strictEqual(owlBalance1, owlAmount, 'account should have OWL balance < feeInUSD / 2')
     assert.isAbove(owlBalance1, 0, 'account should have OWL balance > 0')
 
+    await owl.approve(dx.address, owlAmount, { from: seller1 })
     const amountOfOWLBurned = owlBalance1
 
     fee = adjustFee(fee, amountOfOWLBurned, feeInUSD)
@@ -517,7 +505,7 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
     assert.strictEqual(extraTokens1 + fee, extraTokens2, 'extraTokens should be increased by fee')
 
-    const owlBalance2 = await getOWLinDX(seller1)
+    const owlBalance2 = (await owl.balanceOf(seller1)).toNumber()
     log(`\tburned OWL == ${amountOfOWLBurned}`)
 
     assert.strictEqual(owlBalance2, owlBalance1 - amountOfOWLBurned, 'some OWL should have been burned')
@@ -533,11 +521,14 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
     const owlAmount = Math.floor(feeInUSD / 2) + 10
 
-    await depositOWL(seller1, owlAmount)
+    await owl.transfer(seller1, owlAmount, { from: master })
 
-    const owlBalance1 = await getOWLinDX(seller1)
+    const owlBalance1 = (await owl.balanceOf(seller1)).toNumber()
 
     assert.strictEqual(owlBalance1, owlAmount, 'account should have OWL balance > feeInUSD / 2')
+
+
+    await owl.approve(dx.address, owlAmount * 5, { from: seller1 })
 
     const amountOfOWLBurned = Math.floor(feeInUSD / 2)
 
@@ -559,7 +550,7 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
     assert.strictEqual(extraTokens1 + fee, extraTokens2, 'extraTokens should be increased by fee')
 
-    const owlBalance2 = await getOWLinDX(seller1)
+    const owlBalance2 = (await owl.balanceOf(seller1)).toNumber()
     log(`\tburned OWL == ${amountOfOWLBurned}`)
 
     assert.strictEqual(owlBalance2, owlBalance1 - amountOfOWLBurned, 'some OWL should have been burned')
