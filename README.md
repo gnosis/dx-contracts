@@ -80,11 +80,11 @@ PriceOracle
 
 All variables of the smart contracts are public and can easily be access from other smartcontracts. This allows other smartcontracts to calculate specific prices. But the smartcontracts can also call:
  
-## priceOracle(address token)
+### priceOracle(address token)
 
 PriceOracle() gives a good estimate for market price of a token in ETH by averaging the the prices of token:ETH and ETH:token of the last auction with positive trading volumes.
 
-## historicalPriceOracle(address token, uint auctionIndex)
+### historicalPriceOracle(address token, uint auctionIndex)
 
 historicalPriceOracle returns the price calculated in the same way as priceOracle, but not for the last auction, but the auciton at a specific index.
 
