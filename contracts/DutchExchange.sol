@@ -282,7 +282,7 @@ contract DutchExchange {
         require(Token(tokenAddress).transferFrom(msg.sender, this, amount));
 
         balances[tokenAddress][msg.sender] += amount;
-        // NewDeposit(tokenAddress, amount);
+        NewDeposit(tokenAddress, amount);
     }
 
     // > withdraw()

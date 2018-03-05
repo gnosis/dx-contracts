@@ -1,3 +1,4 @@
+
 // script crashes for gas reason sometimes, if it is run against testrpc. with kovan or rinkeby, there were no porblems dectected.
 
 const Web3 = require('web3')
@@ -45,7 +46,7 @@ let tul
 let dx
 let Token
 
-const startingETH = 18e18
+const startingETH = 13e18
 const startingToken = 100e18
 
 const getContracts = async () => {
@@ -64,9 +65,9 @@ const getContracts = async () => {
 const setup = async () => {
   await eth.deposit({ from: acct, value: startingETH })
   await eth.approve(dx.address, startingETH, { from: acct })
-  await tokenToAdd.approve(dx.address, startingToken+20, { from: acct })
-  await dx.deposit(tokenToAdd.address, startingToken, { from: acct, gas: 234254})
-  await dx.deposit(eth.address, startingETH, { from: acct, gas: 234254})
+  await tokenToApprove.approve(dx.address, startingToken+20, { from: acct })
+  await dx.deposit(tokenToApprove.address, startingToken, { from: acct })
+  await dx.deposit(eth.address, startingETH, { from: acct})
 }
 
 const p = new Promise((resolve, reject) => {
@@ -77,22 +78,14 @@ const p = new Promise((resolve, reject) => {
 
 // parameters for deployment
 let acct
-let tokenToAdd
+let tokenToApprove
 p.then((a) => {
   acct = a[0]
   return getContracts()
 })
   .then((c) => {
     eth = c.EtherToken
-    tokenToAdd = c.TokenRDN
+    tokenToApprove = c.TokenOMG
     dx = c.DutchExchange
-    return setup()})
-  .then(() => dx.balances(eth.address, acct))
-  .then((t) => {
-    console.log(t)
-    return dx.getAuctionIndex(eth.address, tokenToAdd.address)
-  })
-  .then((t) => {
-    console.log(t)
-    return dx.addTokenPair(eth.address, tokenToAdd.address, startingETH, 0, 1, 50, { from: acct, gas: 2374235})
-  })
+    return dx.updateApprovalOfToken(tokenToApprove.address, true,{from: acct, gas: 234668})})
+
