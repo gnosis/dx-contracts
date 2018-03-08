@@ -16,26 +16,25 @@ contract DutchExchange {
         uint den;
     }
 
-    struct masterCopyCountdownType {
-        address masterCopy;
-        uint timeWhenAvailable;
-    }
+    uint constant waitingPeriodNewTokenPair = 6 hours;
+    uint constant waitingPeriodNewAuction = 10 minutes;
 
     address masterCopy;
-    masterCopyCountdownType masterCopyCountdown;
+    address newMasterCopy;
+    // Time when new masterCopy is updatabale
+    uint masterCopyCountdown;
 
     // > Storage
     address public auctioneer;
     // Ether ERC-20 token
-    address public ETH;
-    address public ETHUSDOracle;
+    address public ethToken;
+    address public ethUSDOracle;
     // Minimum required sell funding for adding a new token pair, in USD
     uint public thresholdNewTokenPair;
     // Minimum required sell funding for starting antoher auction, in USD
     uint public thresholdNewAuction;
     address public TUL;
     address public OWL;
-    bool public isInitialised;
 
     // Token => approved
     // Only tokens approved by auctioneer generate TUL tokens
@@ -73,6 +72,7 @@ contract DutchExchange {
 
     // > Modifiers
     modifier onlyAuctioneer() {
+        // Only allows auctioneer to proceed
         // R1
         require(msg.sender == auctioneer);
         _;
@@ -82,45 +82,73 @@ contract DutchExchange {
     /// @param _TUL - address of TUL ERC-20 token
     /// @param _OWL - address of OWL ERC-20 token
     /// @param _auctioneer - auctioneer for managing interfaces
-    /// @param _ETH - address of ETH ERC-20 token
-    /// @param _ETHUSDOracle - address of the oracle contract for fetching feeds
+    /// @param _ethToken - address of ETH ERC-20 token
+    /// @param _ethUSDOracle - address of the oracle contract for fetching feeds
     /// @param _thresholdNewTokenPair - Minimum required sell funding for adding a new token pair, in USD
     function setupDutchExchange(
         address _TUL,
         address _OWL,
         address _auctioneer, 
-        address _ETH,
-        address _ETHUSDOracle,
+        address _ethToken,
+        address _ethUSDOracle,
         uint _thresholdNewTokenPair,
         uint _thresholdNewAuction
     )
         public
     {
-        require(!isInitialised);
+        // Make sure contract hasn't been initialised
+        require(ethToken == 0);
+
+        // Validates inputs
+        require(
+            _owl != 0 &&
+            _auctioneer != 0 &&
+            _ethToken != 0 &&
+            _ethUSDOracle != 0
+        );
 
         TUL = _TUL;
         OWL = _OWL;
         auctioneer = _auctioneer;
-        ETH = _ETH;
-        ETHUSDOracle = _ETHUSDOracle;
+        ethToken = _ethToken;
+        ethUSDOracle = _ethUSDOracle;
         thresholdNewTokenPair = _thresholdNewTokenPair;
         thresholdNewAuction = _thresholdNewAuction;
-
-        isInitialised = true;
     }
 
-    function updateExchangeParams(
-        address _auctioneer,
-        address _ETHUSDOracle,
-        uint _thresholdNewTokenPair,
+    function updateAuctioneer(
+        address _auctioneer
+    )
+        public
+        onlyAuctioneer
+    {
+        auctioneer = _auctioneer;
+    }
+
+    function updateEthUSDOracle(
+        address _ethUSDOracle
+    )
+        public
+        onlyAuctioneer
+    {
+        ethUSDOracle = _ethUSDOracle;
+    }
+
+    function updateThresholdNewTokenPair(
+        uint _thresholdNewTokenPair
+    )
+        public
+        onlyAuctioneer
+    {
+        thresholdNewTokenPair = _thresholdNewTokenPair;
+    }
+
+    function updateThresholdNewAuction(
         uint _thresholdNewAuction
     )
         public
-        onlyAuctioneer()
+        onlyAuctioneer
     {
-        auctioneer = _auctioneer;
-        ETHUSDOracle = _ETHUSDOracle;
-        thresholdNewTokenPair = _thresholdNewTokenPair;
         thresholdNewAuction = _thresholdNewAuction;
     }
 
@@ -129,7 +157,7 @@ contract DutchExchange {
         bool approved
     )
         public
-        onlyAuctioneer()
+        onlyAuctioneer
      {   
         approvedTokens[token] = approved;
      }
@@ -138,7 +166,7 @@ contract DutchExchange {
         address _masterCopy
      )
         public
-        onlyAuctioneer()
+        onlyAuctioneer
     {
         require(_masterCopy != 0);
 
@@ -149,7 +177,7 @@ contract DutchExchange {
 
     function updateMasterCopy()
         public
-        onlyAuctioneer()
+        onlyAuctioneer
     {
         require(address(masterCopyCountdown.masterCopy) != 0);
         require(now >= masterCopyCountdown.timeWhenAvailable);
@@ -201,26 +229,26 @@ contract DutchExchange {
         require(token2Funding < 10 ** 30);
 
         uint fundedValueUSD;
-        uint ETHUSDPrice = PriceOracleInterface(ETHUSDOracle).getUSDETHPrice();
+        uint ethUSDPrice = PriceOracleInterface(ethUSDOracle).getUSDETHPrice();
 
         // Compute fundedValueUSD
-        address ETHmem = ETH;
-        if (token1 == ETHmem) {
+        address ethTokenMem = ethToken;
+        if (token1 == ethTokenMem) {
             // C1
             // MUL: 10^30 * 10^4 = 10^34
-            fundedValueUSD = token1Funding * ETHUSDPrice;
-        } else if (token2 == ETHmem) {
+            fundedValueUSD = token1Funding * ethUSDPrice;
+        } else if (token2 == ethTokenMem) {
             // C2
             // MUL: 10^30 * 10^4 = 10^34
-            fundedValueUSD = token2Funding * ETHUSDPrice;
+            fundedValueUSD = token2Funding * ethUSDPrice;
         } else {
-            // C3: Neither token is ETH
-            // We require there to exist ETH-Token auctions
+            // C3: Neither token is ethToken
+            // We require there to exist ethToken-Token auctions
             // R3.1
-            require(getAuctionIndex(token1, ETHmem) > 0);
+            require(getAuctionIndex(token1, ethTokenMem) > 0);
 
             // R3.2
-            require(getAuctionIndex(token2, ETHmem) > 0);
+            require(getAuctionIndex(token2, ethTokenMem) > 0);
 
             // Price of Token 1
             fraction memory priceToken1 = priceOracle(token1);
@@ -228,10 +256,10 @@ contract DutchExchange {
             // Price of Token 2
             fraction memory priceToken2 = priceOracle(token2);
 
-            // Compute funded value in ETH and USD
+            // Compute funded value in ethToken and USD
             // 10^30 * 10^30 = 10^60
             fundedValueUSD = (token1Funding * priceToken1.num / priceToken1.den + 
-                token2Funding * priceToken2.num / priceToken2.den) * ETHUSDPrice;
+                token2Funding * priceToken2.num / priceToken2.den) * ethUSDPrice;
         }
 
         // R5
@@ -267,7 +295,7 @@ contract DutchExchange {
         sellerBalances[token1][token2][1][msg.sender] = token1FundingAfterFee;
         sellerBalances[token2][token1][1][msg.sender] = token2FundingAfterFee;
         
-        setAuctionStart(token1, token2, 6 hours);
+        setAuctionStart(token1, token2, waitingPeriodNewTokenPair);
         NewTokenPair(token1, token2);
     }
 
@@ -282,7 +310,7 @@ contract DutchExchange {
         require(Token(tokenAddress).transferFrom(msg.sender, this, amount));
 
         balances[tokenAddress][msg.sender] += amount;
-        // NewDeposit(tokenAddress, amount);
+        NewDeposit(tokenAddress, amount);
     }
 
     // > withdraw()
@@ -470,13 +498,13 @@ contract DutchExchange {
 
         // Get tulips issued based on ETH price of returned tokens
         if (approvedTokens[sellToken] == true && approvedTokens[buyToken] == true) {
-            address ETHmem = ETH;
-            if (sellToken == ETHmem) {
+            address ethTokenMem = ethToken;
+            if (sellToken == ethTokenMem) {
                 tulipsIssued = sellerBalance;
-            } else if (buyToken == ETHmem) {
+            } else if (buyToken == ethTokenMem) {
                 tulipsIssued = returned;
             } else {
-                // Neither token is ETH, so we use priceOracle()
+                // Neither token is ethToken, so we use priceOracle()
                 // priceOracle() depends on latestAuctionIndex
                 // i.e. if a user claims tokens later in the future,
                 // he/she is likely to get slightly different number
@@ -533,18 +561,18 @@ contract DutchExchange {
             returned += tokensExtra;
  
             if (approvedTokens[buyToken] == true && approvedTokens[sellToken] == true) {
-                address ETHmem = ETH;
+                address ethTokenMem = ethToken;
                 // Get tulips issued based on ETH price of returned tokens
-                if (buyToken == ETHmem) {
+                if (buyToken == ethTokenMem) {
                     tulipsIssued = buyerBalance;
-                } else if (sellToken == ETHmem) {
+                } else if (sellToken == ethTokenMem) {
                     // 10^30 * 10^39 = 10^66
                     tulipsIssued = buyerBalance * price.den / price.num;
                 } else {
-                    // Neither token is ETH, so we use historicalPriceOracle()
-                    fraction memory priceETH = historicalPriceOracle(buyToken, auctionIndex);
+                    // Neither token is ethToken, so we use historicalPriceOracle()
+                    fraction memory priceEthToken = historicalPriceOracle(buyToken, auctionIndex);
                     // 10^30 * 10^28 = 10^58
-                    tulipsIssued = buyerBalance * priceETH.num / priceETH.den;
+                    tulipsIssued = buyerBalance * priceEthToken.num / priceEthToken.den;
                 }
 
                 if (tulipsIssued > 0) {
@@ -615,7 +643,7 @@ contract DutchExchange {
 
         if (fee > 0) {
             // Allow user to reduce up to half of the fee with OWL
-            uint ETHUSDPrice = PriceOracleInterface(ETHUSDOracle).getUSDETHPrice();
+            uint ethUSDPrice = PriceOracleInterface(ethUSDOracle).getUSDETHPrice();
             fraction memory price = priceOracle(primaryToken);
 
             // Convert fee to ETH, then USD
@@ -624,7 +652,7 @@ contract DutchExchange {
 
             // 10^29 * 10^4 = 10^33
             // Uses 18 decimal places <> exactly as OWL tokens: 10**18 OWL == 1 USD 
-            uint feeInUSD = feeInETH * ETHUSDPrice;
+            uint feeInUSD = feeInETH * ethUSDPrice;
             uint amountOfOWLBurned = min(TokenOWL(OWL).allowance(msg.sender, this), feeInUSD / 2);
 
             if (amountOfOWLBurned > 0) {
@@ -752,7 +780,7 @@ contract DutchExchange {
         internal
     {
         // Check if auctions received enough sell orders
-        uint ETHUSDPrice = PriceOracleInterface(ETHUSDOracle).getUSDETHPrice();
+        uint ethUSDPrice = PriceOracleInterface(ethUSDOracle).getUSDETHPrice();
         fraction memory priceTs = priceOracle(sellToken);
         fraction memory priceTb = priceOracle(buyToken);
 
@@ -762,8 +790,8 @@ contract DutchExchange {
         // since it might also be called from postSellOrder())
 
         // 10^30 * 10^30 * 10^4 = 10^64
-        uint sellVolume = sellVolumesCurrent[sellToken][buyToken] * priceTs.num * ETHUSDPrice / priceTs.den;
-        uint sellVolumeOpp = sellVolumesCurrent[buyToken][sellToken] * priceTb.num * ETHUSDPrice / priceTb.den;
+        uint sellVolume = sellVolumesCurrent[sellToken][buyToken] * priceTs.num * ethUSDPrice / priceTs.den;
+        uint sellVolumeOpp = sellVolumesCurrent[buyToken][sellToken] * priceTb.num * ethUSDPrice / priceTb.den;
         if (sellVolume >= thresholdNewAuction || sellVolumeOpp >= thresholdNewAuction) {
             // Schedule next auction
             setAuctionStart(sellToken, buyToken, 10 minutes);
@@ -809,8 +837,8 @@ contract DutchExchange {
         // price < 10^30
         returns (fraction memory price)
     {
-        address ETHmem = ETH;
-        if (token == ETHmem) {
+        address ethTokenMem = ethToken;
+        if (token == ethTokenMem) {
             // C1
             price.num = 1;
             price.den = 1;
@@ -821,15 +849,15 @@ contract DutchExchange {
 
             uint i = 0;
             bool correctPair = false;
-            fraction memory closingPriceETH;
+            fraction memory closingPriceEthToken;
             fraction memory closingPriceToken;
 
             while (!correctPair) {
                 i++;
-                closingPriceETH = closingPrices[ETHmem][token][auctionIndex - i];
-                closingPriceToken = closingPrices[token][ETHmem][auctionIndex - i];
+                closingPriceEthToken = closingPrices[ethTokenMem][token][auctionIndex - i];
+                closingPriceToken = closingPrices[token][ethTokenMem][auctionIndex - i];
                 
-                if (closingPriceETH.num > 0 && closingPriceETH.den > 0 || 
+                if (closingPriceEthToken.num > 0 && closingPriceEthToken.den > 0 || 
                     closingPriceToken.num > 0 && closingPriceToken.den > 0)
                 {
                     correctPair = true;
@@ -838,16 +866,16 @@ contract DutchExchange {
 
             // At this point at least one closing price is strictly positive
             // If only one is positive, we want to output that
-            if (closingPriceETH.num == 0 || closingPriceETH.den == 0) {
+            if (closingPriceEthToken.num == 0 || closingPriceEthToken.den == 0) {
                 price.num = closingPriceToken.num;
                 price.den = closingPriceToken.den;
             } else if (closingPriceToken.num == 0 || closingPriceToken.den == 0) {
-                price.num = closingPriceETH.den;
-                price.den = closingPriceETH.num;
+                price.num = closingPriceEthToken.den;
+                price.den = closingPriceEthToken.num;
             } else {
                 // If both prices are positive, output weighted average
-                price.num = closingPriceETH.den + closingPriceToken.num;
-                price.den = closingPriceETH.num + closingPriceToken.den;
+                price.num = closingPriceEthToken.den + closingPriceToken.num;
+                price.den = closingPriceEthToken.num + closingPriceToken.den;
             }
         } 
     }
@@ -855,7 +883,7 @@ contract DutchExchange {
     // > priceOracle()
     /// @dev Gives best estimate for market price of a token in ETH of any price oracle on the Ethereum network
     /// @param token address of ERC-20 token
-    /// @return Weighted average of closing prices of opposite Token-ETH auctions, based on their sellVolume  
+    /// @return Weighted average of closing prices of opposite Token-ethToken auctions, based on their sellVolume  
     function priceOracle(
         address token
     )
@@ -864,7 +892,7 @@ contract DutchExchange {
         // price < 10^30
         returns (fraction memory price)
     {
-        uint latestAuctionIndex = getAuctionIndex(token, ETH);
+        uint latestAuctionIndex = getAuctionIndex(token, ethToken);
         // historicalPriceOracle < 10^30
         price = historicalPriceOracle(token, latestAuctionIndex);
     }
