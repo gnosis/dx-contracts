@@ -1100,7 +1100,55 @@ contract DutchExchange {
             return uint(a);
         }
     }
+    
+    //@dev for quick overview of possible sellerBalances to calculate the possible withdraw tokens
+    //@param auctionSellToken is the sellToken defining an auctionPair
+    //@param auctionBuyToken is the buyToken defining an auctionPair
+    //@param user is the user who wants to his tokens
+    //@returns returns sellbal for all indices for all tokenpairs 
+    function getIndicesWithClaimableTokens(address auctionSellToken, address auctionBuyToken, address user)
+    public view returns(uint[]){
+        uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
+        uint[] memory sellBal = new uint[](runningAuctionIndex+1);
+        for(uint j = 0; j <= runningAuctionIndex; j++){
+            sellBal[j] = sellerBalances[auctionSellToken][auctionBuyToken][j][user];
+        }        
+        return sellBal;
+    }    
 
+    //@dev for quick overview of current sellerBalance for a user
+    //@param auctionSellToken are the sellTokens defining an auctionPair
+    //@param auctionBuyToken are the buyTokens defining an auctionPair
+    //@param user is the user who wants to his tokens
+    function getSellerBalanceOfCurrentAuctions(
+        address[] auctionSellToken,
+        address[] auctionBuyToken,
+        address user)
+    public returns(uint[]){
+        uint length = auctionSellToken.length;
+        uint[] memory sellerBalance = new uint[](length);
+        for(uint i = 0; i < length; i++){
+            uint runningAuctionIndex = getAuctionIndex(auctionSellToken[i], auctionBuyToken[i]);
+            sellerBalance[i] = sellerBalances[auctionSellToken[i]][auctionBuyToken[i]][runningAuctionIndex][user];
+        }
+        return sellerBalance;
+    }
+
+    //@dev for multiple withdraws
+    //@param auctionSellToken are the sellTokens defining an auctionPair
+    //@param auctionBuyToken are the buyTokens defining an auctionPair
+    //@param auctionIndices are the auction indices on which an token should be claimedAmounts
+    //@param user is the user who wants to his tokens
+    function claimTokensFromSeveralAuctions(
+        address[] auctionSellToken,
+        address[] auctionBuyToken,
+        uint [] auctionIndices,
+        address user)
+    public{
+        uint limit = auctionSellToken.length; 
+        for(uint i = 0; i < limit; i++)
+                claimSellerFunds(auctionSellToken[i], auctionBuyToken[i], user, auctionIndices[i]);
+    }
     // > Events
     event NewDeposit(
          address token,
