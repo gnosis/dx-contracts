@@ -1106,8 +1106,15 @@ contract DutchExchange {
     //@param auctionBuyToken is the buyToken defining an auctionPair
     //@param user is the user who wants to his tokens
     //@returns returns sellbal for all indices for all tokenpairs 
-    function getIndicesWithClaimableTokens(address auctionSellToken, address auctionBuyToken, address user)
-    public view returns(uint[]){
+    function getIndicesWithClaimableTokens(
+        address auctionSellToken,
+         address auctionBuyToken,
+        address user
+    )
+        public
+        view
+        returns(uint[])
+    {
         uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
         uint[] memory sellBal = new uint[](runningAuctionIndex+1);
         for(uint j = 0; j <= runningAuctionIndex; j++){
@@ -1123,8 +1130,11 @@ contract DutchExchange {
     function getSellerBalanceOfCurrentAuctions(
         address[] auctionSellToken,
         address[] auctionBuyToken,
-        address user)
-    public returns(uint[]){
+        address user
+    )
+        public
+        returns(uint[])
+    {
         uint length = auctionSellToken.length;
         uint[] memory sellerBalance = new uint[](length);
         for(uint i = 0; i < length; i++){
@@ -1143,8 +1153,10 @@ contract DutchExchange {
         address[] auctionSellToken,
         address[] auctionBuyToken,
         uint [] auctionIndices,
-        address user)
-    public{
+        address user
+    )
+        public
+    {
         uint limit = auctionSellToken.length; 
         for(uint i = 0; i < limit; i++)
                 claimSellerFunds(auctionSellToken[i], auctionBuyToken[i], user, auctionIndices[i]);
