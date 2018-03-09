@@ -236,11 +236,11 @@ contract DutchExchange {
         address ethTokenMem = ethToken;
         if (token1 == ethTokenMem) {
             // C1
-            // MUL: 10^30 * 10^4 = 10^34
+            // MUL: 10^30 * 10^6 = 10^36
             fundedValueUSD = token1Funding * ethUSDPrice;
         } else if (token2 == ethTokenMem) {
             // C2
-            // MUL: 10^30 * 10^4 = 10^34
+            // MUL: 10^30 * 10^6 = 10^36
             fundedValueUSD = token2Funding * ethUSDPrice;
         } else {
             // C3: Neither token is ethToken
@@ -651,7 +651,7 @@ contract DutchExchange {
             // 10^29 * 10^30 / 10^30 = 10^29
             uint feeInETH = fee * price.num / price.den;
 
-            // 10^29 * 10^4 = 10^33
+            // 10^29 * 10^6 = 10^35
             // Uses 18 decimal places <> exactly as owlToken tokens: 10**18 owlToken == 1 USD 
             uint feeInUSD = feeInETH * ethUSDPrice;
             uint amountOfowlTokenBurned = min(owlToken.allowance(msg.sender, this), feeInUSD / 2);
@@ -659,7 +659,7 @@ contract DutchExchange {
             if (amountOfowlTokenBurned > 0) {
                 owlToken.burnOWL(msg.sender, amountOfowlTokenBurned);
                 // Adjust fee
-                // 10^33 * 10^29 = 10^62
+                // 10^35 * 10^29 = 10^64
                 fee -= amountOfowlTokenBurned * fee / feeInUSD;
             }
 
@@ -789,7 +789,7 @@ contract DutchExchange {
         // (this is so that we don't need case work,
         // since it might also be called from postSellOrder())
 
-        // 10^30 * 10^30 * 10^4 = 10^64
+        // 10^30 * 10^30 * 10^6 = 10^66
         uint sellVolume = sellVolumesCurrent[sellToken][buyToken] * priceTs.num * ethUSDPrice / priceTs.den;
         uint sellVolumeOpp = sellVolumesCurrent[buyToken][sellToken] * priceTb.num * ethUSDPrice / priceTb.den;
         if (sellVolume >= thresholdNewAuction || sellVolumeOpp >= thresholdNewAuction) {
@@ -817,6 +817,14 @@ contract DutchExchange {
         // 10^30 * 10^30 = 10^60
         price.num = sellTokenPrice.num * buyTokenPrice.den;
         price.den = sellTokenPrice.den * buyTokenPrice.num;
+
+        while (price.num > 10 ** 12 && price.den > 10 ** 12) {  
+           price.num = price.num / 10 ** 6;   
+           price.den = price.den / 10 ** 6;   
+       }
+  
+       // R1  
+       require(price.num < 10 ** 35 && price.den < 10 ** 35);
     }
 
 
@@ -832,7 +840,7 @@ contract DutchExchange {
     )
         public
         view
-        // price < 10^30
+        // price < 2 * 10^30
         returns (fraction memory price)
     {
         if (token1 == token2) {
