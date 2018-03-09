@@ -20,9 +20,9 @@ contract DutchExchange {
     uint constant waitingPeriodNewAuction = 10 minutes;
 
     address masterCopy;
-    address newMasterCopy;
+    address public newMasterCopy;
     // Time when new masterCopy is updatabale
-    uint masterCopyCountdown;
+    uint public masterCopyCountdown;
 
     // > Storage
     address public auctioneer;
@@ -33,11 +33,11 @@ contract DutchExchange {
     uint public thresholdNewTokenPair;
     // Minimum required sell funding for starting antoher auction, in USD
     uint public thresholdNewAuction;
-    address public TUL;
-    address public OWL;
+    TokenTUL public tulToken;
+    TokenOWL public owlToken;
 
     // Token => approved
-    // Only tokens approved by auctioneer generate TUL tokens
+    // Only tokens approved by auctioneer generate tulToken tokens
     mapping (address => bool) public approvedTokens;
 
     // For the following two mappings, there is one mapping for each token pair
@@ -79,15 +79,15 @@ contract DutchExchange {
     }
 
     /// @dev Constructor-Function creates exchange
-    /// @param _TUL - address of TUL ERC-20 token
-    /// @param _OWL - address of OWL ERC-20 token
+    /// @param _tulToken - address of tulToken ERC-20 token
+    /// @param _owlToken - address of owlToken ERC-20 token
     /// @param _auctioneer - auctioneer for managing interfaces
     /// @param _ethToken - address of ETH ERC-20 token
     /// @param _ethUSDOracle - address of the oracle contract for fetching feeds
     /// @param _thresholdNewTokenPair - Minimum required sell funding for adding a new token pair, in USD
     function setupDutchExchange(
-        address _TUL,
-        address _OWL,
+        TokenTUL _tulToken,
+        TokenOWL _owlToken,
         address _auctioneer, 
         address _ethToken,
         address _ethUSDOracle,
@@ -101,14 +101,15 @@ contract DutchExchange {
 
         // Validates inputs
         require(
-            _owl != 0 &&
+            address(_owlToken) != address(0) &&
+            address(_tulToken) != address(0) &&
             _auctioneer != 0 &&
             _ethToken != 0 &&
             _ethUSDOracle != 0
         );
 
-        TUL = _TUL;
-        OWL = _OWL;
+        tulToken = _tulToken;
+        owlToken = _owlToken;
         auctioneer = _auctioneer;
         ethToken = _ethToken;
         ethUSDOracle = _ethUSDOracle;
@@ -171,19 +172,18 @@ contract DutchExchange {
         require(_masterCopy != 0);
 
         // Update masterCopyCountdown
-        masterCopyCountdown.masterCopy = _masterCopy;
-        masterCopyCountdown.timeWhenAvailable = now + 30 days;
+        newMasterCopy = _masterCopy;
+        masterCopyCountdown = now + 30 days;
     }
 
     function updateMasterCopy()
         public
         onlyAuctioneer
     {
-        require(address(masterCopyCountdown.masterCopy) != 0);
-        require(now >= masterCopyCountdown.timeWhenAvailable);
+        require(now >= masterCopyCountdown);
 
         // Update masterCopy
-        masterCopy = masterCopyCountdown.masterCopy;
+        masterCopy = newMasterCopy;
     }
 
     // > addTokenPair()
@@ -513,9 +513,9 @@ contract DutchExchange {
                 tulipsIssued = sellerBalance * price.num / price.den;
             }
 
-            // Issue TUL
+            // Issue tulToken
             if (tulipsIssued > 0) {
-                TokenTUL(TUL).mintTokens(user, tulipsIssued);
+                tulToken.mintTokens(user, tulipsIssued);
             }
         }
 
@@ -576,8 +576,8 @@ contract DutchExchange {
                 }
 
                 if (tulipsIssued > 0) {
-                    // Issue TUL
-                    TokenTUL(TUL).mintTokens(user, tulipsIssued);
+                    // Issue tulToken
+                    tulToken.mintTokens(user, tulipsIssued);
                 }
             }
 
@@ -642,7 +642,7 @@ contract DutchExchange {
         uint fee = amount * feeRatio.num / feeRatio.den;
 
         if (fee > 0) {
-            // Allow user to reduce up to half of the fee with OWL
+            // Allow user to reduce up to half of the fee with owlToken
             uint ethUSDPrice = PriceOracleInterface(ethUSDOracle).getUSDETHPrice();
             fraction memory price = priceOracle(primaryToken);
 
@@ -651,16 +651,16 @@ contract DutchExchange {
             uint feeInETH = fee * price.num / price.den;
 
             // 10^29 * 10^4 = 10^33
-            // Uses 18 decimal places <> exactly as OWL tokens: 10**18 OWL == 1 USD 
+            // Uses 18 decimal places <> exactly as owlToken tokens: 10**18 owlToken == 1 USD 
             uint feeInUSD = feeInETH * ethUSDPrice;
-            uint amountOfOWLBurned = min(TokenOWL(OWL).allowance(msg.sender, this), feeInUSD / 2);
+            uint amountOfowlTokenBurned = min(owlToken.allowance(msg.sender, this), feeInUSD / 2);
 
-            if (amountOfOWLBurned > 0) {
-                TokenOWL(OWL).burnOWL(msg.sender, amountOfOWLBurned);
+            if (amountOfowlTokenBurned > 0) {
+                owlToken.burnOWL(msg.sender, amountOfowlTokenBurned);
 
                 // Adjust fee
                 // 10^33 * 10^29 = 10^62
-                fee -= amountOfOWLBurned * fee / feeInUSD;
+                fee -= amountOfowlTokenBurned * fee / feeInUSD;
             }
 
             extraTokens[primaryToken][secondaryToken][auctionIndex + 1] += fee;
@@ -678,8 +678,8 @@ contract DutchExchange {
         // feeRatio < 10^4
         returns (fraction memory feeRatio)
     {
-        uint t = TokenTUL(TUL).totalSupply();
-        uint b = TokenTUL(TUL).lockedTULBalances(user);
+        uint t = tulToken.totalSupply();
+        uint b = tulToken.lockedTULBalances(user);
 
         if (b * 100000 < t || t == 0) {
             // 0.5%
