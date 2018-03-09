@@ -3,9 +3,9 @@ import "@gnosis.pm/gnosis-core-contracts/contracts/Tokens/StandardToken.sol";
 
 
 /// @title Standard token contract with overflow protection
-contract TokenTUL is StandardToken {
+contract TokenMGN is StandardToken {
 
-    struct unlockedTUL {
+    struct unlockedMGN {
         uint amountUnlocked;
         uint withdrawalTime;
     }
@@ -17,17 +17,17 @@ contract TokenTUL is StandardToken {
     address public owner;
     address public minter;
 
-    // user => unlockedTUL
-    mapping (address => unlockedTUL) public unlockedTULs;
+    // user => unlockedMGN
+    mapping (address => unlockedMGN) public unlockedMGNs;
 
     // user => amount
-    mapping (address => uint) public lockedTULBalances;
+    mapping (address => uint) public lockedMGNBalances;
 
     /*
      *  Public functions
      */
 
-    function TokenTUL(
+    function TokenMGN(
         address _owner,
         address _minter
     )
@@ -63,11 +63,11 @@ contract TokenTUL is StandardToken {
     {
         require(msg.sender == minter);
 
-        lockedTULBalances[user] += amount;
+        lockedMGNBalances[user] += amount;
         totalTokens += amount;
     }
 
-    /// @dev Lock TUL
+    /// @dev Lock MGN
     function lockTokens(
         uint amount
     )
@@ -79,10 +79,10 @@ contract TokenTUL is StandardToken {
         
         // Update state variables
         balances[msg.sender] -= amount;
-        lockedTULBalances[msg.sender] += amount;
+        lockedMGNBalances[msg.sender] += amount;
 
         // Get return variable
-        totalAmountLocked = lockedTULBalances[msg.sender];
+        totalAmountLocked = lockedMGNBalances[msg.sender];
     }
 
     function unlockTokens(
@@ -92,26 +92,26 @@ contract TokenTUL is StandardToken {
         returns (uint totalAmountUnlocked, uint withdrawalTime)
     {
         // Adjust amount by locked balances
-        amount = min(amount, lockedTULBalances[msg.sender]);
+        amount = min(amount, lockedMGNBalances[msg.sender]);
 
         if (amount > 0) {
             // Update state variables
-            lockedTULBalances[msg.sender] -= amount;
-            unlockedTULs[msg.sender].amountUnlocked += amount;
-            unlockedTULs[msg.sender].withdrawalTime = now + 24 hours;
+            lockedMGNBalances[msg.sender] -= amount;
+            unlockedMGNs[msg.sender].amountUnlocked += amount;
+            unlockedMGNs[msg.sender].withdrawalTime = now + 24 hours;
         }
 
         // Get return variables
-        totalAmountUnlocked = unlockedTULs[msg.sender].amountUnlocked;
-        withdrawalTime = unlockedTULs[msg.sender].withdrawalTime;
+        totalAmountUnlocked = unlockedMGNs[msg.sender].amountUnlocked;
+        withdrawalTime = unlockedMGNs[msg.sender].withdrawalTime;
     }
 
     function withdrawUnlockedTokens()
     public
     {
-        require(unlockedTULs[msg.sender].withdrawalTime < now);
-        balances[msg.sender] += unlockedTULs[msg.sender].amountUnlocked;
-        unlockedTULs[msg.sender].amountUnlocked = 0;
+        require(unlockedMGNs[msg.sender].withdrawalTime < now);
+        balances[msg.sender] += unlockedMGNs[msg.sender].amountUnlocked;
+        unlockedMGNs[msg.sender].amountUnlocked = 0;
     }
 
     function min(uint a, uint b) 

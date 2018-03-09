@@ -1,6 +1,6 @@
 pragma solidity ^0.4.19;
 
-import "./Tokens/TokenTUL.sol";
+import "./Tokens/TokenMGN.sol" as TokenTUL;
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "./Oracle/PriceOracleInterface.sol";  
 
@@ -18,8 +18,9 @@ contract DutchExchange {
 
     uint constant waitingPeriodNewTokenPair = 6 hours;
     uint constant waitingPeriodNewAuction = 10 minutes;
+    uint constant waitingPeriodChangeMasterCopy = 30 days;
 
-    address masterCopy;
+    address public masterCopy;
     address public newMasterCopy;
     // Time when new masterCopy is updatabale
     uint public masterCopyCountdown;
@@ -173,7 +174,7 @@ contract DutchExchange {
 
         // Update masterCopyCountdown
         newMasterCopy = _masterCopy;
-        masterCopyCountdown = now + 30 days;
+        masterCopyCountdown = now + waitingPeriodChangeMasterCopy;
     }
 
     function updateMasterCopy()
@@ -793,7 +794,7 @@ contract DutchExchange {
         uint sellVolumeOpp = sellVolumesCurrent[buyToken][sellToken] * priceTb.num * ethUSDPrice / priceTb.den;
         if (sellVolume >= thresholdNewAuction || sellVolumeOpp >= thresholdNewAuction) {
             // Schedule next auction
-            setAuctionStart(sellToken, buyToken, 10 minutes);
+            setAuctionStart(sellToken, buyToken, waitingPeriodNewAuction);
         } else {
             resetAuctionStart(sellToken, buyToken);
         }
