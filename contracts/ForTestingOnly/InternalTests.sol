@@ -17,8 +17,8 @@ contract InternalTests is DutchExchange {
   }
   
   function InternalTests(
-        address _TUL,
-        address _OWL,
+        TokenTUL _TUL,
+        TokenOWL _OWL,
         address _owner, 
         address _ETH,
         address _ETHUSDOracle,
