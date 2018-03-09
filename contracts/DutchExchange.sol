@@ -1,6 +1,6 @@
 pragma solidity ^0.4.19;
 
-import "./Tokens/TokenMGN.sol" as TokenTUL;
+import { TokenMGN as TokenFRT } from "./Tokens/TokenMGN.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "./Oracle/PriceOracleInterface.sol";  
 
@@ -34,11 +34,11 @@ contract DutchExchange {
     uint public thresholdNewTokenPair;
     // Minimum required sell funding for starting antoher auction, in USD
     uint public thresholdNewAuction;
-    TokenTUL public tulToken;
+    TokenFRT public frtToken;
     TokenOWL public owlToken;
 
     // Token => approved
-    // Only tokens approved by auctioneer generate tulToken tokens
+    // Only tokens approved by auctioneer generate frtToken tokens
     mapping (address => bool) public approvedTokens;
 
     // For the following two mappings, there is one mapping for each token pair
@@ -80,14 +80,14 @@ contract DutchExchange {
     }
 
     /// @dev Constructor-Function creates exchange
-    /// @param _tulToken - address of tulToken ERC-20 token
+    /// @param _frtToken - address of frtToken ERC-20 token
     /// @param _owlToken - address of owlToken ERC-20 token
     /// @param _auctioneer - auctioneer for managing interfaces
     /// @param _ethToken - address of ETH ERC-20 token
     /// @param _ethUSDOracle - address of the oracle contract for fetching feeds
     /// @param _thresholdNewTokenPair - Minimum required sell funding for adding a new token pair, in USD
     function setupDutchExchange(
-        TokenTUL _tulToken,
+        TokenFRT _frtToken,
         TokenOWL _owlToken,
         address _auctioneer, 
         address _ethToken,
@@ -103,13 +103,13 @@ contract DutchExchange {
         // Validates inputs
         require(
             address(_owlToken) != address(0) &&
-            address(_tulToken) != address(0) &&
+            address(_frtToken) != address(0) &&
             _auctioneer != 0 &&
             _ethToken != 0 &&
             _ethUSDOracle != 0
         );
 
-        tulToken = _tulToken;
+        frtToken = _frtToken;
         owlToken = _owlToken;
         auctioneer = _auctioneer;
         ethToken = _ethToken;
@@ -478,7 +478,7 @@ contract DutchExchange {
         uint auctionIndex
     )
         public
-        returns (uint returned, uint tulipsIssued)
+        returns (uint returned, uint frtsIssued)
     {
         uint sellerBalance = sellerBalances[sellToken][buyToken][auctionIndex][user];
 
@@ -497,13 +497,13 @@ contract DutchExchange {
         // 10^30 * 10^30 = 10^60
         returned = sellerBalance * num / den;
 
-        // Get tulips issued based on ETH price of returned tokens
+        // Get frts issued based on ETH price of returned tokens
         if (approvedTokens[sellToken] == true && approvedTokens[buyToken] == true) {
             address ethTokenMem = ethToken;
             if (sellToken == ethTokenMem) {
-                tulipsIssued = sellerBalance;
+                frtsIssued = sellerBalance;
             } else if (buyToken == ethTokenMem) {
-                tulipsIssued = returned;
+                frtsIssued = returned;
             } else {
                 // Neither token is ethToken, so we use priceOracle()
                 // priceOracle() depends on latestAuctionIndex
@@ -511,12 +511,12 @@ contract DutchExchange {
                 // he/she is likely to get slightly different number
                 fraction memory price = historicalPriceOracle(sellToken, ethTokenMem, auctionIndex);
                 // 10^30 * 10^30 = 10^60
-                tulipsIssued = sellerBalance * price.num / price.den;
+                frtsIssued = sellerBalance * price.num / price.den;
             }
 
             // Issue tulToken
-            if (tulipsIssued > 0) {
-                tulToken.mintTokens(user, tulipsIssued);
+            if (frtsIssued > 0) {
+                frtToken.mintTokens(user, frtsIssued);
             }
         }
 
@@ -525,7 +525,7 @@ contract DutchExchange {
         if (returned > 0) {
             balances[buyToken][user] += returned;
         }
-        NewSellerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, tulipsIssued);
+        NewSellerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
     }
 
     // > claimBuyerFunds()
@@ -536,7 +536,7 @@ contract DutchExchange {
         uint auctionIndex
     )
         public
-        returns (uint returned, uint tulipsIssued)
+        returns (uint returned, uint frtsIssued)
     {
         fraction memory price;
         (returned, price) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
@@ -563,22 +563,22 @@ contract DutchExchange {
  
             if (approvedTokens[buyToken] == true && approvedTokens[sellToken] == true) {
                 address ethTokenMem = ethToken;
-                // Get tulips issued based on ETH price of returned tokens
+                // Get frts issued based on ETH price of returned tokens
                 if (buyToken == ethTokenMem) {
-                    tulipsIssued = buyerBalance;
+                    frtsIssued = buyerBalance;
                 } else if (sellToken == ethTokenMem) {
                     // 10^30 * 10^39 = 10^66
-                    tulipsIssued = buyerBalance * price.den / price.num;
+                    frtsIssued = buyerBalance * price.den / price.num;
                 } else {
                     // Neither token is ethToken, so we use historicalPriceOracle()
                     fraction memory priceEthToken = historicalPriceOracle(buyToken, ethTokenMem, auctionIndex);
                     // 10^30 * 10^28 = 10^58
-                    tulipsIssued = buyerBalance * priceEthToken.num / priceEthToken.den;
+                    frtsIssued = buyerBalance * priceEthToken.num / priceEthToken.den;
                 }
 
-                if (tulipsIssued > 0) {
-                    // Issue tulToken
-                    tulToken.mintTokens(user, tulipsIssued);
+                if (frtsIssued > 0) {
+                    // Issue frtToken
+                    frtToken.mintTokens(user, frtsIssued);
                 }
             }
 
@@ -593,7 +593,7 @@ contract DutchExchange {
             balances[sellToken][user] += returned;
         }
         
-        NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, tulipsIssued);
+        NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
     }
 
     // > getUnclaimedBuyerFunds()
@@ -678,8 +678,8 @@ contract DutchExchange {
         // feeRatio < 10^4
         returns (fraction memory feeRatio)
     {
-        uint t = tulToken.totalSupply();
-        uint b = tulToken.lockedTULBalances(user);
+        uint t = frtToken.totalSupply();
+        uint b = frtToken.lockedMGNBalances(user);
 
         if (b * 100000 < t || t == 0) {
             // 0.5%
@@ -1161,7 +1161,7 @@ contract DutchExchange {
         address user,
         uint auctionIndex,
         uint amount,
-        uint tulipsIssued
+        uint frtsIssued
     );
 
     event NewBuyerFundsClaim(
@@ -1170,7 +1170,7 @@ contract DutchExchange {
         address user,
         uint auctionIndex,
         uint amount,
-        uint tulipsIssued
+        uint frtsIssued
     );
 
     event NewTokenPair(
@@ -1184,14 +1184,5 @@ contract DutchExchange {
         uint sellVolume,
         uint buyVolume,
         uint auctionIndex
-    );
-
-    event Log(
-        string l
-    );
-
-    event LogNumber(
-        string l,
-        uint n
     );
 }

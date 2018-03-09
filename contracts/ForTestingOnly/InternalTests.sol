@@ -17,7 +17,7 @@ contract InternalTests is DutchExchange {
   }
   
   function InternalTests(
-        TokenTUL _TUL,
+        TokenFRT _FRT,
         TokenOWL _OWL,
         address _owner, 
         address _ETH,
@@ -27,7 +27,7 @@ contract InternalTests is DutchExchange {
     )
     {
     setupDutchExchange( 
-          _TUL,
+          _FRT,
           _OWL,
           _owner,
           _ETH,

@@ -12,11 +12,11 @@ module.exports = function deploy(deployer, networks, accounts) {
       const dx = DutchExchange.at(p.address)
 
       const initParams = Promise.all([
-        dx.TUL.call(),
-        dx.OWL.call(),
+        dx.frtToken.call(),
+        dx.owlToken.call(),
         dx.auctioneer.call(),
-        dx.ETH.call(),
-        dx.ETHUSDOracle.call(),
+        dx.ethToken.call(),
+        dx.ethUSDOracle.call(),
         dx.thresholdNewTokenPair.call(),
         dx.thresholdNewAuction.call(),
       ])

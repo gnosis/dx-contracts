@@ -11,7 +11,7 @@ const TokenGNO = artifacts.require('TokenGNO')
 const TokenOWL = artifacts.require('TokenOWL')
 const TokenOWLProxy = artifacts.require('TokenOWLProxy')
 
-const TokenTUL = artifacts.require('TokenTUL')
+const TokenMGN = artifacts.require('TokenMGN')
 const Medianizer = artifacts.require('Medianizer')
 const Proxy = artifacts.require('Proxy')
 const OWLAirdrop = artifacts.require('OWLAirdrop')
@@ -22,12 +22,12 @@ module.exports = function deploy(deployer, networks, accounts) {
   deployer.deploy(Math)
 
     // Linking
-    .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenTUL, TokenOWL, TokenOWLProxy, OWLAirdrop]))
+    .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenMGN, TokenOWL, TokenOWLProxy, OWLAirdrop]))
 
     // Deployment of Tokens
     .then(() => deployer.deploy(EtherToken))
     .then(() => deployer.deploy(TokenGNO, 100000 * (10 ** 18)))
-    .then(() => deployer.deploy(TokenTUL, accounts[0], accounts[0]))
+    .then(() => deployer.deploy(TokenMGN, accounts[0], accounts[0]))
     .then(() => deployer.deploy(TokenOWL))
     .then(() => deployer.deploy(TokenOWLProxy, TokenOWL.address))
 
@@ -47,7 +47,7 @@ module.exports = function deploy(deployer, networks, accounts) {
     // @dev DX Constructor creates exchange
     .then(() => Proxy.deployed())
     .then(p => DutchExchange.at(p.address).setupDutchExchange(
-      TokenTUL.address,
+      TokenMGN.address,
       TokenOWLProxy.address,
       accounts[0],                           // @param _owner will be the admin of the contract
       EtherToken.address,                   // @param _ETH               - address of ETH ERC-20 token
@@ -55,6 +55,6 @@ module.exports = function deploy(deployer, networks, accounts) {
       10000000000000000000000,            // @param _thresholdNewTokenPair: 10,000 dollar
       1000000000000000000000,            // @param _thresholdNewAuction:     1,000 dollar
     ))
-    .then(() => TokenTUL.deployed())
+    .then(() => TokenMGN.deployed())
     .then(T => T.updateMinter(Proxy.address))
 }
