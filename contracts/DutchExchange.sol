@@ -252,10 +252,10 @@ contract DutchExchange {
             require(getAuctionIndex(token2, ethTokenMem) > 0);
 
             // Price of Token 1
-            fraction memory priceToken1 = priceOracle(token1);
+            fraction memory priceToken1 = getPriceOracle(token1);
 
             // Price of Token 2
-            fraction memory priceToken2 = priceOracle(token2);
+            fraction memory priceToken2 = getPriceOracle(token2);
 
             // Compute funded value in ethToken and USD
             // 10^30 * 10^30 = 10^60
@@ -440,7 +440,7 @@ contract DutchExchange {
         // In that case we only process the part before the overbuy
         // To calculate overbuy, we first get current price
         uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
-        fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
+        fraction memory price = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
         // 10^30 * 10^39 = 10^69
         uint outstandingVolume = atleastZero(int(sellVolume * price.num / price.den - buyVolume));
 
@@ -505,11 +505,11 @@ contract DutchExchange {
             } else if (buyToken == ethTokenMem) {
                 frtsIssued = returned;
             } else {
-                // Neither token is ethToken, so we use priceOracle()
-                // priceOracle() depends on latestAuctionIndex
+                // Neither token is ethToken, so we use getPriceOracle()
+                // getPriceOracle() depends on latestAuctionIndex
                 // i.e. if a user claims tokens later in the future,
                 // he/she is likely to get slightly different number
-                fraction memory price = historicalPriceOracle(sellToken, ethTokenMem, auctionIndex);
+                fraction memory price = getHistoricalPriceOracle(sellToken, ethTokenMem, auctionIndex);
                 // 10^30 * 10^30 = 10^60
                 frtsIssued = sellerBalance * price.num / price.den;
             }
@@ -570,8 +570,8 @@ contract DutchExchange {
                     // 10^30 * 10^39 = 10^66
                     frtsIssued = buyerBalance * price.den / price.num;
                 } else {
-                    // Neither token is ethToken, so we use historicalPriceOracle()
-                    fraction memory priceEthToken = historicalPriceOracle(buyToken, ethTokenMem, auctionIndex);
+                    // Neither token is ethToken, so we use getHhistoricalPriceOracle()
+                    fraction memory priceEthToken = getHistoricalPriceOracle(buyToken, ethTokenMem, auctionIndex);
                     // 10^30 * 10^28 = 10^58
                     frtsIssued = buyerBalance * priceEthToken.num / priceEthToken.den;
                 }
@@ -611,7 +611,7 @@ contract DutchExchange {
         // R1: checks if particular auction has ever run
         require(auctionIndex <= getAuctionIndex(sellToken, buyToken));
 
-        price = getPrice(sellToken, buyToken, auctionIndex);
+        price = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
 
         if (price.num == 0) {
             // This should rarely happen - as long as there is >= 1 buy order,
@@ -638,14 +638,14 @@ contract DutchExchange {
         internal
         returns (uint amountAfterFee)
     {
-        fraction memory feeRatio = calculateFeeRatio(user);
+        fraction memory feeRatio = getFeeRatio(user);
         // 10^30 * 10^3 / 10^4 = 10^29
         uint fee = amount * feeRatio.num / feeRatio.den;
 
         if (fee > 0) {
             // Allow user to reduce up to half of the fee with owlToken
             uint ethUSDPrice = PriceOracleInterface(ethUSDOracle).getUSDETHPrice();
-            fraction memory price = priceOracle(primaryToken);
+            fraction memory price = getPriceOracle(primaryToken);
 
             // Convert fee to ETH, then USD
             // 10^29 * 10^30 / 10^30 = 10^29
@@ -669,8 +669,8 @@ contract DutchExchange {
         amountAfterFee = amount - fee;
     }
     
-    // > calculateFeeRatio()
-    function calculateFeeRatio(
+    // > getFeeRatio()
+    function getFeeRatio(
         address user
     )
         public
@@ -781,8 +781,8 @@ contract DutchExchange {
     {
         // Check if auctions received enough sell orders
         uint ethUSDPrice = PriceOracleInterface(ethUSDOracle).getUSDETHPrice();
-        fraction memory priceTs = priceOracle(sellToken);
-        fraction memory priceTb = priceOracle(buyToken);
+        fraction memory priceTs = getPriceOracle(sellToken);
+        fraction memory priceTb = getPriceOracle(buyToken);
 
         // We use current sell volume, because in clearAuction() we set
         // sellVolumesCurrent = sellVolumesNext before calling this function
@@ -800,13 +800,32 @@ contract DutchExchange {
         }
     }
 
+    // > getRatioOfHistoricalPriceOracles()
+    function getRatioOfHistoricalPriceOracles(
+        address sellToken,
+        address buyToken,
+        uint auctionIndex
+    )
+        public
+        view
+        // price < 10^35
+        returns (fraction memory price)
+    {
+        fraction memory sellTokenPrice = getHistoricalPriceOracle(sellToken, ethToken, auctionIndex);
+        fraction memory buyTokenPrice = getHistoricalPriceOracle(buyToken, ethToken, auctionIndex);
 
-    // > historicalPriceOracle()
+        // 10^30 * 10^30 = 10^60
+        price.num = sellTokenPrice.num * buyTokenPrice.den;
+        price.den = sellTokenPrice.den * buyTokenPrice.num;
+    }
+
+
+    // > getHistoricalPriceOracle()
     //@ dev returns price in units [token1]/[token2]
     //@ param token1 first token for price calculation
     //@ param token2 second token for price calculation
     //@ param auctionIndex index for the auction to get the averaged price from
-    function historicalPriceOracle(
+    function getHistoricalPriceOracle(
         address token1,
         address token2,
         uint auctionIndex
@@ -858,11 +877,11 @@ contract DutchExchange {
         } 
     }
 
-    // > priceOracle()
+    // > getPriceOracle()
     /// @dev Gives best estimate for market price of a token in ETH of any price oracle on the Ethereum network
     /// @param token address of ERC-20 token
     /// @return Weighted average of closing prices of opposite Token-ethToken auctions, based on their sellVolume  
-    function priceOracle(
+    function getPriceOracle(
         address token
     )
         public
@@ -871,12 +890,12 @@ contract DutchExchange {
         returns (fraction memory price)
     {
         uint latestAuctionIndex = getAuctionIndex(token, ethToken);
-        // historicalPriceOracle < 10^30
-        price = historicalPriceOracle(token, ethToken, latestAuctionIndex);
+        // getHistoricalPriceOracle < 10^30
+        price = getHistoricalPriceOracle(token, ethToken, latestAuctionIndex);
     }
 
-    // > calculateCurrentAuctionPrice()
-    function getPrice(
+    // > getCurrentAuctionPrice()
+    function getCurrentAuctionPrice(
         address sellToken,
         address buyToken,
         uint auctionIndex
@@ -895,7 +914,7 @@ contract DutchExchange {
             (price.num, price.den) = (0, 0);
         } else {
             // Auction is running
-            fraction memory averagedPrice = historicalPriceOracle(sellToken, buyToken, auctionIndex);
+            fraction memory averagedPrice = getHistoricalPriceOracle(sellToken, buyToken, auctionIndex);
 
             // If we're calling the function into an unstarted auction,
             // it will return the starting price of that auction
@@ -943,32 +962,32 @@ contract DutchExchange {
     }
 
     // > External fns
-    // > calculateFeeRatioExt
-    function calculateFeeRatioExt(
+    // > getFeeRatioExt
+    function getFeeRatioExt(
         address user
     )
         public
         view
         returns (uint, uint)
     {
-        fraction memory feeRatio = calculateFeeRatio(user);
+        fraction memory feeRatio = getFeeRatio(user);
         return (feeRatio.num, feeRatio.den);
     }
 
-    // > priceOracleExt
-    function priceOracleExt(
+    // > getPriceOracleExt
+    function getPriceOracleExt(
         address token
     )
         public
         view
         returns (uint, uint) 
     {
-        fraction memory price = priceOracle(token);
+        fraction memory price = getPriceOracle(token);
         return (price.num, price.den);
     }
 
-    // > historicalPriceOracleExt
-    function historicalPriceOracleExt(
+    // > getHistoricalPriceOracleExt
+    function getHistoricalPriceOracleExt(
         address token,
         uint auctionIndex
     )
@@ -976,12 +995,12 @@ contract DutchExchange {
         view
         returns (uint, uint) 
     {
-        fraction memory price = historicalPriceOracle(token, ethToken, auctionIndex);
+        fraction memory price = getHistoricalPriceOracle(token, ethToken, auctionIndex);
         return (price.num, price.den);
     }
 
-     // > computeRatioOfHistoricalPriceOraclesExt
-    function computeRatioOfHistoricalPriceOraclesExt(
+     // > getRatioOfHistoricalPriceOraclesExt
+    function getRatioOfHistoricalPriceOraclesExt(
         address sellToken,
         address buyToken,
         uint auctionIndex
@@ -990,12 +1009,12 @@ contract DutchExchange {
         view
         returns (uint, uint) 
     {
-        fraction memory price = computeRatioOfHistoricalPriceOracles(sellToken, buyToken, auctionIndex);
+        fraction memory price = getRatioOfHistoricalPriceOracles(sellToken, buyToken, auctionIndex);
         return (price.num, price.den);
     }
 
-    // > getPriceExt()
-    function getPriceExt(
+    // > getCurrentAuctionPriceExt()
+    function getCurrentAuctionPriceExt(
         address sellToken,
         address buyToken,
         uint auctionIndex
@@ -1004,7 +1023,7 @@ contract DutchExchange {
         view
         returns (uint, uint) 
     {
-        fraction memory price = getPrice(sellToken, buyToken, auctionIndex);
+        fraction memory price = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
         return (price.num, price.den);
     }
 
@@ -1105,27 +1124,6 @@ contract DutchExchange {
         } else {
             return uint(a);
         }
-    }
-
-
-    // > computeRatioOfHistoricalPriceOracles()
-    function computeRatioOfHistoricalPriceOracles(
-        address sellToken,
-        address buyToken,
-        uint auctionIndex
-    )
-        public
-        view
-        // price < 10^35
-        returns (fraction memory price)
-    {
-        fraction memory sellTokenPrice = historicalPriceOracle(sellToken, ethToken, auctionIndex);
-        fraction memory buyTokenPrice = historicalPriceOracle(buyToken, ethToken, auctionIndex);
-
-        // 10^30 * 10^30 = 10^60
-        price.num = sellTokenPrice.num * buyTokenPrice.den;
-        price.den = sellTokenPrice.den * buyTokenPrice.num;
-
     }
 
     // > Events
