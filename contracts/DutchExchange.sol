@@ -508,7 +508,7 @@ contract DutchExchange {
                 // priceOracle() depends on latestAuctionIndex
                 // i.e. if a user claims tokens later in the future,
                 // he/she is likely to get slightly different number
-                fraction memory price = historicalPriceOracle(sellToken, auctionIndex);
+                fraction memory price = historicalPriceOracle(sellToken, ethTokenMem, auctionIndex);
                 // 10^30 * 10^30 = 10^60
                 tulipsIssued = sellerBalance * price.num / price.den;
             }
@@ -570,7 +570,7 @@ contract DutchExchange {
                     tulipsIssued = buyerBalance * price.den / price.num;
                 } else {
                     // Neither token is ethToken, so we use historicalPriceOracle()
-                    fraction memory priceEthToken = historicalPriceOracle(buyToken, auctionIndex);
+                    fraction memory priceEthToken = historicalPriceOracle(buyToken, ethTokenMem, auctionIndex);
                     // 10^30 * 10^28 = 10^58
                     tulipsIssued = buyerBalance * priceEthToken.num / priceEthToken.den;
                 }
@@ -800,36 +800,15 @@ contract DutchExchange {
         }
     }
 
-    // > computeRatioOfHistoricalPriceOracles()
-    function computeRatioOfHistoricalPriceOracles(
-        address sellToken,
-        address buyToken,
-        uint auctionIndex
-    )
-        public
-        view
-        // price < 10^35
-        returns (fraction memory price)
-    {
-        fraction memory sellTokenPrice = historicalPriceOracle(sellToken, auctionIndex);
-        fraction memory buyTokenPrice = historicalPriceOracle(buyToken, auctionIndex);
-
-        // 10^30 * 10^30 = 10^60
-        price.num = sellTokenPrice.num * buyTokenPrice.den;
-        price.den = sellTokenPrice.den * buyTokenPrice.num;
-
-        while (price.num > 10 ** 12 && price.den > 10 ** 12) {
-            price.num = price.num / 10 ** 6;
-            price.den = price.den / 10 ** 6;
-        }
-
-        // R1
-        require(price.num <= 10 ** 35 || price.den <= 10 ** 35);
-    }
 
     // > historicalPriceOracle()
+    //@ dev returns price in units [token1]/[token2]
+    //@ param token1 first token for price calculation
+    //@ param token2 second token for price calculation
+    //@ param auctionIndex index for the auction to get the averaged price from
     function historicalPriceOracle(
-        address token,
+        address token1,
+        address token2,
         uint auctionIndex
     )
         public
@@ -837,8 +816,7 @@ contract DutchExchange {
         // price < 10^30
         returns (fraction memory price)
     {
-        address ethTokenMem = ethToken;
-        if (token == ethTokenMem) {
+        if (token1 == token2) {
             // C1
             price.num = 1;
             price.den = 1;
@@ -849,16 +827,16 @@ contract DutchExchange {
 
             uint i = 0;
             bool correctPair = false;
-            fraction memory closingPriceEthToken;
-            fraction memory closingPriceToken;
+            fraction memory closingPriceToken1;
+            fraction memory closingPriceToken2;
 
             while (!correctPair) {
                 i++;
-                closingPriceEthToken = closingPrices[ethTokenMem][token][auctionIndex - i];
-                closingPriceToken = closingPrices[token][ethTokenMem][auctionIndex - i];
+                closingPriceToken1 = closingPrices[token2][token1][auctionIndex - i];
+                closingPriceToken2 = closingPrices[token1][token2][auctionIndex - i];
                 
-                if (closingPriceEthToken.num > 0 && closingPriceEthToken.den > 0 || 
-                    closingPriceToken.num > 0 && closingPriceToken.den > 0)
+                if (closingPriceToken1.num > 0 && closingPriceToken1.den > 0 || 
+                    closingPriceToken2.num > 0 && closingPriceToken2.den > 0)
                 {
                     correctPair = true;
                 }
@@ -866,16 +844,16 @@ contract DutchExchange {
 
             // At this point at least one closing price is strictly positive
             // If only one is positive, we want to output that
-            if (closingPriceEthToken.num == 0 || closingPriceEthToken.den == 0) {
-                price.num = closingPriceToken.num;
-                price.den = closingPriceToken.den;
-            } else if (closingPriceToken.num == 0 || closingPriceToken.den == 0) {
-                price.num = closingPriceEthToken.den;
-                price.den = closingPriceEthToken.num;
+            if (closingPriceToken1.num == 0 || closingPriceToken1.den == 0) {
+                price.num = closingPriceToken2.num;
+                price.den = closingPriceToken2.den;
+            } else if (closingPriceToken2.num == 0 || closingPriceToken2.den == 0) {
+                price.num = closingPriceToken1.den;
+                price.den = closingPriceToken1.num;
             } else {
                 // If both prices are positive, output weighted average
-                price.num = closingPriceEthToken.den + closingPriceToken.num;
-                price.den = closingPriceEthToken.num + closingPriceToken.den;
+                price.num = closingPriceToken2.den + closingPriceToken1.num;
+                price.den = closingPriceToken2.num + closingPriceToken1.den;
             }
         } 
     }
@@ -894,10 +872,10 @@ contract DutchExchange {
     {
         uint latestAuctionIndex = getAuctionIndex(token, ethToken);
         // historicalPriceOracle < 10^30
-        price = historicalPriceOracle(token, latestAuctionIndex);
+        price = historicalPriceOracle(token, ethToken, latestAuctionIndex);
     }
 
-    // > getPrice()
+    // > calculateCurrentAuctionPrice()
     function getPrice(
         address sellToken,
         address buyToken,
@@ -917,7 +895,7 @@ contract DutchExchange {
             (price.num, price.den) = (0, 0);
         } else {
             // Auction is running
-            fraction memory ratioOfPriceOracles = computeRatioOfHistoricalPriceOracles(sellToken, buyToken, auctionIndex);
+            fraction memory averagedPrice = historicalPriceOracle(sellToken, buyToken, auctionIndex);
 
             // If we're calling the function into an unstarted auction,
             // it will return the starting price of that auction
@@ -927,9 +905,9 @@ contract DutchExchange {
             // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
 
             // 10^4 * 10^35 = 10^39
-            price.num = atleastZero(int((86400 - timeElapsed) * ratioOfPriceOracles.num));
+            price.num = atleastZero(int((86400 - timeElapsed) * averagedPrice.num));
             // 10^4 * 10^35 = 10^39
-            price.den = (timeElapsed + 43200) * ratioOfPriceOracles.den;
+            price.den = (timeElapsed + 43200) * averagedPrice.den;
 
             if (price.num * sellVolumesCurrent[sellToken][buyToken] <= price.den * buyVolumes[sellToken][buyToken]) {
                 price.num = buyVolumes[sellToken][buyToken];
@@ -998,7 +976,7 @@ contract DutchExchange {
         view
         returns (uint, uint) 
     {
-        fraction memory price = historicalPriceOracle(token, auctionIndex);
+        fraction memory price = historicalPriceOracle(token, ethToken, auctionIndex);
         return (price.num, price.den);
     }
 
@@ -1127,6 +1105,27 @@ contract DutchExchange {
         } else {
             return uint(a);
         }
+    }
+
+
+    // > computeRatioOfHistoricalPriceOracles()
+    function computeRatioOfHistoricalPriceOracles(
+        address sellToken,
+        address buyToken,
+        uint auctionIndex
+    )
+        public
+        view
+        // price < 10^35
+        returns (fraction memory price)
+    {
+        fraction memory sellTokenPrice = historicalPriceOracle(sellToken, ethToken, auctionIndex);
+        fraction memory buyTokenPrice = historicalPriceOracle(buyToken, ethToken, auctionIndex);
+
+        // 10^30 * 10^30 = 10^60
+        price.num = sellTokenPrice.num * buyTokenPrice.den;
+        price.den = sellTokenPrice.den * buyTokenPrice.num;
+
     }
 
     // > Events
