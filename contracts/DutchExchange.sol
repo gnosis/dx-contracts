@@ -19,6 +19,7 @@ contract DutchExchange {
     uint constant waitingPeriodNewTokenPair = 6 hours;
     uint constant waitingPeriodNewAuction = 10 minutes;
     uint constant waitingPeriodChangeMasterCopy = 30 days;
+    uint constant AUCTION_START_WAITING_FOR_FUNDING = 1;
 
     address public masterCopy;
     address public newMasterCopy;
@@ -356,7 +357,7 @@ contract DutchExchange {
       
         // R3
         uint auctionStart = getAuctionStart(sellToken, buyToken);
-        if (auctionStart == 1 || auctionStart > now) {
+        if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING || auctionStart > now) {
             // C1: We are in the 10 minute buffer period
             // OR waiting for an auction to receive sufficient sellVolume
             // Auction has already cleared, and index has been incremented
@@ -425,7 +426,7 @@ contract DutchExchange {
         require(auctionIndex == getAuctionIndex(sellToken, buyToken));
         
         // R5: auction must not be in waiting period
-        require(auctionStart > 1);
+        require(auctionStart > AUCTION_START_WAITING_FOR_FUNDING);
         
         // R6: auction must be funded
         require(sellVolumesCurrent[sellToken][buyToken] > 0);
@@ -1069,8 +1070,8 @@ contract DutchExchange {
         internal
     {
         (token1, token2) = getTokenOrder(token1, token2);
-        if (auctionStarts[token1][token2] != 1) {
-            auctionStarts[token1][token2] = 1;
+        if (auctionStarts[token1][token2] != AUCTION_START_WAITING_FOR_FUNDING) {
+            auctionStarts[token1][token2] = AUCTION_START_WAITING_FOR_FUNDING;
         }
     }
 
