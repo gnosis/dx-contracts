@@ -657,7 +657,6 @@ contract DutchExchange {
 
             if (amountOfowlTokenBurned > 0) {
                 owlToken.burnOWL(msg.sender, amountOfowlTokenBurned);
-
                 // Adjust fee
                 // 10^33 * 10^29 = 10^62
                 fee -= amountOfowlTokenBurned * fee / feeInUSD;

@@ -67,6 +67,11 @@ contract PriceOracleInterface {
         if (!valid) {
             NonValidPriceFeed(priceFeedSource);
         }
-        return uint256(price)/(1 ether);
+        //ensuring that there is no underflow or overflow possible,
+        // even if the price is compromised
+        uint priceUint = uint256(price)/(1 ether);
+        if(priceUint==0) return 1;
+        if(priceUint>1000000) return 1000000; 
+        return priceUint;
     }  
 }
