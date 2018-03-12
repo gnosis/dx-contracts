@@ -182,10 +182,12 @@ contract DutchExchange {
         public
         onlyAuctioneer
     {
+        require(newMasterCopy != 0);
         require(now >= masterCopyCountdown);
 
         // Update masterCopy
         masterCopy = newMasterCopy;
+        newMasterCopy = address(0);
     }
 
     // > addTokenPair()

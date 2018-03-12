@@ -36,7 +36,7 @@ const contractNames = [
   'EtherToken',
   'TokenGNO',
   'TokenOWLProxy',
-  'TokenTUL',
+  'TokenMGN',
   'PriceOracleInterface',
   'PriceFeed',
   'Medianizer',
@@ -348,7 +348,7 @@ const claimSellerFunds = async (ST, BT, user, aucIdx, acct) => {
    */
 const assertClaimingFundsCreatesTulips = async (ST, BT, acc, type) => {
   const {
-    DutchExchange: dx, TokenTUL: tokenTUL,
+    DutchExchange: dx, TokenMGN: tokenMGN,
   } = await getContracts()
 
   if (!ST || !BT) throw new Error('No tokens passed in')
@@ -359,7 +359,7 @@ const assertClaimingFundsCreatesTulips = async (ST, BT, acc, type) => {
   assert.isAtLeast(auctionIdx, 2, 'Auction needs to have cleared - throw otherwise')
 
   // grab prevTulBalance to compare against new Tulips Issued later
-  const prevTulBal = (await tokenTUL.lockedTULBalances.call(acc)).toNumber()
+  const prevTulBal = (await tokenMGN.lockedTULBalances.call(acc)).toNumber()
 
   if (type === 'seller') {
     ([, tulipsIssued] = (await dx.claimSellerFunds.call(ST.address, BT.address, acc, auctionIdx - 1)).map(n => n.toNumber()))
@@ -369,7 +369,7 @@ const assertClaimingFundsCreatesTulips = async (ST, BT, acc, type) => {
     await claimBuyerFunds(ST, BT, acc, auctionIdx - 1)
   }
 
-  const newTulBal = (await tokenTUL.lockedTULBalances.call(acc)).toNumber()
+  const newTulBal = (await tokenMGN.lockedTULBalances.call(acc)).toNumber()
   log(`
     LockedTulBal === ${newTulBal.toEth()}
     prevTul + tulipsIss = newTulBal
@@ -388,7 +388,7 @@ const assertClaimingFundsCreatesTulips = async (ST, BT, acc, type) => {
    */
 const checkUserReceivesTulipTokens = async (ST, BT, user, idx, lastClosingPrice) => {
   const {
-    DutchExchange: dx, EtherToken: eth, TokenGNO: gno, TokenTUL: tokenTUL,
+    DutchExchange: dx, EtherToken: eth, TokenGNO: gno, TokenMGN: tokenMGN,
   } = await getContracts()
   ST = ST || eth; BT = BT || gno
   const aucIdx = idx || await getAuctionIndex(ST, BT)
@@ -413,7 +413,7 @@ const checkUserReceivesTulipTokens = async (ST, BT, user, idx, lastClosingPrice)
   /*
    * SUB TEST 3: CLAIMBUYERFUNDS - CHECK BUYVOLUMES - CHECK LOCKEDTULIPS AMT = 1:1 FROM AMT IN POSTBUYORDER
    */
-  const lockedTulFunds = (await tokenTUL.lockedTULBalances.call(user)).toNumber()
+  const lockedTulFunds = (await tokenMGN.lockedTULBalances.call(user)).toNumber()
   const calcAucIdx = await getAuctionIndex(ST, BT)
 
   log(`CalcAucIdx == ${calcAucIdx}`)
@@ -431,8 +431,8 @@ const checkUserReceivesTulipTokens = async (ST, BT, user, idx, lastClosingPrice)
   log(logs ? '\tCLAIMING FUNDS SUCCESSFUL' : 'CLAIM FUNDS FAILED')
   // amtClaimed = (await dx.claimedAmounts.call(ST.address, BT.address, aucIdx, user)).toNumber()
   // Problem w/consts below is that if the auction has NOT cleared they will always be 0
-  const tulFunds = (await tokenTUL.balanceOf.call(user)).toNumber()
-  const lastestLockedTulFunds = (await tokenTUL.lockedTULBalances.call(user)).toNumber()
+  const tulFunds = (await tokenMGN.balanceOf.call(user)).toNumber()
+  const lastestLockedTulFunds = (await tokenMGN.lockedTULBalances.call(user)).toNumber()
   newBalance = (await dx.balances.call(ST.address, user)).toNumber()
   log(`
     USER'S OWNED TUL AMT      = ${tulFunds.toEth()}
@@ -531,25 +531,25 @@ const assertReturnedPlusTulips = async (ST, BT, acc, type, idx = 1) => {
  * @param {address} user => address to unlock Tokens for
  */
 const unlockTulipTokens = async (user, ST, BT) => {
-  const { TokenTUL: tokenTUL } = await getContracts()
+  const { TokenMGN: tokenMGN } = await getContracts()
   // cache auction index for verification of auciton close
   const aucIdx = await getAuctionIndex(ST, BT)
 
-  // cache locked balances Mapping in TokenTUL contract
-  // filled automatically after auction closes and TokenTUL.mintTokens is called
-  const lockedBalMap = (await tokenTUL.lockedTULBalances.call(user))
+  // cache locked balances Mapping in TokenMGN contract
+  // filled automatically after auction closes and TokenMGN.mintTokens is called
+  const lockedBalMap = (await tokenMGN.lockedTULBalances.call(user))
   log(`
   TOKENTUL.lockedTULBalances[user] === ${lockedBalMap.toNumber().toEth()}
   `)
 
-  // cache the locked Amount of user Tulips from TokenTUL MAP
+  // cache the locked Amount of user Tulips from TokenMGN MAP
   // this map is ONLY calculated and filled AFTER auction clears
-  const lockedUserTulips = (await tokenTUL.lockedTULBalances.call(user)).toNumber()
+  const lockedUserTulips = (await tokenMGN.lockedTULBalances.call(user)).toNumber()
   /*
    * SUB TEST 1: CHECK UNLOCKED AMT + WITHDRAWAL TIME
    * [should be 0,0 as none LOCKED so naturally none to unlock yet]
    */
-  let [unlockedFunds, withdrawTime] = (await tokenTUL.unlockedTULs.call(user)).map(n => n.toNumber())
+  let [unlockedFunds, withdrawTime] = (await tokenMGN.unlockedTULs.call(user)).map(n => n.toNumber())
   log(`
   AMT OF UNLOCKED FUNDS  = ${unlockedFunds.toEth()}
   TIME OF WITHDRAWAL     = ${withdrawTime} [0 means no withdraw time as there are 0 locked tokens]
@@ -561,8 +561,8 @@ const unlockTulipTokens = async (user, ST, BT) => {
    * SUB TEST 2: LOCK TOKENS
    */
   // lock total tulips in lockedMap
-  await tokenTUL.lockTokens(lockedUserTulips, { from: user })
-  const totalAmtLocked = (await tokenTUL.lockTokens.call(lockedUserTulips, { from: user })).toNumber()
+  await tokenMGN.lockTokens(lockedUserTulips, { from: user })
+  const totalAmtLocked = (await tokenMGN.lockTokens.call(lockedUserTulips, { from: user })).toNumber()
   log(`
   TOKENS LOCKED          = ${totalAmtLocked.toEth()}
   `)
@@ -577,8 +577,8 @@ const unlockTulipTokens = async (user, ST, BT) => {
   /*
    * SUB TEST 3: UN-LOCK TOKENS
    */
-  await tokenTUL.unlockTokens(lockedUserTulips, { from: user });
-  ([unlockedFunds, withdrawTime] = (await tokenTUL.unlockTokens.call(lockedUserTulips, { from: user })).map(t => t.toNumber()))
+  await tokenMGN.unlockTokens(lockedUserTulips, { from: user });
+  ([unlockedFunds, withdrawTime] = (await tokenMGN.unlockTokens.call(lockedUserTulips, { from: user })).map(t => t.toNumber()))
   log(`
   AMT OF UNLOCKED FUNDS  = ${unlockedFunds.toEth()}
   TIME OF WITHDRAWAL     = ${withdrawTime} --> ${new Date(withdrawTime * 1000)}
