@@ -33,6 +33,9 @@ contract TokenMGN is StandardToken {
     )
         public
     {
+        require(_owner != address(0));
+        require(_minter != address(0));
+
         owner = _owner;
         minter = _minter;
     }
@@ -43,6 +46,7 @@ contract TokenMGN is StandardToken {
         public
     {
         require(msg.sender == owner);
+        require(_owner != address(0));
         owner = _owner;
     }
 
@@ -52,6 +56,7 @@ contract TokenMGN is StandardToken {
         public
     {
         require(msg.sender == owner);
+        require(_minter != address(0));
         minter = _minter;
     }
 
