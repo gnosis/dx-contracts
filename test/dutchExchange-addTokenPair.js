@@ -13,7 +13,7 @@ const TokenGNO = artifacts.require('TokenGNO')
 // Test VARS
 let eth
 let gno, gno2
-let tul
+let mgn
 let dx
 let oracle
 
@@ -47,7 +47,7 @@ contract('DutchExchange - addTokenPair', (accounts) => {
     ({
       EtherToken: eth,
       TokenGNO: gno,
-      TokenTUL: tul,
+      TokenMGN: mgn,
       DutchExchange: dx,
       PriceOracleInterface: oracle,
     } = contracts)
@@ -58,7 +58,7 @@ contract('DutchExchange - addTokenPair', (accounts) => {
     eventWatcher(dx, 'Log')
     eventWatcher(dx, 'LogNumber')
 
-    const totalTul = (await tul.totalSupply.call()).toNumber()
+    const totalTul = (await mgn.totalSupply.call()).toNumber()
     assert.strictEqual(totalTul, 0, 'total TUL tokens should be 0')
     // then we know that feeRatio = 1 / 200
     feeRatio = 1 / 200
@@ -226,8 +226,8 @@ contract('DutchExchange - addTokenPair', (accounts) => {
     } else if (buyToken === eth || buyToken === eth.address) {
       fundedValueETH = token2Funding
     } else {
-      const [num1, den1] = await dx.priceOracleExt.call(sellToken.address || sellToken)
-      const [num2, den2] = await dx.priceOracleExt.call(buyToken.address || buyToken)
+      const [num1, den1] = await dx.getPriceOfTokenInLastAuctionExt.call(sellToken.address || sellToken)
+      const [num2, den2] = await dx.getPriceOfTokenInLastAuctionExt.call(buyToken.address || buyToken)
 
       fundedValueETH = num1.mul(token1Funding).div(den1).add(num2.mul(token2Funding).div(den2))
     }
@@ -312,7 +312,10 @@ contract('DutchExchange - addTokenPair', (accounts) => {
   })
 
   it('all amounts and balances are set correctly when adding ETH -> GNO pair', async () => {
-    await dx.updateExchangeParams(master, oracle.address, 0, 0, { from: master })
+    //   await dx.updateExchangeParams(master, oracle.address, 0, 0, { from: master })
+
+    await dx.updateThresholdNewTokenPair(0, { from: master })
+    await dx.updateThresholdNewAuction(0, { from: master })
 
     await assertFundingAboveThreshold(eth, gno)
 
