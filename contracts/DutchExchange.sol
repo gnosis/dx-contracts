@@ -16,9 +16,9 @@ contract DutchExchange {
         uint den;
     }
 
-    uint constant waitingPeriodNewTokenPair = 6 hours;
-    uint constant waitingPeriodNewAuction = 10 minutes;
-    uint constant waitingPeriodChangeMasterCopy = 30 days;
+    uint constant WAITING_PERIOD_NEW_TOKEN_PAIR = 6 hours;
+    uint constant WAITING_PERIOD_NEW_AUCTION = 10 minutes;
+    uint constant WAITING_PERIOD_CHANGE_MASTERCOPY= 30 days;
     uint constant AUCTION_START_WAITING_FOR_FUNDING = 1;
 
     address public masterCopy;
@@ -175,7 +175,7 @@ contract DutchExchange {
 
         // Update masterCopyCountdown
         newMasterCopy = _masterCopy;
-        masterCopyCountdown = now + waitingPeriodChangeMasterCopy;
+        masterCopyCountdown = now + WAITING_PERIOD_CHANGE_MASTERCOPY;
     }
 
     function updateMasterCopy()
@@ -297,7 +297,7 @@ contract DutchExchange {
         sellerBalances[token1][token2][1][msg.sender] = token1FundingAfterFee;
         sellerBalances[token2][token1][1][msg.sender] = token2FundingAfterFee;
         
-        setAuctionStart(token1, token2, waitingPeriodNewTokenPair);
+        setAuctionStart(token1, token2, WAITING_PERIOD_NEW_TOKEN_PAIR);
         NewTokenPair(token1, token2);
     }
 
@@ -795,7 +795,7 @@ contract DutchExchange {
         uint sellVolumeOpp = sellVolumesCurrent[buyToken][sellToken] * priceTb.num * ethUSDPrice / priceTb.den;
         if (sellVolume >= thresholdNewAuction || sellVolumeOpp >= thresholdNewAuction) {
             // Schedule next auction
-            setAuctionStart(sellToken, buyToken, waitingPeriodNewAuction);
+            setAuctionStart(sellToken, buyToken, WAITING_PERIOD_NEW_AUCTION);
         } else {
             resetAuctionStart(sellToken, buyToken);
         }
