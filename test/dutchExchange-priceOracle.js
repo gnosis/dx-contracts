@@ -96,7 +96,7 @@ const c1 = () => contract('DX PriceOracleInterface Flow', (accounts) => {
 
   it('getUSDETHPrice: calls this correctly', async () => {
     const ethUSDPrice = (await oracle.getUSDETHPrice.call()).toNumber()
-    assert.equal(ethUSDPrice, 0, 'Oracle ethUSDPrice not set yet so should = 0')
+    assert.equal(ethUSDPrice, 1, 'Oracle ethUSDPrice not set yet so should = 1, since 0 is not permitted')
   })
 
   it('getUSDETHPrice: set price', async () => {    
