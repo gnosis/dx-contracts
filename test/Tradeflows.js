@@ -201,16 +201,6 @@ const c2 = () => contract('DutchExchange - Flow 6', (accounts) => {
 
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
-    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, auctionIndex))
-    const priceBefore = num.div(den)
-    console.log(`
-    Price BEFORE waiting until Price = initial Closing Price (2) * 2
-    ==============================
-    Price.num             = ${num.toNumber()}
-    Price.den             = ${den.toNumber()}
-    Price at this moment  = ${(priceBefore)}
-    ==============================
-    `)
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
     
     // post buyOrder to clear auction with small overbuy

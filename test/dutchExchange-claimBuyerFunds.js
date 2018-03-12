@@ -128,7 +128,7 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
       
     // actual testing at time with previous price
     const [claimedAmount] = (await dx.claimBuyerFunds.call(gno.address, eth.address, buyer2, auctionIndex)).map(i => i.toNumber())
-    const [num, den] = await dx.getPriceExt.call(gno.address, eth.address, auctionIndex)
+    const [num, den] = await dx.getCurrentAuctionPriceExt.call(gno.address, eth.address, auctionIndex)
     let sellVolume = (await dx.sellVolumesCurrent.call(gno.address, eth.address))
     let buyVolume = await dx.buyVolumes.call(gno.address, eth.address)
     logger('buyVolume', buyVolume)
@@ -143,7 +143,7 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
     // actual testing at time with previous 2/3price
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 2 / 3)
     const [claimedAmount2] = (await dx.claimBuyerFunds.call(gno.address, eth.address, buyer2, auctionIndex)).map(i => i.toNumber())
-    const [num2, den2] = await dx.getPriceExt.call(gno.address, eth.address, auctionIndex)
+    const [num2, den2] = await dx.getCurrentAuctionPriceExt.call(gno.address, eth.address, auctionIndex)
     sellVolume = (await dx.sellVolumesCurrent.call(gno.address, eth.address))
     buyVolume = (await dx.buyVolumes.call(gno.address, eth.address))
     oustandingVolume = (sellVolume.mul(num2).div(den2)).sub(buyVolume)
@@ -240,11 +240,11 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
 
     // first withdraw  
     const [claimedAmount] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, auctionIndex)).map(i => i.toNumber())
-    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, auctionIndex))
+    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, auctionIndex))
     await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)
     assert.equal((bn(valMinusFee(10e18)).div(num).mul(den)).toNumber(), claimedAmount)
       
-    const [num2, den2] = (await dx.getPriceExt.call(eth.address, gno.address, auctionIndex))
+    const [num2, den2] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, auctionIndex))
     logger('num', num2)
     logger('den', den2)
       
