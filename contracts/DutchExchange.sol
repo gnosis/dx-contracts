@@ -30,7 +30,7 @@ contract DutchExchange {
     address public auctioneer;
     // Ether ERC-20 token
     address public ethToken;
-    address public ethUSDOracle;
+    PriceOracleInterface public ethUSDOracle;
     // Minimum required sell funding for adding a new token pair, in USD
     uint public thresholdNewTokenPair;
     // Minimum required sell funding for starting antoher auction, in USD
@@ -92,7 +92,7 @@ contract DutchExchange {
         TokenOWL _owlToken,
         address _auctioneer, 
         address _ethToken,
-        address _ethUSDOracle,
+        PriceOracleInterface _ethUSDOracle,
         uint _thresholdNewTokenPair,
         uint _thresholdNewAuction
     )
@@ -107,7 +107,7 @@ contract DutchExchange {
             address(_frtToken) != address(0) &&
             _auctioneer != 0 &&
             _ethToken != 0 &&
-            _ethUSDOracle != 0
+            address(_ethUSDOracle) != address(0)
         );
 
         frtToken = _frtToken;
@@ -129,7 +129,7 @@ contract DutchExchange {
     }
 
     function updateEthUSDOracle(
-        address _ethUSDOracle
+        PriceOracleInterface _ethUSDOracle
     )
         public
         onlyAuctioneer
@@ -231,7 +231,7 @@ contract DutchExchange {
         require(token2Funding < 10 ** 30);
 
         uint fundedValueUSD;
-        uint ethUSDPrice = PriceOracleInterface(ethUSDOracle).getUSDETHPrice();
+        uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
 
         // Compute fundedValueUSD
         address ethTokenMem = ethToken;
@@ -645,7 +645,7 @@ contract DutchExchange {
 
         if (fee > 0) {
             // Allow user to reduce up to half of the fee with owlToken
-            uint ethUSDPrice = PriceOracleInterface(ethUSDOracle).getUSDETHPrice();
+            uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
             fraction memory price = getPriceOracle(primaryToken);
 
             // Convert fee to ETH, then USD
@@ -781,7 +781,7 @@ contract DutchExchange {
         internal
     {
         // Check if auctions received enough sell orders
-        uint ethUSDPrice = PriceOracleInterface(ethUSDOracle).getUSDETHPrice();
+        uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
         fraction memory priceTs = getPriceOracle(sellToken);
         fraction memory priceTb = getPriceOracle(buyToken);
 

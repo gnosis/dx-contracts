@@ -21,7 +21,7 @@ contract InternalTests is DutchExchange {
         TokenOWL _OWL,
         address _owner, 
         address _ETH,
-        address _ETHUSDOracle,
+        PriceOracleInterface _ETHUSDOracle,
         uint _thresholdNewTokenPair,
         uint _thresholdNewAuction
     )
