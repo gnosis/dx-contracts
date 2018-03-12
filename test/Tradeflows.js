@@ -32,7 +32,7 @@ let eth
 let gno
 let dx
 let oracle
-let tokenTUL
+let tokenMGN
 let balanceInvariant
 const ether = 1.0.toWei()
 let contracts
@@ -78,7 +78,7 @@ const setupContracts = async () => {
     DutchExchange: dx,
     EtherToken: eth,
     TokenGNO: gno,
-    TokenTUL: tokenTUL,
+    TokenMGN: tokenMGN,
     PriceOracleInterface: oracle,
   } = contracts)
 }
@@ -124,14 +124,10 @@ const c1 = () => contract('DutchExchange - Flow 3', (accounts) => {
     const auctionIndex = await getAuctionIndex()
     
     // general setup information
-    logger('PRICE ORACLE', await oracle.getUSDETHPrice.call()) 
-    logger('totalTulip amount', await tokenTUL.totalSupply.call()) 
-    assert.equal((await tokenTUL.totalSupply.call()).toNumber(), 0)
+    assert.equal((await tokenMGN.totalSupply.call()).toNumber(), 0)
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
-    
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
-
     // post buyOrder to clear auction with small overbuy
     await postBuyOrder(eth, gno, auctionIndex, (10 * ether) * 3, buyer1)
     
@@ -170,7 +166,7 @@ const c2 = () => contract('DutchExchange - Flow 6', (accounts) => {
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenTUL: tokenTUL,
+      TokenMGN: tokenMGN,
       PriceOracleInterface: oracle,
     } = contracts)
 
@@ -205,6 +201,16 @@ const c2 = () => contract('DutchExchange - Flow 6', (accounts) => {
 
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
+    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, auctionIndex))
+    const priceBefore = num.div(den)
+    console.log(`
+    Price BEFORE waiting until Price = initial Closing Price (2) * 2
+    ==============================
+    Price.num             = ${num.toNumber()}
+    Price.den             = ${den.toNumber()}
+    Price at this moment  = ${(priceBefore)}
+    ==============================
+    `)
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
     
     // post buyOrder to clear auction with small overbuy
@@ -243,7 +249,28 @@ const c2 = () => contract('DutchExchange - Flow 6', (accounts) => {
     
     // ASSERT Auction has started
     await setAndCheckAuctionStarted(eth, gno)
-    await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 * ether * 2, { from: buyer2 })
+    const [num, den] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex - 1))
+    let priceBefore = num.div(den)
+    console.log(`
+    ClosingPrice BEFORE waiting until Price = initial Closing Price (2) * 2
+    ==============================
+    Price.num             = ${num.toNumber()}
+    Price.den             = ${den.toNumber()}
+    Price at this moment  = ${(priceBefore)}
+    ==============================
+    `)
+    const [num2, den2] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, auctionIndex))
+    priceBefore = num2.div(den2)
+    console.log(`
+    Price BEFORE waiting until Price = initial Closing Price (2) * 2
+    ==============================
+    Price.num             = ${num2.toNumber()}
+    Price.den             = ${den2.toNumber()}
+    Price at this moment  = ${(priceBefore)}
+    ==============================
+    `)
+    await postBuyOrder(eth, gno, auctionIndex, 10 * ether * 2, buyer2)
+    // await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 * ether * 2, { from: buyer2 })
 
     // check conditions in flow
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
@@ -264,7 +291,7 @@ const c3 = () => contract('DutchExchange - Flow 4', (accounts) => {
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenTUL: tokenTUL,
+      TokenMGN: tokenMGN,
       PriceOracleInterface: oracle,
     } = contracts)
 
@@ -368,7 +395,7 @@ const c4 = () => contract('DutchExchange - Flow 1', (accounts) => {
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenTUL: tokenTUL,
+      TokenMGN: tokenMGN,
       PriceOracleInterface: oracle,
     } = contracts)
 
@@ -462,7 +489,7 @@ const c5 = () => contract('DutchExchange - Flow 9', (accounts) => {
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenTUL: tokenTUL,
+      TokenMGN: tokenMGN,
       PriceOracleInterface: oracle,
     } = contracts)
 
@@ -544,7 +571,7 @@ const c6 = () => contract('DutchExchange - Flow 10', (accounts) => {
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenTUL: tokenTUL,
+      TokenMGN: tokenMGN,
       PriceOracleInterface: oracle,
     } = contracts)
 
@@ -654,7 +681,7 @@ const c7 = () => contract('DutchExchange - Flow 7', (accounts) => {
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenTUL: tokenTUL,
+      TokenMGN: tokenMGN,
       PriceOracleInterface: oracle,
     } = contracts)
 
@@ -756,7 +783,7 @@ const c8 = () => contract('DutchExchange - Flow 7 - ERC20vsERC20 trading -', (ac
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenTUL: tokenTUL,
+      TokenMGN: tokenMGN,
       PriceOracleInterface: oracle,
     } = contracts)
 

@@ -255,10 +255,10 @@ contract DutchExchange {
             require(getAuctionIndex(token2, ethTokenMem) > 0);
 
             // Price of Token 1
-            fraction memory priceToken1 = getPriceOracle(token1);
+            fraction memory priceToken1 = getPriceOfTokenInLastAuction(token1);
 
             // Price of Token 2
-            fraction memory priceToken2 = getPriceOracle(token2);
+            fraction memory priceToken2 = getPriceOfTokenInLastAuction(token2);
 
             // Compute funded value in ethToken and USD
             // 10^30 * 10^30 = 10^60
@@ -508,8 +508,8 @@ contract DutchExchange {
             } else if (buyToken == ethTokenMem) {
                 frtsIssued = returned;
             } else {
-                // Neither token is ethToken, so we use getPriceOracle()
-                // getPriceOracle() depends on latestAuctionIndex
+                // Neither token is ethToken, so we use getPriceOfTokenInLastAuction()
+                // getPriceOfTokenInLastAuction() depends on latestAuctionIndex
                 // i.e. if a user claims tokens later in the future,
                 // he/she is likely to get slightly different number
                 fraction memory price = getHistoricalPriceOracle(sellToken, ethTokenMem, auctionIndex);
@@ -648,7 +648,7 @@ contract DutchExchange {
         if (fee > 0) {
             // Allow user to reduce up to half of the fee with owlToken
             uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
-            fraction memory price = getPriceOracle(primaryToken);
+            fraction memory price = getPriceOfTokenInLastAuction(primaryToken);
 
             // Convert fee to ETH, then USD
             // 10^29 * 10^30 / 10^30 = 10^29
@@ -784,8 +784,8 @@ contract DutchExchange {
     {
         // Check if auctions received enough sell orders
         uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
-        fraction memory priceTs = getPriceOracle(sellToken);
-        fraction memory priceTb = getPriceOracle(buyToken);
+        fraction memory priceTs = getPriceOfTokenInLastAuction(sellToken);
+        fraction memory priceTb = getPriceOfTokenInLastAuction(buyToken);
 
         // We use current sell volume, because in clearAuction() we set
         // sellVolumesCurrent = sellVolumesNext before calling this function
@@ -832,7 +832,7 @@ contract DutchExchange {
 
 
     // > getHistoricalPriceOracle()
-    //@ dev returns price in units [token1]/[token2]
+    //@ dev returns price in units [token2]/[token1]
     //@ param token1 first token for price calculation
     //@ param token2 second token for price calculation
     //@ param auctionIndex index for the auction to get the averaged price from
@@ -862,8 +862,8 @@ contract DutchExchange {
 
             while (!correctPair) {
                 i++;
-                closingPriceToken1 = closingPrices[token2][token1][auctionIndex - i];
-                closingPriceToken2 = closingPrices[token1][token2][auctionIndex - i];
+                closingPriceToken2 = closingPrices[token2][token1][auctionIndex - i];
+                closingPriceToken1 = closingPrices[token1][token2][auctionIndex - i];
                 
                 if (closingPriceToken1.num > 0 && closingPriceToken1.den > 0 || 
                     closingPriceToken2.num > 0 && closingPriceToken2.den > 0)
@@ -875,11 +875,11 @@ contract DutchExchange {
             // At this point at least one closing price is strictly positive
             // If only one is positive, we want to output that
             if (closingPriceToken1.num == 0 || closingPriceToken1.den == 0) {
-                price.num = closingPriceToken2.num;
-                price.den = closingPriceToken2.den;
+                price.num = closingPriceToken2.den;
+                price.den = closingPriceToken2.num;
             } else if (closingPriceToken2.num == 0 || closingPriceToken2.den == 0) {
-                price.num = closingPriceToken1.den;
-                price.den = closingPriceToken1.num;
+                price.num = closingPriceToken1.num;
+                price.den = closingPriceToken1.den;
             } else {
                 // If both prices are positive, output weighted average
                 price.num = closingPriceToken2.den + closingPriceToken1.num;
@@ -888,11 +888,11 @@ contract DutchExchange {
         } 
     }
 
-    // > getPriceOracle()
+    // > getPriceOfTokenInLastAuction()
     /// @dev Gives best estimate for market price of a token in ETH of any price oracle on the Ethereum network
     /// @param token address of ERC-20 token
     /// @return Weighted average of closing prices of opposite Token-ethToken auctions, based on their sellVolume  
-    function getPriceOracle(
+    function getPriceOfTokenInLastAuction(
         address token
     )
         public
@@ -985,15 +985,15 @@ contract DutchExchange {
         return (feeRatio.num, feeRatio.den);
     }
 
-    // > getPriceOracleExt
-    function getPriceOracleExt(
+    // > getPriceOfTokenInLastAuctionExt
+    function getPriceOfTokenInLastAuctionExt(
         address token
     )
         public
         view
         returns (uint, uint) 
     {
-        fraction memory price = getPriceOracle(token);
+        fraction memory price = getPriceOfTokenInLastAuction(token);
         return (price.num, price.den);
     }
 
