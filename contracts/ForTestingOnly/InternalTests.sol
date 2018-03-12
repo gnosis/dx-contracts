@@ -40,7 +40,7 @@ contract InternalTests is DutchExchange {
     address user
   ) public view returns (uint, uint)
   {
-    fraction memory feeRatio = getFeeRatio(user);
+    fraction memory feeRatio = super.getFeeRatio(user);
     return (feeRatio.num, feeRatio.den);
   }
 

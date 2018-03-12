@@ -11,7 +11,7 @@ const { getContracts, setupTest } = require('./testFunctions')
 // Test VARS
 let eth
 let gno
-let tul
+let mgn
 let owl
 let dx
 let oracle
@@ -21,55 +21,55 @@ let contracts
 const separateLogs = () => log('\n    ----------------------------------')
 
 const getHelperFunctions = (master) => {
-  const getTotalTUL = async (print = true) => {
-    const totalTul = (await tul.totalSupply.call()).toNumber()
-    if (print) log(`\taccount's total TUL == ${totalTul}`)
+  const getTotalMGN = async (print = true) => {
+    const totalMgn = (await mgn.totalSupply.call()).toNumber()
+    if (print) log(`\taccount's total MGN == ${totalMgn}`)
 
-    return totalTul
+    return totalMgn
   }
 
-  const getLockedTUL = async (account, print = true) => {
-    const lockedTul = (await tul.lockedTULBalances.call(account)).toNumber()
-    if (print) log(`\taccount's locked TUL == ${lockedTul}`)
+  const getLockedMGN = async (account, print = true) => {
+    const lockedMgn = (await mgn.lockedTokenBalances.call(account)).toNumber()
+    if (print) log(`\taccount's locked MGN == ${lockedMgn}`)
 
-    return lockedTul
+    return lockedMgn
   }
 
-  const unlockTUL = (account, amount) => tul.unlockTokens(amount, { from: account })
+  const unlockMGN = (account, amount) => mgn.unlockTokens(amount, { from: account })
 
-  const mintTokens = (account, amount) => tul.mintTokens(account, amount, { from: master })
+  const mintTokens = (account, amount) => mgn.mintTokens(account, amount, { from: master })
 
   const calculateFeeRatio = async (account, print = true) => {
-    const [num, den] = (await dx.calculateFeeRatioForJS.call(account)).map(n => n.toNumber())
+    const [num, den] = (await dx.getFeeRatioForJS.call(account)).map(n => n.toNumber())
     if (print) log(`\tfeeRatio == ${((num / den) * 100).toFixed(2)}% == ${num}/${den} == ${num / den}`)
 
     return [num, den]
   }
 
-  const getHowManyToAdd = (totalTul, lockedTULBalance, percent) =>
-    Math.round((totalTul - (lockedTULBalance / percent)) / ((1 / percent) - 1))
+  const getHowManyToAdd = (totalMgn, lockedMGNBalance, percent) =>
+    Math.round((totalMgn - (lockedMGNBalance / percent)) / ((1 / percent) - 1))
 
-  // mint TUL to make account have a given percent of total TUL
+  // mint MGN to make account have a given percent of total MGN
   const mintPercent = async (account, percent) => {
-    const totalTul = await getTotalTUL(false)
-    const lockedTULBalance = await getLockedTUL(account, false)
+    const totalMgn = await getTotalMGN(false)
+    const lockedMGNBalance = await getLockedMGN(account, false)
     // calculate how much is left to reach the given percent
-    let toMint = getHowManyToAdd(totalTul, lockedTULBalance, percent)
+    let toMint = getHowManyToAdd(totalMgn, lockedMGNBalance, percent)
 
     // if given percent < current percent
     if (toMint < 0) {
-      // need to add to total TUL
+      // need to add to total MGN
       // mint for master
       account = master
-      toMint = (lockedTULBalance / percent) - totalTul
+      toMint = (lockedMGNBalance / percent) - totalMgn
     }
     return mintTokens(account, toMint)
   }
 
   return {
-    getTotalTUL,
-    getLockedTUL,
-    unlockTUL,
+    getTotalMGN,
+    getLockedMGN,
+    unlockMGN,
     mintTokens,
     calculateFeeRatio,
     getHowManyToAdd,
@@ -95,7 +95,7 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
       // DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenTUL: tul,
+      TokenMGN: mgn,
       // using internal contract with settleFeePub calling dx.settleFee internally
       InternalTests: dx,
     } = contracts)
@@ -108,111 +108,112 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
       gno.approve(dx.address, GNOBalance, { from: acct }),
     ])))
 
-    await tul.updateMinter(master, { from: master })
+    await mgn.updateMinter(master, { from: master })
   })
 
   afterEach(gasLogger)
   after(eventWatcher.stopWatching)
 
   const {
-    getTotalTUL,
-    getLockedTUL,
+    getTotalMGN,
+    getLockedMGN,
     mintTokens,
     calculateFeeRatio,
     mintPercent,
   } = getHelperFunctions(master)
 
-  it('feeRatio == 0.5% when total TUL == 0', async () => {
-    const totalTul = await getTotalTUL()
+  it('feeRatio == 0.5% when total MGN == 0', async () => {
+    const totalMgn = await getTotalMGN()
 
-    assert.strictEqual(totalTul, 0, 'initially no TUL tokens')
-
+    assert.strictEqual(totalMgn, 0, 'initially no MGN tokens')
+    console.log('done')
     const [num, den] = await calculateFeeRatio(seller1)
-    assert.strictEqual(num / den, 0.005, 'feeRatio is 0.5% when total TUL tokens == 0')
+    console.log('not done')
+    assert.strictEqual(num / den, 0.005, 'feeRatio is 0.5% when total MGN tokens == 0')
   })
 
-  it('feeRatio == 0.5% when total TUL > 0 and account has 0 TUL', async () => {
+  it('feeRatio == 0.5% when total MGN > 0 and account has 0 MGN', async () => {
     await mintTokens(master, 1000)
-    const totalTul = await getTotalTUL()
+    const totalMgn = await getTotalMGN()
 
-    assert.strictEqual(totalTul, 1000, 'there are available total TUL tokens')
+    assert.strictEqual(totalMgn, 1000, 'there are available total MGN tokens')
 
-    const lockedTULBalance = await getLockedTUL(seller1)
-    assert.strictEqual(lockedTULBalance, 0, 'seller doesn\'t have TUL balance')
+    const lockedMGNBalance = await getLockedMGN(seller1)
+    assert.strictEqual(lockedMGNBalance, 0, 'seller doesn\'t have MGN balance')
 
     const [num, den] = await calculateFeeRatio(seller1)
-    assert.strictEqual(num / den, 0.005, 'feeRatio is 0.5% when total TUL tokens > 0 but account\'s TUL balance == 0')
+    assert.strictEqual(num / den, 0.005, 'feeRatio is 0.5% when total MGN tokens > 0 but account\'s MGN balance == 0')
   })
 
-  it('feeRatio == 0.4% when account has 0.00005 of total TUL', async () => {
+  it('feeRatio == 0.4% when account has 0.00005 of total MGN', async () => {
     await mintTokens(master, 1000000)
 
     await mintPercent(seller1, 0.00005)
 
-    const totalTul = await getTotalTUL()
-    assert.isAbove(totalTul, 0, 'there are available total TUL tokens')
+    const totalMgn = await getTotalMGN()
+    assert.isAbove(totalMgn, 0, 'there are available total MGN tokens')
 
-    const lockedTULBalance = await getLockedTUL(seller1)
-    assert.strictEqual(lockedTULBalance, Math.round(totalTul * 0.00005), 'seller has 1% of total TUL')
+    const lockedMGNBalance = await getLockedMGN(seller1)
+    assert.strictEqual(lockedMGNBalance, Math.round(totalMgn * 0.00005), 'seller has 1% of total MGN')
 
     const [num, den] = await calculateFeeRatio(seller1)
     // round feeRatio a bit
-    assert.equal((num / den).toFixed(4), 0.004, 'feeRatio is 0.4% when total TUL tokens > 0 ')
+    assert.equal((num / den).toFixed(4), 0.004, 'feeRatio is 0.4% when total MGN tokens > 0 ')
   })
 
-  it('feeRatio == 0.3% when account has 0.0005 of total TUL', async () => {
+  it('feeRatio == 0.3% when account has 0.0005 of total MGN', async () => {
     await mintPercent(seller1, 0.0005)
 
-    const totalTul = await getTotalTUL()
-    assert.isAbove(totalTul, 0, 'there are available total TUL tokens')
+    const totalMgn = await getTotalMGN()
+    assert.isAbove(totalMgn, 0, 'there are available total MGN tokens')
 
-    const lockedTULBalance = await getLockedTUL(seller1)
-    assert.strictEqual(lockedTULBalance, Math.round(totalTul * 0.0005), 'seller has 1% of total TUL')
+    const lockedMGNBalance = await getLockedMGN(seller1)
+    assert.strictEqual(lockedMGNBalance, Math.round(totalMgn * 0.0005), 'seller has 1% of total MGN')
 
     const [num, den] = await calculateFeeRatio(seller1)
     // round feeRatio a bit
-    assert.equal((num / den).toFixed(4), 0.003, 'feeRatio is 0.3% when total TUL tokens > 0')
+    assert.equal((num / den).toFixed(4), 0.003, 'feeRatio is 0.3% when total MGN tokens > 0')
   })
 
-  it('feeRatio == 0.2% when account has 0.005 of total TUL', async () => {
+  it('feeRatio == 0.2% when account has 0.005 of total MGN', async () => {
     await mintPercent(seller1, 0.005)
 
-    const totalTul = await getTotalTUL()
-    assert.isAbove(totalTul, 0, 'there are available total TUL tokens')
+    const totalMgn = await getTotalMGN()
+    assert.isAbove(totalMgn, 0, 'there are available total MGN tokens')
 
-    const lockedTULBalance = await getLockedTUL(seller1)
-    assert.strictEqual(lockedTULBalance, Math.round(totalTul * 0.005), 'seller has 1% of total TUL')
+    const lockedMGNBalance = await getLockedMGN(seller1)
+    assert.strictEqual(lockedMGNBalance, Math.round(totalMgn * 0.005), 'seller has 1% of total MGN')
 
     const [num, den] = await calculateFeeRatio(seller1)
     // round feeRatio a bit
-    assert.equal((num / den).toFixed(4), 0.0020, 'feeRatio is 0.20% when total TUL tokens > 0 ')
+    assert.equal((num / den).toFixed(4), 0.0020, 'feeRatio is 0.20% when total MGN tokens > 0 ')
   })
 
-  it('feeRatio == 0.1% when account has 0.05 of total TUL', async () => {
+  it('feeRatio == 0.1% when account has 0.05 of total MGN', async () => {
     await mintPercent(seller1, 0.05)
 
-    const totalTul = await getTotalTUL()
-    assert.isAbove(totalTul, 0, 'there are available total TUL tokens')
+    const totalMgn = await getTotalMGN()
+    assert.isAbove(totalMgn, 0, 'there are available total MGN tokens')
 
-    const lockedTULBalance = await getLockedTUL(seller1)
-    assert.strictEqual(lockedTULBalance, Math.round(totalTul * 0.05), 'seller has 1% of total TUL')
+    const lockedMGNBalance = await getLockedMGN(seller1)
+    assert.strictEqual(lockedMGNBalance, Math.round(totalMgn * 0.05), 'seller has 1% of total MGN')
 
     const [num, den] = await calculateFeeRatio(seller1)
     // round feeRatio a bit
-    assert.equal((num / den).toFixed(4), 0.0010, 'feeRatio is 0.10% when total TUL tokens > 0 ')
+    assert.equal((num / den).toFixed(4), 0.0010, 'feeRatio is 0.10% when total MGN tokens > 0 ')
   })
 
-  it('feeRatio == 0% when account has >= 10% of total TUL', async () => {
+  it('feeRatio == 0% when account has >= 10% of total MGN', async () => {
     await mintPercent(seller1, 0.11)
 
-    const totalTul2 = await getTotalTUL()
-    assert.isAbove(totalTul2, 0, 'there are available total TUL tokens')
+    const totalMgn2 = await getTotalMGN()
+    assert.isAbove(totalMgn2, 0, 'there are available total MGN tokens')
 
-    const lockedTULBalance2 = await getLockedTUL(seller1)
-    assert.isAtLeast(lockedTULBalance2, Math.round(totalTul2 * 0.1), 'seller has >= 10% of total TUL')
+    const lockedMGNBalance2 = await getLockedMGN(seller1)
+    assert.isAtLeast(lockedMGNBalance2, Math.round(totalMgn2 * 0.1), 'seller has >= 10% of total MGN')
 
     const [num, den] = await calculateFeeRatio(seller1)
-    assert.equal(num / den, 0, 'feeRatio is 0% when total TUL tokens > 0 but account\'s TUL balance == 10% total TUL')
+    assert.equal(num / den, 0, 'feeRatio is 0% when total MGN tokens > 0 but account\'s MGN balance == 10% total MGN')
   })
 })
 
@@ -238,7 +239,7 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
       // DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenTUL: tul,
+      TokenMGN: mgn,
       TokenOWL: owl,
       // using internal contract with settleFeePub calling dx.settleFee internally
       InternalTests: dx,
@@ -269,11 +270,9 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
       { from: seller1 },
     )
 
-    await tul.updateMinter(master, { from: master })
+    await mgn.updateMinter(master, { from: master })
     logger('PRICE ORACLE', await oracle.getUSDETHPrice.call())
 
-    const [num, den] = await dx.priceOracleExt.call(eth.address)
-    logger('PRICE', `${num}/${den} == ${num / den}`)
 
     eventWatcher(dx, 'LogNumber')
   })
@@ -303,17 +302,17 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
   }
 
   const {
-    getTotalTUL,
-    getLockedTUL,
-    unlockTUL,
+    getTotalMGN,
+    getLockedMGN,
+    unlockMGN,
     mintTokens,
     mintPercent,
     calculateFeeRatio,
   } = getHelperFunctions(master)
 
-  const ensureTotalTUL = async () => {
-    const totalTul = await getTotalTUL()
-    if (totalTul === 0) {
+  const ensureTotalMGN = async () => {
+    const totalMgn = await getTotalMGN()
+    if (totalMgn === 0) {
       await mintTokens(master, 1000)
     }
   }
@@ -324,13 +323,13 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
       let feeRatio = num / den
       if (feeRatio === 0) return feeRatio
 
-      // fee is 0% when account has >= 10% of total TUL
-      await ensureTotalTUL()
+      // fee is 0% when account has >= 10% of total MGN
+      await ensureTotalMGN()
       await mintPercent(account, 0.11);
 
       ([num, den] = await calculateFeeRatio(account))
       feeRatio = num / den
-      assert.equal(feeRatio, 0, 'feeRatio is 0% when total TUL tokens > 0 and account\'s TUL balance >= 10% total TUL')
+      assert.equal(feeRatio, 0, 'feeRatio is 0% when total MGN tokens > 0 and account\'s MGN balance >= 10% total MGN')
 
       return feeRatio
     },
@@ -339,21 +338,21 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
       let feeRatio = num / den
       if (feeRatio === 0.005) return feeRatio
 
-      const totalTul = await getTotalTUL()
+      const totalMgn = await getTotalMGN()
       // fee is 0.5% when
-      // either total TUL == 0
-      // or total TUL > 0, but account has no TUL
-      if (totalTul > 0) {
-        const lockedTULBalance = await getLockedTUL(account)
-        // get rid of lockedTUL if any
-        if (lockedTULBalance > 0) {
-          await unlockTUL(account, lockedTULBalance)
+      // either total MGN == 0
+      // or total MGN > 0, but account has no MGN
+      if (totalMgn > 0) {
+        const lockedMGNBalance = await getLockedMGN(account)
+        // get rid of lockedMGN if any
+        if (lockedMGNBalance > 0) {
+          await unlockMGN(account, lockedMGNBalance)
         }
       }
 
       ([num, den] = await calculateFeeRatio(account))
       feeRatio = num / den
-      assert.strictEqual(feeRatio, 0.005, 'feeRatio is 0.5% when total TUL tokens > 0 but account\'s TUL balance == 0')
+      assert.strictEqual(feeRatio, 0.005, 'feeRatio is 0.5% when total MGN tokens > 0 but account\'s MGN balance == 0')
 
       return feeRatio
     },
@@ -362,22 +361,22 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
       let feeRatio = num / den
       if (feeRatio.toFixed(4) === 0.0025) return feeRatio
 
-      // fee is 0.25% when account has 1% of total TUL
-      await ensureTotalTUL()
+      // fee is 0.25% when account has 1% of total MGN
+      await ensureTotalMGN()
 
       await mintPercent(account, 0.01);
 
       ([num, den] = await calculateFeeRatio(account))
       feeRatio = num / den
       // round feeRatio a bit
-      assert.equal(feeRatio.toFixed(4), 0.0025, 'feeRatio is 0.25% when total TUL tokens > 0 but account\'s TUL balance == 1% total TUL')
+      assert.equal(feeRatio.toFixed(4), 0.0025, 'feeRatio is 0.25% when total MGN tokens > 0 but account\'s MGN balance == 1% total MGN')
 
       return feeRatio
     },
   }
 
   /**
-   * Sets TUL tokens so that feeRatio would be 0, 0.5 or 0.25 %
+   * Sets MGN tokens so that feeRatio would be 0, 0.5 or 0.25 %
    * @param {0 | 0.5 | 0.25} percent
    * @param {address} account
    */
@@ -408,7 +407,7 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
   const calculateFeeInUSD = async (fee, token) => {
     const [ETHUSDPrice, [num, den]] = await Promise.all([
       oracle.getUSDETHPrice.call(),
-      dx.priceOracleExt.call(token),
+      dx.getPriceOfTokenInLastAuctionExt.call(token),
     ])
 
     const feeInETH = calculateFee(fee, num.toNumber() / den.toNumber(), false)
