@@ -35,16 +35,16 @@ contract('DutchExchange updating exchange params', (accounts) => {
   })
 
   const getExchangeParams = async () => {
-    const [auctioneer, ETHUSDOracle, thresholdNewTokenPair, thresholdNewAuction] = await Promise.all([
+    const [auctioneer, ethUSDOracle, thresholdNewTokenPair, thresholdNewAuction] = await Promise.all([
       dx.auctioneer.call(),
-      dx.ETHUSDOracle.call(),
+      dx.ethUSDOracle.call(),
       dx.thresholdNewTokenPair.call(),
       dx.thresholdNewAuction.call(),
     ])
 
     return {
       auctioneer,
-      ETHUSDOracle,
+      ethUSDOracle,
       thresholdNewTokenPair: thresholdNewTokenPair.toNumber(),
       thresholdNewAuction: thresholdNewAuction.toNumber(),
     }
@@ -54,27 +54,20 @@ contract('DutchExchange updating exchange params', (accounts) => {
     const params = await getExchangeParams()
     const {
       auctioneer,
-      ETHUSDOracle,
+      ethUSDOracle,
       thresholdNewTokenPair,
       thresholdNewAuction,
     } = params
 
     logger(`DutchExchange parameters:
       auctioneer: ${auctioneer},
-      ETHUSDOracle: ${ETHUSDOracle},
+      ethUSDOracle: ${ethUSDOracle},
       thresholdNewTokenPair: ${thresholdNewTokenPair},
       thresholdNewAuction: ${thresholdNewAuction}
     `)
 
     return params
   }
-
-  const updateExchangeParams = (account, {
-    auctioneer,
-    ETHUSDOracle,
-    thresholdNewTokenPair,
-    thresholdNewAuction,
-  }) => dx.updateExchangeParams(auctioneer, ETHUSDOracle, thresholdNewTokenPair, thresholdNewAuction, { from: account })
 
   const assertIsAuctioneer = async (acc) => {
     const auctioneer = await dx.auctioneer.call()
@@ -93,7 +86,7 @@ contract('DutchExchange updating exchange params', (accounts) => {
 
     const params2 = {
       auctioneer: seller1,
-      ETHUSDOracle: newPO.address,
+      ethUSDOracle: newPO.address,
       thresholdNewTokenPair: 5000,
       thresholdNewAuction: 500,
     }
@@ -102,7 +95,10 @@ contract('DutchExchange updating exchange params', (accounts) => {
 
     logger(`Not auctioneer tries to change params to ${JSON.stringify(params2, null, 5)}`)
 
-    await assertRejects(updateExchangeParams(seller1, params2), 'not auctioneer can\'t change params')
+    await assertRejects(dx.updateAuctioneer(params2.auctioneer, { from: seller1 }), 'not auctioneer can\'t change params')
+    await assertRejects(dx.updateEthUSDOracle(params2.ethUSDOracle, { from: seller1 }), 'not auctioneer can\'t change params')
+    await assertRejects(dx.updateThresholdNewTokenPair(params2.thresholdNewTokenPair, { from: seller1 }), 'not auctioneer can\'t change params')
+    await assertRejects(dx.updateThresholdNewAuction(params2.thresholdNewAuction, { from: seller1 }), 'not auctioneer can\'t change params')
 
     assert.deepEqual(params1, await getAndPrintExchangeParams(), 'exchange params should stay the same')
   })
@@ -114,7 +110,7 @@ contract('DutchExchange updating exchange params', (accounts) => {
 
     const params2 = {
       auctioneer: seller1,
-      ETHUSDOracle: newPO.address,
+      ethUSDOracle: newPO.address,
       thresholdNewTokenPair: 4000,
       thresholdNewAuction: 400,
     }
@@ -123,7 +119,10 @@ contract('DutchExchange updating exchange params', (accounts) => {
 
     logger(`auctioneer changes params to ${JSON.stringify(params2, null, 5)}`)
 
-    await updateExchangeParams(master, params2)
+    await dx.updateEthUSDOracle(params2.ethUSDOracle, { from: master })
+    await dx.updateThresholdNewTokenPair(params2.thresholdNewTokenPair, { from: master })
+    await dx.updateThresholdNewAuction(params2.thresholdNewAuction, { from: master })
+    await dx.updateAuctioneer(params2.auctioneer, { from: master })
 
     assert.deepEqual(params2, await getAndPrintExchangeParams(), 'exchange params should be changed')
   })

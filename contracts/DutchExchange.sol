@@ -125,6 +125,7 @@ contract DutchExchange {
         public
         onlyAuctioneer
     {
+        require(_auctioneer != address(0));
         auctioneer = _auctioneer;
     }
 
@@ -134,6 +135,7 @@ contract DutchExchange {
         public
         onlyAuctioneer
     {
+        require(address(_ethUSDOracle) != address(0));
         ethUSDOracle = _ethUSDOracle;
     }
 
