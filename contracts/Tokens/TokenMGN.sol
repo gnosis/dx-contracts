@@ -5,7 +5,7 @@ import "@gnosis.pm/gnosis-core-contracts/contracts/Tokens/StandardToken.sol";
 /// @title Standard token contract with overflow protection
 contract TokenMGN is StandardToken {
 
-    struct unlockedMGN {
+    struct unlockedToken {
         uint amountUnlocked;
         uint withdrawalTime;
     }
@@ -17,11 +17,11 @@ contract TokenMGN is StandardToken {
     address public owner;
     address public minter;
 
-    // user => unlockedMGN
-    mapping (address => unlockedMGN) public unlockedMGNs;
+    // user => unlockedToken
+    mapping (address => unlockedToken) public unlockedTokens;
 
     // user => amount
-    mapping (address => uint) public lockedMGNBalances;
+    mapping (address => uint) public lockedTokenBalances;
 
     /*
      *  Public functions
@@ -63,11 +63,11 @@ contract TokenMGN is StandardToken {
     {
         require(msg.sender == minter);
 
-        lockedMGNBalances[user] += amount;
+        lockedTokenBalances[user] += amount;
         totalTokens += amount;
     }
 
-    /// @dev Lock MGN
+    /// @dev Lock Token
     function lockTokens(
         uint amount
     )
@@ -79,10 +79,10 @@ contract TokenMGN is StandardToken {
         
         // Update state variables
         balances[msg.sender] -= amount;
-        lockedMGNBalances[msg.sender] += amount;
+        lockedTokenBalances[msg.sender] += amount;
 
         // Get return variable
-        totalAmountLocked = lockedMGNBalances[msg.sender];
+        totalAmountLocked = lockedTokenBalances[msg.sender];
     }
 
     function unlockTokens(
@@ -92,26 +92,26 @@ contract TokenMGN is StandardToken {
         returns (uint totalAmountUnlocked, uint withdrawalTime)
     {
         // Adjust amount by locked balances
-        amount = min(amount, lockedMGNBalances[msg.sender]);
+        amount = min(amount, lockedTokenBalances[msg.sender]);
 
         if (amount > 0) {
             // Update state variables
-            lockedMGNBalances[msg.sender] -= amount;
-            unlockedMGNs[msg.sender].amountUnlocked += amount;
-            unlockedMGNs[msg.sender].withdrawalTime = now + 24 hours;
+            lockedTokenBalances[msg.sender] -= amount;
+            unlockedTokens[msg.sender].amountUnlocked += amount;
+            unlockedTokens[msg.sender].withdrawalTime = now + 24 hours;
         }
 
         // Get return variables
-        totalAmountUnlocked = unlockedMGNs[msg.sender].amountUnlocked;
-        withdrawalTime = unlockedMGNs[msg.sender].withdrawalTime;
+        totalAmountUnlocked = unlockedTokens[msg.sender].amountUnlocked;
+        withdrawalTime = unlockedTokens[msg.sender].withdrawalTime;
     }
 
     function withdrawUnlockedTokens()
-    public
+        public
     {
-        require(unlockedMGNs[msg.sender].withdrawalTime < now);
-        balances[msg.sender] += unlockedMGNs[msg.sender].amountUnlocked;
-        unlockedMGNs[msg.sender].amountUnlocked = 0;
+        require(unlockedTokens[msg.sender].withdrawalTime < now);
+        balances[msg.sender] += unlockedTokens[msg.sender].amountUnlocked;
+        unlockedTokens[msg.sender].amountUnlocked = 0;
     }
 
     function min(uint a, uint b) 
