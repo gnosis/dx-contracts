@@ -998,17 +998,16 @@ contract DutchExchange {
         fraction memory price = getPriceOfTokenInLastAuction(token);
         return (price.num, price.den);
     }
-
-    // > getHistoricalPriceOracleExt
     function getHistoricalPriceOracleExt(
-        address token,
+        address token1,
+        address token2,
         uint auctionIndex
     )
         public
         view
         returns (uint, uint) 
     {
-        fraction memory price = getHistoricalPriceOracle(token, ethToken, auctionIndex);
+        fraction memory price = getHistoricalPriceOracle(token1, token2, auctionIndex);
         return (price.num, price.den);
     }
 
