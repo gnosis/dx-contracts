@@ -173,7 +173,7 @@ contract DutchExchange {
         public
         onlyAuctioneer
     {
-        require(_masterCopy != 0);
+        require(_masterCopy != address(0));
 
         // Update masterCopyCountdown
         newMasterCopy = _masterCopy;
@@ -184,7 +184,7 @@ contract DutchExchange {
         public
         onlyAuctioneer
     {
-        require(newMasterCopy != 0);
+        require(newMasterCopy != address(0));
         require(now >= masterCopyCountdown);
 
         // Update masterCopy
@@ -394,7 +394,7 @@ contract DutchExchange {
         // Update variables
         balances[sellToken][msg.sender] -= amount;
         sellerBalances[sellToken][buyToken][auctionIndex][msg.sender] += amountAfterFee;
-        if (auctionStart == 1 || auctionStart > now) {
+        if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING || auctionStart > now) {
             // C1
             sellVolumesCurrent[sellToken][buyToken] += amountAfterFee;
         } else {
@@ -402,7 +402,7 @@ contract DutchExchange {
             sellVolumesNext[sellToken][buyToken] += amountAfterFee;
         }
 
-        if (auctionStart == 1) {
+        if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING) {
             scheduleNextAuction(sellToken, buyToken);
         }
 
@@ -515,7 +515,7 @@ contract DutchExchange {
                 // i.e. if a user claims tokens later in the future,
                 // he/she is likely to get slightly different number
                 fraction memory price = getHistoricalPriceOracle(sellToken, ethTokenMem, auctionIndex);
-                // 10^30 * 10^30 = 10^60
+                // 10^30 * 10^35 = 10^65
                 frtsIssued = sellerBalance * price.num / price.den;
             }
 
@@ -577,7 +577,7 @@ contract DutchExchange {
                 } else {
                     // Neither token is ethToken, so we use getHhistoricalPriceOracle()
                     fraction memory priceEthToken = getHistoricalPriceOracle(buyToken, ethTokenMem, auctionIndex);
-                    // 10^30 * 10^28 = 10^58
+                    // 10^30 * 10^35 = 10^65
                     frtsIssued = buyerBalance * priceEthToken.num / priceEthToken.den;
                 }
 
@@ -684,7 +684,7 @@ contract DutchExchange {
         returns (fraction memory feeRatio)
     {
         uint t = frtToken.totalSupply();
-        uint b = frtToken.lockedMGNBalances(user);
+        uint b = frtToken.lockedTokenBalances(user);
 
         if (b * 100000 < t || t == 0) {
             // 0.5%
@@ -899,7 +899,7 @@ contract DutchExchange {
     )
         public
         view
-        // price < 10^30
+        // price < 2 * 10^30
         returns (fraction memory price)
     {
         uint latestAuctionIndex = getAuctionIndex(token, ethToken);
