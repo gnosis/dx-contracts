@@ -108,11 +108,6 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
     // checking that right amount is claimed
     assert.equal(claimedAmount, 0) 
   })
-  it(' 3. checks that a non-buyer can not claim any returns', async () => {
-    const auctionIndex = await getAuctionIndex()
-    const [claimedAmount] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, auctionIndex)).map(i => i.toNumber())
-    assert.equal(claimedAmount, 0) 
-  })
 
   it('4. check right amount of coins is returned by claimBuyerFunds if auction is not closed', async () => {
     const auctionIndex = await getAuctionIndex()
@@ -150,6 +145,11 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
     logger('oustandingVolume', oustandingVolume)
     logger('buyVolume', buyVolume)
     assert.equal((bn(valMinusFee(totalSellAmount2ndAuction)).mul(buyVolume).div(buyVolume.add(oustandingVolume))).toNumber(), claimedAmount2)
+  })
+
+  it(' 3. checks that a non-buyer can not claim any returns', async () => {
+    const [claimedAmount] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, 0)).map(i => i.toNumber())
+    assert.equal(claimedAmount, 0) 
   })
 })
 
