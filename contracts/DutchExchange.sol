@@ -514,7 +514,7 @@ contract DutchExchange {
                 // getPriceOfTokenInLastAuction() depends on latestAuctionIndex
                 // i.e. if a user claims tokens later in the future,
                 // he/she is likely to get slightly different number
-                fraction memory price = getHistoricalPriceOracle(sellToken, ethTokenMem, auctionIndex);
+                fraction memory price = getPriceInPastAuction(sellToken, ethTokenMem, auctionIndex);
                 // 10^30 * 10^35 = 10^65
                 frtsIssued = sellerBalance * price.num / price.den;
             }
@@ -576,7 +576,7 @@ contract DutchExchange {
                     frtsIssued = buyerBalance * price.den / price.num;
                 } else {
                     // Neither token is ethToken, so we use getHhistoricalPriceOracle()
-                    fraction memory priceEthToken = getHistoricalPriceOracle(buyToken, ethTokenMem, auctionIndex);
+                    fraction memory priceEthToken = getPriceInPastAuction(buyToken, ethTokenMem, auctionIndex);
                     // 10^30 * 10^35 = 10^65
                     frtsIssued = buyerBalance * priceEthToken.num / priceEthToken.den;
                 }
@@ -805,40 +805,14 @@ contract DutchExchange {
         }
     }
 
-    // > getRatioOfHistoricalPriceOracles()
-    function getRatioOfHistoricalPriceOracles(
-        address sellToken,
-        address buyToken,
-        uint auctionIndex
-    )
-        public
-        view
-        // price < 10^35
-        returns (fraction memory price)
-    {
-        fraction memory sellTokenPrice = getHistoricalPriceOracle(sellToken, ethToken, auctionIndex);
-        fraction memory buyTokenPrice = getHistoricalPriceOracle(buyToken, ethToken, auctionIndex);
-
-        // 10^30 * 10^30 = 10^60
-        price.num = sellTokenPrice.num * buyTokenPrice.den;
-        price.den = sellTokenPrice.den * buyTokenPrice.num;
-
-        while (price.num > 10 ** 12 && price.den > 10 ** 12) {  
-           price.num = price.num / 10 ** 6;   
-           price.den = price.den / 10 ** 6;   
-       }
-  
-       // R1  
-       require(price.num < 10 ** 35 && price.den < 10 ** 35);
-    }
 
 
-    // > getHistoricalPriceOracle()
+    // > getPriceInPastAuction()
     //@ dev returns price in units [token2]/[token1]
     //@ param token1 first token for price calculation
     //@ param token2 second token for price calculation
     //@ param auctionIndex index for the auction to get the averaged price from
-    function getHistoricalPriceOracle(
+    function getPriceInPastAuction(
         address token1,
         address token2,
         uint auctionIndex
@@ -903,8 +877,8 @@ contract DutchExchange {
         returns (fraction memory price)
     {
         uint latestAuctionIndex = getAuctionIndex(token, ethToken);
-        // getHistoricalPriceOracle < 10^30
-        price = getHistoricalPriceOracle(token, ethToken, latestAuctionIndex);
+        // getPriceInPastAuction < 10^30
+        price = getPriceInPastAuction(token, ethToken, latestAuctionIndex);
     }
 
     // > getCurrentAuctionPrice()
@@ -927,7 +901,7 @@ contract DutchExchange {
             (price.num, price.den) = (0, 0);
         } else {
             // Auction is running
-            fraction memory averagedPrice = getHistoricalPriceOracle(sellToken, buyToken, auctionIndex);
+            fraction memory averagedPrice = getPriceInPastAuction(sellToken, buyToken, auctionIndex);
 
             // If we're calling the function into an unstarted auction,
             // it will return the starting price of that auction
@@ -998,7 +972,7 @@ contract DutchExchange {
         fraction memory price = getPriceOfTokenInLastAuction(token);
         return (price.num, price.den);
     }
-    function getHistoricalPriceOracleExt(
+    function getPriceInPastAuctionExt(
         address token1,
         address token2,
         uint auctionIndex
@@ -1007,21 +981,7 @@ contract DutchExchange {
         view
         returns (uint, uint) 
     {
-        fraction memory price = getHistoricalPriceOracle(token1, token2, auctionIndex);
-        return (price.num, price.den);
-    }
-
-     // > getRatioOfHistoricalPriceOraclesExt
-    function getRatioOfHistoricalPriceOraclesExt(
-        address sellToken,
-        address buyToken,
-        uint auctionIndex
-    )
-        public
-        view
-        returns (uint, uint) 
-    {
-        fraction memory price = getRatioOfHistoricalPriceOracles(sellToken, buyToken, auctionIndex);
+        fraction memory price = getPriceInPastAuction(token1, token2, auctionIndex);
         return (price.num, price.den);
     }
 
