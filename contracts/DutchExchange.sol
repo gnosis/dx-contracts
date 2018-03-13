@@ -315,7 +315,12 @@ contract DutchExchange {
         // R1
         require(Token(tokenAddress).transferFrom(msg.sender, this, amount));
 
-        balances[tokenAddress][msg.sender] += amount;
+        uint balance = balances[tokenAddress][msg.sender];
+        balances[tokenAddress][msg.sender] = balance + amount;
+        
+        //overflow check, we did not use Mathsafe libary, since this is the only place we acutally need it
+        require(balance + amount >= amount);
+
         NewDeposit(tokenAddress, amount);
     }
 
@@ -446,7 +451,7 @@ contract DutchExchange {
         // To calculate overbuy, we first get current price
         uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
         fraction memory price = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
-        // 10^30 * 10^39 = 10^69
+        // 10^30 * 10^37 = 10^67
         uint outstandingVolume = atleastZero(int(sellVolume * price.num / price.den - buyVolume));
 
         uint amountAfterFee;
@@ -483,6 +488,7 @@ contract DutchExchange {
         uint auctionIndex
     )
         public
+        // < (10^60, 10^61)
         returns (uint returned, uint frtsIssued)
     {
         closeTheoreticalClosedAuction(sellToken, buyToken, auctionIndex);
@@ -500,7 +506,7 @@ contract DutchExchange {
         require(den > 0);
 
         // Calculate return
-        // 10^30 * 10^30 = 10^60
+        // < 10^30 * 10^30 = 10^60
         returned = sellerBalance * num / den;
 
         // Get frts issued based on ETH price of returned tokens
@@ -516,7 +522,7 @@ contract DutchExchange {
                 // i.e. if a user claims tokens later in the future,
                 // he/she is likely to get slightly different number
                 fraction memory price = getPriceInPastAuction(sellToken, ethTokenMem, auctionIndex);
-                // 10^30 * 10^35 = 10^65
+                // 10^30 * 10^31 = 10^61
                 frtsIssued = sellerBalance * price.num / price.den;
             }
 
@@ -564,7 +570,7 @@ contract DutchExchange {
             uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
 
             // closingPrices.num represents buyVolume
-            // 10^30 * 10^30 = 10^60
+            // < 10^30 * 10^30 = 10^60
             uint tokensExtra = buyerBalance * extraTokensTotal / closingPrices[sellToken][buyToken][auctionIndex].num;
             returned += tokensExtra;
  
@@ -618,7 +624,7 @@ contract DutchExchange {
             uint buyVolume = buyVolumes[sellToken][buyToken];
             uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
             fraction memory price = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
-            // 10^30 * 10^39 = 10^69
+            // 10^30 * 10^37 = 10^67
             uint outstandingVolume = atleastZero(int(sellVolume * price.num / price.den - buyVolume));
             
             if(outstandingVolume == 0) {
@@ -637,6 +643,7 @@ contract DutchExchange {
     )
         public
         view
+        // < (10^67, 10^37)
         returns (uint unclaimedBuyerFunds, fraction memory price)
     {
         // R1: checks if particular auction has ever run
@@ -650,7 +657,7 @@ contract DutchExchange {
             unclaimedBuyerFunds = 0;
         } else {
             uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
-            // 10^30 * 10^39 = 10^69
+            // < 10^30 * 10^37 = 10^67
             unclaimedBuyerFunds = atleastZero(int(
                 buyerBalance * price.den / price.num - 
                 claimedAmounts[sellToken][buyToken][auctionIndex][user]
@@ -667,6 +674,7 @@ contract DutchExchange {
         uint amount
     )
         internal
+        // < 10^30
         returns (uint amountAfterFee)
     {
         fraction memory feeRatio = getFeeRatio(user);
@@ -820,7 +828,7 @@ contract DutchExchange {
         // (this is so that we don't need case work,
         // since it might also be called from postSellOrder())
 
-        // 10^30 * 10^30 * 10^6 = 10^66
+        // < 10^30 * 10^31 * 10^6 = 10^67
         uint sellVolume = sellVolumesCurrent[sellToken][buyToken] * priceTs.num * ethUSDPrice / priceTs.den;
         uint sellVolumeOpp = sellVolumesCurrent[buyToken][sellToken] * priceTb.num * ethUSDPrice / priceTb.den;
         if (sellVolume >= thresholdNewAuction || sellVolumeOpp >= thresholdNewAuction) {
@@ -845,7 +853,7 @@ contract DutchExchange {
     )
         public
         view
-        // price < 2 * 10^30
+        // price < 10^31
         returns (fraction memory price)
     {
         if (token1 == token2) {
@@ -899,7 +907,7 @@ contract DutchExchange {
     )
         public
         view
-        // price < 2 * 10^30
+        // price < 10^31
         returns (fraction memory price)
     {
         uint latestAuctionIndex = getAuctionIndex(token, ethToken);
@@ -915,7 +923,7 @@ contract DutchExchange {
     )
         public
         view
-        // price < 10^39
+        // price < 10^37
         returns (fraction memory price)
     {
         fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
@@ -936,9 +944,9 @@ contract DutchExchange {
             // The numbers below are chosen such that
             // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
 
-            // 10^4 * 10^35 = 10^39
+            // 10^5 * 10^31 = 10^36
             price.num = atleastZero(int((86400 - timeElapsed) * averagedPrice.num));
-            // 10^4 * 10^35 = 10^39
+            // 10^6 * 10^31 = 10^37
             price.den = (timeElapsed + 43200) * averagedPrice.den;
 
             if (price.num * sellVolumesCurrent[sellToken][buyToken] <= price.den * buyVolumes[sellToken][buyToken]) {
