@@ -485,6 +485,7 @@ contract DutchExchange {
         public
         returns (uint returned, uint frtsIssued)
     {
+        closeTheoreticalClosedAuction(sellToken, buyToken, auctionIndex);
         uint sellerBalance = sellerBalances[sellToken][buyToken][auctionIndex][user];
 
         // R1
@@ -543,6 +544,7 @@ contract DutchExchange {
         public
         returns (uint returned, uint frtsIssued)
     {
+        closeTheoreticalClosedAuction(sellToken, buyToken, auctionIndex);
         fraction memory price;
         (returned, price) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
 
@@ -599,6 +601,30 @@ contract DutchExchange {
         }
         
         NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
+    }
+
+    //@dev allows to close possible theoretical closed markets
+    //@param sellToken sellToken of an auction
+    //@param buyToken buyToken of an auction 
+    //@param index is the auctionIndex of the auction
+    function closeTheoreticalClosedAuction(
+        address sellToken,
+        address buyToken,
+        uint auctionIndex
+    )
+        public
+    {
+        if(auctionIndex == getAuctionIndex(buyToken, sellToken) && closingPrices[sellToken][buyToken][auctionIndex].num == 0) {
+            uint buyVolume = buyVolumes[sellToken][buyToken];
+            uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
+            fraction memory price = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
+            // 10^30 * 10^39 = 10^69
+            uint outstandingVolume = atleastZero(int(sellVolume * price.num / price.den - buyVolume));
+            
+            if(outstandingVolume == 0) {
+                postBuyOrder(sellToken, buyToken, auctionIndex, 0);
+            }
+        }
     }
 
     // > getUnclaimedBuyerFunds()
