@@ -41,7 +41,6 @@ TokenRDN.setProvider(web3.currentProvider)
 let eth
 let gno
 let rdn
-let tul
 let dx
 let Token
 
@@ -89,10 +88,8 @@ p.then((a) => {
     return setup()})
   .then(() => dx.balances(eth.address, acct))
   .then((t) => {
-    console.log(t)
     return dx.getAuctionIndex(eth.address, tokenToAdd.address)
   })
   .then((t) => {
-    console.log(t)
     return dx.addTokenPair(eth.address, tokenToAdd.address, startingETH, 0, 1, 50, { from: acct, gas: 2374235})
   })
