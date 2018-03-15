@@ -281,11 +281,11 @@ contract DutchExchange {
         closingPrices[token2][token1][0] = fraction(initialClosingPriceDen, initialClosingPriceNum);
 
         // Split into two fns because of 16 local-var cap
-        addTokenPair2(token1, token2, token1Funding, token2Funding);
+        addTokenPairSecondPart(token1, token2, token1Funding, token2Funding);
     }
 
     // > addTokenPair2()
-    function addTokenPair2 (
+    function addTokenPairSecondPart(
         address token1,
         address token2,
         uint token1Funding,
