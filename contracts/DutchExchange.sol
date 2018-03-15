@@ -21,7 +21,7 @@ contract DutchExchange {
     uint constant WAITING_PERIOD_CHANGE_MASTERCOPY= 30 days;
     uint constant AUCTION_START_WAITING_FOR_FUNDING = 1;
 
-    address public masterCopy;
+    address public masterCopy;  
     address public newMasterCopy;
     // Time when new masterCopy is updatabale
     uint public masterCopyCountdown;
