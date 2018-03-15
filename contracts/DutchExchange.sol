@@ -1100,6 +1100,23 @@ contract DutchExchange {
             return uint(a);
         }
     }
+
+    // function getRunningTokenPairs(
+    //     address[] tokens
+    // )
+    //     public
+    //     view
+    //     returns (address[] tokens1, address[] token2)
+    // {
+    //     for (uint i = 0; i < tokens.length - 1; i++) {
+    //         for (uint j = i + 1; j < tokens.length; j++) {
+    //             if (getAuctionIndex(tokens[i], tokens[j]) > 0) {
+    //                 tokens1.push(tokens[i]);
+    //                 tokens2.push(tokens[j]);
+    //             }
+    //         }
+    //     }
+    // }
     
     //@dev for quick overview of possible sellerBalances to calculate the possible withdraw tokens
     //@param auctionSellToken is the sellToken defining an auctionPair
@@ -1123,7 +1140,7 @@ contract DutchExchange {
         
         uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
 
-        for (uint j = startingIndex; j <= runningAuctionIndex; j++){
+        for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
             sellerBalances[auctionSellToken][auctionBuyToken][j][user] > 0 ? arrayLength++ : 0;
         }
 
