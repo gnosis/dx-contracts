@@ -9,7 +9,7 @@ const { getContracts, wait } = require('./testFunctions')
 const InternalTests = artifacts.require('InternalTests')
 
 // Test VARS
-let dx, dxNew
+let dx, dxNew, ethToken
 let pr
 
 let contracts
@@ -29,6 +29,7 @@ contract('DutchExchange - Proxy', (accounts) => {
     // destructure contracts into upper state
     ({
       DutchExchange: dx,
+      EtherToken: ethToken,
       // dxNew has new code as it is an InternalTests contract
       InternalTests: dxNew,
       Proxy: pr,
@@ -36,22 +37,28 @@ contract('DutchExchange - Proxy', (accounts) => {
   })
 
   const getExchangeParams = async (dxContr = dx) => {
-    const [auctioneer, TUL, OWL, ETH, ETHUSDOracle, thresholdNewTokenPair, thresholdNewAuction] = await Promise.all([
+    const [auctioneer,
+      frtToken,
+      owlToken,
+      eth,
+      ethUSDOracle,
+      thresholdNewTokenPair,
+      thresholdNewAuction] = await Promise.all([
       dxContr.auctioneer.call(),
-      dxContr.TUL.call(),
-      dxContr.OWL.call(),
-      dxContr.ETH.call(),
-      dxContr.ETHUSDOracle.call(),
+      dxContr.frtToken.call(),
+      dxContr.owlToken.call(),
+      dxContr.ethToken.call(),
+      dxContr.ethUSDOracle.call(),
       dxContr.thresholdNewTokenPair.call(),
       dxContr.thresholdNewAuction.call(),
     ])
 
     return {
       auctioneer,
-      TUL,
-      OWL,
-      ETH,
-      ETHUSDOracle,
+      frtToken,
+      owlToken,
+      eth,
+      ethUSDOracle,
       thresholdNewTokenPair: thresholdNewTokenPair.toNumber(),
       thresholdNewAuction: thresholdNewAuction.toNumber(),
     }
@@ -68,8 +75,8 @@ contract('DutchExchange - Proxy', (accounts) => {
   }
 
   it('DutchExchange is initialized and params are set', async () => {
-    const isInitialised = await dx.isInitialised.call()
-    assert.isTrue(isInitialised, 'DutchExchange should be initialized')
+    const ethTokenAddress = await dx.ethToken.call()
+    assert.strictEqual(ethTokenAddress, ethToken.address, 'DutchExchange should be initialized')
 
     const params = await getExchangeParams()
     assert.isTrue(Object.values(params).every(param => !!+param), 'No zero-initialized parameters')
