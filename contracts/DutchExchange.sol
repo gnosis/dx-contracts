@@ -1101,22 +1101,36 @@ contract DutchExchange {
         }
     }
 
-    // function getRunningTokenPairs(
-    //     address[] tokens
-    // )
-    //     public
-    //     view
-    //     returns (address[] tokens1, address[] token2)
-    // {
-    //     for (uint i = 0; i < tokens.length - 1; i++) {
-    //         for (uint j = i + 1; j < tokens.length; j++) {
-    //             if (getAuctionIndex(tokens[i], tokens[j]) > 0) {
-    //                 tokens1.push(tokens[i]);
-    //                 tokens2.push(tokens[j]);
-    //             }
-    //         }
-    //     }
-    // }
+    function getRunningTokenPairs(
+        address[] tokens
+    )
+        public
+        view
+        returns (address[] tokens1, address[] tokens2)
+    {
+        uint arrayLength;
+
+        for (uint k = 0; k < tokens.length - 1; k++) {
+            for (uint l = k + 1; l < tokens.length; l++) {
+                getAuctionIndex(tokens[k], tokens[l]) > 0 ? arrayLength++ : 0;
+            }
+        }
+
+        tokens1 = new address[](arrayLength);
+        tokens2 = new address[](arrayLength);
+
+        uint h;
+
+        for (uint i = 0; i < tokens.length - 1; i++) {
+            for (uint j = i + 1; j < tokens.length; j++) {
+                if (getAuctionIndex(tokens[i], tokens[j]) > 0) {
+                    tokens1[h] = tokens[i];
+                    tokens2[h] = tokens[j];
+                    h++;
+                }
+            }
+        }
+    }
     
     //@dev for quick overview of possible sellerBalances to calculate the possible withdraw tokens
     //@param auctionSellToken is the sellToken defining an auctionPair
