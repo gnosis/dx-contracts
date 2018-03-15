@@ -1112,7 +1112,9 @@ contract DutchExchange {
 
         for (uint k = 0; k < tokens.length - 1; k++) {
             for (uint l = k + 1; l < tokens.length; l++) {
-                getAuctionIndex(tokens[k], tokens[l]) > 0 ? arrayLength++ : 0;
+                if (getAuctionIndex(tokens[k], tokens[l]) > 0) {
+                    arrayLength++;
+                }
             }
         }
 
@@ -1155,7 +1157,9 @@ contract DutchExchange {
         uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
 
         for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
-            sellerBalances[auctionSellToken][auctionBuyToken][j][user] > 0 ? arrayLength++ : 0;
+            if (sellerBalances[auctionSellToken][auctionBuyToken][j][user] > 0) {
+                arrayLength++;
+            }
         }
 
         indices = new uint[](arrayLength);
