@@ -21,13 +21,15 @@ contract DutchExchange {
     uint constant WAITING_PERIOD_CHANGE_MASTERCOPY= 30 days;
     uint constant AUCTION_START_WAITING_FOR_FUNDING = 1;
 
-
+    // variables for Proxy Construction
+    //
     address masterCopy;
     address public newMasterCopy;
     // Time when new masterCopy is updatabale
     uint public masterCopyCountdown;
 
     // > Storage
+    // auctioneer has the power to manage some variables
     address public auctioneer;
     // Ether ERC-20 token
     address public ethToken;
@@ -36,7 +38,9 @@ contract DutchExchange {
     uint public thresholdNewTokenPair;
     // Minimum required sell funding for starting antoher auction, in USD
     uint public thresholdNewAuction;
+    // Fee reduction token (magnolia, ERC-20 token)
     TokenFRT public frtToken;
+    // Token for paying fees
     TokenOWL public owlToken;
 
     // Token => approved
@@ -480,7 +484,7 @@ contract DutchExchange {
             clearAuction(sellToken, buyToken, auctionIndex, sellVolume);
         }
     }
-
+    
     // > claimSellerFunds()
     function claimSellerFunds(
         address sellToken,
