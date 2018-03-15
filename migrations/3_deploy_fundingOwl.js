@@ -30,4 +30,5 @@ module.exports = function deploy(deployer, networks, accounts) {
     .then(A => A.lockGNO(50000 * (10 ** 18)))
     .then(() => TokenOWLProxy.deployed())
     .then(T => TokenOWL.at(T.address).balanceOf(accounts[0]))
+    .then(T => console.log(T))
 }
