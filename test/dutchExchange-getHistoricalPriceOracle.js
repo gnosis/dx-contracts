@@ -42,7 +42,7 @@ const startBal = {
 }
 
 
-const c1 = () => contract('DutchExchange - historicalPriceOracleExt', (accounts) => {
+const c1 = () => contract('DutchExchange - getPriceInPastAuctionExt', (accounts) => {
   const [, seller1, seller2, buyer1] = accounts
 
 
@@ -71,14 +71,14 @@ const c1 = () => contract('DutchExchange - historicalPriceOracleExt', (accounts)
   afterEach(gasLogger)
 
   it('0. throws for auctionIndex == 0', async () => {
-    await assertRejects(dx.historicalPriceOracleExt.call(gno.address, 0))
+    await assertRejects(dx.getPriceInPastAuctionExt.call(gno.address, 0))
   })
 
   it('1. check that price for ETH is (1,1)', async () => {
     const auctionIndex = await getAuctionIndex()
     await setAndCheckAuctionStarted(eth, gno)
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
-    const [num, den] = (await dx.historicalPriceOracleExt.call(eth.address, auctionIndex)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceInPastAuctionExt.call(eth.address, eth.address, auctionIndex)).map(i => i.toNumber())
 
     assert.equal(num, 1)
     assert.equal(den, 1)
@@ -103,10 +103,10 @@ const c1 = () => contract('DutchExchange - historicalPriceOracleExt', (accounts)
 
     // actual testing
     const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex - 1)).map(i => i.toNumber())
-    const [num, den] = (await dx.historicalPriceOracleExt.call(gno.address, auctionIndex)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceInPastAuctionExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
     // We need to check the inverse closingPrices, since we have eth, gno prices
-    assert.equal(closingPriceDen, num)
-    assert.equal(closingPriceNum, den)
+    assert.equal(closingPriceNum, num)
+    assert.equal(closingPriceDen, den)
   })
 
 
@@ -128,9 +128,9 @@ const c1 = () => contract('DutchExchange - historicalPriceOracleExt', (accounts)
     
     // actual testing
     const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(gno.address, eth.address, auctionIndex - 1)).map(i => i.toNumber())
-    const [num, den] = (await dx.historicalPriceOracleExt.call(gno.address, auctionIndex)).map(i => i.toNumber())
-    assert.equal(closingPriceNum, num)
-    assert.equal(closingPriceDen, den)
+    const [num, den] = (await dx.getPriceInPastAuctionExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
+    assert.equal(closingPriceDen, num)
+    assert.equal(closingPriceNum, den)
   })
 
   it('4. check that price returns the averaged price by volume, if both previous volumes >0 ', async () => {
@@ -150,15 +150,15 @@ const c1 = () => contract('DutchExchange - historicalPriceOracleExt', (accounts)
 
     const [closingPriceNum, closingPriceDen] = await dx.closingPrices.call(eth.address, gno.address, auctionIndex - 1)
     const [closingPriceNumOpp, closingPriceDenOpp] = await dx.closingPrices.call(gno.address, eth.address, auctionIndex - 1)
-    const [num, den] = (await dx.historicalPriceOracleExt.call(gno.address, auctionIndex)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceInPastAuctionExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
 
     // check that the tests is in correct state:
     assert.equal(closingPriceNum.toNumber() > 0, true)
     assert.equal(closingPriceNumOpp.toNumber() > 0, true)
 
     // checks for the acutal test
-    assert.equal((closingPriceNum).add(closingPriceDenOpp).toNumber(), den)
-    assert.equal((closingPriceDen).add(closingPriceNumOpp).toNumber(), num)
+    assert.equal((closingPriceNum).add(closingPriceDenOpp).toNumber(), num)
+    assert.equal((closingPriceDen).add(closingPriceNumOpp).toNumber(), den)
   })
 })
 enableContractFlag(c1)

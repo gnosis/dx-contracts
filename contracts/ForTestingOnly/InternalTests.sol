@@ -17,17 +17,17 @@ contract InternalTests is DutchExchange {
   }
   
   function InternalTests(
-        address _TUL,
-        address _OWL,
+        TokenFRT _FRT,
+        TokenOWL _OWL,
         address _owner, 
         address _ETH,
-        address _ETHUSDOracle,
+        PriceOracleInterface _ETHUSDOracle,
         uint _thresholdNewTokenPair,
         uint _thresholdNewAuction
     )
     {
     setupDutchExchange( 
-          _TUL,
+          _FRT,
           _OWL,
           _owner,
           _ETH,
@@ -36,11 +36,11 @@ contract InternalTests is DutchExchange {
           _thresholdNewAuction);
     }
 
-  function calculateFeeRatioForJS(
+  function getFeeRatioForJS(
     address user
   ) public view returns (uint, uint)
   {
-    fraction memory feeRatio = calculateFeeRatio(user);
+    fraction memory feeRatio = super.getFeeRatio(user);
     return (feeRatio.num, feeRatio.den);
   }
 

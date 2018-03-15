@@ -41,7 +41,7 @@ const startBal = {
 }
 
 
-contract('DutchExchange - getPrice', (accounts) => {
+contract('DutchExchange - getCurrentAuctionPrice', (accounts) => {
   const [, seller1, , buyer1, buyer2] = accounts
 
 
@@ -68,15 +68,15 @@ contract('DutchExchange - getPrice', (accounts) => {
 
   after(eventWatcher.stopWatching)
 
-  it('1. check that getPrice returns the right value according to time for a normal running auction', async () => {
+  it('1. check that getCurrentAuctionPrice returns the right value according to time for a normal running auction', async () => {
     const auctionIndex = await getAuctionIndex()
     await setAndCheckAuctionStarted(eth, gno)
     const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
 
-    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
     const currenttime = timestamp()
-    const [numPrevious, denPrevious] = (await dx.computeRatioOfHistoricalPriceOraclesExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
+    const [numPrevious, denPrevious] = (await dx.getPriceInPastAuctionExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
     const timeElapsed = currenttime - auctionStart 
     logger('numPrevious', numPrevious)
     logger('timeE', timeElapsed)
@@ -84,7 +84,7 @@ contract('DutchExchange - getPrice', (accounts) => {
     assert.equal(den, bn((timeElapsed + 43200)).mul(denPrevious).toNumber())
   })
 
-  it('2. check that getPrice returns the right value (closing Price ) for a theoretical closed auction', async () => {
+  it('2. check that getCurrentAuctionPrice returns the right value (closing Price ) for a theoretical closed auction', async () => {
     const auctionIndex = await getAuctionIndex()
 
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
@@ -96,27 +96,27 @@ contract('DutchExchange - getPrice', (accounts) => {
     // check prices:  - actually reduantant with tests postBuyOrder
     const closingPriceNum = (await dx.buyVolumes.call(eth.address, gno.address)).toNumber()
     const closingPriceDen = (await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber()
-    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
     assert.equal(closingPriceNum, num)
     assert.equal(closingPriceDen, den)
   })
 
 
-  it('3. check that getPrice returns the (0,0) for future auctions', async () => {
+  it('3. check that getCurrentAuctionPrice returns the (0,0) for future auctions', async () => {
     const auctionIndex = await getAuctionIndex()
-    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, auctionIndex + 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, auctionIndex + 1)).map(i => i.toNumber())
     assert.equal(0, num)
     assert.equal(0, den)
   })
 
-  it('4. check that getPrice returns the right value (closing Price ) for a closed auction', async () => {
+  it('4. check that getCurrentAuctionPrice returns the right value (closing Price ) for a closed auction', async () => {
     const auctionIndex = await getAuctionIndex()
 
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     // clearning the auction
     await postBuyOrder(eth, gno, auctionIndex, 50 * 10e17, buyer2)
     const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
-    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
     assert.equal(closingPriceNum, num)
     assert.equal(closingPriceDen, den)
   })

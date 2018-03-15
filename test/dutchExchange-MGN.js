@@ -21,8 +21,8 @@ const {
 } = require('./utils')
 
 const {
-  assertClaimingFundsCreatesTulips,
-  assertReturnedPlusTulips,
+  assertClaimingFundsCreatesMGNs,
+  assertReturnedPlusMGNs,
   claimBuyerFunds,
   claimSellerFunds,
   getAuctionIndex,
@@ -32,7 +32,7 @@ const {
   postSellOrder,
   setupTest,
   setAndCheckAuctionStarted,
-  unlockTulipTokens,
+  unlockMGNTokens,
   wait,
   waitUntilPriceIsXPercentOfPreviousPrice,
 } = require('./testFunctions')
@@ -41,8 +41,7 @@ const {
 let eth
 let gno
 let dx
-let tokenTUL
-let oracle
+let tokenMGN
 let contracts
 
 const setupContracts = async () => {
@@ -52,12 +51,11 @@ const setupContracts = async () => {
     DutchExchange: dx,
     EtherToken: eth,
     TokenGNO: gno,
-    TokenTUL: tokenTUL,
-    PriceOracleInterface: oracle,
+    TokenMGN: tokenMGN,
   } = contracts)
 }
 
-const c1 = () => contract('DX Tulip Flow --> 1 Seller + 1 Buyer', (accounts) => {
+const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
   const [master, seller1, , buyer1] = accounts
 
   let seller1Balance, sellVolumes
@@ -145,12 +143,12 @@ const c1 = () => contract('DX Tulip Flow --> 1 Seller + 1 Buyer', (accounts) => 
     assert.equal(sellVolumes, sellingAmount - svFee(0.5), 'sellVolumes === seller1Balance')
   })
   
-  it('BUYER1: Non Auction clearing PostBuyOrder + Claim => Tulips = 0', async () => {
+  it('BUYER1: Non Auction clearing PostBuyOrder + Claim => MGNs = 0', async () => {
     eventWatcher(dx, 'ClaimBuyerFunds', {})
     eventWatcher(dx, 'LogNumber', {})
     log(`
     ============================================================================================
-    T2.5: Buyer1 PostBuyOrder => [[Non Auction clearing PostBuyOrder + Claim]] => [[Tulips = 0]]
+    T2.5: Buyer1 PostBuyOrder => [[Non Auction clearing PostBuyOrder + Claim]] => [[MGNs = 0]]
     ============================================================================================
     `)
     log(`
@@ -165,8 +163,8 @@ const c1 = () => contract('DX Tulip Flow --> 1 Seller + 1 Buyer', (accounts) => 
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
-    log(`
+    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    log(` 
     Last Closing Prices:
     closeN        = ${closingNum}
     closeD        = ${closingDen}
@@ -189,25 +187,25 @@ const c1 = () => contract('DX Tulip Flow --> 1 Seller + 1 Buyer', (accounts) => 
     Left to clear auction = ${((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber() - ((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()) * (den / num)).toEth()}
     `)
     let idx = await getAuctionIndex()
-    const [claimedFunds, tulipsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
+    const [claimedFunds, mgnsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
     log(`
     CLAIMED FUNDS => ${claimedFunds.toEth()}
-    TULIPS ISSUED => ${tulipsIssued.toEth()}
+    MGN ISSUED => ${mgnsIssued.toEth()}
     `)
 
-    assert.equal(tulipsIssued, 0, 'Tulips only issued / minted after auction Close so here = 0')
+    assert.equal(mgnsIssued, 0, 'MGNs only issued / minted after auction Close so here = 0')
   })
 
   it(
-    'BUYER1: Tries to lock and unlock Tulips --> Auction NOT cleared --> asserts 0 Tulips minted and in mapping', 
-    () => unlockTulipTokens(buyer1, eth, gno),
+    'BUYER1: Tries to lock and unlock MGNs --> Auction NOT cleared --> asserts 0 MGNs minted and in mapping', 
+    () => unlockMGNTokens(buyer1, eth, gno),
   )
 
-  it('BUYER1: Auction clearing PostBuyOrder + Claim => Tulips = sellVolume', async () => {
+  it('BUYER1: Auction clearing PostBuyOrder + Claim => MGNs = sellVolume', async () => {
     eventWatcher(dx, 'AuctionCleared')
     log(`
     ================================================================================================
-    T3: Buyer1 PostBuyOrder => Auction clearing PostBuyOrder + Claim => Tulips = 99.5 || sellVolume
+    T3: Buyer1 PostBuyOrder => Auction clearing PostBuyOrder + Claim => MGNs = 99.5 || sellVolume
     ================================================================================================
     `)
     log(`
@@ -218,7 +216,7 @@ const c1 = () => contract('DX Tulip Flow --> 1 Seller + 1 Buyer', (accounts) => 
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -243,14 +241,14 @@ const c1 = () => contract('DX Tulip Flow --> 1 Seller + 1 Buyer', (accounts) => 
     `)
     // drop it down 1 as Auction has cleared
     let idx = await getAuctionIndex() - 1
-    const [claimedFunds, tulipsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
-    await assertClaimingFundsCreatesTulips(eth, gno, buyer1, 'buyer')
+    const [claimedFunds, mgnsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
+    await assertClaimingFundsCreatesMGNs(eth, gno, buyer1, 'buyer')
     log(`
     RETURNED//CLAIMED FUNDS => ${claimedFunds.toEth()}
-    TULIPS ISSUED           => ${tulipsIssued.toEth()}
+    MGN ISSUED           => ${mgnsIssued.toEth()}
     `)
 
-    assert.equal(tulipsIssued.toEth(), 99.5, 'Tulips only issued / minted after auction Close so here = 99.5 || sell Volume')
+    assert.equal(mgnsIssued.toEth(), 99.5, 'MGNs only issued / minted after auction Close so here = 99.5 || sell Volume')
   })
 
   it('Clear Auction, assert auctionIndex increase', async () => {
@@ -277,7 +275,7 @@ const c1 = () => contract('DX Tulip Flow --> 1 Seller + 1 Buyer', (accounts) => 
 
   it('BUYER1: ETH --> GNO: Buyer can lock tokens and only unlock them 24 hours later', async () => {
     // event listeners
-    // eventWatcher(tokenTUL, 'NewTokensMinted')
+    // eventWatcher(tokenMGN, 'NewTokensMinted')
     // eventWatcher(dx, 'AuctionCleared')
     log(`
     ============================================
@@ -285,12 +283,12 @@ const c1 = () => contract('DX Tulip Flow --> 1 Seller + 1 Buyer', (accounts) => 
     ============================================
     `)
     /*
-     * SUB TEST 1: Try getting Tulips
+     * SUB TEST 1: Try getting MGNs
      */ 
     // Claim Buyer Funds from auctionIdx 1
     await claimBuyerFunds(eth, gno, buyer1, 1)
-    // await checkUserReceivesTulipTokens(eth, gno, buyer1)
-    await unlockTulipTokens(buyer1)
+    // await checkUserReceivesMGNTokens(eth, gno, buyer1)
+    await unlockMGNTokens(buyer1)
   })
 
   it('SELLER: ETH --> GNO: seller can lock tokens and only unlock them 24 hours later', async () => {
@@ -303,15 +301,15 @@ const c1 = () => contract('DX Tulip Flow --> 1 Seller + 1 Buyer', (accounts) => 
     // await postBuyOrder(eth, gno, 1, 400..toWei(), buyer1)
     // just to close auction
     await claimSellerFunds(eth, gno, seller1, 1)
-    // await checkUserReceivesTulipTokens(eth, gno, buyer1)
-    await unlockTulipTokens(seller1)
+    // await checkUserReceivesMGNTokens(eth, gno, buyer1)
+    await unlockMGNTokens(seller1)
   })
 })
 
-const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) => {
+const c2 = () => contract('DX MGN Flow --> 1 Seller + 2 Buyers', (accounts) => {
   const [master, seller1, buyer2, buyer1] = accounts
   // const user = seller1
-  // let userTulips
+  // let userMGNs
   let seller1Balance, sellVolumes, buyer1Returns, buyer2Returns
   
   const startBal = {
@@ -407,12 +405,12 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
   })
 
 
-  it('BUYER1: [[Non Auction clearing PostBuyOrder + Claim]] => [[Tulips = 0]]', async () => {
+  it('BUYER1: [[Non Auction clearing PostBuyOrder + Claim]] => [[MGNs = 0]]', async () => {
     eventWatcher(dx, 'ClaimBuyerFunds')
     eventWatcher(dx, 'LogNumber')
     log(`
     ============================================================================================
-    T-2a: Buyer1 PostBuyOrder => [[Non Auction clearing PostBuyOrder + Claim]] => [[Tulips = 0]]
+    T-2a: Buyer1 PostBuyOrder => [[Non Auction clearing PostBuyOrder + Claim]] => [[MGNs = 0]]
     ============================================================================================
     `)
 
@@ -424,7 +422,7 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -444,13 +442,13 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     await postBuyOrder(eth, gno, false, (200).toWei(), buyer1)
     log(`\nBuy Volume AFTER = ${((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()).toEth()}`)
     let idx = await getAuctionIndex()
-    const [claimedFunds, tulipsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
+    const [claimedFunds, mgnsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
     log(`
     CLAIMED FUNDS => ${claimedFunds.toEth()}
-    TULIPS ISSUED => ${tulipsIssued.toEth()}
+    MGN ISSUED => ${mgnsIssued.toEth()}
     `)
     
-    assert.equal(tulipsIssued, 0, 'Tulips only issued / minted after auction Close so here = 0')
+    assert.equal(mgnsIssued, 0, 'MGNs only issued / minted after auction Close so here = 0')
   })
 
   it('Move time and change price to 50% of 4:1 aka 2:1 aka Last Closing Price', async () => {
@@ -463,7 +461,7 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -478,12 +476,12 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     assert.isAtLeast((num / den), 2.899999)
   })
 
-  it('BUYER2: Non Auction clearing PostBuyOrder + Claim => Tulips = 0', async () => {
+  it('BUYER2: Non Auction clearing PostBuyOrder + Claim => MGNs = 0', async () => {
     eventWatcher(dx, 'ClaimBuyerFunds', {})
     eventWatcher(dx, 'LogNumber', {})
     log(`
     ============================================================================================
-    T-2b: Buyer1 PostBuyOrder => [[Non Auction clearing PostBuyOrder + Claim]] => [[Tulips = 0]]
+    T-2b: Buyer1 PostBuyOrder => [[Non Auction clearing PostBuyOrder + Claim]] => [[MGNs = 0]]
     ============================================================================================
     `)
 
@@ -500,7 +498,7 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -518,20 +516,20 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     Left to clear auction = ${((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber() - ((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()) * (den / num)).toEth()} ETH
     `)
     
-    const [claimedFunds, tulipsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer2, 1)).map(i => i.toNumber())
+    const [claimedFunds, mgnsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer2, 1)).map(i => i.toNumber())
     log(`
     CLAIMED FUNDS => ${claimedFunds.toEth()} ETH
-    TULIPS ISSUED => ${tulipsIssued.toEth()} TUL
+    MGN ISSUED => ${mgnsIssued.toEth()} MGN
     `)
 
-    assert.equal(tulipsIssued, 0, 'Tulips only issued / minted after auction Close so here = 0')
+    assert.equal(mgnsIssued, 0, 'MGNs only issued / minted after auction Close so here = 0')
   })
 
-  it('BUYER1: Auction clearing PostBuyOrder + Claim => Tulips = sellVolume', async () => {
+  it('BUYER1: Auction clearing PostBuyOrder + Claim => MGNs = sellVolume', async () => {
     eventWatcher(dx, 'AuctionCleared')
     log(`
     ================================================================================================
-    T3: Buyer1 PostBuyOrder => Auction clearing PostBuyOrder + Claim => Tulips = 99.5 || sellVolume
+    T3: Buyer1 PostBuyOrder => Auction clearing PostBuyOrder + Claim => MGNs = 99.5 || sellVolume
     ================================================================================================
     `)
     log(`
@@ -546,7 +544,7 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -566,31 +564,31 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     Left to clear auction = ${((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber() - ((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()) * (den / num)).toEth()}
     `)
     let idx = await getAuctionIndex() - 1
-    const [b1ClaimedFunds, b1TulipsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
-    const [b2ClaimedFunds, b2TulipsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer2, idx)).map(i => i.toNumber())
-    buyer1Returns = b1TulipsIssued
-    buyer2Returns = b2TulipsIssued
+    const [b1ClaimedFunds, b1MGNsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
+    const [b2ClaimedFunds, b2MGNsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer2, idx)).map(i => i.toNumber())
+    buyer1Returns = b1MGNsIssued
+    buyer2Returns = b2MGNsIssued
 
     // Buyer1 Claim
-    await assertClaimingFundsCreatesTulips(eth, gno, buyer1, 'buyer')
+    await assertClaimingFundsCreatesMGNs(eth, gno, buyer1, 'buyer')
     // Buyer2 Claim
-    await assertClaimingFundsCreatesTulips(eth, gno, buyer2, 'buyer')
+    await assertClaimingFundsCreatesMGNs(eth, gno, buyer2, 'buyer')
 
-    // Save return amt into state since TUL 1:1 w/ETH
+    // Save return amt into state since MGN 1:1 w/ETH
     log(`
     Buyer 1
     RETURNED//CLAIMED FUNDS => ${b1ClaimedFunds.toEth()}
-    TULIPS ISSUED           => ${b1TulipsIssued.toEth()}
+    MGN ISSUED           => ${b1MGNsIssued.toEth()}
     `)
 
     log(`
     Buyer 2
     RETURNED//CLAIMED FUNDS => ${b2ClaimedFunds.toEth()}
-    TULIPS ISSUED           => ${b2TulipsIssued.toEth()}
+    MGN ISSUED           => ${b2MGNsIssued.toEth()}
     `)
 
-    // assert both amount of tulips issued = sellVolume
-    assert.equal((b1TulipsIssued + b2TulipsIssued).toEth(), 99.5, 'Tulips only issued / minted after auction Close so here = 99.5 || sell Volume')
+    // assert both amount of mgns issued = sellVolume
+    assert.equal((b1MGNsIssued + b2MGNsIssued).toEth(), 99.5, 'MGNs only issued / minted after auction Close so here = 99.5 || sell Volume')
   })
 
   it('Clear Auction, assert auctionIndex increase', async () => {
@@ -619,7 +617,7 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
 
   it('BUYER1: ETH --> GNO: user can lock tokens and only unlock them 24 hours later', async () => {
     // event listeners
-    // eventWatcher(tokenTUL, 'NewTokensMinted')
+    // eventWatcher(tokenMGN, 'NewTokensMinted')
     // eventWatcher(dx, 'AuctionCleared')
     log(`
     ============================================
@@ -627,17 +625,17 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     ============================================
     `)
     /*
-     * SUB TEST 1: Try getting Tulips
+     * SUB TEST 1: Try getting MGNs
      */ 
     // Claim Buyer Funds from auctionIdx 1
     await claimBuyerFunds(eth, gno, buyer1, 1)
-    // await checkUserReceivesTulipTokens(eth, gno, buyer1)
-    await unlockTulipTokens(buyer1)
+    // await checkUserReceivesMGNTokens(eth, gno, buyer1)
+    await unlockMGNTokens(buyer1)
   })
 
   it('BUYER2: ETH --> GNO: user can lock tokens and only unlock them 24 hours later', async () => {
     // event listeners
-    // eventWatcher(tokenTUL, 'NewTokensMinted')
+    // eventWatcher(tokenMGN, 'NewTokensMinted')
     // eventWatcher(dx, 'AuctionCleared')
     log(`
     ============================================
@@ -645,12 +643,12 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     ============================================
     `)
     /*
-     * SUB TEST 1: Try getting Tulips
+     * SUB TEST 1: Try getting MGNs
      */ 
     // Claim Buyer Funds from auctionIdx 1
     await claimBuyerFunds(eth, gno, buyer2, 1)
-    // await checkUserReceivesTulipTokens(eth, gno, buyer1)
-    await unlockTulipTokens(buyer2)
+    // await checkUserReceivesMGNTokens(eth, gno, buyer1)
+    await unlockMGNTokens(buyer2)
   })
 
   it('SELLER: ETH --> GNO: seller can lock tokens and only unlock them 24 hours later', async () => {
@@ -661,14 +659,14 @@ const c2 = () => contract('DX Tulip Flow --> 1 Seller + 2 Buyers', (accounts) =>
     `)
     log('seller BALANCE = ', (await getBalance(seller1, eth)).toEth())
     await claimSellerFunds(eth, gno, seller1, 1)
-    await unlockTulipTokens(seller1)
+    await unlockMGNTokens(seller1)
   })
 })
 
-const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts) => {
+const c3 = () => contract('DX MGN Flow --> withdrawUnlockedTokens', (accounts) => {
   const [master, seller1, , buyer1] = accounts
   // const user = seller1
-  // let userTulips
+  // let userMGNs
   let seller1Balance, sellVolumes
   
   const startBal = {
@@ -754,12 +752,12 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
     assert.equal(sellVolumes, sellingAmount - svFee(0.5), 'sellVolumes === seller1Balance')
   })
   
-  it('BUYER1: Non Auction clearing PostBuyOrder + Claim => Tulips = 0', async () => {
+  it('BUYER1: Non Auction clearing PostBuyOrder + Claim => MGNs = 0', async () => {
     eventWatcher(dx, 'ClaimBuyerFunds', {})
     eventWatcher(dx, 'LogNumber', {})
     log(`
     ============================================================================================
-    T2.5: Buyer1 PostBuyOrder => [[Non Auction clearing PostBuyOrder + Claim]] => [[Tulips = 0]]
+    T2.5: Buyer1 PostBuyOrder => [[Non Auction clearing PostBuyOrder + Claim]] => [[MGNs = 0]]
     ============================================================================================
     `)
     log(`
@@ -774,7 +772,7 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -798,25 +796,25 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
     Left to clear auction = ${((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber() - ((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()) * (den / num)).toEth()}
     `)
     let idx = await getAuctionIndex()
-    const [claimedFunds, tulipsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
+    const [claimedFunds, mgnsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
     log(`
     CLAIMED FUNDS => ${claimedFunds.toEth()}
-    TULIPS ISSUED => ${tulipsIssued.toEth()}
+    MGN ISSUED => ${mgnsIssued.toEth()}
     `)
 
-    assert.equal(tulipsIssued, 0, 'Tulips only issued / minted after auction Close so here = 0')
+    assert.equal(mgnsIssued, 0, 'MGNs only issued / minted after auction Close so here = 0')
   })
 
   it(
-    'BUYER1: Tries to lock and unlock Tulips --> Auction NOT cleared --> asserts 0 Tulips minted and in mapping', 
-    () => unlockTulipTokens(buyer1),
+    'BUYER1: Tries to lock and unlock MGNs --> Auction NOT cleared --> asserts 0 MGNs minted and in mapping', 
+    () => unlockMGNTokens(buyer1),
   )
 
-  it('BUYER1: Auction clearing PostBuyOrder + Claim => Tulips = sellVolume', async () => {
+  it('BUYER1: Auction clearing PostBuyOrder + Claim => MGNs = sellVolume', async () => {
     eventWatcher(dx, 'AuctionCleared')
     log(`
     ================================================================================================
-    T3: Buyer1 PostBuyOrder => Auction clearing PostBuyOrder + Claim => Tulips = 99.5 || sellVolume
+    T3: Buyer1 PostBuyOrder => Auction clearing PostBuyOrder + Claim => MGNs = 99.5 || sellVolume
     ================================================================================================
     `)
     log(`
@@ -827,7 +825,7 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -852,14 +850,14 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
     `)
     // drop it down 1 as Auction has cleared
     let idx = await getAuctionIndex() - 1
-    const [claimedFunds, tulipsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
-    await assertClaimingFundsCreatesTulips(eth, gno, buyer1, 'buyer')
+    const [claimedFunds, mgnsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
+    await assertClaimingFundsCreatesMGNs(eth, gno, buyer1, 'buyer')
     log(`
     RETURNED//CLAIMED FUNDS => ${claimedFunds.toEth()}
-    TULIPS ISSUED           => ${tulipsIssued.toEth()}
+    MGN ISSUED           => ${mgnsIssued.toEth()}
     `)
 
-    assert.equal(tulipsIssued.toEth(), 99.5, 'Tulips only issued / minted after auction Close so here = 99.5 || sell Volume')
+    assert.equal(mgnsIssued.toEth(), 99.5, 'MGNs only issued / minted after auction Close so here = 99.5 || sell Volume')
   })
 
   it('Clear Auction, assert auctionIndex increase', async () => {
@@ -886,7 +884,7 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
 
   it('BUYER1: ETH --> GNO: Buyer can lock tokens and only unlock them 24 hours later', async () => {
     // event listeners
-    // eventWatcher(tokenTUL, 'NewTokensMinted')
+    // eventWatcher(tokenMGN, 'NewTokensMinted')
     // eventWatcher(dx, 'AuctionCleared')
     log(`
     ============================================
@@ -894,12 +892,12 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
     ============================================
     `)
     /*
-     * SUB TEST 1: Try getting Tulips
+     * SUB TEST 1: Try getting MGNs
      */ 
     // Claim Buyer Funds from auctionIdx 1
     await claimBuyerFunds(eth, gno, buyer1, 1)
-    // await checkUserReceivesTulipTokens(eth, gno, buyer1)
-    await unlockTulipTokens(buyer1)
+    // await checkUserReceivesMGNTokens(eth, gno, buyer1)
+    await unlockMGNTokens(buyer1)
   })
 
   it('SELLER: ETH --> GNO: seller can lock tokens and only unlock them 24 hours later', async () => {
@@ -912,15 +910,15 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
     // await postBuyOrder(eth, gno, 1, 400..toWei(), buyer1)
     // just to close auction
     await claimSellerFunds(eth, gno, seller1, 1)
-    // await checkUserReceivesTulipTokens(eth, gno, buyer1)
-    await unlockTulipTokens(seller1)
+    // await checkUserReceivesMGNTokens(eth, gno, buyer1)
+    await unlockMGNTokens(seller1)
   })
 
-  it('BUYER1: Unlocked TUL tokens can be Withdrawn and Balances show for this', async () => {
-    // TUL were minted
-    // TUL were locked
-    // TUL were UNLOCKED - starts 24h countdown
-    // withdraw time MUST be < NOW aka TUL can be withdrawn
+  it('BUYER1: Unlocked MGN tokens can be Withdrawn and Balances show for this', async () => {
+    // MGN were minted
+    // MGN were locked
+    // MGN were UNLOCKED - starts 24h countdown
+    // withdraw time MUST be < NOW aka MGN can be withdrawn
 
     /**
      * Sub-Test 1: 
@@ -928,8 +926,8 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
      * move time 24 hours
      * assert withdrawTime is < now
      */
-    const [amountUnlocked, withdrawTime] = (await tokenTUL.unlockedTULs.call(buyer1)).map(n => n.toNumber())
-    assert(amountUnlocked !== 0 && amountUnlocked === sellVolumes, 'Amount unlocked isnt 0 aka there are tulips')
+    const [amountUnlocked, withdrawTime] = (await tokenMGN.unlockedTokens.call(buyer1)).map(n => n.toNumber())
+    assert(amountUnlocked !== 0 && amountUnlocked === sellVolumes, 'Amount unlocked isnt 0 aka there are mgns')
     // wait 24 hours
     await wait(86405)
     log(`
@@ -939,27 +937,27 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
     `)
     assert(withdrawTime < timestamp(), 'withdrawTime must be < now')
     // withdraw them!
-    await tokenTUL.withdrawUnlockedTokens({ from: buyer1 })
+    await tokenMGN.withdrawUnlockedTokens({ from: buyer1 })
     /**
      * Sub Test 2:
-     * assert balance[user] of TUL != 0
+     * assert balance[user] of MGN != 0
      */
-    const userTULBalance = (await tokenTUL.balanceOf.call(buyer1)).toNumber()
+    const userMGNBalance = (await tokenMGN.balanceOf.call(buyer1)).toNumber()
     log(`
-    BUYER1 TUL Balance ===> ${userTULBalance.toEth()}
+    BUYER1 MGN Balance ===> ${userMGNBalance.toEth()}
     `)
-    assert(userTULBalance > 0 && userTULBalance === sellVolumes, 'Buyer1 should have non 0 Token TUL balances')
+    assert(userMGNBalance > 0 && userMGNBalance === sellVolumes, 'Buyer1 should have non 0 Token MGN balances')
   })
 
-  it('SELLER1: Unlocked TUL tokens can be Withdrawn and Balances show for this', async () => {
+  it('SELLER1: Unlocked MGN tokens can be Withdrawn and Balances show for this', async () => {
     /**
      * Sub-Test 1: 
      * assert amount unlocked is not 0
      * move time 24 hours
      * assert withdrawTime is < now
      */
-    const [amountUnlocked, withdrawTime] = (await tokenTUL.unlockedTULs.call(seller1)).map(n => n.toNumber())
-    assert(amountUnlocked !== 0 && amountUnlocked === sellVolumes, 'Amount unlocked isnt 0 aka there are tulips')
+    const [amountUnlocked, withdrawTime] = (await tokenMGN.unlockedTokens.call(seller1)).map(n => n.toNumber())
+    assert(amountUnlocked !== 0 && amountUnlocked === sellVolumes, 'Amount unlocked isnt 0 aka there are mgns')
     // wait 24 hours
     await wait(86405)
     log(`
@@ -969,23 +967,23 @@ const c3 = () => contract('DX Tulip Flow --> withdrawUnlockedTokens', (accounts)
     `)
     assert(withdrawTime < timestamp(), 'withdrawTime must be < now')
     // withdraw them!
-    await tokenTUL.withdrawUnlockedTokens({ from: seller1 })
+    await tokenMGN.withdrawUnlockedTokens({ from: seller1 })
     /**
      * Sub Test 2:
-     * assert balance[user] of TUL != 0
+     * assert balance[user] of MGN != 0
      */
-    const userTULBalance = (await tokenTUL.balanceOf.call(seller1)).toNumber()
+    const userMGNBalance = (await tokenMGN.balanceOf.call(seller1)).toNumber()
     log(`
-    seller1 TUL Balance ===> ${userTULBalance.toEth()}
+    seller1 MGN Balance ===> ${userMGNBalance.toEth()}
     `)
-    assert(userTULBalance > 0 && userTULBalance === sellVolumes, 'seller1 should have non 0 Token TUL balances')
+    assert(userMGNBalance > 0 && userMGNBalance === sellVolumes, 'seller1 should have non 0 Token MGN balances')
   })
 })
 
-const c4 = () => contract('DX Tulip Flow --> change Owner', (accounts) => {
+const c4 = () => contract('DX MGN Flow --> change Owner', (accounts) => {
   const [master, seller1] = accounts
   // const user = seller1
-  // let userTulips
+  // let userMGNs
   let seller1Balance
   
   const startBal = {
@@ -1055,28 +1053,28 @@ const c4 = () => contract('DX Tulip Flow --> change Owner', (accounts) => {
     assert.equal(seller1Balance, startingETH - sellingAmount, `Seller1 should have ${startingETH.toEth()} balance after new Token Pair add`)
   })
 
-  it('CHANGING OWNER AND MINTER: changes TUL_OWNER from Master to Seller1 --> changes TUL_MINTER from NEW OWNER seller1 to seller1', async () => {
-    const originalTULOwner = await tokenTUL.owner.call()
-    await tokenTUL.updateOwner(seller1, { from: master })
-    const newTULOwner = await tokenTUL.owner.call()
+  it('CHANGING OWNER AND MINTER: changes MGN_OWNER from Master to Seller1 --> changes MGN_MINTER from NEW OWNER seller1 to seller1', async () => {
+    const originalMGNOwner = await tokenMGN.owner.call()
+    await tokenMGN.updateOwner(seller1, { from: master })
+    const newMGNOwner = await tokenMGN.owner.call()
 
-    assert(originalTULOwner === master, 'Original owner should be accounts[0] aka master aka migrations deployed acct for tokenTUL')
-    assert(newTULOwner === seller1, 'New owner should be accounts[1] aka seller1')
+    assert(originalMGNOwner === master, 'Original owner should be accounts[0] aka master aka migrations deployed acct for tokenMGN')
+    assert(newMGNOwner === seller1, 'New owner should be accounts[1] aka seller1')
 
-    // set new Minter as seller1 - must come from TUL owner aka seller1
-    await tokenTUL.updateMinter(seller1, { from: newTULOwner })
-    const newTULMInter = await tokenTUL.minter.call()
+    // set new Minter as seller1 - must come from MGN owner aka seller1
+    await tokenMGN.updateMinter(seller1, { from: newMGNOwner })
+    const newMGNMInter = await tokenMGN.minter.call()
 
-    // assert.equal(originalTULMinter, master, 'Original owner should be accounts[0] aka master aka migrations deployed acct for tokenTUL')
-    assert.equal(newTULMInter, seller1, 'New owner should be accounts[1] aka seller1')
+    // assert.equal(originalMGNMinter, master, 'Original owner should be accounts[0] aka master aka migrations deployed acct for tokenMGN')
+    assert.equal(newMGNMInter, seller1, 'New owner should be accounts[1] aka seller1')
   })
 })
 
-const c5 = () => contract('DX Tulip Flow --> 2 Sellers || Tulip issuance', (accounts) => {
+const c5 = () => contract('DX MGN Flow --> 2 Sellers || MGN issuance', (accounts) => {
   const [master, seller1, seller2, buyer1, seller3] = accounts
   const sellers = [seller1, seller2]
   // const user = seller1
-  // let userTulips
+  // let userMGNs
   let seller1Balance, seller2Balance, sellVolumes
   let seller3SellAmount
   
@@ -1178,28 +1176,28 @@ const c5 = () => contract('DX Tulip Flow --> 2 Sellers || Tulip issuance', (acco
     assert(aucIdx === 2, 'Auc ended and moved +1 idx')
   })
 
-  it('Sellers 1 and 2 can take out their equal share of Tulips', () => 
+  it('Sellers 1 and 2 can take out their equal share of MGNs', () => 
     Promise.all(sellers.map(async (seller) => {
       await claimSellerFunds(eth, gno, seller, 1)
-      let tulBal = (await tokenTUL.lockedTULBalances.call(seller)).toNumber()
+      let tulBal = (await tokenMGN.lockedTokenBalances.call(seller)).toNumber()
       log(tulBal)
 
-      assert.equal(tulBal, sellVolumes / 2, 'Tulips minted should equal each sellers\' amount posted after FEES')
+      assert.equal(tulBal, sellVolumes / 2, 'MGNs minted should equal each sellers\' amount posted after FEES')
     })))
   
   it('Seller 3 can take out their smaller share', async () => {
     await claimSellerFunds(eth, gno, seller3, 1)
-    const tulBal = (await tokenTUL.lockedTULBalances.call(seller3)).toNumber()
+    const tulBal = (await tokenMGN.lockedTokenBalances.call(seller3)).toNumber()
     log(tulBal)
 
     assert.equal(tulBal, seller3SellAmount * 0.995, 'Seller 3 balance is their sell amount * fee')
   })  
 })  
 
-const c6 = () => contract('DX Tulip Flow --> 1 SellOrder && 1 BuyOrder', (accounts) => {
+const c6 = () => contract('DX MGN Flow --> 1 SellOrder && 1 BuyOrder', (accounts) => {
   const [master, seller1, , buyer1] = accounts
 
-  // let userTulips
+  // let userMGNs
   let seller1Balance
   
   const startBal = {
@@ -1249,8 +1247,8 @@ const c6 = () => contract('DX Tulip Flow --> 1 SellOrder && 1 BuyOrder', (accoun
     assert.equal(await dx.approvedTokens.call(gno.address), true, 'GNO is approved by DX')
     
     // allow the start of an auction w/no threshold
-    await dx.updateExchangeParams(master, oracle.address, 0, 0, { from: master })
-
+    await dx.updateThresholdNewTokenPair(0, { from: master })
+    await dx.updateThresholdNewAuction(0, { from: master })
     /*
      * SUB TEST 4: create new token pair and assert Seller1Balance = 0 after depositing more than Balance
      */
@@ -1287,7 +1285,7 @@ const c6 = () => contract('DX Tulip Flow --> 1 SellOrder && 1 BuyOrder', (accoun
   it('ASSERTS AUCTION IDX === 2', async () => assert.equal(await getAuctionIndex(), 2, 'AucIdx should = 2'))
 })
 
-const c7 = () => contract('DX Tulip Flow --> ERC20:ERC20 --> 1 S + 1B', (accounts) => {
+const c7 = () => contract('DX MGN Flow --> ERC20:ERC20 --> 1 S + 1B', (accounts) => {
   const [master, seller1, seller2, buyer1] = accounts
   const participants = accounts.slice(1)
   const sellers = [seller1, seller2]
@@ -1330,6 +1328,7 @@ const c7 = () => contract('DX Tulip Flow --> ERC20:ERC20 --> 1 S + 1B', (account
 
     // fund gno2 - deposit in DX
     await Promise.all(participants.map((acc) => {
+      /* eslint array-callback-return:0 */
       gno2.transfer(acc, startingGNO2, { from: master })
       gno2.approve(dx.address, startingGNO2, { from: acc })
     }))
@@ -1414,7 +1413,7 @@ const c7 = () => contract('DX Tulip Flow --> ERC20:ERC20 --> 1 S + 1B', (account
     // clear recip
     await postBuyOrder(gno, eth, 1, 100.0.toWei(), buyer1)
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Buy Volume AFTER = ${((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()).toEth()}
     Left to clear auction = ${((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber() - ((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()) * (den / num)).toEth()}
@@ -1453,60 +1452,60 @@ const c7 = () => contract('DX Tulip Flow --> ERC20:ERC20 --> 1 S + 1B', (account
     assert.equal(assertingAI, startingAI + 1, `Current Auction Index should == ${startingAI} + 1`)
   })
 
-  it('Calculate that PROPER Tulip amt is minted', async () => {
+  it('Calculate that PROPER MGN amt is minted', async () => {
     // assuming all auctions: E/G, E/G2, G/G2 are CLOSED
-    /** Tulip minting guide
+    /** MGN minting guide
      * ETH/ERC20 
      * --> Buyer (ERC20)
-     * ------> Tulip = buyerBalance * (price.den / price.num) <== closingPrice
+     * ------> MGN = buyerBalance * (price.den / price.num) <== closingPrice
      * --> Seller (ETH)
-     * ------> Tulip = sellerBalance (1:1 conversion)
+     * ------> MGN = sellerBalance (1:1 conversion)
      * 
      * ERC20/ETH
      * --> Buyer (ETH)
-     * ------> Tulip = buyerBalance (1:1 conversion)
+     * ------> MGN = buyerBalance (1:1 conversion)
      * --> Seller (ERC20)
-     * ------> Tulip = returned AKA sellerBalance * (price.num / price.den)
+     * ------> MGN = returned AKA sellerBalance * (price.num / price.den)
      * 
      * ERC20/ERC20
      * --> Buyer (ERC20)
-     * ------> Tulip = buyerBalance * (priceETHden / priceETHnum)
+     * ------> MGN = buyerBalance * (priceETHden / priceETHnum)
      * --> Seller (ERC20)
-     * ------> Tulip = returned AKA sellerBalance * (price.num / price.den)
+     * ------> MGN = returned AKA sellerBalance * (price.num / price.den)
      * 
      */
     
     // seller
-    await assertReturnedPlusTulips(eth, gno, seller1, 'seller')
-    await assertReturnedPlusTulips(eth, gno2, seller1, 'seller')
-    await assertReturnedPlusTulips(gno, gno2, seller1, 'seller')
+    await assertReturnedPlusMGNs(eth, gno, seller1, 'seller', 1, eth)
+    await assertReturnedPlusMGNs(eth, gno2, seller1, 'seller', 1, eth)
+    await assertReturnedPlusMGNs(gno, gno2, seller1, 'seller', 1, eth)
 
     // buyer
-    await assertReturnedPlusTulips(eth, gno, buyer1, 'buyer')
-    await assertReturnedPlusTulips(eth, gno2, buyer1, 'buyer')
-    await assertReturnedPlusTulips(gno, gno2, buyer1, 'buyer')
+    await assertReturnedPlusMGNs(eth, gno, buyer1, 'buyer', 1, eth)
+    await assertReturnedPlusMGNs(eth, gno2, buyer1, 'buyer', 1, eth)
+    await assertReturnedPlusMGNs(gno, gno2, buyer1, 'buyer', 1, eth)
   })
 
-  it('Buyer1 => can claim all TULIPS from all auctions', async () => {
+  it('Buyer1 => can claim all MGN from all auctions', async () => {
     // ETH/GNO
-    await assertClaimingFundsCreatesTulips(eth, gno, buyer1, 'buyer')
+    await assertClaimingFundsCreatesMGNs(eth, gno, buyer1, 'buyer')
     // ETH/GNO2
-    await assertClaimingFundsCreatesTulips(eth, gno2, buyer1, 'buyer')
+    await assertClaimingFundsCreatesMGNs(eth, gno2, buyer1, 'buyer')
     // GNO/GNO2
-    await assertClaimingFundsCreatesTulips(gno, gno2, buyer1, 'buyer')
+    await assertClaimingFundsCreatesMGNs(gno, gno2, buyer1, 'buyer')
   })
   
-  it('Seller1 can take out his/her share of TUL', async () => {
+  it('Seller1 can take out his/her share of MGN', async () => {
     // ETH/GNO
-    await assertClaimingFundsCreatesTulips(eth, gno, seller1, 'seller')
+    await assertClaimingFundsCreatesMGNs(eth, gno, seller1, 'seller')
     // ETH/GNO2
-    await assertClaimingFundsCreatesTulips(eth, gno2, seller1, 'seller')
+    await assertClaimingFundsCreatesMGNs(eth, gno2, seller1, 'seller')
     // GNO/GNO2
-    await assertClaimingFundsCreatesTulips(gno, gno2, seller1, 'seller')
+    await assertClaimingFundsCreatesMGNs(gno, gno2, seller1, 'seller')
   })  
 })
 
-const c8 = () => contract('DX Tulip Flow --> Seller ERC20/ETH', (accounts) => {
+const c8 = () => contract('DX MGN Flow --> Seller ERC20/ETH', (accounts) => {
   const [master, seller1, , buyer1, buyer2] = accounts
 
   let seller1Balance, sellVolumes
@@ -1590,10 +1589,10 @@ const c8 = () => contract('DX Tulip Flow --> Seller ERC20/ETH', (accounts) => {
     assert.equal(sellVolumes, (sellingAmount / 4) - svFee(0.5), 'sellVolumes === seller1Balance')
   })
   
-  it('BUYER1: Non Auction clearing PostBuyOrder + Claim => Tulips = 0', async () => {
+  it('BUYER1: Non Auction clearing PostBuyOrder + Claim => MGNs = 0', async () => {
     log(`
     ============================================================================================
-    T2.5: Buyer1 PostBuyOrder => [[Non Auction clearing PostBuyOrder + Claim]] => [[Tulips = 0]]
+    T2.5: Buyer1 PostBuyOrder => [[Non Auction clearing PostBuyOrder + Claim]] => [[MGNs = 0]]
     ============================================================================================
     `)
     log(`
@@ -1608,7 +1607,7 @@ const c8 = () => contract('DX Tulip Flow --> Seller ERC20/ETH', (accounts) => {
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(gno.address, eth.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceExt.call(gno.address, eth.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(gno.address, eth.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -1632,25 +1631,25 @@ const c8 = () => contract('DX Tulip Flow --> Seller ERC20/ETH', (accounts) => {
     Left to clear auction = ${((await dx.sellVolumesCurrent.call(gno.address, eth.address)).toNumber() - ((await dx.buyVolumes.call(gno.address, eth.address)).toNumber()) * (den / num)).toEth()}
     `)
     let idx = await getAuctionIndex()
-    const [claimedFunds, tulipsIssued] = (await dx.claimBuyerFunds.call(gno.address, eth.address, buyer1, idx)).map(i => i.toNumber())
+    const [claimedFunds, mgnsIssued] = (await dx.claimBuyerFunds.call(gno.address, eth.address, buyer1, idx)).map(i => i.toNumber())
     log(`
     CLAIMED FUNDS => ${claimedFunds.toEth()}
-    TULIPS ISSUED => ${tulipsIssued.toEth()}
+    MGN ISSUED => ${mgnsIssued.toEth()}
     `)
 
-    assert.equal(tulipsIssued, 0, 'Tulips only issued / minted after auction Close so here = 0')
+    assert.equal(mgnsIssued, 0, 'MGNs only issued / minted after auction Close so here = 0')
   })
 
   it(
-    'BUYER1: Tries to lock and unlock Tulips --> Auction NOT cleared --> asserts 0 Tulips minted and in mapping', 
-    () => unlockTulipTokens(buyer1, gno, eth),
+    'BUYER1: Tries to lock and unlock MGNs --> Auction NOT cleared --> asserts 0 MGNs minted and in mapping', 
+    () => unlockMGNTokens(buyer1, gno, eth),
   )
 
-  it('BUYER1: Auction clearing PostBuyOrder + Claim => Tulips = sellVolume', async () => {
+  it('BUYER1: Auction clearing PostBuyOrder + Claim => MGNs = sellVolume', async () => {
     eventWatcher(dx, 'AuctionCleared')
     log(`
     ================================================================================================
-    T3: Buyer1 PostBuyOrder => Auction clearing PostBuyOrder + Claim => Tulips = 99.5 || sellVolume
+    T3: Buyer1 PostBuyOrder => Auction clearing PostBuyOrder + Claim => MGNs = 99.5 || sellVolume
     ================================================================================================
     `)
     log(`
@@ -1661,7 +1660,7 @@ const c8 = () => contract('DX Tulip Flow --> Seller ERC20/ETH', (accounts) => {
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(gno.address, eth.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getPriceExt.call(gno.address, eth.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(gno.address, eth.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -1690,14 +1689,14 @@ const c8 = () => contract('DX Tulip Flow --> Seller ERC20/ETH', (accounts) => {
     // clear RECIP auction via buyer2
     await postBuyOrder(eth, gno, 1, 800..toWei(), buyer2)
     
-    const [returned, tulipsIssued] = (await dx.claimBuyerFunds.call(gno.address, eth.address, buyer1, idx)).map(i => i.toNumber())
-    await assertClaimingFundsCreatesTulips(gno, eth, buyer1, 'buyer')
+    const [returned, mgnsIssued] = (await dx.claimBuyerFunds.call(gno.address, eth.address, buyer1, idx)).map(i => i.toNumber())
+    await assertClaimingFundsCreatesMGNs(gno, eth, buyer1, 'buyer')
     log(`
     RETURNED//CLAIMED FUNDS => ${returned.toEth()}
-    TULIPS ISSUED           => ${tulipsIssued.toEth()}
+    MGN ISSUED           => ${mgnsIssued.toEth()}
     `)
 
-    assert.equal(tulipsIssued.toEth(), returned, 'Tulips only issued / minted after auction Close and are equal to returned amount')
+    assert.equal(mgnsIssued.toEth(), returned, 'MGNs only issued / minted after auction Close and are equal to returned amount')
   })
 
   it('Clear Auction, assert auctionIndex increase', async () => {
@@ -1728,12 +1727,12 @@ const c8 = () => contract('DX Tulip Flow --> Seller ERC20/ETH', (accounts) => {
     ============================================
     `)
     /*
-     * SUB TEST 1: Try getting Tulips
+     * SUB TEST 1: Try getting MGNs
      */ 
     // Claim Buyer Funds from auctionIdx 1
     await claimBuyerFunds(gno, eth, buyer1, 1)
-    // await checkUserReceivesTulipTokens(eth, gno, buyer1)
-    await unlockTulipTokens(buyer1)
+    // await checkUserReceivesMGNTokens(eth, gno, buyer1)
+    await unlockMGNTokens(buyer1)
   })
 
   it('SELLER: GNO --> ETH: seller can lock tokens and only unlock them 24 hours later', async () => {
@@ -1746,8 +1745,8 @@ const c8 = () => contract('DX Tulip Flow --> Seller ERC20/ETH', (accounts) => {
     // await postBuyOrder(eth, gno, 1, 400..toWei(), buyer1)
     // just to close auction
     await claimSellerFunds(gno, eth, seller1, 1)
-    // await checkUserReceivesTulipTokens(eth, gno, buyer1)
-    await unlockTulipTokens(seller1)
+    // await checkUserReceivesMGNTokens(eth, gno, buyer1)
+    await unlockMGNTokens(seller1)
   })
 })
 

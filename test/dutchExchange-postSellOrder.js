@@ -11,7 +11,7 @@ const { getContracts, setupTest, wait } = require('./testFunctions')
 // Test VARS
 let eth
 let gno
-let tul
+let mgn
 let dx
 
 let feeRatio
@@ -42,7 +42,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     ({
       EtherToken: eth,
       TokenGNO: gno,
-      TokenTUL: tul,
+      TokenMGN: mgn,
       DutchExchange: dx,
     } = contracts)
 
@@ -51,8 +51,8 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     eventWatcher(dx, 'NewSellOrder')
     eventWatcher(dx, 'Log')
 
-    const totalTul = (await tul.totalSupply.call()).toNumber()
-    assert.strictEqual(totalTul, 0, 'total TUL tokens should be 0')
+    const totalMGN = (await mgn.totalSupply.call()).toNumber()
+    assert.strictEqual(totalMGN, 0, 'total TUL tokens should be 0')
     // then we know that feeRatio = 1 / 200
     feeRatio = 1 / 200
   })
