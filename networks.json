@@ -3,47 +3,91 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0x568e5ceb1c6cad1bc7d03a0162572e981e20f8e7"
+      "address": "0x0bc200e033fcc9160f6d7e7cc4b6ef68af9f62bf"
     },
     "42": {
       "events": {},
       "links": {},
-      "address": "0x9df0f2f629e320375b90398de75cd792e9aeaa53"
+      "address": "0x006469da83c2e8ea9d4a257452f431cea3ab0713"
+    },
+    "1521135983856": {
+      "events": {},
+      "links": {},
+      "address": "0x08d139eb7a0132efcb84a12a9becb080d4ebc9bc"
+    },
+    "1521200229715": {
+      "events": {},
+      "links": {},
+      "address": "0xdf3cf8b9978c9c5639e06da3bff5014ab5c055d1"
     }
   },
   "EtherToken": {
     "4": {
       "events": {},
       "links": {
-        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
+        "Math": "0x1ae89d288caade83a779a75d3ce13d98a24ae24e"
       },
-      "address": "0xf046d2cee552cc274132e36bb54770072bec8433"
+      "address": "0x8eb1fc258ff788e6de02794cd0d6b2a3fa11681a"
     },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
+        "Math": "0x33f795d29d41aefb90ee04cf302667fec74cafeb"
       },
-      "address": "0x1ae89d288caade83a779a75d3ce13d98a24ae24e"
+      "address": "0x1b188b23855ddd045d5d8cc417ee0a3e38f9366c"
+    },
+    "1521135983856": {
+      "events": {},
+      "links": {
+        "Math": "0x5d94a387b0264e0390c896a4a17ba2782ad6a7eb"
+      },
+      "address": "0xccdb6ccfe8e19632b562b0c81b1dce0412ff61c5"
+    },
+    "1521200229715": {
+      "events": {},
+      "links": {
+        "Math": "0xc22ffa318051d8af4e5f2e2732d7049486fce093"
+      },
+      "address": "0x8be8dfcdc90f50562b5022de1f8d83fe93b0b055"
     }
   },
   "InternalTests": {
     "4": {
       "events": {},
       "links": {},
-      "address": "0x59c051fe2507376ca32d5105ad8acf12feff64b1"
+      "address": "0x19baf8d3863287c73dad3384cc885434ae0b9723"
+    },
+    "1521135983856": {
+      "events": {},
+      "links": {},
+      "address": "0x13a1d278e74bd7d0d206bfa6f360eb2d9f451c3b"
+    },
+    "1521200229715": {
+      "events": {},
+      "links": {},
+      "address": "0x027e4121d4675465e8029f09511d813c3476ebf5"
     }
   },
   "Math": {
     "4": {
       "events": {},
       "links": {},
-      "address": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
+      "address": "0x1ae89d288caade83a779a75d3ce13d98a24ae24e"
     },
     "42": {
       "events": {},
       "links": {},
-      "address": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
+      "address": "0x33f795d29d41aefb90ee04cf302667fec74cafeb"
+    },
+    "1521135983856": {
+      "events": {},
+      "links": {},
+      "address": "0x5d94a387b0264e0390c896a4a17ba2782ad6a7eb"
+    },
+    "1521200229715": {
+      "events": {},
+      "links": {},
+      "address": "0xc22ffa318051d8af4e5f2e2732d7049486fce093"
     }
   },
   "Medianizer": {
@@ -112,20 +156,166 @@
         }
       },
       "links": {},
-      "address": "0xcc7b218f13c2000b01673d9fbc32d61da90a027a"
+      "address": "0xe4ad47e2029ca5dcba1caa27a01d1d46f86b7770"
+    },
+    "1521135983856": {
+      "events": {
+        "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
+          "anonymous": true,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "sig",
+              "type": "bytes4"
+            },
+            {
+              "indexed": true,
+              "name": "guy",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "name": "foo",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "name": "bar",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "name": "wad",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "fax",
+              "type": "bytes"
+            }
+          ],
+          "name": "LogNote",
+          "type": "event"
+        },
+        "0x1abebea81bfa2637f28358c371278fb15ede7ea8dd28d2e03b112ff6d936ada4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "authority",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetAuthority",
+          "type": "event"
+        },
+        "0xce241d7ca1f669fee44b6fc00b8eba2df3bb514eed0f6f668f8f89096e81ed94": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetOwner",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x69f8a52b97dd0ebc255de83ca25976b0017fa9ad"
+    },
+    "1521200229715": {
+      "events": {
+        "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
+          "anonymous": true,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "sig",
+              "type": "bytes4"
+            },
+            {
+              "indexed": true,
+              "name": "guy",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "name": "foo",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "name": "bar",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "name": "wad",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "fax",
+              "type": "bytes"
+            }
+          ],
+          "name": "LogNote",
+          "type": "event"
+        },
+        "0x1abebea81bfa2637f28358c371278fb15ede7ea8dd28d2e03b112ff6d936ada4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "authority",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetAuthority",
+          "type": "event"
+        },
+        "0xce241d7ca1f669fee44b6fc00b8eba2df3bb514eed0f6f668f8f89096e81ed94": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetOwner",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xde2f00ccfeefadd1ecc87be765cf46ac901a6ac8"
     }
   },
   "OWLAirdrop": {
     "4": {
       "events": {},
       "links": {
-        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
+        "Math": "0x1ae89d288caade83a779a75d3ce13d98a24ae24e"
       }
     },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
+        "Math": "0x33f795d29d41aefb90ee04cf302667fec74cafeb"
+      }
+    },
+    "1521135983856": {
+      "events": {},
+      "links": {
+        "Math": "0x5d94a387b0264e0390c896a4a17ba2782ad6a7eb"
+      }
+    },
+    "1521200229715": {
+      "events": {},
+      "links": {
+        "Math": "0xc22ffa318051d8af4e5f2e2732d7049486fce093"
       }
     }
   },
@@ -195,44 +385,210 @@
         }
       },
       "links": {},
-      "address": "0x480cf2dc0b0b2838ded0eae5ac5c64de69986b0c"
+      "address": "0x9df0f2f629e320375b90398de75cd792e9aeaa53"
+    },
+    "1521135983856": {
+      "events": {
+        "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
+          "anonymous": true,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "sig",
+              "type": "bytes4"
+            },
+            {
+              "indexed": true,
+              "name": "guy",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "name": "foo",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "name": "bar",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "name": "wad",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "fax",
+              "type": "bytes"
+            }
+          ],
+          "name": "LogNote",
+          "type": "event"
+        },
+        "0x1abebea81bfa2637f28358c371278fb15ede7ea8dd28d2e03b112ff6d936ada4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "authority",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetAuthority",
+          "type": "event"
+        },
+        "0xce241d7ca1f669fee44b6fc00b8eba2df3bb514eed0f6f668f8f89096e81ed94": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetOwner",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x0a3732f4c5e09f1969c272b95c672ad140d241a4"
+    },
+    "1521200229715": {
+      "events": {
+        "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
+          "anonymous": true,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "sig",
+              "type": "bytes4"
+            },
+            {
+              "indexed": true,
+              "name": "guy",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "name": "foo",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "name": "bar",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "name": "wad",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "fax",
+              "type": "bytes"
+            }
+          ],
+          "name": "LogNote",
+          "type": "event"
+        },
+        "0x1abebea81bfa2637f28358c371278fb15ede7ea8dd28d2e03b112ff6d936ada4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "authority",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetAuthority",
+          "type": "event"
+        },
+        "0xce241d7ca1f669fee44b6fc00b8eba2df3bb514eed0f6f668f8f89096e81ed94": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetOwner",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x10fb2ab116e2eb3a8b5a1ca912e05f63c3d969e4"
     }
   },
   "PriceOracleInterface": {
     "4": {
       "events": {},
       "links": {},
-      "address": "0x1675edbe4ca5a6787a7477a9f802e8bf7d270e7f"
+      "address": "0x3e576b91bce9b29bcc65ee62c2f50010869daac6"
     },
     "42": {
       "events": {},
       "links": {},
-      "address": "0x868718691294155538ecf8458c9fac30d370b1b0"
+      "address": "0x5af7a3fe0d59c40a4fc89b731672220b2201f52f"
+    },
+    "1521135983856": {
+      "events": {},
+      "links": {},
+      "address": "0x04874bf9a4fb5fe83f3770b64fb0e7771584343a"
+    },
+    "1521200229715": {
+      "events": {},
+      "links": {},
+      "address": "0x180d179bbf473a30183fe858e8416351d2170fd2"
     }
   },
   "Proxy": {
     "4": {
       "events": {},
       "links": {},
-      "address": "0xc026b46daf1c8d9bbe694abb47872881a04b2385"
+      "address": "0xe6986e58ce311237e3026f647c885637c750dea4"
     },
     "42": {
       "events": {},
       "links": {},
-      "address": "0xe4ad47e2029ca5dcba1caa27a01d1d46f86b7770"
+      "address": "0xe86fed7bc9a89196bb725a99557e965b57c8694a"
+    },
+    "1521135983856": {
+      "events": {},
+      "links": {},
+      "address": "0xcc5c0eba633e35861252d955383880c5c6485668"
+    },
+    "1521200229715": {
+      "events": {},
+      "links": {},
+      "address": "0xc045c7b6b976d24728872d2117073c893d0b09c2"
     }
   },
   "StandardToken": {
     "4": {
       "events": {},
       "links": {
-        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
+        "Math": "0x1ae89d288caade83a779a75d3ce13d98a24ae24e"
       }
     },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
+        "Math": "0x33f795d29d41aefb90ee04cf302667fec74cafeb"
+      }
+    },
+    "1521135983856": {
+      "events": {},
+      "links": {
+        "Math": "0x5d94a387b0264e0390c896a4a17ba2782ad6a7eb"
+      }
+    },
+    "1521200229715": {
+      "events": {},
+      "links": {
+        "Math": "0xc22ffa318051d8af4e5f2e2732d7049486fce093"
       }
     }
   },
@@ -240,96 +596,180 @@
     "4": {
       "events": {},
       "links": {
-        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
+        "Math": "0x1ae89d288caade83a779a75d3ce13d98a24ae24e"
       },
-      "address": "0x333ede87b78d89d8f7b670488efe96b9797db635"
+      "address": "0x5e9fc659e6824ad6a21ab923825265f4fdb85046"
     },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
+        "Math": "0x33f795d29d41aefb90ee04cf302667fec74cafeb"
       },
-      "address": "0x8eb1fc258ff788e6de02794cd0d6b2a3fa11681a"
+      "address": "0x37f000f1ac172539d14b6d29e53a7aa6368ee29f"
+    },
+    "1521135983856": {
+      "events": {},
+      "links": {
+        "Math": "0x5d94a387b0264e0390c896a4a17ba2782ad6a7eb"
+      },
+      "address": "0xfbd1e45815c07efad2ef6fa445984c2dfa50d554"
+    },
+    "1521200229715": {
+      "events": {},
+      "links": {
+        "Math": "0xc22ffa318051d8af4e5f2e2732d7049486fce093"
+      },
+      "address": "0xe6da6e31540239b4a09ec574f147004d50f1b140"
+    }
+  },
+  "TokenMGN": {
+    "4": {
+      "events": {},
+      "links": {
+        "Math": "0x1ae89d288caade83a779a75d3ce13d98a24ae24e"
+      },
+      "address": "0x39ca7a25b1618265a53f45145ae9fe2ddaa5c1b8"
+    },
+    "42": {
+      "events": {},
+      "links": {
+        "Math": "0x33f795d29d41aefb90ee04cf302667fec74cafeb"
+      },
+      "address": "0x42a2cab6a0a647c78762e9f75c406002476e2b45"
+    },
+    "1521135983856": {
+      "events": {},
+      "links": {
+        "Math": "0x5d94a387b0264e0390c896a4a17ba2782ad6a7eb"
+      },
+      "address": "0x8165644fc264bb3c4e24c49ecd15a1da63b72912"
+    },
+    "1521200229715": {
+      "events": {},
+      "links": {
+        "Math": "0xc22ffa318051d8af4e5f2e2732d7049486fce093"
+      },
+      "address": "0xedcd6442143188deb586e182b7900dfb8707bc27"
     }
   },
   "TokenOMG": {
     "4": {
       "events": {},
       "links": {
-        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
+        "Math": "0x1ae89d288caade83a779a75d3ce13d98a24ae24e"
       },
-      "address": "0x68eab9a897ed92655a08171d4258537669befabe"
+      "address": "0x917076f5a7b61388e69d4f7475bde398c39032cd"
     },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
+        "Math": "0x33f795d29d41aefb90ee04cf302667fec74cafeb"
       },
-      "address": "0x447d50c371bb4d2990df04e813b3d8d4220acdd2"
+      "address": "0x3ac2abff92b7eb8e11e3d1470bc34d6a35271007"
+    },
+    "1521135983856": {
+      "events": {},
+      "links": {
+        "Math": "0x5d94a387b0264e0390c896a4a17ba2782ad6a7eb"
+      },
+      "address": "0xdd407ce1bcad846bc2f0e9d05c5ed1dee6f6485b"
+    },
+    "1521200229715": {
+      "events": {},
+      "links": {
+        "Math": "0xc22ffa318051d8af4e5f2e2732d7049486fce093"
+      },
+      "address": "0xa6f8431c9eee4ac2859207af4004f7a948924c30"
     }
   },
   "TokenOWL": {
     "4": {
       "events": {},
       "links": {
-        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
+        "Math": "0x1ae89d288caade83a779a75d3ce13d98a24ae24e"
       },
-      "address": "0x056c3956cb9abaa124d329e72c9713b522d50d6a"
+      "address": "0xea60befdd49463fe6808918c106689339d26ff6e"
     },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
+        "Math": "0x33f795d29d41aefb90ee04cf302667fec74cafeb"
       },
-      "address": "0x39ca7a25b1618265a53f45145ae9fe2ddaa5c1b8"
+      "address": "0x791912e731d036f7f1e6fb4a31562ab65c1d035d"
+    },
+    "1521135983856": {
+      "events": {},
+      "links": {
+        "Math": "0x5d94a387b0264e0390c896a4a17ba2782ad6a7eb"
+      },
+      "address": "0x466fcbc689d8506d29095745da8b8578e3d9cd33"
+    },
+    "1521200229715": {
+      "events": {},
+      "links": {
+        "Math": "0xc22ffa318051d8af4e5f2e2732d7049486fce093"
+      },
+      "address": "0x81920caf1f99bb0f7d72fdfba840cff21d63ccc5"
     }
   },
   "TokenOWLProxy": {
     "4": {
       "events": {},
       "links": {
-        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
+        "Math": "0x1ae89d288caade83a779a75d3ce13d98a24ae24e"
       },
-      "address": "0xc249173d5e1703d96f2455cccfce41d7d02dbe36"
+      "address": "0x868718691294155538ecf8458c9fac30d370b1b0"
     },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
+        "Math": "0x33f795d29d41aefb90ee04cf302667fec74cafeb"
       },
-      "address": "0xea60befdd49463fe6808918c106689339d26ff6e"
+      "address": "0x07aa53f284f9255cd9415195aab51156019f207e"
+    },
+    "1521135983856": {
+      "events": {},
+      "links": {
+        "Math": "0x5d94a387b0264e0390c896a4a17ba2782ad6a7eb"
+      },
+      "address": "0x63de3720298826eb4ec14f1214b33a2808e5dadf"
+    },
+    "1521200229715": {
+      "events": {},
+      "links": {
+        "Math": "0xc22ffa318051d8af4e5f2e2732d7049486fce093"
+      },
+      "address": "0xd99748782d7643b00c36a4bb296c4a099df98ff3"
     }
   },
   "TokenRDN": {
     "4": {
       "events": {},
       "links": {
-        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
+        "Math": "0x1ae89d288caade83a779a75d3ce13d98a24ae24e"
       },
-      "address": "0x7799dc527be765e1347cd635c3e78a2cbeb9cd00"
+      "address": "0x447d50c371bb4d2990df04e813b3d8d4220acdd2"
     },
     "42": {
       "events": {},
       "links": {
-        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
+        "Math": "0x33f795d29d41aefb90ee04cf302667fec74cafeb"
       },
-      "address": "0x5e9fc659e6824ad6a21ab923825265f4fdb85046"
-    }
-  },
-  "TokenTUL": {
-    "4": {
-      "events": {},
-      "links": {
-        "Math": "0xd856e038ba937e2b96bc5b139a3dd21a15ff04bb"
-      },
-      "address": "0xed9917e73217ef4f7860de019e14a6dcc1c1e857"
+      "address": "0x24f6f5ca461713d0d5df921865e6cabb06d456da"
     },
-    "42": {
+    "1521135983856": {
       "events": {},
       "links": {
-        "Math": "0x8037906970b0ebf13ca31b88b4ed26b268512a65"
+        "Math": "0x5d94a387b0264e0390c896a4a17ba2782ad6a7eb"
       },
-      "address": "0x917076f5a7b61388e69d4f7475bde398c39032cd"
+      "address": "0x02c5ec798a712abab289d63cc24474fb464d383a"
+    },
+    "1521200229715": {
+      "events": {},
+      "links": {
+        "Math": "0xc22ffa318051d8af4e5f2e2732d7049486fce093"
+      },
+      "address": "0xb0015714b541a99265f529c7c0d34da47deca5b2"
     }
   }
 }
