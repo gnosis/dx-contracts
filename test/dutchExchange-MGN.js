@@ -11,7 +11,6 @@
 */
 
 const TokenGNO2 = artifacts.require('TokenGNO')
-
 const { 
   eventWatcher,
   log,

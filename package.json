@@ -1,5 +1,5 @@
 {
-  "name": "@gnosis.pm/dutch-exchange",
+  "name": "dutchexchange-abikovan",
   "version": "0.1.0",
   "description": "DutchX - Gnosis Dutch Auction Trading Platform",
   "main": "src/index.js",

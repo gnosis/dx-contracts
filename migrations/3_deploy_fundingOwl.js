@@ -14,8 +14,14 @@ const currentETHPrice = (1100 * (10 ** 18))
 module.exports = function deploy(deployer, networks, accounts) {
       
     //Generating enough OWL for testing
-    const t = (web3.eth.getBlock('pending')).timestamp
-    deployer.deploy(OWLAirdrop, TokenOWLProxy.address, TokenGNO.address, (t + 30 * 60 * 60))
+    //const t = (web3.eth.getBlock('pending')).timestamp
+    new Promise((resolve, reject) => {
+        web3.eth.getBlock('pending', (err, block) => {
+            if(err) return reject(err)
+            resolve(block.timestamp)
+        })
+    })
+    .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, TokenGNO.address, (t + 30 * 60 * 60)))
     .then(() => TokenGNO.deployed())
     .then(T => T.approve(OWLAirdrop.address, 50000 * (10 ** 18)))
     .then(() => TokenOWLProxy.deployed())
@@ -24,4 +30,5 @@ module.exports = function deploy(deployer, networks, accounts) {
     .then(A => A.lockGNO(50000 * (10 ** 18)))
     .then(() => TokenOWLProxy.deployed())
     .then(T => TokenOWL.at(T.address).balanceOf(accounts[0]))
+    .then(T => console.log(T))
 }

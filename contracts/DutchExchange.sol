@@ -325,7 +325,6 @@ contract DutchExchange {
         
         //overflow check, we did not use Mathsafe libary, since this is the only place we acutally need it
         require(balance + amount >= amount);
-
         NewDeposit(tokenAddress, amount);
     }
 
@@ -781,7 +780,6 @@ contract DutchExchange {
         if (sellVolumeOpp == 0 || now >= auctionStart + 86400 || closingPriceOppDen > 0) {
             // Close auction pair
             uint buyVolumeOpp = buyVolumes[buyToken][sellToken];
-
             if (closingPriceOppDen == 0 && sellVolumeOpp > 0) {
                 // Save opposite price
                 closingPrices[buyToken][sellToken][auctionIndex] = fraction(buyVolumeOpp, sellVolumeOpp);
