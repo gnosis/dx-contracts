@@ -1,6 +1,6 @@
 {
-  "name": "dutch-exchange-smartcontracts",
-  "version": "0.2.0",
+  "name": "@josojo/dutch-exchange-smartcontracts",
+  "version": "0.1.1",
   "description": "DutchX - Gnosis Dutch Auction Trading Platform. This npm package provides all smartcontracts used in the project",
   "scripts": {
     "lint:js": "eslint ./src --cache",

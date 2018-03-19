@@ -20,7 +20,12 @@ const OWLAirdrop = artifacts.require('OWLAirdrop')
 // ETH price as reported by MakerDAO with 18 decimal places
 const currentETHPrice = (1100 * (10 ** 18))
 
-
+const getTime = new Promise((resolve, reject) => {
+          web3.eth.getBlock('pending', (err, block) => {
+            if(err) return reject(err)
+            resolve(block.timestamp)
+        })
+    })
 module.exports = function deploy(deployer, network, accounts) {
   if (network === 'kovan') {
     deployer.deploy(Math)
@@ -100,5 +105,8 @@ module.exports = function deploy(deployer, network, accounts) {
       ))
       .then(() => TokenMGN.deployed())
       .then(T => T.updateMinter(Proxy.address))
+      .then(() => getTime)
+    .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, TokenGNO.address, (t + 30 * 60 * 60)))
+
   }
 }
