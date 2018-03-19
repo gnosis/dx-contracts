@@ -13,8 +13,8 @@ const provider = new HDWalletProvider(privKey, "https://kovan.infura.io/");
 
 const HDWalletProvider = require('truffle-hdwallet-provider')
 const mnemonic = process.env.MNEMONIC
-//const provider = new HDWalletProvider(mnemonic, 'https://kovan.infura.io/')
-const provider = new HDWalletProvider(mnemonic, 'http://localhost:8545')
+const provider = new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/')
+//const provider = new HDWalletProvider(mnemonic, 'http://localhost:8545')
 // important: gas needs to specified for ganache with local test net for whatever reason.
 web3 = new Web3(provider.engine)
 const TruffleContract = require('truffle-contract')
