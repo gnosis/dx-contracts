@@ -63,6 +63,8 @@ module.exports = function deploy(deployer, network, accounts) {
       ))
       .then(() => TokenMGN.deployed())
       .then(T => T.updateMinter(Proxy.address))
+      .then(() => getTime)
+    .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, TokenGNO.address, (t + 30 * 60 * 60)))
   } else {
     deployer.deploy(Math)
       // Linking
