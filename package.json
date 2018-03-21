@@ -1,5 +1,5 @@
 {
-  "name": "@josojo/dutch-exchange-smartcontracts",
+  "name": "@gnosis.pm/dutch-exchange-smartcontracts",
   "version": "0.3.0",
   "description": "DutchX - Gnosis Dutch Auction Trading Platform. This npm package provides all smartcontracts used in the project",
   "scripts": {
