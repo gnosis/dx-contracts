@@ -8,12 +8,12 @@
     "42": {
       "events": {},
       "links": {},
-      "address": "0x2ebf69277b060bf442899ca179d04bf6675aff8f"
+      "address": "0x176cae1df91d389d0e9279b1b19409b14a1dda5d"
     },
-    "1521200229715": {
+    "1521560055105": {
       "events": {},
       "links": {},
-      "address": "0xe365e88eb44e10d2a4832198d622a4469f482259"
+      "address": "0x2253469e16bd89b054064da58ec25a4c2c9f4da1"
     }
   },
   "EtherToken": {
@@ -27,16 +27,16 @@
     "42": {
       "events": {},
       "links": {
-        "Math": "0xf692b6d07ef36b88b375563d70a4b23dad249607"
+        "Math": "0x443d6a84e4589a6e6c4b768bc0670c79170d6b15"
       },
-      "address": "0xa058111d226b4bedf1cad44c279eab837bbbaaa7"
+      "address": "0x3b70b1833ecf4a81ad0c651d40dedfc594de939c"
     },
-    "1521200229715": {
+    "1521560055105": {
       "events": {},
       "links": {
-        "Math": "0x45cf31b8a87097e0ac46953fd757df8427b9d96d"
+        "Math": "0x2871d43872a032ad189a849bda23bfca4ef64033"
       },
-      "address": "0xc6a5da387e927c8dd3cdf783004a85eed2a052b1"
+      "address": "0xd8d256785ae32dbf66aebe8a36d8c18539c4a6b5"
     }
   },
   "InternalTests": {
@@ -45,10 +45,10 @@
       "links": {},
       "address": "0xa377fe01e64ab00abeae2cead325fba27ef8e9fb"
     },
-    "1521200229715": {
+    "1521560055105": {
       "events": {},
       "links": {},
-      "address": "0x9c74e8a6b4d8026666a0a0c8bad7259b1fe49b2b"
+      "address": "0xb0ca65897b8f8ee9280463db9f64ccc20c0452f7"
     }
   },
   "Math": {
@@ -60,12 +60,12 @@
     "42": {
       "events": {},
       "links": {},
-      "address": "0xf692b6d07ef36b88b375563d70a4b23dad249607"
+      "address": "0x443d6a84e4589a6e6c4b768bc0670c79170d6b15"
     },
-    "1521200229715": {
+    "1521560055105": {
       "events": {},
       "links": {},
-      "address": "0x45cf31b8a87097e0ac46953fd757df8427b9d96d"
+      "address": "0x2871d43872a032ad189a849bda23bfca4ef64033"
     }
   },
   "Medianizer": {
@@ -136,7 +136,7 @@
       "links": {},
       "address": "0xea5fe17a5010aaa84dbc7b8d0b706a4cb168ead2"
     },
-    "1521200229715": {
+    "1521560055105": {
       "events": {
         "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
           "anonymous": true,
@@ -201,7 +201,7 @@
         }
       },
       "links": {},
-      "address": "0xa6bdc6e136dda9362a65f86a6441cacf8571f9f9"
+      "address": "0xde25c8cf7ed7bcfd15f26599a109b606a2d12a94"
     }
   },
   "OWLAirdrop": {
@@ -215,15 +215,16 @@
     "42": {
       "events": {},
       "links": {
-        "Math": "0xf692b6d07ef36b88b375563d70a4b23dad249607"
-      }
+        "Math": "0x443d6a84e4589a6e6c4b768bc0670c79170d6b15"
+      },
+      "address": "0x06e22e65844cfc6d4d8a92c6c8e489ccd9cec7d2"
     },
-    "1521200229715": {
+    "1521560055105": {
       "events": {},
       "links": {
-        "Math": "0x45cf31b8a87097e0ac46953fd757df8427b9d96d"
+        "Math": "0x2871d43872a032ad189a849bda23bfca4ef64033"
       },
-      "address": "0xeb028ecd162aaeccee0632c3bb170a723c9712e2"
+      "address": "0x7c04ac9e04a38518dab0d9b39881323773f07f69"
     }
   },
   "PriceFeed": {
@@ -294,7 +295,7 @@
       "links": {},
       "address": "0xa9031a22474bbee15893bf24356d0f24e9f5ce68"
     },
-    "1521200229715": {
+    "1521560055105": {
       "events": {
         "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
           "anonymous": true,
@@ -359,7 +360,7 @@
         }
       },
       "links": {},
-      "address": "0xae9fddaffca85dfad7e325f6cea96b1216c60317"
+      "address": "0xa696cc7932a815c1d3d6b51a7f1f68a7a806ea36"
     }
   },
   "PriceOracleInterface": {
@@ -371,12 +372,12 @@
     "42": {
       "events": {},
       "links": {},
-      "address": "0x19da9ba3efc01e04bbd6a30ddb92667e62fb3657"
+      "address": "0xdbf38b92111f61cae100f49e341e242200f1ef5f"
     },
-    "1521200229715": {
+    "1521560055105": {
       "events": {},
       "links": {},
-      "address": "0xde2d1de7bbc81560cb34421bf562c41b1bb415f2"
+      "address": "0x593d8f30793a0c45548d20e1637f08ff2eb10c83"
     }
   },
   "Proxy": {
@@ -388,12 +389,12 @@
     "42": {
       "events": {},
       "links": {},
-      "address": "0x56868065dd677a2ff0a371e3e0e95603823c6c50"
+      "address": "0x2806ab3f4020ab599d260fe953b42e7545ff7f7b"
     },
-    "1521200229715": {
+    "1521560055105": {
       "events": {},
       "links": {},
-      "address": "0x1fce6ad3a48168bba8214ab40ddea9257c294c9c"
+      "address": "0xfdfbd3098e6c3097d6f9ba90a6b387c19caff36e"
     }
   },
   "StandardToken": {
@@ -406,13 +407,13 @@
     "42": {
       "events": {},
       "links": {
-        "Math": "0xf692b6d07ef36b88b375563d70a4b23dad249607"
+        "Math": "0x443d6a84e4589a6e6c4b768bc0670c79170d6b15"
       }
     },
-    "1521200229715": {
+    "1521560055105": {
       "events": {},
       "links": {
-        "Math": "0x45cf31b8a87097e0ac46953fd757df8427b9d96d"
+        "Math": "0x2871d43872a032ad189a849bda23bfca4ef64033"
       }
     }
   },
@@ -470,13 +471,6 @@
       "address": "0xa3ac70ad2ffc8ef763c11fcfbcc1d6f014ef1f5a"
     },
     "42": {
-      "events": {},
-      "links": {
-        "Math": "0xf692b6d07ef36b88b375563d70a4b23dad249607"
-      },
-      "address": "0x2b247f4d3a4e47e3c7251208e94d56c4a8f49198"
-    },
-    "1521200229715": {
       "events": {
         "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef": {
           "anonymous": false,
@@ -524,9 +518,61 @@
         }
       },
       "links": {
-        "Math": "0x45cf31b8a87097e0ac46953fd757df8427b9d96d"
+        "Math": "0x443d6a84e4589a6e6c4b768bc0670c79170d6b15"
       },
-      "address": "0xa7ed470dd9f1e2b656708d87e64e9ddcc79583c0"
+      "address": "0xce45a4dfaea6ff3b468a51a0a7d2ca25bbfcb9f9"
+    },
+    "1521560055105": {
+      "events": {
+        "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "value",
+              "type": "uint256"
+            }
+          ],
+          "name": "Transfer",
+          "type": "event"
+        },
+        "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "name": "spender",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "value",
+              "type": "uint256"
+            }
+          ],
+          "name": "Approval",
+          "type": "event"
+        }
+      },
+      "links": {
+        "Math": "0x2871d43872a032ad189a849bda23bfca4ef64033"
+      },
+      "address": "0x5c6a04c77c6f57a5e50a82aa337354fb1b1373ff"
     }
   },
   "TokenMGN": {
@@ -540,16 +586,16 @@
     "42": {
       "events": {},
       "links": {
-        "Math": "0xf692b6d07ef36b88b375563d70a4b23dad249607"
+        "Math": "0x443d6a84e4589a6e6c4b768bc0670c79170d6b15"
       },
-      "address": "0xd25b710630e73c1f218d75e34e64d90d4429c3b0"
+      "address": "0x2a6d3326ef32a76e3b4d171eb0b63a4051c17287"
     },
-    "1521200229715": {
+    "1521560055105": {
       "events": {},
       "links": {
-        "Math": "0x45cf31b8a87097e0ac46953fd757df8427b9d96d"
+        "Math": "0x2871d43872a032ad189a849bda23bfca4ef64033"
       },
-      "address": "0xbf5b1e4c21fb2fd9075cae924f4c4fa9bc9fa486"
+      "address": "0x96b58cfe1f8e35a105145ba63f7c7cce8c98e539"
     }
   },
   "TokenOMG": {
@@ -563,16 +609,16 @@
     "42": {
       "events": {},
       "links": {
-        "Math": "0xf692b6d07ef36b88b375563d70a4b23dad249607"
+        "Math": "0x443d6a84e4589a6e6c4b768bc0670c79170d6b15"
       },
-      "address": "0x542631b95a58043250b12d9857986bb70fbd2f7c"
+      "address": "0xaed05a64cd8112136fea8f1ed590a2e3b22ca06a"
     },
-    "1521200229715": {
+    "1521560055105": {
       "events": {},
       "links": {
-        "Math": "0x45cf31b8a87097e0ac46953fd757df8427b9d96d"
+        "Math": "0x2871d43872a032ad189a849bda23bfca4ef64033"
       },
-      "address": "0x44caa0c71800eea0ec750ba1a9ff420cbc393952"
+      "address": "0x14cfc304a251f7f2c897501bc345cc5ac3d22007"
     }
   },
   "TokenOWL": {
@@ -586,16 +632,16 @@
     "42": {
       "events": {},
       "links": {
-        "Math": "0xf692b6d07ef36b88b375563d70a4b23dad249607"
+        "Math": "0x443d6a84e4589a6e6c4b768bc0670c79170d6b15"
       },
-      "address": "0x74ae3fbeb5294f02a81e11ab0bcda07da32e8df6"
+      "address": "0xe24d5287657f085efeda5ca49526fc9b85affb2a"
     },
-    "1521200229715": {
+    "1521560055105": {
       "events": {},
       "links": {
-        "Math": "0x45cf31b8a87097e0ac46953fd757df8427b9d96d"
+        "Math": "0x2871d43872a032ad189a849bda23bfca4ef64033"
       },
-      "address": "0x32b283164b5a283a01208ca894b534b9ea9c4632"
+      "address": "0x3c20883313b8fef494ea0ca8a6f029c280162410"
     }
   },
   "TokenOWLProxy": {
@@ -609,16 +655,16 @@
     "42": {
       "events": {},
       "links": {
-        "Math": "0xf692b6d07ef36b88b375563d70a4b23dad249607"
+        "Math": "0x443d6a84e4589a6e6c4b768bc0670c79170d6b15"
       },
-      "address": "0xda2899d58b59bca444fa645e56d5d8b212c7cad7"
+      "address": "0x8d636ce939d89244d9e9fc4ad63c0f8e16fb694d"
     },
-    "1521200229715": {
+    "1521560055105": {
       "events": {},
       "links": {
-        "Math": "0x45cf31b8a87097e0ac46953fd757df8427b9d96d"
+        "Math": "0x2871d43872a032ad189a849bda23bfca4ef64033"
       },
-      "address": "0x3d7eec9c41c7a99489fd17e6b087f9c827b16d3f"
+      "address": "0x3bcd0351d6b2bedf71a6632241fff87c651367e5"
     }
   },
   "TokenRDN": {
@@ -632,16 +678,16 @@
     "42": {
       "events": {},
       "links": {
-        "Math": "0xf692b6d07ef36b88b375563d70a4b23dad249607"
+        "Math": "0x443d6a84e4589a6e6c4b768bc0670c79170d6b15"
       },
-      "address": "0x2d603b842f3ff4ceabc109f3a76343ae77fa8354"
+      "address": "0xf36e910371c0594c35bd46d60c79c5a0a44a4ad1"
     },
-    "1521200229715": {
+    "1521560055105": {
       "events": {},
       "links": {
-        "Math": "0x45cf31b8a87097e0ac46953fd757df8427b9d96d"
+        "Math": "0x2871d43872a032ad189a849bda23bfca4ef64033"
       },
-      "address": "0x4be79425d3a40ebecdff4b7a393f879185f6e96d"
+      "address": "0x3969ed8aa6b59775d191373460e3295b9866ae38"
     }
   }
 }
