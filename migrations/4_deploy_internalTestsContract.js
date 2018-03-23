@@ -6,24 +6,21 @@ const proxy = artifacts.require('Proxy')
 
 
 module.exports = function deploy(deployer, network) {
-  if (network == 'kovan') {
-    
-  } else {
-    deployer
-      .then(() => proxy.deployed())
-      .then((p) => {
-        const dx = DutchExchange.at(p.address)
+  if (network == 'kovan') return
+  deployer
+    .then(() => proxy.deployed())
+    .then((p) => {
+      const dx = DutchExchange.at(p.address)
 
-        const initParams = Promise.all([
-        dx.frtToken.call(),
-        dx.owlToken.call(),
-        dx.auctioneer.call(),
-        dx.ethToken.call(),
-        dx.ethUSDOracle.call(),
-        dx.thresholdNewTokenPair.call(),
-        dx.thresholdNewAuction.call(),
-      ])
-      return initParams
-    }).then(initParams => deployer.deploy(InternalTests, ...initParams))
-  }
+      const initParams = Promise.all([
+      dx.frtToken.call(),
+      dx.owlToken.call(),
+      dx.auctioneer.call(),
+      dx.ethToken.call(),
+      dx.ethUSDOracle.call(),
+      dx.thresholdNewTokenPair.call(),
+      dx.thresholdNewAuction.call(),
+    ])
+    return initParams
+  }).then(initParams => deployer.deploy(InternalTests, ...initParams))
 }
