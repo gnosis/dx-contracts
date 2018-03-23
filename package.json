@@ -12,8 +12,7 @@
   "author": "Gnosis",
   "license": "GPL-2.0+",
   "dependencies": {
-    // "@gnosis.pm/gnosis-core-contracts": "^1.0.3", ==> added to this npm-package already
-    // "@gnosis.pm/owl-token": "^0.3.0",  ==> added to this npm-package already
+    "_comment":  "// @gnosis.pm/gnosis-core-contracts: ^1.0.3 @gnosis.pm/owl-token: ^0.3.0,  ==> added to this npm-package already manually",
     "truffle-contract": "^3.0.1",
     "web3": "^0.20.2"
   },
