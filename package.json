@@ -24,5 +24,6 @@
     "diff": "3.4.0",
     "minimist": "^1.2.0",
     "truffle-hdwallet-provider": "0.0.3"
-  }
+  },
+  "postinstall": "npm install @gnosis.pm/owl-token @gnosis.pm/gnosis-core-contracts"
 }
