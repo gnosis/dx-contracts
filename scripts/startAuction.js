@@ -1,4 +1,3 @@
-// @ts-check
 // script crashes for gas reason sometimes, if it is run against testrpc. with kovan or rinkeby, there were no porblems dectected.
 
 const Web3 = require('web3')
@@ -45,14 +44,14 @@ module.exports = (async () => {
 
   // Test VARS
   let eth
-  let gno
+  let omg
   let rdn
   let dx
   let Token
 
   const tokenMap = {
     eth,
-    gno,
+    omg,
     rdn,
     Token
   }
@@ -80,7 +79,7 @@ module.exports = (async () => {
     await eth.approve(dx.address, startingETH, { from: a })
     await tta.approve(dx.address, startingToken+20, { from: a })
     await dx.deposit(tta.address, startingToken, { from: a, gas: 234254})
-    await dx.deposit(eth.address, startingETH, { from: a, gas: 234254})
+    return dx.deposit(eth.address, startingETH, { from: a, gas: 234254})
   }
 
   try {
@@ -91,8 +90,9 @@ module.exports = (async () => {
     const receipt = await dx.addTokenPair(eth.address, Token.address, startingETH, 0, 1, 50, { from: acct, gas: 2374235})
     console.log(`
     ===========================
-    Successfully added ${await Token.name.call()}
-    Auction Index => ${(await dx.getAuctionIndex.call(eth.address, Token.address)).toNumber()}
+    Successfully added  => [Ether Token // ${await Token.name.call()}] Auction
+    Auction Index       => ${(await dx.getAuctionIndex.call(eth.address, Token.address)).toNumber()}
+    Receipt.tx          => ${JSON.stringify(receipt.tx, false, 2)}
     ===========================
     `)
   } catch (error) {
