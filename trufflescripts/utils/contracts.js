@@ -4,6 +4,8 @@ module.exports = (artifacts) => {
   const TokenETH = artifacts.require('./EtherToken')
   const TokenGNO = artifacts.require('./TokenGNO')
   const TokenMGN = artifacts.require('./TokenMGN')
+  const TokenOMG = artifacts.require('./TokenOMG')
+  const TokenRDN = artifacts.require('./TokenRDN')
 
   const TokenOWLProxy = artifacts.require('./TokenOWLProxy')
   const TokenOWL = artifacts.require('./TokenOWL')
@@ -35,6 +37,8 @@ module.exports = (artifacts) => {
     TokenETH,
     TokenGNO,
     TokenMGN,
+    TokenOMG,
+    TokenRDN,
     TokenOWL,
     TokenOWLProxy,
     DutchExchange,
@@ -48,6 +52,8 @@ module.exports = (artifacts) => {
     TokenETH: 'eth',
     TokenGNO: 'gno',
     TokenMGN: 'frt',
+    TokenOMG: 'omg',
+    TokenRDN: 'rdn',
     TokenOWL: 'owl',
     TokenOWLProxy: 'owlProxy',
     DutchExchange: 'dx',
@@ -83,7 +89,6 @@ module.exports = (artifacts) => {
     // delete deployedMap.proxy
     // delete deployedMap.pf
     // delete deployedMap.mn
-
     return deployedMap
   }
 
@@ -95,13 +100,15 @@ module.exports = (artifacts) => {
  * @typedef {Object} DeployedContracts - deployed contracts map
  * @prop {DeployedContract} eth - deployed EtherToken contract
  * @prop {DeployedContract} gno - deployed TokenGNO contract
- * @prop {DeployedContract} owl - deployed TokenOWL contract (proxy)
  * @prop {DeployedContract} frt - deployed TokenMGN contract
+ * @prop {DeployedContract} rdn - deployed TokenRDN contract
+ * @prop {DeployedContract} omg - deployed TokenOMG contract
+ * @prop {DeployedContract} owl - deployed TokenOWL contract (proxy)
  * @prop {DeployedContract} dx - deployed DutchExchange contract (proxy)
  * @prop {DeployedContract} po - deployed PriceOracleInterface contract
  */
   /** @type {Promise<DeployedContracts>} */
-  const 
+  const
 
 deployed = getDeployed(contracts)
 
@@ -109,9 +116,7 @@ deployed = getDeployed(contracts)
    * helper function that iterates through given tokensMap
    * and does something for token contracts corresponding to eth, gno, ... keys
    * @param {{[T in TokenCode]: number}} tokensMap - mapping (token name lowercase => balance), {ETH: balance, ...}
-   * @param {function({key: TokenCode, token: 
-
-TokenContract, amount: number})} cb - call for each {token: amount}
+   * @param {function({key: TokenCode, token: TokenContract, amount: number})} cb - call for each {token: amount}
    */
   const handleTokensMap = async (tokensMap, cb) => {
     const { dx, po, ...tokens } = await deployed
@@ -122,7 +127,7 @@ TokenContract, amount: number})} cb - call for each {token: amount}
       // skip for 0 amounts or falsy tokens
       if (!amount || !token) return null
 
-      
+
 return cb({ key, token, amount })
     })
 
@@ -135,17 +140,19 @@ return cb({ key, token, amount })
    * @returns {{ ETH: number, GNO: number, FRT: number, OWL: number }}
    */
   const getTokenBalances = async (acc) => {
-    const { eth, gno, frt, owl } = await deployed
+    const { eth, gno, frt, rdn, omg, owl } = await deployed
     const balances = await Promise.all([
       eth.balanceOf(acc),
       gno.balanceOf(acc),
       frt.balanceOf(acc),
+      omg.balanceOf(acc),
+      rdn.balanceOf(acc),
       owl.balanceOf(acc),
     ])
 
-    const [ETH, GNO, FRT, OWL] = mapToNumber(balances)
+    const [ETH, GNO, FRT, OMG, RDN, OWL] = mapToNumber(balances)
 
-    return { ETH, GNO, FRT, OWL }
+    return { ETH, GNO, FRT, OMG, RDN, OWL }
   }
 
   /**
@@ -154,18 +161,20 @@ return cb({ key, token, amount })
    * @returns {{ ETH: number, GNO: number, FRT: number, GNO: number }}
    */
   const getTokenDeposits = async (acc) => {
-    const { dx, eth, gno, frt, owl } = await deployed
+    const { dx, eth, gno, rdn, omg, frt, owl } = await deployed
 
     const deposits = await Promise.all([
       dx.balances.call(eth.address, acc),
       dx.balances.call(gno.address, acc),
       dx.balances.call(frt.address, acc),
+      dx.balances.call(rdn.address, acc),
+      dx.balances.call(omg.address, acc),
       dx.balances.call(owl.address, acc),
     ])
 
-    const [ETH, GNO, FRT, OWL] = mapToNumber(deposits)
+    const [ETH, GNO, FRT, OMG, RDN, OWL] = mapToNumber(deposits)
 
-    return { ETH, GNO, FRT, OWL }
+    return { ETH, GNO, FRT, OMG, RDN, OWL }
   }
 
   /**
@@ -253,7 +262,7 @@ return cb({ key, token, amount })
     const { dx } = await deployed
 
     try {
-      
+
 const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
       return mapToNumber(oraclePrice)
     } catch (error) {
@@ -616,7 +625,7 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
       buyToken: Token | address,
       index: number = 0,
       amount: number,
-    }} 
+    }}
     options
     @returns postSellOrder transaction | undefined
    */
@@ -642,7 +651,7 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
       sellToken: Token | address,
       buyToken: Token | address,
       amount: number,
-    }} 
+    }}
     options
     @returns postSellOrder transaction | undefined
    */
@@ -773,7 +782,7 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
       buyToken: Token | address,
       user: address,
       index: number,
-    }} 
+    }}
     options
     @returns {[unclaimedFunds: number, tulipsToIssue: number] | undefined}
    */
