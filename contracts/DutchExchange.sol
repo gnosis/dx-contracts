@@ -43,9 +43,14 @@ contract DutchExchange {
     // Token for paying fees
     TokenOWL public owlToken;
 
+    // mapping that stores the tokens, which are approved
     // Token => approved
     // Only tokens approved by auctioneer generate frtToken tokens
     mapping (address => bool) public approvedTokens;
+
+    // mapping that stores the tokens, which will be approved
+    // Token => time of notice
+    mapping (address => uint) public tokenToBeApproved;
 
     // For the following two mappings, there is one mapping for each token pair
     // The order which the tokens should be called is smaller, larger
@@ -162,6 +167,16 @@ contract DutchExchange {
         thresholdNewAuction = _thresholdNewAuction;
     }
 
+    function declareIntentionOfTokenApproval(
+        address token
+    )
+        public
+        onlyAuctioneer
+     {   
+        tokenToBeApproved[token] = now;
+        TokenToBeApproved(token);
+     }
+
     function updateApprovalOfToken(
         address token,
         bool approved
@@ -169,6 +184,9 @@ contract DutchExchange {
         public
         onlyAuctioneer
      {   
+        if(approved) {
+            require(tokenToBeApproved[token] + 2 days < now);
+        }
         approvedTokens[token] = approved;
      }
 
@@ -1260,6 +1278,10 @@ contract DutchExchange {
     event NewDeposit(
          address token,
          uint amount
+    );
+
+    event TokenToBeApproved(
+         address token
     );
 
     event NewWithdrawal(

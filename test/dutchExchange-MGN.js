@@ -101,13 +101,17 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
      * SUB TEST 3: assert both eth and gno get approved by DX
      */
     // approve ETH
+    await dx.declareIntentionOfTokenApproval(eth.address, { from: master })
+    await dx.declareIntentionOfTokenApproval(gno.address, { from: master })
+    await wait(60*60*24*2+5);
+
     await dx.updateApprovalOfToken(eth.address, true, { from: master })
+
     // approve GNO
     await dx.updateApprovalOfToken(gno.address, true, { from: master })
 
     assert.equal(await dx.approvedTokens.call(eth.address), true, 'ETH is approved by DX')
     assert.equal(await dx.approvedTokens.call(gno.address), true, 'GNO is approved by DX')
-
     /*
      * SUB TEST 4: create new token pair and assert Seller1Balance = 0 after depositing more than Balance
      */
@@ -353,6 +357,11 @@ const c2 = () => contract('DX MGN Flow --> 1 Seller + 2 Buyers', (accounts) => {
      * SUB TEST 3: assert both eth and gno get approved by DX
      */
     // approve ETH
+
+    await dx.declareIntentionOfTokenApproval(eth.address, { from: master })
+    await dx.declareIntentionOfTokenApproval(gno.address, { from: master })
+    await wait(60*60*24*2+5);
+
     await dx.updateApprovalOfToken(eth.address, true, { from: master })
     // approve GNO
     await dx.updateApprovalOfToken(gno.address, true, { from: master })
@@ -710,6 +719,11 @@ const c3 = () => contract('DX MGN Flow --> withdrawUnlockedTokens', (accounts) =
      * SUB TEST 3: assert both eth and gno get approved by DX
      */
     // approve ETH
+
+    await dx.declareIntentionOfTokenApproval(eth.address, { from: master })
+    await dx.declareIntentionOfTokenApproval(gno.address, { from: master })
+    await wait(60*60*24*2+5);
+
     await dx.updateApprovalOfToken(eth.address, true, { from: master })
     // approve GNO
     await dx.updateApprovalOfToken(gno.address, true, { from: master })
@@ -1027,6 +1041,11 @@ const c4 = () => contract('DX MGN Flow --> change Owner', (accounts) => {
      * SUB TEST 3: assert both eth and gno get approved by DX
      */
     // approve ETH
+
+    await dx.declareIntentionOfTokenApproval(eth.address, { from: master })
+    await dx.declareIntentionOfTokenApproval(gno.address, { from: master })
+    await wait(60*60*24*2+5);
+
     await dx.updateApprovalOfToken(eth.address, true, { from: master })
     // approve GNO
     await dx.updateApprovalOfToken(gno.address, true, { from: master })
@@ -1115,6 +1134,11 @@ const c5 = () => contract('DX MGN Flow --> 2 Sellers || MGN issuance', (accounts
     /*
      * SUB TEST 3: assert both eth and gno get approved by DX
      */
+
+    await dx.declareIntentionOfTokenApproval(eth.address, { from: master })
+    await dx.declareIntentionOfTokenApproval(gno.address, { from: master })
+    await wait(60*60*24*2+5);
+
     // approve ETH
     await dx.updateApprovalOfToken(eth.address, true, { from: master })
     // approve GNO
@@ -1238,6 +1262,10 @@ const c6 = () => contract('DX MGN Flow --> 1 SellOrder && 1 BuyOrder', (accounts
     /*
      * SUB TEST 3: assert both eth and gno get approved by DX
      */
+
+    await dx.declareIntentionOfTokenApproval(eth.address, { from: master })
+    await dx.declareIntentionOfTokenApproval(gno.address, { from: master })
+    await wait(60*60*24*2+5);
     // approve ETH
     await dx.updateApprovalOfToken(eth.address, true, { from: master })
     // approve GNO
@@ -1347,6 +1375,13 @@ const c7 = () => contract('DX MGN Flow --> ERC20:ERC20 --> 1 S + 1B', (accounts)
      * SUB TEST 3: assert both eth and gno get approved by DX
      */
     // approve ETH
+
+    await dx.declareIntentionOfTokenApproval(eth.address, { from: master })
+    await dx.declareIntentionOfTokenApproval(gno.address, { from: master })
+    await dx.declareIntentionOfTokenApproval(gno2.address, { from: master })
+
+    await wait(60*60*24*2+5);
+
     await dx.updateApprovalOfToken(eth.address, true, { from: master })
     // approve GNO
     await dx.updateApprovalOfToken(gno.address, true, { from: master })
@@ -1549,6 +1584,11 @@ const c8 = () => contract('DX MGN Flow --> Seller ERC20/ETH', (accounts) => {
     /*
      * SUB TEST 3: assert both eth and gno get approved by DX
      */
+
+    await dx.declareIntentionOfTokenApproval(eth.address, { from: master })
+    await dx.declareIntentionOfTokenApproval(gno.address, { from: master })
+
+    await wait(60*60*24*2+5);
     // approve ETH
     await dx.updateApprovalOfToken(eth.address, true, { from: master })
     // approve GNO
