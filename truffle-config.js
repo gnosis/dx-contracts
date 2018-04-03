@@ -11,6 +11,13 @@ module.exports = {
       gas: 6700000,
       network_id: '*',
     },
+    live: {
+      provider: function() {
+                  return new HDWalletProvider(mnemonic, 'https://mainnet.infura.io/');
+                },
+      network_id: '1',
+      gas: 4612388,
+    },
     kovan: {
       provider: function() {
                   return new HDWalletProvider(mnemonic, 'https://kovan.infura.io/');
