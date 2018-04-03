@@ -23,13 +23,16 @@ const {
 
 const Medianizer = artifacts.require('Medianizer')
 const PriceFeed = artifacts.require('PriceFeed')
+const PriceOracleInterface = artifacts.require('PriceOracleInterface')
+
 
 // Test VARS
 let oracle
 let priceFeed
-
+let dx
 let medzr2
 let contracts
+let newPriceOracleInterface
 
 const setupContracts = async () => {
   contracts = await getContracts();
@@ -37,6 +40,7 @@ const setupContracts = async () => {
   ({
     PriceOracleInterface: oracle,
     PriceFeed: priceFeed,
+    DutchExchange: dx,
   } = contracts)
 }
 
@@ -46,7 +50,7 @@ const c1 = () => contract('DX PriceOracleInterface Flow', (accounts) => {
   const startBal = {
     startingETH: 1000..toWei(),
     startingGNO: 1000..toWei(),
-    ethUSDPrice: 6000..toWei(),   // 400 ETH @ $6000/ETH = $2,400,000 USD
+    ethUSDPrice: 1100..toWei(),   // 400 ETH @ $6000/ETH = $2,400,000 USD
     sellingAmount: 100..toWei(), // Same as web3.toWei(50, 'ether') - $60,000USD
   }
   
@@ -63,47 +67,24 @@ const c1 = () => contract('DX PriceOracleInterface Flow', (accounts) => {
     await setupTest(accounts, contracts, startBal)
   })
 
-  it(
-    'updatePriceFeedSource: throws when NON-OWNER tries to change source',
-    async () => assertRejects(oracle.updatePriceFeedSource(medzr2, { from: notOwner })),
-  )
-
-  it('updatePriceFeedSource: switches PFS to new PFS', async () => {
-    const oldPFS = await oracle.priceFeedSource.call()
-    await oracle.updatePriceFeedSource(medzr2.address, { from: owner })
-    const newPFS = await oracle.priceFeedSource.call()
-
-    // set the new priceFeed into Medianizer2
-    await medzr2.set(priceFeed.address, { from: owner }) 
-
-    assert.notEqual(oldPFS, newPFS, 'Old FPS should NOT == New FPS')
-    assert.equal(newPFS, medzr2.address, 'new PFS = medzr2')
-  })
-
-  it(
-    'updateCurator: throws when NON-OWNER tries to change curator',
-    async () => assertRejects(oracle.updateCurator(medzr2, { from: notOwner })),
-  )
-
-  it('updateCurator: switches OWNER to new OWNER', async () => {
-    const oldOwner = await oracle.owner.call()
-    await oracle.updateCurator(newCurator, { from: owner })
-    const newOwner = await oracle.owner.call()
-
-    assert.notEqual(oldOwner, newOwner, 'Old Owner should NOT == New Owner')
-    assert.equal(newCurator, newOwner, 'New Curator passed in is indeed newOwner')
-  })
 
   it('getUSDETHPrice: calls this correctly', async () => {
     const ethUSDPrice = (await oracle.getUSDETHPrice.call()).toNumber()
-    assert.equal(ethUSDPrice, 1, 'Oracle ethUSDPrice not set yet so should = 1, since 0 is not permitted')
+    assert.equal(ethUSDPrice, 1100, 'Oracle ethUSDPrice is not the set price ethUSDPrice: 1100..toWei(),')
   })
 
-  it('getUSDETHPrice: set price', async () => {    
+  it('getUSDETHPrice: set price', async () => {   
+    newPriceOracleInterface = await PriceOracleInterface.new(medzr2.address);
+    await dx.updateEthUSDOracle(newPriceOracleInterface.address, { from: owner });
+    const ethUSDPrice = (await newPriceOracleInterface.getUSDETHPrice.call()).toNumber()
+    assert.equal(ethUSDPrice, 1, 'Oracle ethUSDPrice is not set and should return 1');
+ 
+ })
+  it('getUSDETHPrice: set price should work correctly', async () => { 
     const ethUSDPrice = 1500..toWei()
-
+    await Medianizer.at(medzr2.address).set(PriceFeed.address, { from: owner })
     await priceFeed.post(ethUSDPrice, 1516168838 * 2, medzr2.address, { from: owner })
-    const getNewETHUSDPrice = (await oracle.getUSDETHPrice.call()).toNumber()
+    const getNewETHUSDPrice = (await newPriceOracleInterface.getUSDETHPrice.call()).toNumber()
 
     assert.equal(ethUSDPrice.toEth(), getNewETHUSDPrice, 'Should be same')
   })
