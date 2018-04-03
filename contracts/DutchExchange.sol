@@ -240,7 +240,7 @@ contract DutchExchange {
         require(token2Funding < 10 ** 30);
 
         uint fundedValueUSD;
-        uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
+        uint ethUSDPrice = ethUSDOracle.getUSDETHPrice.gas(3500)();
 
         // Compute fundedValueUSD
         address ethTokenMem = ethToken;
@@ -688,7 +688,7 @@ contract DutchExchange {
 
         if (fee > 0) {
             // Allow user to reduce up to half of the fee with owlToken
-            uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
+            uint ethUSDPrice = ethUSDOracle.getUSDETHPrice.gas(3500)();
             fraction memory price = getPriceOfTokenInLastAuction(primaryToken);
 
             // Convert fee to ETH, then USD
@@ -824,7 +824,7 @@ contract DutchExchange {
         internal
     {
         // Check if auctions received enough sell orders
-        uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
+        uint ethUSDPrice = ethUSDOracle.getUSDETHPrice.gas(3500)();
         fraction memory priceTs = getPriceOfTokenInLastAuction(sellToken);
         fraction memory priceTb = getPriceOfTokenInLastAuction(buyToken);
 
