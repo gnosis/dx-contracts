@@ -297,8 +297,8 @@ contract DutchExchange {
         balances[token2][msg.sender] -= token2Funding;
 
         // Fee mechanism, fees are added to extraTokens
-        uint token1FundingAfterFee = settleFee(token1, token2, 1, msg.sender, token1Funding);
-        uint token2FundingAfterFee = settleFee(token2, token1, 1, msg.sender, token2Funding);
+        uint token1FundingAfterFee = settleFee(token1, token2, 1, token1Funding);
+        uint token2FundingAfterFee = settleFee(token2, token1, 1, token2Funding);
 
         // Update other variables
         sellVolumesCurrent[token1][token2] = token1FundingAfterFee;
@@ -399,7 +399,7 @@ contract DutchExchange {
         }
 
         // Fee mechanism, fees are added to extraTokens
-        uint amountAfterFee = settleFee(sellToken, buyToken, auctionIndex, msg.sender, amount);
+        uint amountAfterFee = settleFee(sellToken, buyToken, auctionIndex, amount);
 
         // Update variables
         balances[sellToken][msg.sender] -= amount;
@@ -462,7 +462,7 @@ contract DutchExchange {
         uint amountAfterFee;
         if (amount < outstandingVolume) {
             if (amount > 0) {
-                amountAfterFee = settleFee(buyToken, sellToken, auctionIndex, msg.sender, amount);
+                amountAfterFee = settleFee(buyToken, sellToken, auctionIndex, amount);
             }
         } else {
             amount = outstandingVolume;
@@ -675,14 +675,13 @@ contract DutchExchange {
         address primaryToken,
         address secondaryToken,
         uint auctionIndex,
-        address user,
         uint amount
     )
         internal
         // < 10^30
         returns (uint amountAfterFee)
     {
-        fraction memory feeRatio = getFeeRatio(user);
+        fraction memory feeRatio = getFeeRatio(msg.sender);
         // 10^30 * 10^3 / 10^4 = 10^29
         uint fee = amount * feeRatio.num / feeRatio.den;
 
