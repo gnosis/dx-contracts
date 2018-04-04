@@ -1251,7 +1251,14 @@ contract DutchExchange {
     )
         public
     {
-        for (uint i = 0; i < auctionSellTokens.length; i++)
+        uint length = auctionSellTokens.length;
+        uint length2 = auctionBuyTokens.length;
+        require(length == length2);
+
+        uint length3 = auctionIndices.length;
+        require(length2 == length3);
+
+        for (uint i = 0; i < length; i++)
             claimSellerFunds(auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
     }
 
