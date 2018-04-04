@@ -259,6 +259,8 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
     // deposit ETHER into DX
     await depositETH(ETHBalance, seller1)
 
+
+    await mgn.updateMinter(dx.address,{from: master})
     // add tokenPair ETH GNO
     await dx.addTokenPair(
       eth.address,

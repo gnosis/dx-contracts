@@ -27,7 +27,7 @@ module.exports = function deploy(deployer, networks, accounts) {
     // Deployment of Tokens
     .then(() => deployer.deploy(EtherToken))
     .then(() => deployer.deploy(TokenGNO, 100000 * (10 ** 18)))
-    .then(() => deployer.deploy(TokenMGN, accounts[0], accounts[0]))
+    .then(() => deployer.deploy(TokenMGN, accounts[0]))
     .then(() => deployer.deploy(TokenOWL))
     .then(() => deployer.deploy(TokenOWLProxy, TokenOWL.address))
 

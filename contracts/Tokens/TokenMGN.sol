@@ -28,28 +28,16 @@ contract TokenMGN is StandardToken {
      */
 
     function TokenMGN(
-        address _owner,
-        address _minter
-    )
-        public
-    {
-        require(_owner != address(0));
-        require(_minter != address(0));
-
-        owner = _owner;
-        minter = _minter;
-    }
-
-    function updateOwner(
         address _owner
     )
         public
     {
-        require(msg.sender == owner);
         require(_owner != address(0));
         owner = _owner;
     }
 
+    // @dev allows to set the minter of Magnolia tokens once.
+    // @param   _minter the minter of the Magnolia tokens, should be the DX-proxy
     function updateMinter(
         address _minter
     )
@@ -57,6 +45,8 @@ contract TokenMGN is StandardToken {
     {
         require(msg.sender == owner);
         require(_minter != address(0));
+        //require(minter == address(0));
+
         minter = _minter;
     }
 

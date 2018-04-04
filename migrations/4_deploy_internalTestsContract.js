@@ -3,6 +3,7 @@
 const DutchExchange = artifacts.require('DutchExchange')
 const InternalTests = artifacts.require('InternalTests')
 const proxy = artifacts.require('Proxy')
+const TokenMGN = artifacts.require('TokenMGN')
 
 
 module.exports = function deploy(deployer, networks, accounts) {
@@ -22,4 +23,5 @@ module.exports = function deploy(deployer, networks, accounts) {
       ])
       return initParams
     }).then(initParams => deployer.deploy(InternalTests, ...initParams))
+       
 }
