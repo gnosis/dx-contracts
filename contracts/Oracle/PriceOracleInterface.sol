@@ -22,7 +22,7 @@ contract PriceOracleInterface {
     }
 
     /// @dev constructor of the contract
-    /// @param _priceFeedSource address of price Feed Source -> should be maker feeds
+    /// @param _priceFeedSource address of price Feed Source -> should be maker feeds Medianizer contract
     function PriceOracleInterface(
         address _owner,
         address _priceFeedSource

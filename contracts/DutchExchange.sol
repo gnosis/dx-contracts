@@ -52,10 +52,6 @@ contract DutchExchange {
     // Only tokens approved by auctioneer generate frtToken tokens
     mapping (address => bool) public approvedTokens;
 
-    // mapping that stores the tokens, which will be approved
-    // Token => time of notice
-    mapping (address => uint) public tokenToBeApproved;
-
     // For the following two mappings, there is one mapping for each token pair
     // The order which the tokens should be called is smaller, larger
     // These variables should never be called directly! They have getters below
@@ -262,7 +258,7 @@ contract DutchExchange {
         require(token2Funding < 10 ** 30);
 
         uint fundedValueUSD;
-        uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
+        uint ethUSDPrice = ethUSDOracle.getUSDETHPrice.gas(5000)();
 
         // Compute fundedValueUSD
         address ethTokenMem = ethToken;
@@ -1292,7 +1288,7 @@ contract DutchExchange {
     event NewMasterCopyProposal(
          address newMasterCopy
     );
-    
+
     event NewWithdrawal(
         address token,
         uint amount
