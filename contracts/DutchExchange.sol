@@ -152,6 +152,7 @@ contract DutchExchange {
         require(address(_ethUSDOracle) != address(0));
         newProposalEthUSDOracle = _ethUSDOracle;
         oracleInterfaceCountdown = now + WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE;
+        NewOracleProposal(_ethUSDOracle);
     }
 
     function updateEthUSDOracle()
@@ -203,6 +204,7 @@ contract DutchExchange {
         // Update masterCopyCountdown
         newMasterCopy = _masterCopy;
         masterCopyCountdown = now + WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE;
+        NewMasterCopyProposal(_masterCopy);
     }
 
     function updateMasterCopy()
@@ -1282,10 +1284,15 @@ contract DutchExchange {
          uint amount
     );
 
-    event TokenToBeApproved(
-         address token
+    event NewOracleProposal(
+         PriceOracleInterface priceOracleInterface
     );
 
+
+    event NewMasterCopyProposal(
+         address newMasterCopy
+    );
+    
     event NewWithdrawal(
         address token,
         uint amount
