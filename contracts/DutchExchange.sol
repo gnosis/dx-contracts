@@ -428,13 +428,13 @@ contract DutchExchange {
     )
         public
     {
-        uint auctionStart = getAuctionStart(sellToken, buyToken);
-
         // R1: auction must not have cleared
         require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
 
+        uint auctionStart = getAuctionStart(sellToken, buyToken);
+        
         // R2
-        require(getAuctionStart(sellToken, buyToken) <= now);
+        require(auctionStart <= now);
 
         // R4
         require(auctionIndex == getAuctionIndex(sellToken, buyToken));
