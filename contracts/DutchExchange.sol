@@ -567,7 +567,7 @@ contract DutchExchange {
         address user,
         uint auctionIndex
     )
-        external
+        public
         returns (uint returned, uint frtsIssued)
     {
         closeTheoreticalClosedAuction(sellToken, buyToken, auctionIndex);
