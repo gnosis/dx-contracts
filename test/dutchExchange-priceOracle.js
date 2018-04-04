@@ -19,6 +19,7 @@ const {
 const {
   getContracts,
   setupTest,
+  wait,
 } = require('./testFunctions')
 
 const Medianizer = artifacts.require('Medianizer')
@@ -68,14 +69,34 @@ const c1 = () => contract('DX PriceOracleInterface Flow', (accounts) => {
   })
 
 
+  it('raiseEmergency: throws when NON-OWNER tries to call it',
+    async () => assertRejects(oracle.raiseEmergency({ from: notOwner })),
+  )
+
+  it('raiseEmergency: switches into emergency mode', async () => {
+    await oracle.raiseEmergency(true, { from: owner })
+    
+    let ethUSDPrice = (await oracle.getUSDETHPrice.call()).toNumber()
+    assert.equal(ethUSDPrice, 600, 'Oracle ethUSDPrice should report emergency price')
+    await oracle.raiseEmergency(false, { from: owner })
+    
+    ethUSDPrice = (await oracle.getUSDETHPrice.call()).toNumber()
+    assert.equal(ethUSDPrice, 1100, 'Oracle ethUSDPrice should on longer report emergency price')
+  })
+
+
+
   it('getUSDETHPrice: calls this correctly', async () => {
     const ethUSDPrice = (await oracle.getUSDETHPrice.call()).toNumber()
     assert.equal(ethUSDPrice, 1100, 'Oracle ethUSDPrice is not the set price ethUSDPrice: 1100..toWei(),')
   })
 
-  it('getUSDETHPrice: set price', async () => {   
-    newPriceOracleInterface = await PriceOracleInterface.new(medzr2.address);
-    await dx.updateEthUSDOracle(newPriceOracleInterface.address, { from: owner });
+  it('getUSDETHPrice: price is correctly restricted if actual price is 0', async () => {   
+    newPriceOracleInterface = await PriceOracleInterface.new(owner, medzr2.address);
+    await dx.initiateEthUsdOracleUpdate(newPriceOracleInterface.address, { from: owner })
+    await assertRejects(dx.updateEthUSDOracle( { from: owner }))
+    await wait(60*60*24*30+5)
+    await dx.updateEthUSDOracle( { from: owner })
     const ethUSDPrice = (await newPriceOracleInterface.getUSDETHPrice.call()).toNumber()
     assert.equal(ethUSDPrice, 1, 'Oracle ethUSDPrice is not set and should return 1');
  
@@ -88,6 +109,21 @@ const c1 = () => contract('DX PriceOracleInterface Flow', (accounts) => {
 
     assert.equal(ethUSDPrice.toEth(), getNewETHUSDPrice, 'Should be same')
   })
+
+  it(
+    'updateCurator: throws when NON-OWNER tries to change curator',
+    async () => assertRejects(oracle.updateCurator(medzr2, { from: notOwner })),
+  )
+
+  it('updateCurator: switches OWNER to new OWNER', async () => {
+    const oldOwner = await oracle.owner.call()
+    await oracle.updateCurator(newCurator, { from: owner })
+    const newOwner = await oracle.owner.call()
+
+    assert.notEqual(oldOwner, newOwner, 'Old Owner should NOT == New Owner')
+    assert.equal(newCurator, newOwner, 'New Curator passed in is indeed newOwner')
+  })
+
 })
 
 enableContractFlag(c1)

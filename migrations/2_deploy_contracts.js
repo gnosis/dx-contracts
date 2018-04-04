@@ -34,7 +34,7 @@ module.exports = function deploy(deployer, networks, accounts) {
     // Deployment of PriceFeedInfrastructure
     .then(() => deployer.deploy(PriceFeed))
     .then(() => deployer.deploy(Medianizer))
-    .then(() => deployer.deploy(PriceOracleInterface, Medianizer.address))
+    .then(() => deployer.deploy(PriceOracleInterface, accounts[0], Medianizer.address))
     .then(() => Medianizer.deployed())
     .then(M => M.set(PriceFeed.address, { from: accounts[0] }))
     .then(() => PriceFeed.deployed())

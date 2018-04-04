@@ -18,7 +18,7 @@ contract DutchExchange {
 
     uint constant WAITING_PERIOD_NEW_TOKEN_PAIR = 6 hours;
     uint constant WAITING_PERIOD_NEW_AUCTION = 10 minutes;
-    uint constant WAITING_PERIOD_CHANGE_MASTERCOPY= 30 days;
+    uint constant WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE= 30 days;
     uint constant AUCTION_START_WAITING_FOR_FUNDING = 1;
 
     // variables for Proxy Construction
@@ -33,7 +33,11 @@ contract DutchExchange {
     address public auctioneer;
     // Ether ERC-20 token
     address public ethToken;
+    // Price Oracle interface 
     PriceOracleInterface public ethUSDOracle;
+    // Price Oracle interface proposals during update process
+    PriceOracleInterface public newProposalEthUSDOracle;
+    uint public oracleInterfaceCountdown;
     // Minimum required sell funding for adding a new token pair, in USD
     uint public thresholdNewTokenPair;
     // Minimum required sell funding for starting antoher auction, in USD
@@ -139,14 +143,25 @@ contract DutchExchange {
         auctioneer = _auctioneer;
     }
 
-    function updateEthUSDOracle(
+    function initiateEthUsdOracleUpdate(
         PriceOracleInterface _ethUSDOracle
     )
         public
         onlyAuctioneer
-    {
+    {         
         require(address(_ethUSDOracle) != address(0));
-        ethUSDOracle = _ethUSDOracle;
+        newProposalEthUSDOracle = _ethUSDOracle;
+        oracleInterfaceCountdown = now + WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE;
+    }
+
+    function updateEthUSDOracle()
+        public
+        onlyAuctioneer
+    {
+        require(address(newProposalEthUSDOracle) != address(0));
+        require(oracleInterfaceCountdown < now);
+        ethUSDOracle = newProposalEthUSDOracle;
+        newProposalEthUSDOracle = PriceOracleInterface(0);
     }
 
     function updateThresholdNewTokenPair(
@@ -167,26 +182,13 @@ contract DutchExchange {
         thresholdNewAuction = _thresholdNewAuction;
     }
 
-    function declareIntentionOfTokenApproval(
-        address token
-    )
-        public
-        onlyAuctioneer
-     {   
-        tokenToBeApproved[token] = now;
-        TokenToBeApproved(token);
-     }
-
     function updateApprovalOfToken(
         address token,
         bool approved
     )
         public
         onlyAuctioneer
-     {   
-        if(approved) {
-            require(tokenToBeApproved[token] + 2 days < now);
-        }
+     {  
         approvedTokens[token] = approved;
      }
 
@@ -200,7 +202,7 @@ contract DutchExchange {
 
         // Update masterCopyCountdown
         newMasterCopy = _masterCopy;
-        masterCopyCountdown = now + WAITING_PERIOD_CHANGE_MASTERCOPY;
+        masterCopyCountdown = now + WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE;
     }
 
     function updateMasterCopy()
@@ -258,7 +260,7 @@ contract DutchExchange {
         require(token2Funding < 10 ** 30);
 
         uint fundedValueUSD;
-        uint ethUSDPrice = ethUSDOracle.getUSDETHPrice.gas(3500)();
+        uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
 
         // Compute fundedValueUSD
         address ethTokenMem = ethToken;
