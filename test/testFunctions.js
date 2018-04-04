@@ -159,9 +159,7 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const currentIndex = (await dx.getAuctionIndex.call(ST.address, BT.address)).toNumber()
   const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
   const timeToWaitFor = Math.ceil((86400 - p * 43200) / (1 + p)) + startingTimeOfAuction
-  console.log(timeToWaitFor)
   let [num, den] = (await dx.getCurrentAuctionPriceExt.call(ST.address, BT.address, currentIndex))
-  console.log(num)
   const priceBefore = num.div(den)
   log(`
   Price BEFORE waiting until Price = initial Closing Price (2) * 2
