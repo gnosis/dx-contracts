@@ -1183,7 +1183,7 @@ contract DutchExchange {
     )
         external
         view
-        returns(uint[] indices, uint[] balances)
+        returns(uint[] indices, uint[] usersBalances)
     {
         uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
 
@@ -1198,14 +1198,14 @@ contract DutchExchange {
         }
 
         indices = new uint[](arrayLength);
-        balances = new uint[](arrayLength);
+        usersBalances = new uint[](arrayLength);
 
         uint k;
 
         for (uint i = 1; i <= runningAuctionIndex; i++) {
             if (sellerBalances[auctionSellToken][auctionBuyToken][i][user] > 0) {
                 indices[k] = i;
-                balances[k] = sellerBalances[auctionSellToken][auctionBuyToken][i][user];
+                usersBalances[k] = sellerBalances[auctionSellToken][auctionBuyToken][i][user];
                 k++;
             }
         }
