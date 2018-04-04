@@ -492,7 +492,7 @@ contract DutchExchange {
         address user,
         uint auctionIndex
     )
-        external
+        public
         // < (10^60, 10^61)
         returns (uint returned, uint frtsIssued)
     {
