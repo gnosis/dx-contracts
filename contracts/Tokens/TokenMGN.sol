@@ -70,8 +70,8 @@ contract TokenMGN is StandardToken {
     {
         require(msg.sender == minter);
 
-        lockedTokenBalances[user] = lockedTokenBalances[user].add(amount);
-        totalTokens = totalTokens.add(amount);
+        lockedTokenBalances[user] = add(lockedTokenBalances[user], amount);
+        totalTokens = add(totalTokens, amount);
     }
 
     /// @dev Lock Token
@@ -85,8 +85,8 @@ contract TokenMGN is StandardToken {
         amount = min(amount, balances[msg.sender]);
         
         // Update state variables
-        balances[msg.sender] = balances[msg.sender].sub(amount);
-        lockedTokenBalances[msg.sender] = lockedTokenBalances[msg.sender].add(amount);
+        balances[msg.sender] = sub(balances[msg.sender], amount);
+        lockedTokenBalances[msg.sender] = add(lockedTokenBalances[msg.sender], amount);
 
         // Get return variable
         totalAmountLocked = lockedTokenBalances[msg.sender];
@@ -103,8 +103,8 @@ contract TokenMGN is StandardToken {
 
         if (amount > 0) {
             // Update state variables
-            lockedTokenBalances[msg.sender] = lockedTokenBalances[msg.sender].sub(amount);
-            unlockedTokens[msg.sender].amountUnlocked =  unlockedTokens[msg.sender].amountUnlocked.add(amount);
+            lockedTokenBalances[msg.sender] = sub(lockedTokenBalances[msg.sender], amount);
+            unlockedTokens[msg.sender].amountUnlocked =  add(unlockedTokens[msg.sender].amountUnlocked, amount);
             unlockedTokens[msg.sender].withdrawalTime = now + 24 hours;
         }
 
@@ -117,7 +117,7 @@ contract TokenMGN is StandardToken {
         public
     {
         require(unlockedTokens[msg.sender].withdrawalTime < now);
-        balances[msg.sender] = balances[msg.sender].add(unlockedTokens[msg.sender].amountUnlocked);
+        balances[msg.sender] = add(balances[msg.sender], unlockedTokens[msg.sender].amountUnlocked);
         unlockedTokens[msg.sender].amountUnlocked = 0;
     }
 
@@ -131,5 +131,55 @@ contract TokenMGN is StandardToken {
         } else {
             return b;
         }
+    }
+        /// @dev Returns whether an add operation causes an overflow
+    /// @param a First addend
+    /// @param b Second addend
+    /// @return Did no overflow occur?
+    function safeToAdd(uint a, uint b)
+        public
+        constant
+        returns (bool)
+    {
+        return a + b >= a;
+    }
+
+    /// @dev Returns whether a subtraction operation causes an underflow
+    /// @param a Minuend
+    /// @param b Subtrahend
+    /// @return Did no underflow occur?
+    function safeToSub(uint a, uint b)
+        public
+        constant
+        returns (bool)
+    {
+        return a >= b;
+    }
+
+
+    /// @dev Returns sum if no overflow occurred
+    /// @param a First addend
+    /// @param b Second addend
+    /// @return Sum
+    function add(uint a, uint b)
+        public
+        constant
+        returns (uint)
+    {
+        require(safeToAdd(a, b));
+        return a + b;
+    }
+
+    /// @dev Returns difference if no overflow occurred
+    /// @param a Minuend
+    /// @param b Subtrahend
+    /// @return Difference
+    function sub(uint a, uint b)
+        public
+        constant
+        returns (uint)
+    {
+        require(safeToSub(a, b));
+        return a - b;
     }
 }

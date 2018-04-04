@@ -57,4 +57,8 @@ module.exports = function deploy(deployer, networks, accounts) {
     ))
     .then(() => TokenMGN.deployed())
     .then(T => T.updateMinter(Proxy.address))
+
+    // At some later point we would change the ownerShip of the MagnoliaTokens
+    // .then(() => TokenMGN.deployed())
+    // .then(T => T.updateOwner(Proxy.address))
 }
