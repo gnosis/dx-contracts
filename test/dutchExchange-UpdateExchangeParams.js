@@ -94,7 +94,6 @@ contract('DutchExchange updating exchange params', (accounts) => {
     const params1 = await getAndPrintExchangeParams()
   
     await assertIsNotAuctioneer(seller1)
-    console.log(params2)
     assert.notDeepEqual(params1, params2, 'parameters must be different')
 
     logger(`Not auctioneer tries to change params to ${JSON.stringify(params2, null, 5)}`)

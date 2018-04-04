@@ -967,9 +967,9 @@ contract DutchExchange {
             // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
 
             // 10^5 * 10^31 = 10^36
-            price.num = atleastZero(int((86400 - timeElapsed).mul(averagedPrice.num)));
+            price.num = atleastZero(int((86400 - timeElapsed)*(averagedPrice.num)));
             // 10^6 * 10^31 = 10^37
-            price.den = (timeElapsed + 43200).mul(averagedPrice.den);
+            price.den = (timeElapsed + 43200)*(averagedPrice.den);
 
             if (price.num.mul(sellVolumesCurrent[sellToken][buyToken]) <= price.den.mul(buyVolumes[sellToken][buyToken])) {
                 price.num = buyVolumes[sellToken][buyToken];

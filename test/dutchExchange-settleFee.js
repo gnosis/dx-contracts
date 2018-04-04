@@ -126,9 +126,7 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
     const totalMgn = await getTotalMGN()
 
     assert.strictEqual(totalMgn, 0, 'initially no MGN tokens')
-    console.log('done')
     const [num, den] = await calculateFeeRatio(seller1)
-    console.log('not done')
     assert.strictEqual(num / den, 0.005, 'feeRatio is 0.5% when total MGN tokens == 0')
   })
 
