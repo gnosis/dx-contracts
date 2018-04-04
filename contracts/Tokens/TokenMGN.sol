@@ -4,6 +4,7 @@ import "@gnosis.pm/gnosis-core-contracts/contracts/Tokens/StandardToken.sol";
 
 /// @title Standard token contract with overflow protection
 contract TokenMGN is StandardToken {
+   using Math for *;
 
     struct unlockedToken {
         uint amountUnlocked;
@@ -45,9 +46,20 @@ contract TokenMGN is StandardToken {
     {
         require(msg.sender == owner);
         require(_minter != address(0));
-        //require(minter == address(0));
 
         minter = _minter;
+    }
+
+    // @dev the intention is to set the owner as the DX-proxy. Once it is deployed
+    // Then only an update of the DX-proxy contract after a 30 days delay could change the minter again.
+    function updateOwner(   
+        address _owner
+    )
+        public
+    {
+        require(msg.sender == owner);
+        require(_owner != address(0));
+        owner = _owner;
     }
 
     function mintTokens(
@@ -58,8 +70,8 @@ contract TokenMGN is StandardToken {
     {
         require(msg.sender == minter);
 
-        lockedTokenBalances[user] += amount;
-        totalTokens += amount;
+        lockedTokenBalances[user] = lockedTokenBalances[user].add(amount);
+        totalTokens = totalTokens.add(amount);
     }
 
     /// @dev Lock Token
@@ -73,8 +85,8 @@ contract TokenMGN is StandardToken {
         amount = min(amount, balances[msg.sender]);
         
         // Update state variables
-        balances[msg.sender] -= amount;
-        lockedTokenBalances[msg.sender] += amount;
+        balances[msg.sender] = balances[msg.sender].sub(amount);
+        lockedTokenBalances[msg.sender] = lockedTokenBalances[msg.sender].add(amount);
 
         // Get return variable
         totalAmountLocked = lockedTokenBalances[msg.sender];
@@ -91,8 +103,8 @@ contract TokenMGN is StandardToken {
 
         if (amount > 0) {
             // Update state variables
-            lockedTokenBalances[msg.sender] -= amount;
-            unlockedTokens[msg.sender].amountUnlocked += amount;
+            lockedTokenBalances[msg.sender] = lockedTokenBalances[msg.sender].sub(amount);
+            unlockedTokens[msg.sender].amountUnlocked =  unlockedTokens[msg.sender].amountUnlocked.add(amount);
             unlockedTokens[msg.sender].withdrawalTime = now + 24 hours;
         }
 
@@ -105,7 +117,7 @@ contract TokenMGN is StandardToken {
         public
     {
         require(unlockedTokens[msg.sender].withdrawalTime < now);
-        balances[msg.sender] += unlockedTokens[msg.sender].amountUnlocked;
+        balances[msg.sender] = balances[msg.sender].add(unlockedTokens[msg.sender].amountUnlocked);
         unlockedTokens[msg.sender].amountUnlocked = 0;
     }
 

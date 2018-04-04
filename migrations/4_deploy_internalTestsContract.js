@@ -4,10 +4,13 @@ const DutchExchange = artifacts.require('DutchExchange')
 const InternalTests = artifacts.require('InternalTests')
 const proxy = artifacts.require('Proxy')
 const TokenMGN = artifacts.require('TokenMGN')
+const Math = artifacts.require('Math')
 
 
 module.exports = function deploy(deployer, networks, accounts) {
-  deployer
+  
+  deployer.deploy(Math)
+    .then(() => deployer.link(Math, InternalTests))
     .then(() => proxy.deployed())
     .then((p) => {
       const dx = DutchExchange.at(p.address)

@@ -22,7 +22,7 @@ module.exports = function deploy(deployer, networks, accounts) {
   deployer.deploy(Math)
 
     // Linking
-    .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenMGN, TokenOWL, TokenOWLProxy, OWLAirdrop]))
+    .then(() => deployer.link(Math, [DutchExchange, StandardToken, EtherToken, TokenGNO, TokenMGN, TokenOWL, TokenOWLProxy, OWLAirdrop]))
 
     // Deployment of Tokens
     .then(() => deployer.deploy(EtherToken))
