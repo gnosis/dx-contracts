@@ -432,7 +432,7 @@ contract DutchExchange {
         require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
 
         uint auctionStart = getAuctionStart(sellToken, buyToken);
-        
+
         // R2
         require(auctionStart <= now);
 
@@ -492,7 +492,7 @@ contract DutchExchange {
         address user,
         uint auctionIndex
     )
-        public
+        external
         // < (10^60, 10^61)
         returns (uint returned, uint frtsIssued)
     {
@@ -552,7 +552,7 @@ contract DutchExchange {
         address user,
         uint auctionIndex
     )
-        public
+        external
         returns (uint returned, uint frtsIssued)
     {
         closeTheoreticalClosedAuction(sellToken, buyToken, auctionIndex);
@@ -966,7 +966,7 @@ contract DutchExchange {
         address buyToken,
         uint amount
     )
-        public
+        external
     {
         deposit(sellToken, amount);
         postSellOrder(sellToken, buyToken, 0, amount);
@@ -980,7 +980,7 @@ contract DutchExchange {
         uint auctionIndex,
         uint amount
     )
-        public
+        external
     {
         claimSellerFunds(sellToken, buyToken, user, auctionIndex);
         withdraw(buyToken, amount);
@@ -991,7 +991,7 @@ contract DutchExchange {
     function getFeeRatioExt(
         address user
     )
-        public
+        external
         view
         returns (uint, uint)
     {
@@ -1003,7 +1003,7 @@ contract DutchExchange {
     function getPriceOfTokenInLastAuctionExt(
         address token
     )
-        public
+        external
         view
         returns (uint, uint) 
     {
@@ -1015,7 +1015,7 @@ contract DutchExchange {
         address token2,
         uint auctionIndex
     )
-        public
+        external
         view
         returns (uint, uint) 
     {
@@ -1029,7 +1029,7 @@ contract DutchExchange {
         address buyToken,
         uint auctionIndex
     )
-        public
+        external
         view
         returns (uint, uint) 
     {
@@ -1139,7 +1139,7 @@ contract DutchExchange {
     function getRunningTokenPairs(
         address[] tokens
     )
-        public
+        external
         view
         returns (address[] tokens1, address[] tokens2)
     {
@@ -1181,7 +1181,7 @@ contract DutchExchange {
         address user,
         uint lastNAuctions
     )
-        public
+        external
         view
         returns(uint[] indices, uint[] balances)
     {
@@ -1220,7 +1220,7 @@ contract DutchExchange {
         address[] auctionBuyTokens,
         address user
     )
-        public
+        external
         view
         returns (uint[])
     {
@@ -1249,7 +1249,7 @@ contract DutchExchange {
         uint[] auctionIndices,
         address user
     )
-        public
+        external
     {
         uint length = auctionSellTokens.length;
         uint length2 = auctionBuyTokens.length;
