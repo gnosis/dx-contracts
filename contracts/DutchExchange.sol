@@ -1,5 +1,6 @@
-pragma solidity ^0.4.19;
+//pragma solidity 0.4.19;
 
+pragma experimental ABIEncoderV2;
 import { TokenMGN as TokenFRT } from "./Tokens/TokenMGN.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "./Oracle/PriceOracleInterface.sol";  
@@ -943,7 +944,7 @@ contract DutchExchange {
         public
         view
         // price < 10^37
-        returns (fraction memory price)
+        returns (fraction price)
     {
         fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
 
