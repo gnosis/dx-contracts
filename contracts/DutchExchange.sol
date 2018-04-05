@@ -19,7 +19,7 @@ contract DutchExchange {
 
     uint constant WAITING_PERIOD_NEW_TOKEN_PAIR = 6 hours;
     uint constant WAITING_PERIOD_NEW_AUCTION = 10 minutes;
-    uint constant WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE= 30 days;
+    uint constant WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE = 30 days;
     uint constant AUCTION_START_WAITING_FOR_FUNDING = 1;
 
     // variables for Proxy Construction
@@ -148,7 +148,7 @@ contract DutchExchange {
     {         
         require(address(_ethUSDOracle) != address(0));
         newProposalEthUSDOracle = _ethUSDOracle;
-        oracleInterfaceCountdown = now + WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE;
+        oracleInterfaceCountdown = add(now, WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE);
         NewOracleProposal(_ethUSDOracle);
     }
 
@@ -200,7 +200,7 @@ contract DutchExchange {
 
         // Update masterCopyCountdown
         newMasterCopy = _masterCopy;
-        masterCopyCountdown = now + WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE;
+        masterCopyCountdown = add(now, WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE);
         NewMasterCopyProposal(_masterCopy);
     }
 
@@ -266,11 +266,11 @@ contract DutchExchange {
         if (token1 == ethTokenMem) {
             // C1
             // MUL: 10^30 * 10^6 = 10^36
-            fundedValueUSD = token1Funding * ethUSDPrice;
+            fundedValueUSD = mul(token1Funding, ethUSDPrice);
         } else if (token2 == ethTokenMem) {
             // C2
             // MUL: 10^30 * 10^6 = 10^36
-            fundedValueUSD = token2Funding * ethUSDPrice;
+            fundedValueUSD = mul(token2Funding, ethUSDPrice);
         } else {
             // C3: Neither token is ethToken
             // We require there to exist ethToken-Token auctions
@@ -288,8 +288,8 @@ contract DutchExchange {
 
             // Compute funded value in ethToken and USD
             // 10^30 * 10^30 = 10^60
-            fundedValueUSD = (token1Funding * priceToken1.num / priceToken1.den + 
-                token2Funding * priceToken2.num / priceToken2.den) * ethUSDPrice;
+            fundedValueUSD = mul((add(mul(token1Funding, priceToken1.num) / priceToken1.den,
+                token2Funding * priceToken2.num / priceToken2.den)), ethUSDPrice);
         }
 
         // R5
@@ -339,7 +339,9 @@ contract DutchExchange {
         // R1
         require(Token(tokenAddress).transferFrom(msg.sender, this, amount));
 
-        balances[tokenAddress][msg.sender] = add(balances[tokenAddress][msg.sender], amount);
+        uint usersBalances = balances[tokenAddress][msg.sender];
+
+        balances[tokenAddress][msg.sender] = add(usersBalances, amount);
 
         NewDeposit(tokenAddress, amount);
     }
@@ -351,11 +353,12 @@ contract DutchExchange {
     )
         public
     {
+        uint usersBalances = balances[tokenAddress][msg.sender];
+        amount = min(amount, usersBalances);
         // R1
-        amount = min(amount, balances[tokenAddress][msg.sender]);
         require(amount > 0);
 
-        balances[tokenAddress][msg.sender] -= amount;
+        balances[tokenAddress][msg.sender] = sub(usersBalances, amount);
 
         // R2
         require(Token(tokenAddress).transfer(msg.sender, amount));
@@ -421,10 +424,12 @@ contract DutchExchange {
         sellerBalances[sellToken][buyToken][auctionIndex][msg.sender] = add(sellerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
         if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING || auctionStart > now) {
             // C1
-            sellVolumesCurrent[sellToken][buyToken] += amountAfterFee;
+            uint sellVolumeCurrent = sellVolumesCurrent[sellToken][buyToken];
+            sellVolumesCurrent[sellToken][buyToken] = add(sellVolumeCurrent, amountAfterFee);
         } else {
             // C2
-            sellVolumesNext[sellToken][buyToken] += amountAfterFee;
+            uint sellVolumeNext = sellVolumesNext[sellToken][buyToken];
+            sellVolumesNext[sellToken][buyToken] = add(sellVolumeNext, amountAfterFee);
         }
 
         if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING) {
@@ -472,7 +477,7 @@ contract DutchExchange {
         uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
         fraction memory price = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
         // 10^30 * 10^37 = 10^67
-        uint outstandingVolume = atleastZero(int(sellVolume * price.num / price.den - buyVolume));
+        uint outstandingVolume = atleastZero(int(mul(sellVolume, price.num) / price.den - buyVolume));
 
         uint amountAfterFee;
         if (amount < outstandingVolume) {
@@ -721,7 +726,8 @@ contract DutchExchange {
                 fee = sub(fee, mul(amountOfowlTokenBurned, fee) / feeInUSD);
             }
 
-            extraTokens[primaryToken][secondaryToken][auctionIndex + 1] += fee;
+            uint usersExtraTokens = extraTokens[primaryToken][secondaryToken][auctionIndex + 1];
+            extraTokens[primaryToken][secondaryToken][auctionIndex + 1] = add(usersExtraTokens, fee);
         }
         
         amountAfterFee = sub(amount, fee);
@@ -848,8 +854,8 @@ contract DutchExchange {
         // since it might also be called from postSellOrder())
 
         // < 10^30 * 10^31 * 10^6 = 10^67
-        uint sellVolume = sellVolumesCurrent[sellToken][buyToken] * priceTs.num * ethUSDPrice / priceTs.den;
-        uint sellVolumeOpp = sellVolumesCurrent[buyToken][sellToken] * priceTb.num * ethUSDPrice / priceTb.den;
+        uint sellVolume = mul(mul(sellVolumesCurrent[sellToken][buyToken], priceTs.num), ethUSDPrice) / priceTs.den;
+        uint sellVolumeOpp = mul(mul(sellVolumesCurrent[buyToken][sellToken], priceTb.num), ethUSDPrice) / priceTb.den;
         if (sellVolume >= thresholdNewAuction || sellVolumeOpp >= thresholdNewAuction) {
             // Schedule next auction
             setAuctionStart(sellToken, buyToken, WAITING_PERIOD_NEW_AUCTION);
@@ -964,9 +970,9 @@ contract DutchExchange {
             // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
 
             // 10^5 * 10^31 = 10^36
-            price.num = atleastZero(int((86400 - timeElapsed)*(averagedPrice.num)));
+            price.num = atleastZero(int((86400 - timeElapsed) * averagedPrice.num));
             // 10^6 * 10^31 = 10^37
-            price.den = (timeElapsed + 43200)*(averagedPrice.den);
+            price.den = mul((timeElapsed + 43200), averagedPrice.den);
 
             if (mul(price.num, sellVolumesCurrent[sellToken][buyToken]) <= mul(price.den, buyVolumes[sellToken][buyToken])) {
                 price.num = buyVolumes[sellToken][buyToken];
@@ -1156,7 +1162,7 @@ contract DutchExchange {
     /// @return Did no overflow occur?
     function safeToAdd(uint a, uint b)
         public
-        constant
+        pure
         returns (bool)
     {
         return a + b >= a;
@@ -1168,7 +1174,7 @@ contract DutchExchange {
     /// @return Did no underflow occur?
     function safeToSub(uint a, uint b)
         public
-        constant
+        pure
         returns (bool)
     {
         return a >= b;
@@ -1180,7 +1186,7 @@ contract DutchExchange {
     /// @return Did no overflow occur?
     function safeToMul(uint a, uint b)
         public
-        constant
+        pure
         returns (bool)
     {
         return b == 0 || a * b / b == a;
@@ -1192,7 +1198,7 @@ contract DutchExchange {
     /// @return Sum
     function add(uint a, uint b)
         public
-        constant
+        pure
         returns (uint)
     {
         require(safeToAdd(a, b));
@@ -1205,7 +1211,7 @@ contract DutchExchange {
     /// @return Difference
     function sub(uint a, uint b)
         public
-        constant
+        pure
         returns (uint)
     {
         require(safeToSub(a, b));
@@ -1218,7 +1224,7 @@ contract DutchExchange {
     /// @return Product
     function mul(uint a, uint b)
         public
-        constant
+        pure
         returns (uint)
     {
         require(safeToMul(a, b));
