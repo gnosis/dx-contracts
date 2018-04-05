@@ -733,7 +733,7 @@ contract DutchExchange {
         uint fee = mul(amount, feeNum) / feeDen;
 
         if (fee > 0) {
-            settleFeeSecondPart(primaryToken, fee);
+            fee = settleFeeSecondPart(primaryToken, fee);
 
             uint usersExtraTokens = extraTokens[primaryToken][secondaryToken][auctionIndex + 1];
             extraTokens[primaryToken][secondaryToken][auctionIndex + 1] = add(usersExtraTokens, fee);
@@ -770,7 +770,9 @@ contract DutchExchange {
             // Adjust fee
             // 10^35 * 10^29 = 10^64
             uint adjustment = mul(amountOfowlTokenBurned, fee) / feeInUSD;
-            fee = sub(fee, adjustment);
+            newFee = sub(fee, adjustment);
+        } else {
+            newFee = fee;
         }
     }
     
