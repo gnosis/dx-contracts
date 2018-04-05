@@ -241,24 +241,9 @@ const c2 = () => contract('DutchExchange - Flow 6', (accounts) => {
     await setAndCheckAuctionStarted(eth, gno)
     const [num, den] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex - 1))
     let priceBefore = num.div(den)
-    console.log(`
-    ClosingPrice BEFORE waiting until Price = initial Closing Price (2) * 2
-    ==============================
-    Price.num             = ${num.toNumber()}
-    Price.den             = ${den.toNumber()}
-    Price at this moment  = ${(priceBefore)}
-    ==============================
-    `)
     const [num2, den2] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, auctionIndex))
     priceBefore = num2.div(den2)
-    console.log(`
-    Price BEFORE waiting until Price = initial Closing Price (2) * 2
-    ==============================
-    Price.num             = ${num2.toNumber()}
-    Price.den             = ${den2.toNumber()}
-    Price at this moment  = ${(priceBefore)}
-    ==============================
-    `)
+    
     await postBuyOrder(eth, gno, auctionIndex, 10 * ether * 2, buyer2)
     // await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 * ether * 2, { from: buyer2 })
 

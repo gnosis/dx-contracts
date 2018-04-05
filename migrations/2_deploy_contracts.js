@@ -22,12 +22,12 @@ module.exports = function deploy(deployer, networks, accounts) {
   deployer.deploy(Math)
 
     // Linking
-    .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenMGN, TokenOWL, TokenOWLProxy, OWLAirdrop]))
+    .then(() => deployer.link(Math, [DutchExchange, StandardToken, EtherToken, TokenGNO, TokenMGN, TokenOWL, TokenOWLProxy, OWLAirdrop]))
 
     // Deployment of Tokens
     .then(() => deployer.deploy(EtherToken))
     .then(() => deployer.deploy(TokenGNO, 100000 * (10 ** 18)))
-    .then(() => deployer.deploy(TokenMGN, accounts[0], accounts[0]))
+    .then(() => deployer.deploy(TokenMGN, accounts[0]))
     .then(() => deployer.deploy(TokenOWL))
     .then(() => deployer.deploy(TokenOWLProxy, TokenOWL.address))
 
@@ -57,4 +57,8 @@ module.exports = function deploy(deployer, networks, accounts) {
     ))
     .then(() => TokenMGN.deployed())
     .then(T => T.updateMinter(Proxy.address))
+
+    // At some later point we would change the ownerShip of the MagnoliaTokens
+    // .then(() => TokenMGN.deployed())
+    // .then(T => T.updateOwner(Proxy.address))
 }
