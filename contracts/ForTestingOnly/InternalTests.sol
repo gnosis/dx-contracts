@@ -13,7 +13,7 @@ contract InternalTests is DutchExchange {
     public
     returns (uint)
   {
-    return super.settleFee(primaryToken, secondaryToken, auctionIndex, user, amount);
+    return super.settleFee(primaryToken, secondaryToken, auctionIndex, amount);
   }
   
   function InternalTests(

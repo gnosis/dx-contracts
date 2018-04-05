@@ -297,8 +297,8 @@ contract DutchExchange {
         balances[token2][msg.sender] -= token2Funding;
 
         // Fee mechanism, fees are added to extraTokens
-        uint token1FundingAfterFee = settleFee(token1, token2, 1, msg.sender, token1Funding);
-        uint token2FundingAfterFee = settleFee(token2, token1, 1, msg.sender, token2Funding);
+        uint token1FundingAfterFee = settleFee(token1, token2, 1, token1Funding);
+        uint token2FundingAfterFee = settleFee(token2, token1, 1, token2Funding);
 
         // Update other variables
         sellVolumesCurrent[token1][token2] = token1FundingAfterFee;
@@ -399,7 +399,7 @@ contract DutchExchange {
         }
 
         // Fee mechanism, fees are added to extraTokens
-        uint amountAfterFee = settleFee(sellToken, buyToken, auctionIndex, msg.sender, amount);
+        uint amountAfterFee = settleFee(sellToken, buyToken, auctionIndex, amount);
 
         // Update variables
         balances[sellToken][msg.sender] -= amount;
@@ -428,13 +428,13 @@ contract DutchExchange {
     )
         public
     {
-        uint auctionStart = getAuctionStart(sellToken, buyToken);
-
         // R1: auction must not have cleared
         require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
 
+        uint auctionStart = getAuctionStart(sellToken, buyToken);
+
         // R2
-        require(getAuctionStart(sellToken, buyToken) <= now);
+        require(auctionStart <= now);
 
         // R4
         require(auctionIndex == getAuctionIndex(sellToken, buyToken));
@@ -462,7 +462,7 @@ contract DutchExchange {
         uint amountAfterFee;
         if (amount < outstandingVolume) {
             if (amount > 0) {
-                amountAfterFee = settleFee(buyToken, sellToken, auctionIndex, msg.sender, amount);
+                amountAfterFee = settleFee(buyToken, sellToken, auctionIndex, amount);
             }
         } else {
             amount = outstandingVolume;
@@ -552,7 +552,7 @@ contract DutchExchange {
         address user,
         uint auctionIndex
     )
-        public
+        external
         returns (uint returned, uint frtsIssued)
     {
         closeTheoreticalClosedAuction(sellToken, buyToken, auctionIndex);
@@ -675,14 +675,13 @@ contract DutchExchange {
         address primaryToken,
         address secondaryToken,
         uint auctionIndex,
-        address user,
         uint amount
     )
         internal
         // < 10^30
         returns (uint amountAfterFee)
     {
-        fraction memory feeRatio = getFeeRatio(user);
+        fraction memory feeRatio = getFeeRatio(msg.sender);
         // 10^30 * 10^3 / 10^4 = 10^29
         uint fee = amount * feeRatio.num / feeRatio.den;
 
@@ -967,7 +966,7 @@ contract DutchExchange {
         address buyToken,
         uint amount
     )
-        public
+        external
     {
         deposit(sellToken, amount);
         postSellOrder(sellToken, buyToken, 0, amount);
@@ -981,7 +980,7 @@ contract DutchExchange {
         uint auctionIndex,
         uint amount
     )
-        public
+        external
     {
         claimSellerFunds(sellToken, buyToken, user, auctionIndex);
         withdraw(buyToken, amount);
@@ -992,7 +991,7 @@ contract DutchExchange {
     function getFeeRatioExt(
         address user
     )
-        public
+        external
         view
         returns (uint, uint)
     {
@@ -1004,7 +1003,7 @@ contract DutchExchange {
     function getPriceOfTokenInLastAuctionExt(
         address token
     )
-        public
+        external
         view
         returns (uint, uint) 
     {
@@ -1016,7 +1015,7 @@ contract DutchExchange {
         address token2,
         uint auctionIndex
     )
-        public
+        external
         view
         returns (uint, uint) 
     {
@@ -1030,7 +1029,7 @@ contract DutchExchange {
         address buyToken,
         uint auctionIndex
     )
-        public
+        external
         view
         returns (uint, uint) 
     {
@@ -1140,7 +1139,7 @@ contract DutchExchange {
     function getRunningTokenPairs(
         address[] tokens
     )
-        public
+        external
         view
         returns (address[] tokens1, address[] tokens2)
     {
@@ -1182,9 +1181,9 @@ contract DutchExchange {
         address user,
         uint lastNAuctions
     )
-        public
+        external
         view
-        returns(uint[] indices, uint[] balances)
+        returns(uint[] indices, uint[] usersBalances)
     {
         uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
 
@@ -1199,14 +1198,14 @@ contract DutchExchange {
         }
 
         indices = new uint[](arrayLength);
-        balances = new uint[](arrayLength);
+        usersBalances = new uint[](arrayLength);
 
         uint k;
 
         for (uint i = 1; i <= runningAuctionIndex; i++) {
             if (sellerBalances[auctionSellToken][auctionBuyToken][i][user] > 0) {
                 indices[k] = i;
-                balances[k] = sellerBalances[auctionSellToken][auctionBuyToken][i][user];
+                usersBalances[k] = sellerBalances[auctionSellToken][auctionBuyToken][i][user];
                 k++;
             }
         }
@@ -1221,7 +1220,7 @@ contract DutchExchange {
         address[] auctionBuyTokens,
         address user
     )
-        public
+        external
         view
         returns (uint[])
     {
@@ -1250,9 +1249,16 @@ contract DutchExchange {
         uint[] auctionIndices,
         address user
     )
-        public
+        external
     {
-        for (uint i = 0; i < auctionSellTokens.length; i++)
+        uint length = auctionSellTokens.length;
+        uint length2 = auctionBuyTokens.length;
+        require(length == length2);
+
+        uint length3 = auctionIndices.length;
+        require(length2 == length3);
+
+        for (uint i = 0; i < length; i++)
             claimSellerFunds(auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
     }
 
