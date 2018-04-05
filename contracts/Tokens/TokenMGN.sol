@@ -4,7 +4,6 @@ import "@gnosis.pm/gnosis-core-contracts/contracts/Tokens/StandardToken.sol";
 
 /// @title Standard token contract with overflow protection
 contract TokenMGN is StandardToken {
-   using Math for *;
 
     struct unlockedToken {
         uint amountUnlocked;
