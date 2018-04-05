@@ -241,7 +241,7 @@ const c2 = () => contract('DutchExchange - Flow 6', (accounts) => {
     await setAndCheckAuctionStarted(eth, gno)
     const [num, den] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex - 1))
     let priceBefore = num.div(den)
-    const [num2, den2] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, auctionIndex))
+    const [num2, den2] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, auctionIndex))
     priceBefore = num2.div(den2)
     
     await postBuyOrder(eth, gno, auctionIndex, 10 * ether * 2, buyer2)
