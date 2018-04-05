@@ -288,6 +288,7 @@ contract DutchExchange {
         addTokenPairSecondPart(token1, token2, token1Funding, token2Funding);
     }
 
+    // > calculateFundedValueTokenToken()
     function calculateFundedValueTokenToken(
         address token1,
         address token2,
@@ -741,6 +742,7 @@ contract DutchExchange {
         amountAfterFee = sub(amount, fee);
     }
 
+    // > settleFeeSecondPart()
     function settleFeeSecondPart(
         address primaryToken,
         uint fee

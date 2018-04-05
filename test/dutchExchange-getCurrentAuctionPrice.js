@@ -74,9 +74,9 @@ contract('DutchExchange - getCurrentAuctionPrice', (accounts) => {
     const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
 
-    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
     const currenttime = timestamp()
-    const [numPrevious, denPrevious] = (await dx.getPriceInPastAuctionExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
+    const [numPrevious, denPrevious] = (await dx.getPriceInPastAuction.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
     const timeElapsed = currenttime - auctionStart 
     logger('numPrevious', numPrevious)
     logger('timeE', timeElapsed)
@@ -96,7 +96,7 @@ contract('DutchExchange - getCurrentAuctionPrice', (accounts) => {
     // check prices:  - actually reduantant with tests postBuyOrder
     const closingPriceNum = (await dx.buyVolumes.call(eth.address, gno.address)).toNumber()
     const closingPriceDen = (await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber()
-    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
     assert.equal(closingPriceNum, num)
     assert.equal(closingPriceDen, den)
   })
@@ -104,7 +104,7 @@ contract('DutchExchange - getCurrentAuctionPrice', (accounts) => {
 
   it('3. check that getCurrentAuctionPrice returns the (0,0) for future auctions', async () => {
     const auctionIndex = await getAuctionIndex()
-    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, auctionIndex + 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, auctionIndex + 1)).map(i => i.toNumber())
     assert.equal(0, num)
     assert.equal(0, den)
   })
@@ -116,7 +116,7 @@ contract('DutchExchange - getCurrentAuctionPrice', (accounts) => {
     // clearning the auction
     await postBuyOrder(eth, gno, auctionIndex, 50 * 10e17, buyer2)
     const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
-    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
     assert.equal(closingPriceNum, num)
     assert.equal(closingPriceDen, den)
   })

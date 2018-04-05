@@ -42,7 +42,7 @@ const startBal = {
 }
 
 
-const c1 = () => contract('DutchExchange - getPriceInPastAuctionExt', (accounts) => {
+const c1 = () => contract('DutchExchange - getPriceInPastAuction', (accounts) => {
   const [, seller1, seller2, buyer1] = accounts
 
 
@@ -71,14 +71,14 @@ const c1 = () => contract('DutchExchange - getPriceInPastAuctionExt', (accounts)
   afterEach(gasLogger)
 
   it('0. throws for auctionIndex == 0', async () => {
-    await assertRejects(dx.getPriceInPastAuctionExt.call(gno.address, 0))
+    await assertRejects(dx.getPriceInPastAuction.call(gno.address, 0))
   })
 
   it('1. check that price for ETH is (1,1)', async () => {
     const auctionIndex = await getAuctionIndex()
     await setAndCheckAuctionStarted(eth, gno)
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
-    const [num, den] = (await dx.getPriceInPastAuctionExt.call(eth.address, eth.address, auctionIndex)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceInPastAuction.call(eth.address, eth.address, auctionIndex)).map(i => i.toNumber())
 
     assert.equal(num, 1)
     assert.equal(den, 1)
@@ -103,7 +103,7 @@ const c1 = () => contract('DutchExchange - getPriceInPastAuctionExt', (accounts)
 
     // actual testing
     const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex - 1)).map(i => i.toNumber())
-    const [num, den] = (await dx.getPriceInPastAuctionExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceInPastAuction.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
     // We need to check the inverse closingPrices, since we have eth, gno prices
     assert.equal(closingPriceNum, num)
     assert.equal(closingPriceDen, den)
@@ -128,7 +128,7 @@ const c1 = () => contract('DutchExchange - getPriceInPastAuctionExt', (accounts)
     
     // actual testing
     const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(gno.address, eth.address, auctionIndex - 1)).map(i => i.toNumber())
-    const [num, den] = (await dx.getPriceInPastAuctionExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceInPastAuction.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
     assert.equal(closingPriceDen, num)
     assert.equal(closingPriceNum, den)
   })
@@ -150,7 +150,7 @@ const c1 = () => contract('DutchExchange - getPriceInPastAuctionExt', (accounts)
 
     const [closingPriceNum, closingPriceDen] = await dx.closingPrices.call(eth.address, gno.address, auctionIndex - 1)
     const [closingPriceNumOpp, closingPriceDenOpp] = await dx.closingPrices.call(gno.address, eth.address, auctionIndex - 1)
-    const [num, den] = (await dx.getPriceInPastAuctionExt.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceInPastAuction.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
 
     // check that the tests is in correct state:
     assert.equal(closingPriceNum.toNumber() > 0, true)

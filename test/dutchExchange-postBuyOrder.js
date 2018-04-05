@@ -171,7 +171,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     const sellVolume = await dx.sellVolumesCurrent.call(eth.address, gno.address)
     const buyVolume = await getBuyVolume(eth, gno)
     await postBuyOrder(eth, gno, auctionIndex, amount, buyer1)
-    const [num, den] = await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, auctionIndex)
+    const [num, den] = await dx.getCurrentAuctionPrice.call(eth.address, gno.address, auctionIndex)
 
     const outstandingVolume = sellVolume.mul(num).div(den).sub(buyVolume)
     varLogger('oustandingVolume', outstandingVolume.toNumber())

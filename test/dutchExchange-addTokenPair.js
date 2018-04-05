@@ -226,8 +226,8 @@ contract('DutchExchange - addTokenPair', (accounts) => {
     } else if (buyToken === eth || buyToken === eth.address) {
       fundedValueETH = token2Funding
     } else {
-      const [num1, den1] = await dx.getPriceOfTokenInLastAuctionExt.call(sellToken.address || sellToken)
-      const [num2, den2] = await dx.getPriceOfTokenInLastAuctionExt.call(buyToken.address || buyToken)
+      const [num1, den1] = await dx.getPriceOfTokenInLastAuction.call(sellToken.address || sellToken)
+      const [num2, den2] = await dx.getPriceOfTokenInLastAuction.call(buyToken.address || buyToken)
 
       fundedValueETH = num1.mul(token1Funding).div(den1).add(num2.mul(token2Funding).div(den2))
     }

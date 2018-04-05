@@ -407,7 +407,7 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
   const calculateFeeInUSD = async (fee, token) => {
     const [ETHUSDPrice, [num, den]] = await Promise.all([
       oracle.getUSDETHPrice.call(),
-      dx.getPriceOfTokenInLastAuctionExt.call(token),
+      dx.getPriceOfTokenInLastAuction.call(token),
     ])
 
     const feeInETH = calculateFee(fee, num.toNumber() / den.toNumber(), false)
