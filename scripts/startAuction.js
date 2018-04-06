@@ -1,4 +1,13 @@
-// script crashes for gas reason sometimes, if it is run against testrpc. with kovan or rinkeby, there were no porblems dectected.
+/**
+ * node scritps/startAuction.js
+ * to add a new TradingPair ETH:Token to the DutchExchange
+ * @flags:
+ * --network                    if not specified, testrpc will be used. Otherwise rinkeby             
+ * --tokenToAddAddress              
+ * --priceNum                   price is given in units [EtherToken]/[buyToken]
+ * --priceDen                   
+ * --tokenNR                    selecting the Token from the list tokenMap
+ */
 
 const Web3 = require('web3')
 const fs = require('fs')
@@ -28,6 +37,8 @@ const TokenOMGJson = JSON.parse(fs.readFileSync('./build/contracts/TokenOMG.json
 const TokenOMG = TruffleContract(TokenOMGJson)
 const TokenRDNJson = JSON.parse(fs.readFileSync('./build/contracts/TokenRDN.json'))
 const TokenRDN = TruffleContract(TokenRDNJson)
+const StandardTokenJson = JSON.parse(fs.readFileSync('./build/contracts/StandardToken.json'))
+const StandardToken = TruffleContract(StandardTokenJson)
 const ProxyJson = JSON.parse(fs.readFileSync('./build/contracts/Proxy.json'))
 const Proxy = TruffleContract(ProxyJson)
 const DutchExchangeJson = JSON.parse(fs.readFileSync('./build/contracts/DutchExchange.json'))
@@ -56,8 +67,8 @@ module.exports = (async () => {
     Token
   }
 
-  const startingETH = 18e18
-  const startingToken = 100e18
+  const startingETH = argv.fundingETH ? argv.fundingETH : 18e18
+  const startingToken = argv.fundingToken ? argv.fundingToken : 100e18
 
   const getContracts = async () => {
     const proxy = await Proxy.deployed()
@@ -65,8 +76,10 @@ module.exports = (async () => {
     omg = await TokenOMG.deployed()
     rdn = await TokenRDN.deployed()
     dx = DutchExchange.at(proxy.address)
-    Token = argv.token && tokenMap[argv.token] ? tokenMap[argv.token] : rdn
-
+    Token = argv.tokenNR && tokenMap[argv.tokenNR] ? tokenMap[argv.tokenNR] : rdn
+    if(argv.tokenToAddAddress){
+      Token = StandardToken.at(argv.tokenToAddAddress)
+    }
     return {
       EtherToken: eth,
       TokenOMG: omg,
@@ -77,7 +90,7 @@ module.exports = (async () => {
   const setup = async (a, tta) => {
     await eth.deposit({ from: a, value: startingETH })
     await eth.approve(dx.address, startingETH, { from: a })
-    await tta.approve(dx.address, startingToken+20, { from: a })
+    await tta.approve(dx.address, startingToken, { from: a })
     await dx.deposit(tta.address, startingToken, { from: a, gas: 234254})
     return dx.deposit(eth.address, startingETH, { from: a, gas: 234254})
   }
@@ -85,9 +98,10 @@ module.exports = (async () => {
   try {
     const acct = await promisedAcct
     await getContracts()
+
     await setup(acct, Token)
 
-    const receipt = await dx.addTokenPair(eth.address, Token.address, startingETH, 0, 1, 50, { from: acct, gas: 2374235})
+    const receipt = await dx.addTokenPair(eth.address, Token.address, startingETH, 0, argv.priceNum ? argv.priceNum : 1, argv.priceDen ? argv.priceDen : 1, { from: acct, gas: 2374235})
     console.log(`
     ===========================
     Successfully added  => [Ether Token // ${await Token.name.call()}] Auction
