@@ -214,7 +214,7 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
     `) 
     
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
-    const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
+    const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     // Should be 4 here as closing price starts @ 2 and we times by 2
     const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
