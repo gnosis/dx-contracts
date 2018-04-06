@@ -3,10 +3,13 @@
 const DutchExchange = artifacts.require('DutchExchange')
 const InternalTests = artifacts.require('InternalTests')
 const proxy = artifacts.require('Proxy')
-
+const TokenMGN = artifacts.require('TokenMGN')
+const Math = artifacts.require('Math')
 
 module.exports = function deploy(deployer, network) {
   if (network == 'kovan') return
+  if (network == 'rinkeby') return
+
   deployer
     .then(() => proxy.deployed())
     .then((p) => {

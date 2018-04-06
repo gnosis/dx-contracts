@@ -13,7 +13,7 @@ contract InternalTests is DutchExchange {
     public
     returns (uint)
   {
-    return super.settleFee(primaryToken, secondaryToken, auctionIndex, user, amount);
+    return super.settleFee(primaryToken, secondaryToken, auctionIndex, amount);
   }
   
   function InternalTests(
@@ -38,10 +38,9 @@ contract InternalTests is DutchExchange {
 
   function getFeeRatioForJS(
     address user
-  ) public view returns (uint, uint)
+  ) public view returns (uint feeRatioNum, uint feeRatioDen)
   {
-    fraction memory feeRatio = super.getFeeRatio(user);
-    return (feeRatio.num, feeRatio.den);
+    (feeRatioNum, feeRatioDen) = super.getFeeRatio(user);
   }
 
   function getMasterCopy() public view returns (address) {

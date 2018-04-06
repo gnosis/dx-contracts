@@ -3,7 +3,7 @@
 // https://drive.google.com/drive/folders/0ByHhiGx-ltJZczhjZHhHeGpHcHM
 // States are generated with the function getIntoState and 
 // right state transitions are asserted with the function getState() == expectation
-
+// https://drive.google.com/drive/folders/10_j3bMx6YngR0xKn5PXXiF1_Bi1eqeMR
 // checkState is only a rough check for right updates of the numbers in the smart contract. It allows a big tolerance (Maxrounding error)
 // since there are unpredicted timejumps with an evm_increase time
 
@@ -77,7 +77,7 @@ const getState = async (ST, BT) => { // eslint-disable-line
   let numBasedOnVolume
   let denBasedOnVolume
   // calculate state of Auction
-  [numP, denP] = (await dx.getCurrentAuctionPriceExt.call(ST.address, BT.address, auctionIndex)) // eslint-disable-line
+  [numP, denP] = (await dx.getCurrentAuctionPrice.call(ST.address, BT.address, auctionIndex)) // eslint-disable-line
   numBasedOnVolume = await dx.buyVolumes.call(ST.address, BT.address)
   denBasedOnVolume = await dx.sellVolumesCurrent.call(ST.address, BT.address)
   const isAuctionTheoreticalClosed = (numP.mul(denBasedOnVolume).sub(numBasedOnVolume.mul(denP)).toNumber() <= 0);
@@ -87,7 +87,7 @@ const getState = async (ST, BT) => { // eslint-disable-line
   // calculate state of OppAuction
   let numP2
   let denP2
-  [numP2, denP2] = (await dx.getCurrentAuctionPriceExt.call(BT.address, ST.address, auctionIndex)) // eslint-disable-line
+  [numP2, denP2] = (await dx.getCurrentAuctionPrice.call(BT.address, ST.address, auctionIndex)) // eslint-disable-line
   numBasedOnVolume = await dx.buyVolumes.call(BT.address, ST.address) 
   denBasedOnVolume = await dx.sellVolumesCurrent.call(BT.address, ST.address)
   const isOppAuctionTheoreticalClosed = (numP2.mul(denBasedOnVolume).minus(numBasedOnVolume.mul(denP2)).toNumber() <= 0);
@@ -1496,11 +1496,17 @@ const c27 = () => contract('DutchExchange - Stage S5 -  waiting to reach the thr
 
   it('postSellOrder - posting a SellOrders and switch to S0', async () => {
     const auctionIndex = await getAuctionIndex()
+
+        console.log("testing")
     await setAndCheckAuctionStarted(eth, gno)
       
+        console.log("testing")
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
     // clearing first auction
+        console.log("testing")
+
     await postSellOrder(gno, eth, auctionIndex, ether / 10, seller1)
+    console.log("testing")
     const newAuctionStart = timestamp() + 60 * 10
     await postSellOrder(eth, gno, 0, 10.0.toWei() * 30, seller2)
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {

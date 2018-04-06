@@ -26,6 +26,7 @@ const getTime = new Promise((resolve, reject) => {
             resolve(block.timestamp)
         })
     })
+
 module.exports = function deploy(deployer, network, accounts) {
   if (network === 'kovan') {
     deployer.deploy(Math)
@@ -38,7 +39,7 @@ module.exports = function deploy(deployer, network, accounts) {
       .then(() => deployer.deploy(TokenGNO, 100000 * (10 ** 18)))
       .then(() => deployer.deploy(TokenRDN, 100000 * (10 ** 18)))
       .then(() => deployer.deploy(TokenOMG, 100000 * (10 ** 18)))
-      .then(() => deployer.deploy(TokenMGN, accounts[0], accounts[0]))
+      .then(() => deployer.deploy(TokenMGN, accounts[0]))
       .then(() => deployer.deploy(TokenOWL))
       .then(() => deployer.deploy(TokenOWLProxy, TokenOWL.address))
 
@@ -65,6 +66,11 @@ module.exports = function deploy(deployer, network, accounts) {
       .then(T => T.updateMinter(Proxy.address))
       .then(() => getTime)
     .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, TokenGNO.address, (t + 30 * 60 * 60)))
+
+    // At some later point we would change the ownerShip of the MagnoliaTokens
+    // .then(() => TokenMGN.deployed())
+    // .then(T => T.updateOwner(Proxy.address))
+
   } else {
     deployer.deploy(Math)
       // Linking
@@ -76,7 +82,7 @@ module.exports = function deploy(deployer, network, accounts) {
       .then(() => deployer.deploy(TokenGNO, 100000 * (10 ** 18)))
       .then(() => deployer.deploy(TokenRDN, 100000 * (10 ** 18)))
       .then(() => deployer.deploy(TokenOMG, 100000 * (10 ** 18)))
-      .then(() => deployer.deploy(TokenMGN, accounts[0], accounts[0]))
+      .then(() => deployer.deploy(TokenMGN, accounts[0]))
       .then(() => deployer.deploy(TokenOWL))
       .then(() => deployer.deploy(TokenOWLProxy, TokenOWL.address))
 
@@ -110,5 +116,9 @@ module.exports = function deploy(deployer, network, accounts) {
       .then(() => getTime)
     .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, TokenGNO.address, (t + 30 * 60 * 60)))
 
+    // At some later point we would change the ownerShip of the MagnoliaTokens
+    // .then(() => TokenMGN.deployed())
+    // .then(T => T.updateOwner(Proxy.address))
   }
+
 }

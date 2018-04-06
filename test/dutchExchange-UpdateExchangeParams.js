@@ -4,7 +4,10 @@ const {
   gasLogger,
 } = require('./utils')
 
-const { getContracts } = require('./testFunctions')
+const {
+  getContracts,
+  wait,
+ } = require('./testFunctions')
 
 const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 
@@ -12,7 +15,7 @@ const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 let newPO
 let dx
 let medianizer
-
+let params2
 let contracts
 
 contract('DutchExchange updating exchange params', (accounts) => {
@@ -32,6 +35,13 @@ contract('DutchExchange updating exchange params', (accounts) => {
     // a new deployed PriceOracleInterface to replace the old with
     contracts.newPO = await PriceOracleInterface.new(master, medianizer.address);
     ({ newPO } = contracts)
+
+     params2 = {
+       auctioneer: seller1,
+       ethUSDOracle: newPO.address,
+       thresholdNewTokenPair: 5000,
+       thresholdNewAuction: 500,
+     }
   })
 
   const getExchangeParams = async () => {
@@ -79,47 +89,39 @@ contract('DutchExchange updating exchange params', (accounts) => {
     assert.notStrictEqual(auctioneer, acc, 'account should not be DutchExchange contract auctioneer')
   }
 
+
   it('not auctioneer can\'t change params', async () => {
     const params1 = await getAndPrintExchangeParams()
-
+  
     await assertIsNotAuctioneer(seller1)
-
-    const params2 = {
-      auctioneer: seller1,
-      ethUSDOracle: newPO.address,
-      thresholdNewTokenPair: 5000,
-      thresholdNewAuction: 500,
-    }
-
     assert.notDeepEqual(params1, params2, 'parameters must be different')
 
     logger(`Not auctioneer tries to change params to ${JSON.stringify(params2, null, 5)}`)
-
     await assertRejects(dx.updateAuctioneer(params2.auctioneer, { from: seller1 }), 'not auctioneer can\'t change params')
+    await assertRejects(dx.initiateEthUsdOracleUpdate( { from: seller1 }), 'not auctioneer can\'t change params')
     await assertRejects(dx.updateEthUSDOracle(params2.ethUSDOracle, { from: seller1 }), 'not auctioneer can\'t change params')
     await assertRejects(dx.updateThresholdNewTokenPair(params2.thresholdNewTokenPair, { from: seller1 }), 'not auctioneer can\'t change params')
     await assertRejects(dx.updateThresholdNewAuction(params2.thresholdNewAuction, { from: seller1 }), 'not auctioneer can\'t change params')
 
     assert.deepEqual(params1, await getAndPrintExchangeParams(), 'exchange params should stay the same')
   })
+  it('price oracle can not be changed immediately params', async () => {
+    const params1 = await getAndPrintExchangeParams()
 
+    await assertIsAuctioneer(master)
+    console.log(params2.ethUSDOracle)
+    await dx.initiateEthUsdOracleUpdate(params2.ethUSDOracle, { from: master })
+    await assertRejects(dx.updateEthUSDOracle({ from: master }), 'to early to change oracle interface')
+  })
   it('auctioneer can change params', async () => {
     const params1 = await getAndPrintExchangeParams()
 
     await assertIsAuctioneer(master)
 
-    const params2 = {
-      auctioneer: seller1,
-      ethUSDOracle: newPO.address,
-      thresholdNewTokenPair: 4000,
-      thresholdNewAuction: 400,
-    }
-
     assert.notDeepEqual(params1, params2, 'parameters must be different')
-
+    await wait(60*60*24*30+5)
     logger(`auctioneer changes params to ${JSON.stringify(params2, null, 5)}`)
-
-    await dx.updateEthUSDOracle(params2.ethUSDOracle, { from: master })
+    await dx.updateEthUSDOracle( { from: master })
     await dx.updateThresholdNewTokenPair(params2.thresholdNewTokenPair, { from: master })
     await dx.updateThresholdNewAuction(params2.thresholdNewAuction, { from: master })
     await dx.updateAuctioneer(params2.auctioneer, { from: master })
