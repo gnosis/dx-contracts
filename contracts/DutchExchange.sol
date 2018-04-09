@@ -1,5 +1,6 @@
-pragma solidity ^0.4.19;
+//pragma solidity 0.4.19;
 
+pragma experimental ABIEncoderV2;
 import { TokenMGN as TokenFRT } from "./Tokens/TokenMGN.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "./Oracle/PriceOracleInterface.sol";  
@@ -357,15 +358,18 @@ contract DutchExchange {
         uint amount
     )
         public
+        returns (uint)
     {
         // R1
         require(Token(tokenAddress).transferFrom(msg.sender, this, amount));
 
-        uint usersBalances = balances[tokenAddress][msg.sender];
+        uint newBal = add(balances[tokenAddress][msg.sender], amount);
 
-        balances[tokenAddress][msg.sender] = add(usersBalances, amount);
+        balances[tokenAddress][msg.sender] = newBal;
 
         NewDeposit(tokenAddress, amount);
+
+        return newBal;
     }
 
     // > withdraw()
@@ -374,18 +378,23 @@ contract DutchExchange {
         uint amount
     )
         public
+        returns (uint)
     {
-        uint usersBalances = balances[tokenAddress][msg.sender];
-        amount = min(amount, usersBalances);
+        uint usersBalance = balances[tokenAddress][msg.sender];
+        amount = min(amount, usersBalance);
+
         // R1
         require(amount > 0);
-
-        balances[tokenAddress][msg.sender] = sub(usersBalances, amount);
 
         // R2
         require(Token(tokenAddress).transfer(msg.sender, amount));
 
+        uint newBal = sub(usersBalance, amount);
+        balances[tokenAddress][msg.sender] = newBal;
+
         NewWithdrawal(tokenAddress, amount);
+
+        return newBal;
     }
 
      // > postSellOrder()
@@ -396,6 +405,7 @@ contract DutchExchange {
         uint amount
     )
         public
+        returns (uint, uint)
     {
         // Note: if a user specifies auctionIndex of 0, it
         // means he is agnostic which auction his sell order goes into
@@ -443,7 +453,9 @@ contract DutchExchange {
 
         // Update variables
         balances[sellToken][msg.sender] = sub(balances[sellToken][msg.sender], amount);
-        sellerBalances[sellToken][buyToken][auctionIndex][msg.sender] = add(sellerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
+        uint newSellerBal = add(sellerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
+        sellerBalances[sellToken][buyToken][auctionIndex][msg.sender] = newSellerBal;
+
         if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING || auctionStart > now) {
             // C1
             uint sellVolumeCurrent = sellVolumesCurrent[sellToken][buyToken];
@@ -459,6 +471,8 @@ contract DutchExchange {
         }
 
         NewSellOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
+
+        return (auctionIndex, newSellerBal);
     }
 
     // > postBuyOrder()
@@ -469,6 +483,7 @@ contract DutchExchange {
         uint amount
     )
         public
+        returns (uint)
     {
         // R1: auction must not have cleared
         require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
@@ -518,7 +533,8 @@ contract DutchExchange {
         if (amount > 0) {
             // Update variables
             balances[buyToken][msg.sender] = sub(balances[buyToken][msg.sender], amount);
-            buyerBalances[sellToken][buyToken][auctionIndex][msg.sender] = add(buyerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
+            uint newBuyerBal = add(buyerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
+            buyerBalances[sellToken][buyToken][auctionIndex][msg.sender] = newBuyerBal;
             buyVolumes[sellToken][buyToken] = add(buyVolumes[sellToken][buyToken], amountAfterFee);
             NewBuyOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
         }
@@ -528,6 +544,8 @@ contract DutchExchange {
             // Clear auction
             clearAuction(sellToken, buyToken, auctionIndex, sellVolume);
         }
+
+        return (newBuyerBal);
     }
     
     // > claimSellerFunds()
@@ -559,7 +577,7 @@ contract DutchExchange {
         // < 10^30 * 10^30 = 10^60
         returned = mul(sellerBalance, num) / den;
 
-        frtsIssued = issueFrts(sellToken, buyToken, returned, auctionIndex, sellerBalance, user);
+        issueFrts(sellToken, buyToken, returned, auctionIndex, sellerBalance, user);
 
         // Claim tokens
         sellerBalances[sellToken][buyToken][auctionIndex][user] = 0;
@@ -603,7 +621,7 @@ contract DutchExchange {
             uint tokensExtra = mul(buyerBalance, extraTokensTotal) / closingPrices[sellToken][buyToken][auctionIndex].num;
             returned = add(returned, tokensExtra);
 
-            frtsIssued = issueFrts(buyToken, sellToken, mul(buyerBalance, den) / num, auctionIndex, buyerBalance, user);
+            issueFrts(buyToken, sellToken, mul(buyerBalance, den) / num, auctionIndex, buyerBalance, user);
 
             // Auction has closed
             // Reset buyerBalances and claimedAmounts
@@ -629,8 +647,8 @@ contract DutchExchange {
         address user
     )
         internal
-        returns(uint frtsIssued)
     {
+        uint frtsIssued;
 
         if (approvedTokens[primaryToken] == true && approvedTokens[secondaryToken] == true) {
             address ethTokenMem = ethToken;
@@ -1038,9 +1056,10 @@ contract DutchExchange {
         uint amount
     )
         external
+        returns (uint newBal, uint auctionIndex, uint newSellerBal)
     {
-        deposit(sellToken, amount);
-        postSellOrder(sellToken, buyToken, 0, amount);
+        newBal = deposit(sellToken, amount);
+        (auctionIndex, newSellerBal) = postSellOrder(sellToken, buyToken, 0, amount);
     }
 
     // > claimAndWithdraw()
@@ -1052,9 +1071,10 @@ contract DutchExchange {
         uint amount
     )
         external
+        returns (uint returned, uint frtsIssued, uint newBal)
     {
-        claimSellerFunds(sellToken, buyToken, user, auctionIndex);
-        withdraw(buyToken, amount);
+        (returned, frtsIssued) = claimSellerFunds(sellToken, buyToken, user, auctionIndex);
+        newBal = withdraw(buyToken, amount);
     }
 
     // > helper fns
@@ -1269,7 +1289,7 @@ contract DutchExchange {
     //@param user is the user who wants to his tokens
     //@param lastNAuctions how many auctions will be checked. 0 means all
     //@returns returns sellbal for all indices for all tokenpairs 
-    function getIndicesWithClaimableTokensForSellers(
+    function getIndicesWithClaimableTokens(
         address auctionSellToken,
         address auctionBuyToken,
         address user,
@@ -1331,76 +1351,6 @@ contract DutchExchange {
 
         return sellersBalances;
     }
-
-    //@dev for quick overview of possible buyerBalances to calculate the possible withdraw tokens
-    //@param auctionSellToken is the sellToken defining an auctionPair
-    //@param auctionBuyToken is the buyToken defining an auctionPair
-    //@param user is the user who wants to his tokens
-    //@param lastNAuctions how many auctions will be checked. 0 means all
-    //@returns returns sellbal for all indices for all tokenpairs 
-    function getIndicesWithClaimableTokensForBuyers(
-        address auctionSellToken,
-        address auctionBuyToken,
-        address user,
-        uint lastNAuctions
-    )
-        external
-        view
-        returns(uint[] indices, uint[] usersBalances)
-    {
-        uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
-
-        uint arrayLength;
-        
-        uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
-
-        for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
-            if (buyerBalances[auctionSellToken][auctionBuyToken][j][user] > 0) {
-                arrayLength++;
-            }
-        }
-
-        indices = new uint[](arrayLength);
-        usersBalances = new uint[](arrayLength);
-
-        uint k;
-
-        for (uint i = 1; i <= runningAuctionIndex; i++) {
-            if (buyerBalances[auctionSellToken][auctionBuyToken][i][user] > 0) {
-                indices[k] = i;
-                usersBalances[k] = buyerBalances[auctionSellToken][auctionBuyToken][i][user];
-                k++;
-            }
-        }
-    }    
-
-    //@dev for quick overview of current sellerBalances for a user
-    //@param auctionSellTokens are the sellTokens defining an auctionPair
-    //@param auctionBuyTokens are the buyTokens defining an auctionPair
-    //@param user is the user who wants to his tokens
-    function getBuyerBalancesOfCurrentAuctions(
-        address[] auctionSellTokens,
-        address[] auctionBuyTokens,
-        address user
-    )
-        external
-        view
-        returns (uint[])
-    {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2);
-
-        uint[] memory buyersBalances = new uint[](length);
-
-        for (uint i = 0; i < length; i++) {
-            uint runningAuctionIndex = getAuctionIndex(auctionSellTokens[i], auctionBuyTokens[i]);
-            buyersBalances[i] = buyerBalances[auctionSellTokens[i]][auctionBuyTokens[i]][runningAuctionIndex][user];
-        }
-
-        return buyersBalances;
-    }
-
 
     //@dev for multiple withdraws
     //@param auctionSellTokens are the sellTokens defining an auctionPair
