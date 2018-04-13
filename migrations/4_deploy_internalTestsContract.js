@@ -9,6 +9,8 @@ const Math = artifacts.require('Math')
 module.exports = function deploy(deployer, network) {
   if (network == 'kovan') return
   if (network == 'rinkeby') return
+  if (network == 'mainnet') return
+
 
   deployer
     .then(() => proxy.deployed())

@@ -28,7 +28,47 @@ const getTime = new Promise((resolve, reject) => {
     })
 
 module.exports = function deploy(deployer, network, accounts) {
-  if (network === 'kovan') {
+  
+  if (network === 'mainnet') {
+    deployer.deploy(Math)
+
+      // Linking
+      .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenMGN, TokenOWL, TokenOWLProxy, OWLAirdrop]))
+      // Deployment of Tokens
+      .then(() => deployer.deploy(TokenMGN, accounts[0]))
+      .then(() => deployer.deploy(TokenOWL))
+      .then(() => deployer.deploy(TokenOWLProxy, TokenOWL.address))
+
+
+      // Deployment of PriceFeedInfrastructure
+      .then(() => deployer.deploy(PriceOracleInterface, accounts[0], '0x729D19f657BD0614b4985Cf1D82531c67569197B'))
+
+      // Deployment of DutchExchange
+      .then(() => deployer.deploy(DutchExchange))
+      .then(() => deployer.deploy(Proxy, DutchExchange.address))
+
+      // @dev DX Constructor creates exchange
+      .then(() => Proxy.deployed())
+      .then(p => DutchExchange.at(p.address).setupDutchExchange(
+        TokenMGN.address,
+        TokenOWLProxy.address,
+        accounts[0],                           // @param _owner will be the admin of the contract
+        '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', // @param _ETH               - address of ETH ERC-20 token
+        PriceOracleInterface.address,        // @param _priceOracleAddress - address of priceOracle
+        10000000000000000000000,            // @param _thresholdNewTokenPair: 10,000 dollar
+        1000000000000000000000,            // @param _thresholdNewAuction:     1,000 dollar
+      ))
+      .then(() => TokenMGN.deployed())
+      .then(T => T.updateMinter(Proxy.address))
+      .then(() => getTime)
+    .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, '0x6810e776880C02933D47DB1b9fc05908e5386b96', (t + 30 * 60 * 60)))
+
+    // At some later point we would change the ownerShip of the MagnoliaTokens
+    // .then(() => TokenMGN.deployed())
+    // .then(T => T.updateOwner(Proxy.address))
+  }
+
+  else if (network === 'kovan') {
     deployer.deploy(Math)
 
       // Linking
