@@ -13,12 +13,18 @@ const currentETHPrice = (1100 * (10 ** 18))
 
 module.exports = function deploy(deployer, networks, accounts) {
       
-    //Generating enough OWL for testing
-    deployer
-    .then((t) => TokenGNO.deployed())
-    .then(T => T.approve(OWLAirdrop.address, 50000 * (10 ** 18)))
-    .then(() => TokenOWLProxy.deployed())
-    .then(T => TokenOWL.at(T.address).setMinter(OWLAirdrop.address))
-    .then(() => OWLAirdrop.deployed())
-    .then(A => A.lockGNO(50000 * (10 ** 18)))
+     if (network == 'mainnet'){
+	     deployer	
+	    .then(() => TokenOWLProxy.deployed())
+	    .then(T => TokenOWL.at(T.address).setMinter(OWLAirdrop.address))
+     }else {
+	    //Generating enough OWL for testing
+	    deployer
+	    .then((t) => TokenGNO.deployed())
+	    .then(T => T.approve(OWLAirdrop.address, 50000 * (10 ** 18)))
+	    .then(() => TokenOWLProxy.deployed())
+	    .then(T => TokenOWL.at(T.address).setMinter(OWLAirdrop.address))
+	    .then(() => OWLAirdrop.deployed())
+	    .then(A => A.lockGNO(50000 * (10 ** 18)))
+	}
 }

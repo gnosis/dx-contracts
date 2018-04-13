@@ -18,7 +18,7 @@
     "@gnosis.pm/gnosis-core-contracts": "^1.0.3",
     "@gnosis.pm/owl-token": "^0.3.0",
     "truffle-contract": "^3.0.1",
-    "truffle-hdwallet-provider": "0.0.3",
+    "truffle-hdwallet-provider": "^0.0.3",
     "truffle-hdwallet-provider-privkey": "^0.2.0",
     "web3": "^0.20.2"
   },

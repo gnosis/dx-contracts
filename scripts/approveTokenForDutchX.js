@@ -1,91 +1,77 @@
-
-// script crashes for gas reason sometimes, if it is run against testrpc. with kovan or rinkeby, there were no porblems dectected.
+/**
+ * node scritps/approveTokenForDutchX.js
+ * to add a new TradingPair ETH:Token to the DutchExchange
+ * @flags:
+ * --network                    if not specified, testrpc will be used. Otherwise rinkeby             
+ * --tokenToApprove             any token that inherits the StandartToken functions can be submitted 
+ * --Approved                    bool variable 
+ */
 
 const Web3 = require('web3')
 const fs = require('fs')
+const argv = require('minimist')(process.argv.slice(2), { string: 'a', string: ['tokenToApprove', 'Approved']})
+
+//optional for MNEMONICs
+//const mnemonic = process.env.MNEMONIC // Mnemonic for account
+//const HDWalletProvider = require('truffle-hdwallet-provider')
+//const provider = new HDWalletProvider(process.env.MNEMONIC, 'https://rinkeby.infura.io/')
 
 
-//optional for private keys
-/*
+const privKey = process.env.PrivateKEY // raw private key
 const HDWalletProvider = require("truffle-hdwallet-provider-privkey");
-const privKey = "process.env.PrivateKEY // raw private key
-const provider = new HDWalletProvider(privKey, "https://kovan.infura.io/");
-*/
 
-const HDWalletProvider = require('truffle-hdwallet-provider')
-const mnemonic = process.env.MNEMONIC
-//const provider = new HDWalletProvider(mnemonic, 'https://kovan.infura.io/')
-const provider = new HDWalletProvider(mnemonic, 'http://localhost:8545')
-// important: gas needs to specified for ganache with local test net for whatever reason.
-web3 = new Web3(provider.engine)
+let web3, provider
+if (argv.network) {
+  if(argv.network == 'rinkeby')
+    provider = new HDWalletProvider(privKey, 'https://rinkeby.infura.io/')
+  else if(argv.network == 'kovan'){
+    provider = new HDWalletProvider(privKey, 'https://kovan.infura.io/')
+  }
+  else if(argv.network == 'mainnet'){
+    provider = new HDWalletProvider(privKey, 'https://mainet.infura.io/')
+  }
+  web3 = new Web3(provider.engine)
+} else {
+  web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+}
+
 const TruffleContract = require('truffle-contract')
 
+
 // retrieve truffle-contracts 
-const EtherTokenJson = JSON.parse(fs.readFileSync('./build/contracts/EtherToken.json'))
-const EtherToken = TruffleContract(EtherTokenJson)
-const TokenOMGJson = JSON.parse(fs.readFileSync('./build/contracts/TokenOMG.json'))
-const TokenOMG = TruffleContract(TokenOMGJson)
-const TokenRDNJson = JSON.parse(fs.readFileSync('./build/contracts/TokenRDN.json'))
-const TokenRDN = TruffleContract(TokenRDNJson)
 const ProxyJson = JSON.parse(fs.readFileSync('./build/contracts/Proxy.json'))
 const Proxy = TruffleContract(ProxyJson)
 const DutchExchangeJson = JSON.parse(fs.readFileSync('./build/contracts/DutchExchange.json'))
 const DutchExchange = TruffleContract(DutchExchangeJson)
 
-EtherToken.setProvider(web3.currentProvider)
 DutchExchange.setProvider(web3.currentProvider)
 Proxy.setProvider(web3.currentProvider)
-TokenOMG.setProvider(web3.currentProvider)
-TokenRDN.setProvider(web3.currentProvider)
 
-// Test VARS
-let eth
-let gno
-let rdn
-let tul
-let dx
-let Token
+module.exports = (async () => {
+  const promisedAcct = new Promise((a, r) => web3.eth.getAccounts((e, r) => a(r[0])))
 
-const startingETH = 13e18
-const startingToken = 100e18
-
-const getContracts = async () => {
-  eth = await EtherToken.deployed()
-  omg = await TokenOMG.deployed()
-  rdn = await TokenRDN.deployed()
-  const proxy = await Proxy.deployed()
-  dx = DutchExchange.at(proxy.address)
-  return {
-    EtherToken: eth,
-    TokenOMG: omg,
-    TokenRDN: rdn,
-    DutchExchange: dx,
+  // Test VARS
+  let tul
+  let dx
+  try {
+    const acct = await promisedAcct
+    const proxy = await Proxy.deployed()
+    const dx = DutchExchange.at(proxy.address)
+    if(42 != argv.tokenToApprove.length){
+      throw("No token address specified")
+    }
+    if(argv.Approved.length == 4) // equals 'true'
+      await dx.updateApprovalOfToken(argv.tokenToApprove, true,{from: acct})
+    else{
+      await dx.updateApprovalOfToken(argv.tokenToApprove, false,{from: acct})
+    }
+    console.log(`
+    ===========================
+    Successfully approved the Token  => [${argv.tokenToApprove}] 
+    New approval status of Token  => [${await dx.approvedTokens.call(argv.tokenToApprove)}] 
+    `)
+    return
+  } catch (error) {
+    throw new Error(error)
   }
-}
-const setup = async () => {
-  await eth.deposit({ from: acct, value: startingETH })
-  await eth.approve(dx.address, startingETH, { from: acct })
-  await tokenToApprove.approve(dx.address, startingToken+20, { from: acct })
-  await dx.deposit(tokenToApprove.address, startingToken, { from: acct })
-  await dx.deposit(eth.address, startingETH, { from: acct})
-}
-
-const p = new Promise((resolve, reject) => {
-  web3.eth.getAccounts((error, result) => {
-    resolve(result)
-  })
-})
-
-// parameters for deployment
-let acct
-let tokenToApprove
-p.then((a) => {
-  acct = a[0]
-  return getContracts()
-})
-  .then((c) => {
-    eth = c.EtherToken
-    tokenToApprove = c.TokenOMG
-    dx = c.DutchExchange
-    return dx.updateApprovalOfToken(tokenToApprove.address, true,{from: acct, gas: 234668})})
-
+})()

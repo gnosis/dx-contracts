@@ -7,7 +7,7 @@
  * --priceNum                   price is given in units [EtherToken]/[tokenToAdd]
  * --priceDen
  * --fundingETH                 how much Ether should be sold in the first auction
- * --fundingToken               how much Tokens should be deposited on the Exchange    
+ * --fundingToken               how much Tokens should be deposited on the exchange    
  */
 
 const Web3 = require('web3')
@@ -25,7 +25,14 @@ const HDWalletProvider = require("truffle-hdwallet-provider-privkey");
 
 let web3
 if (argv.network) {
-  const provider = new HDWalletProvider(privKey, 'https://rinkeby.infura.io/')
+  if(argv.network == 'rinkeby')
+    provider = new HDWalletProvider(privKey, 'https://rinkeby.infura.io/')
+  else if(argv.network == 'kovan'){
+    provider = new HDWalletProvider(privKey, 'https://kovan.infura.io/')
+  }
+  else if(argv.network == 'mainnet'){
+    provider = new HDWalletProvider(privKey, 'https://mainet.infura.io/')
+  }
   web3 = new Web3(provider.engine)
 } else {
   web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
@@ -109,13 +116,17 @@ module.exports = (async () => {
   try {
     const acct = await promisedAcct
     await getContracts()
+
+    console.log(Token.address)
     await checkETHFundingSufficient()
     await setup(acct, Token)
+    console.log(argv.priceNum)
     const receipt = await dx.addTokenPair(eth.address, Token.address, sellVolumeInETH, 0, argv.priceNum ? argv.priceNum : 1, argv.priceDen ? argv.priceDen : 1, { from: acct, gas: 2374235})
     console.log(`
     ===========================
     Successfully added  => [Ether Token // ${await Token.address}] Auction
     Auction Index       => ${(await dx.getAuctionIndex.call(eth.address, Token.address)).toNumber()}
+    price in [ETH/Token] =>${(await dx.closingPrices.call(eth.address, Token.address, 0))}
     Receipt.tx          => ${JSON.stringify(receipt.tx, false, 2)}
     ===========================
     `)
