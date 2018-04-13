@@ -4,6 +4,7 @@ const _ = require('lodash')
 
 const dir = path.join('build', 'contracts')
 const dirFiles = fs.readdirSync(dir)
+const networkFile = process.env.NETWORKS_FILE || 'networks.json'
 
 Promise.all(dirFiles.filter((fname) => fname.endsWith('.json')).map((fname) => new Promise((resolve, _reject) => {
     fs.readFile(path.join(dir, fname), (err, data) => {
@@ -12,5 +13,5 @@ Promise.all(dirFiles.filter((fname) => fname.endsWith('.json')).map((fname) => n
     })
     
 }))).then((nameNetworkPairs) => {
-    fs.writeFileSync('networks.json', JSON.stringify(_.fromPairs(nameNetworkPairs.filter(([_name, nets]) => !_.isEmpty(nets))), null, 2))
+    fs.writeFileSync(networkFile, JSON.stringify(_.fromPairs(nameNetworkPairs.filter(([_name, nets]) => !_.isEmpty(nets))), null, 2))
 })
