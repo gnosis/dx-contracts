@@ -15,6 +15,9 @@
       },
       "address": "0xc58b96a0278bd2c77bc93e01b148282fb8e753a5",
       "transactionHash": "0xb60b4c82d6e6763e1f058216f1832a3a702752297d1190e207d0ab0b7b81e256"
+    },
+    "1": {
+      "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
     }
   },
   "Math": {
@@ -26,6 +29,9 @@
     }
   },
   "Medianizer": {
+    "1": {
+      "address": "0x729D19f657BD0614b4985Cf1D82531c67569197B"
+    },
     "4": {
       "events": {
         "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
@@ -208,6 +214,9 @@
     }
   },
   "TokenGNO": {
+    "1": {
+      "address": "0x6810e776880C02933D47DB1b9fc05908e5386b96"
+    },
     "4": {
       "events": {
         "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef": {
