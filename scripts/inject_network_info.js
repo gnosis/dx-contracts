@@ -3,8 +3,8 @@ const path = require('path')
 const _ = require('lodash')
 
 const dir = path.join('build', 'contracts')
-
-const contractNetworksMap = JSON.parse(fs.readFileSync('networks.json'))
+const networkFile = process.env.NETWORKS_FILE || 'networks.json'
+const contractNetworksMap = JSON.parse(fs.readFileSync(networkFile))
 
 _.toPairs(contractNetworksMap)
     .map(([name, networks]) => [path.join(dir, name + '.json'), networks])
