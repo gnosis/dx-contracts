@@ -542,7 +542,6 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
     const { dx } = await deployed
     let {
       auctioneer,
-      ethUSDOracle,
       thresholdNewTokenPair,
       thresholdNewAuction,
     } = options
@@ -550,14 +549,12 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
     let params
 
     if (auctioneer === undefined
-      || ethUSDOracle === undefined
       || thresholdNewTokenPair === undefined
       || thresholdNewAuction === undefined) {
       params = await getExchangeParams();
 
       ({
         auctioneer,
-        ETHUSDOracle,
         thresholdNewTokenPair,
         thresholdNewAuction,
       } = { ...params, ...options })
@@ -565,7 +562,6 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
 
     return Promise.all([
       dx.updateAuctioneer(auctioneer, { from: params.auctioneer }),
-      dx.updateEthUSDOracle(ETHUSDOracle, { from: params.auctioneer }),
       dx.updateThresholdNewTokenPair(thresholdNewTokenPair, { from: params.auctioneer }),
       dx.updateThresholdNewAuction(thresholdNewAuction, { from: params.auctioneer }),
     ])
