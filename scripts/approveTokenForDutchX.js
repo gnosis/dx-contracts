@@ -51,7 +51,6 @@ module.exports = (async () => {
   const promisedAcct = new Promise((a, r) => web3.eth.getAccounts((e, r) => a(r[0])))
 
   // Test VARS
-  let tul
   let dx
   try {
     const acct = await promisedAcct
