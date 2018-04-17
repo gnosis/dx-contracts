@@ -7,6 +7,14 @@ Dutch X
 
 Collection of smart contracts for the Gnosis DutchX.
 
+
+Audit
+-----
+### Audit Report:
+
+[Audit Report inc. known weaknesses](https://drive.google.com/file/d/15aH3edp5IvkMS5R5pjzjg7wj08Vqh9OV/view)
+
+
 Install
 -------
 ### Install requirements with npm:
