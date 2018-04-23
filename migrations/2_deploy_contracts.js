@@ -111,14 +111,13 @@ module.exports = function deploy(deployer, network, accounts) {
     // .then(() => TokenMGN.deployed())
     // .then(T => T.updateOwner(Proxy.address))
 
-  } else {
+  } else if (netowrk === 'rinkeby') {
     deployer.deploy(Math)
       // Linking
       .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenMGN, TokenOWL, TokenOWLProxy, OWLAirdrop]))
       .then(() => deployer.link(Math, [TokenRDN, TokenOMG]))
 
       // Deployment of Tokens
-      .then(() => deployer.deploy(EtherToken))
       .then(() => deployer.deploy(TokenGNO, 100000 * (10 ** 18)))
       .then(() => deployer.deploy(TokenRDN, 100000 * (10 ** 18)))
       .then(() => deployer.deploy(TokenOMG, 100000 * (10 ** 18)))
@@ -146,7 +145,7 @@ module.exports = function deploy(deployer, network, accounts) {
         TokenMGN.address,
         TokenOWLProxy.address,
         accounts[0],                           // @param _owner will be the admin of the contract
-        EtherToken.address,                   // @param _ETH               - address of ETH ERC-20 token
+        '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',                   // @param _ETH               - address of ETH ERC-20 token
         PriceOracleInterface.address,        // @param _priceOracleAddress - address of priceOracle
         10000000000000000000000,            // @param _thresholdNewTokenPair: 10,000 dollar
         1000000000000000000000,            // @param _thresholdNewAuction:     1,000 dollar
