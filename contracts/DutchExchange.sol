@@ -1449,7 +1449,7 @@ contract DutchExchange {
     }
     // > Events
     event NewDeposit(
-         address token,
+         address indexed token,
          uint amount
     );
 
@@ -1463,54 +1463,54 @@ contract DutchExchange {
     );
 
     event NewWithdrawal(
-        address token,
+        address indexed token,
         uint amount
     );
     
     event NewSellOrder(
-        address sellToken,
-        address buyToken,
-        address user,
+        address indexed sellToken,
+        address indexed buyToken,
+        address indexed user,
         uint auctionIndex,
         uint amount
     );
 
     event NewBuyOrder(
-        address sellToken,
-        address buyToken,
-        address user,
+        address indexed sellToken,
+        address indexed buyToken,
+        address indexed user,
         uint auctionIndex,
         uint amount
     );
 
     event NewSellerFundsClaim(
-        address sellToken,
-        address buyToken,
-        address user,
+        address indexed sellToken,
+        address indexed buyToken,
+        address indexed user,
         uint auctionIndex,
         uint amount,
         uint frtsIssued
     );
 
     event NewBuyerFundsClaim(
-        address sellToken,
-        address buyToken,
-        address user,
+        address indexed sellToken,
+        address indexed buyToken,
+        address indexed user,
         uint auctionIndex,
         uint amount,
         uint frtsIssued
     );
 
     event NewTokenPair(
-        address sellToken,
-        address buyToken
+        address indexed sellToken,
+        address indexed buyToken
     );
 
     event AuctionCleared(
-        address sellToken,
-        address buyToken,
+        address indexed sellToken,
+        address indexed buyToken,
         uint sellVolume,
         uint buyVolume,
-        uint auctionIndex
+        uint indexed auctionIndex
     );
 }
