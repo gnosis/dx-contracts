@@ -576,7 +576,7 @@ contract DutchExchange {
         // < 10^30 * 10^30 = 10^60
         returned = mul(sellerBalance, num) / den;
 
-        issueFrts(sellToken, buyToken, returned, auctionIndex, sellerBalance, user);
+        frtsIssued = issueFrts(sellToken, buyToken, returned, auctionIndex, sellerBalance, user);
 
         // Claim tokens
         sellerBalances[sellToken][buyToken][auctionIndex][user] = 0;
@@ -620,7 +620,7 @@ contract DutchExchange {
             uint tokensExtra = mul(buyerBalance, extraTokensTotal) / closingPrices[sellToken][buyToken][auctionIndex].num;
             returned = add(returned, tokensExtra);
 
-            issueFrts(buyToken, sellToken, mul(buyerBalance, den) / num, auctionIndex, buyerBalance, user);
+            frtsIssued = issueFrts(buyToken, sellToken, mul(buyerBalance, den) / num, auctionIndex, buyerBalance, user);
 
             // Auction has closed
             // Reset buyerBalances and claimedAmounts
@@ -646,9 +646,8 @@ contract DutchExchange {
         address user
     )
         internal
+        returns (uint frtsIssued)
     {
-        uint frtsIssued;
-
         if (approvedTokens[primaryToken] == true && approvedTokens[secondaryToken] == true) {
             address ethTokenMem = ethToken;
             // Get frts issued based on ETH price of returned tokens
