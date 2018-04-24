@@ -187,6 +187,7 @@ contract DutchExchange {
         onlyAuctioneer
      {  
         approvedTokens[token] = approved;
+        Approval(token, approved);
      }
 
      function startMasterCopyCountdown (
@@ -648,7 +649,7 @@ contract DutchExchange {
         internal
         returns (uint frtsIssued)
     {
-        if (approvedTokens[primaryToken] == true && approvedTokens[secondaryToken] == true) {
+        if (approvedTokens[primaryToken] && approvedTokens[secondaryToken]) {
             address ethTokenMem = ethToken;
             // Get frts issued based on ETH price of returned tokens
             if (primaryToken == ethTokenMem) {
@@ -1530,5 +1531,10 @@ contract DutchExchange {
         uint sellVolume,
         uint buyVolume,
         uint indexed auctionIndex
+    );
+
+    event Approval(
+        address indexed token;
+        bool approved;
     );
 }
