@@ -1534,7 +1534,7 @@ contract DutchExchange {
     );
 
     event Approval(
-        address indexed token;
-        bool approved;
+        address indexed token,
+        bool approved
     );
 }
