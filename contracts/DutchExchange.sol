@@ -187,6 +187,7 @@ contract DutchExchange {
         onlyAuctioneer
      {  
         approvedTokens[token] = approved;
+        Approval(token, approved);
      }
 
      function startMasterCopyCountdown (
@@ -357,15 +358,18 @@ contract DutchExchange {
         uint amount
     )
         public
+        returns (uint)
     {
         // R1
         require(Token(tokenAddress).transferFrom(msg.sender, this, amount));
 
-        uint usersBalances = balances[tokenAddress][msg.sender];
+        uint newBal = add(balances[tokenAddress][msg.sender], amount);
 
-        balances[tokenAddress][msg.sender] = add(usersBalances, amount);
+        balances[tokenAddress][msg.sender] = newBal;
 
         NewDeposit(tokenAddress, amount);
+
+        return newBal;
     }
 
     // > withdraw()
@@ -374,18 +378,23 @@ contract DutchExchange {
         uint amount
     )
         public
+        returns (uint)
     {
-        uint usersBalances = balances[tokenAddress][msg.sender];
-        amount = min(amount, usersBalances);
+        uint usersBalance = balances[tokenAddress][msg.sender];
+        amount = min(amount, usersBalance);
+
         // R1
         require(amount > 0);
-
-        balances[tokenAddress][msg.sender] = sub(usersBalances, amount);
 
         // R2
         require(Token(tokenAddress).transfer(msg.sender, amount));
 
+        uint newBal = sub(usersBalance, amount);
+        balances[tokenAddress][msg.sender] = newBal;
+
         NewWithdrawal(tokenAddress, amount);
+
+        return newBal;
     }
 
      // > postSellOrder()
@@ -396,6 +405,7 @@ contract DutchExchange {
         uint amount
     )
         public
+        returns (uint, uint)
     {
         // Note: if a user specifies auctionIndex of 0, it
         // means he is agnostic which auction his sell order goes into
@@ -443,7 +453,9 @@ contract DutchExchange {
 
         // Update variables
         balances[sellToken][msg.sender] = sub(balances[sellToken][msg.sender], amount);
-        sellerBalances[sellToken][buyToken][auctionIndex][msg.sender] = add(sellerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
+        uint newSellerBal = add(sellerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
+        sellerBalances[sellToken][buyToken][auctionIndex][msg.sender] = newSellerBal;
+
         if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING || auctionStart > now) {
             // C1
             uint sellVolumeCurrent = sellVolumesCurrent[sellToken][buyToken];
@@ -459,6 +471,8 @@ contract DutchExchange {
         }
 
         NewSellOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
+
+        return (auctionIndex, newSellerBal);
     }
 
     // > postBuyOrder()
@@ -469,6 +483,7 @@ contract DutchExchange {
         uint amount
     )
         public
+        returns (uint)
     {
         // R1: auction must not have cleared
         require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
@@ -518,7 +533,8 @@ contract DutchExchange {
         if (amount > 0) {
             // Update variables
             balances[buyToken][msg.sender] = sub(balances[buyToken][msg.sender], amount);
-            buyerBalances[sellToken][buyToken][auctionIndex][msg.sender] = add(buyerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
+            uint newBuyerBal = add(buyerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
+            buyerBalances[sellToken][buyToken][auctionIndex][msg.sender] = newBuyerBal;
             buyVolumes[sellToken][buyToken] = add(buyVolumes[sellToken][buyToken], amountAfterFee);
             NewBuyOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
         }
@@ -528,6 +544,8 @@ contract DutchExchange {
             // Clear auction
             clearAuction(sellToken, buyToken, auctionIndex, sellVolume);
         }
+
+        return (newBuyerBal);
     }
     
     // > claimSellerFunds()
@@ -629,10 +647,9 @@ contract DutchExchange {
         address user
     )
         internal
-        returns(uint frtsIssued)
+        returns (uint frtsIssued)
     {
-
-        if (approvedTokens[primaryToken] == true && approvedTokens[secondaryToken] == true) {
+        if (approvedTokens[primaryToken] && approvedTokens[secondaryToken]) {
             address ethTokenMem = ethToken;
             // Get frts issued based on ETH price of returned tokens
             if (primaryToken == ethTokenMem) {
@@ -843,7 +860,6 @@ contract DutchExchange {
         if (sellVolumeOpp == 0 || now >= auctionStart + 86400 || closingPriceOppDen > 0) {
             // Close auction pair
             uint buyVolumeOpp = buyVolumes[buyToken][sellToken];
-
             if (closingPriceOppDen == 0 && sellVolumeOpp > 0) {
                 // Save opposite price
                 closingPrices[buyToken][sellToken][auctionIndex] = fraction(buyVolumeOpp, sellVolumeOpp);
@@ -1038,9 +1054,10 @@ contract DutchExchange {
         uint amount
     )
         external
+        returns (uint newBal, uint auctionIndex, uint newSellerBal)
     {
-        deposit(sellToken, amount);
-        postSellOrder(sellToken, buyToken, 0, amount);
+        newBal = deposit(sellToken, amount);
+        (auctionIndex, newSellerBal) = postSellOrder(sellToken, buyToken, 0, amount);
     }
 
     // > claimAndWithdraw()
@@ -1052,9 +1069,10 @@ contract DutchExchange {
         uint amount
     )
         external
+        returns (uint returned, uint frtsIssued, uint newBal)
     {
-        claimSellerFunds(sellToken, buyToken, user, auctionIndex);
-        withdraw(buyToken, amount);
+        (returned, frtsIssued) = claimSellerFunds(sellToken, buyToken, user, auctionIndex);
+        newBal = withdraw(buyToken, amount);
     }
 
     // > helper fns
@@ -1450,7 +1468,7 @@ contract DutchExchange {
     }
     // > Events
     event NewDeposit(
-         address token,
+         address indexed token,
          uint amount
     );
 
@@ -1464,54 +1482,59 @@ contract DutchExchange {
     );
 
     event NewWithdrawal(
-        address token,
+        address indexed token,
         uint amount
     );
     
     event NewSellOrder(
-        address sellToken,
-        address buyToken,
-        address user,
+        address indexed sellToken,
+        address indexed buyToken,
+        address indexed user,
         uint auctionIndex,
         uint amount
     );
 
     event NewBuyOrder(
-        address sellToken,
-        address buyToken,
-        address user,
+        address indexed sellToken,
+        address indexed buyToken,
+        address indexed user,
         uint auctionIndex,
         uint amount
     );
 
     event NewSellerFundsClaim(
-        address sellToken,
-        address buyToken,
-        address user,
+        address indexed sellToken,
+        address indexed buyToken,
+        address indexed user,
         uint auctionIndex,
         uint amount,
         uint frtsIssued
     );
 
     event NewBuyerFundsClaim(
-        address sellToken,
-        address buyToken,
-        address user,
+        address indexed sellToken,
+        address indexed buyToken,
+        address indexed user,
         uint auctionIndex,
         uint amount,
         uint frtsIssued
     );
 
     event NewTokenPair(
-        address sellToken,
-        address buyToken
+        address indexed sellToken,
+        address indexed buyToken
     );
 
     event AuctionCleared(
-        address sellToken,
-        address buyToken,
+        address indexed sellToken,
+        address indexed buyToken,
         uint sellVolume,
         uint buyVolume,
-        uint auctionIndex
+        uint indexed auctionIndex
+    );
+
+    event Approval(
+        address indexed token,
+        bool approved
     );
 }

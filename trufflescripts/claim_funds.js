@@ -18,7 +18,7 @@ const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
  * @flags:
  * --seller                     sellerBalance for seller only
  * --buyer                      buyerBalance for buyer only
- * -a seller|buyer|<address>    for the given address
+ * -a seller|buyer|master|<address>    for the given address
  * -i <index>                   for auction with given index
  * --last                       for last auction
  */
@@ -31,11 +31,12 @@ module.exports = async () => {
   let index = argv.i !== undefined ? argv.i
     : (await getExchangeStatsForTokenPair({ sellToken, buyToken })).latestAuctionIndex
   if (argv.i === undefined && argv.last) index -= 1
-
-  let [, seller, buyer] = web3.eth.accounts
+  // eslint-disable-next-line
+  let [master, seller, buyer] = web3.eth.accounts
 
   if (argv.a === 'seller') buyer = seller
   else if (argv.a === 'buyer') seller = buyer
+  else if (argv.a === 'master') seller = buyer = master
   else if (argv.a) seller = buyer = argv.a
 
   const getStats = async (account, role) => {

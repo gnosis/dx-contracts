@@ -20,15 +20,15 @@ module.exports = async () => {
   const [masterBal, sellerBal, buyerBal] = await getBalancesForAccounts(master, seller, buyer)
 
 
-  console.log(`Seller:\t${sellerBal.ETH}\tETH,\t${sellerBal.GNO}\tGNO,\t${sellerBal.TUL}\tTUL,\t${sellerBal.OWL}\tOWL`)
-  console.log(`Buyer:\t${buyerBal.ETH}\tETH,\t${buyerBal.GNO}\tGNO,\t${buyerBal.TUL}\tTUL,\t${buyerBal.OWL}\tOWL`)
+  console.log(`Seller:\t${sellerBal.ETH}\tETH,\t${sellerBal.GNO}\tGNO,\t${sellerBal.FRT}\tFRT,\t${sellerBal.OWL}\tOWL`)
+  console.log(`Buyer:\t${buyerBal.ETH}\tETH,\t${buyerBal.GNO}\tGNO,\t${buyerBal.FRT}\tFRT,\t${buyerBal.OWL}\tOWL`)
   console.log('________________________________________')
-  console.log(`Master:\t${masterBal.ETH}\tETH,\t${masterBal.GNO}\tGNO,\t${masterBal.TUL}\tTUL,\t${masterBal.OWL}\tOWL`)
+  console.log(`Master:\t${masterBal.ETH}\tETH,\t${masterBal.GNO}\tGNO,\t${masterBal.FRT}\tFRT,\t${masterBal.OWL}\tOWL`)
 
   if (argv.a) {
-    const [{ ETH, GNO, TUL, OWL }] = await getBalancesForAccounts(argv.a)
+    const [{ ETH, GNO, FRT, OWL }] = await getBalancesForAccounts(argv.a)
 
     console.log(`\nAccount at ${argv.a} address`)
-    console.log(`Balance:\t${ETH}\tETH,\t${GNO}\tGNO,\t${TUL}\tTUL,\t${OWL}\tOWL`)
+    console.log(`Balance:\t${ETH}\tETH,\t${GNO}\tGNO,\t${FRT}\tFRT,\t${OWL}\tOWL`)
   }
 }

@@ -8,6 +8,8 @@ const {
 
 const { getContracts, setupTest } = require('./testFunctions')
 
+const POWL = artifacts.require('TokenOWLProxy')
+
 // Test VARS
 let eth
 let gno
@@ -477,9 +479,13 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
     const feeInUSD = await calculateFeeInUSD(fee, eth.address)
 
     const owlAmount = Math.floor(feeInUSD / 2) - 1
+    console.log(await owl.balanceOf(master))
 
+    console.log(await owl.totalSupply())
     await owl.transfer(seller1, owlAmount, { from: master })
-
+    console.log(await owl.balanceOf(seller1))
+    console.log(POWL.address)
+    console.log(owl.address)
     const owlBalance1 = (await owl.balanceOf(seller1)).toNumber()
     assert.strictEqual(owlBalance1, owlAmount, 'account should have OWL balance < feeInUSD / 2')
     assert.isAbove(owlBalance1, 0, 'account should have OWL balance > 0')

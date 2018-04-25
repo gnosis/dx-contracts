@@ -9,10 +9,10 @@ const {
 const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
 
 /**
- * truffle exec trufflescripts/sell_order.js
- * to post a buy order to token pair auction as the seller
+ * truffle exec trufflescripts/buy_order.js
+ * to post a buy order to token pair auction as the buyer
  * @flags:
- * -n <number>                    for a specific amount of sellToken
+ * -n <number>                    for a specific amount of buyToken
  * --pair <sellToken,buyToken>    token pair auction, eth,gno by default
  * --seller                       as the seller
  * -a <address>                   as the given account

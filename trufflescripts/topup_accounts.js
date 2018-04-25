@@ -2,8 +2,8 @@
 const { getTokenBalances, giveTokens } = require('./utils/contracts')(artifacts)
 
 const initBalances = {
-  seller: { ETH: 1000, GNO: 100, TUL: 0, OWL: 100 },
-  buyer: { ETH: 100, GNO: 1000, TUL: 0, OWL: 100 },
+  seller: { ETH: 1000, GNO: 100, FRT: 0, OWL: 100 },
+  buyer: { ETH: 100, GNO: 1000, FRT: 0, OWL: 100 },
 }
 
 /**
@@ -37,6 +37,6 @@ module.exports = async () => {
   sellerBal = await getTokenBalances(seller)
   buyerBal = await getTokenBalances(buyer)
 
-  console.log(`Seller:\t${sellerBal.ETH}\tETH,\t${sellerBal.GNO}\tGNO,\t${sellerBal.TUL}\tTUL,\t${sellerBal.OWL}\tOWL`)
-  console.log(`Buyer:\t${buyerBal.ETH}\tETH,\t${buyerBal.GNO}\tGNO,\t${buyerBal.TUL}\tTUL,\t${buyerBal.OWL}\tOWL`)
+  console.log(`Seller:\t${sellerBal.ETH}\tETH,\t${sellerBal.GNO}\tGNO,\t${sellerBal.FRT}\tFRT,\t${sellerBal.OWL}\tOWL`)
+  console.log(`Buyer:\t${buyerBal.ETH}\tETH,\t${buyerBal.GNO}\tGNO,\t${buyerBal.FRT}\tFRT,\t${buyerBal.OWL}\tOWL`)
 }

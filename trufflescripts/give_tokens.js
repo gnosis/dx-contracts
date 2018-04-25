@@ -12,12 +12,12 @@ const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
  * -a <address>       to the given address
  * --eth <number>     ETH tokens
  * --gno <number>     GNO tokens
- * --tul <number>     TUL tokens
+ * --frt <number>     FRT tokens
  * --owl <number>     OWL tokens
  */
 
 module.exports = async () => {
-  if (!(argv.eth > 0 || argv.gno > 0 || argv.tul > 0 || argv.owl > 0) || !(argv.seller || argv.buyer || argv.a)) {
+  if (!(argv.eth > 0 || argv.gno > 0 || argv.frt > 0 || argv.owl > 0) || !(argv.seller || argv.buyer || argv.a)) {
     console.warn('No tokens or accounts specified')
     return
   }
@@ -29,13 +29,13 @@ module.exports = async () => {
 
   console.log(`${accountName}`)
 
-  let { ETH, GNO, TUL, OWL } = await getTokenBalances(account)
-  console.log(`Balance was:\t${ETH}\tETH,\t${GNO}\tGNO,\t${TUL}\tTUL,\t${OWL}\tOWL`)
+  let { ETH, GNO, FRT, OWL } = await getTokenBalances(account)
+  console.log(`Balance was:\t${ETH}\tETH,\t${GNO}\tGNO,\t${FRT}\tFRT,\t${OWL}\tOWL`)
 
-  const tokensToGive = { ETH: argv.eth, GNO: argv.gno, TUL: argv.tul, OWL: argv.owl }
+  const tokensToGive = { ETH: argv.eth, GNO: argv.gno, FRT: argv.frt, OWL: argv.owl }
 
   giveTokens(account, tokensToGive, master);
 
-  ({ ETH, GNO, TUL, OWL } = await getTokenBalances(account))
-  console.log(`Balance is:\t${ETH}\tETH,\t${GNO}\tGNO,\t${TUL}\tTUL,\t${OWL}\tOWL`)
+  ({ ETH, GNO, FRT, OWL } = await getTokenBalances(account))
+  console.log(`Balance is:\t${ETH}\tETH,\t${GNO}\tGNO,\t${FRT}\tFRT,\t${OWL}\tOWL`)
 }
