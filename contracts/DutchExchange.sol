@@ -1079,8 +1079,11 @@ contract DutchExchange {
     )
         internal
     {
-        (token1, token2) = getTokenOrder(token1, token2);
-        auctionStarts[token1][token2] = now + value;
+        (token1, token2) = getTokenOrder(token1, token2);        
+        uint auctionStart = now + value;
+        uint auctionIndex = latestAuctionIndices[token1][token2];
+        auctionStarts[token1][token2] = auctionStart;
+        AuctionStartScheduled(token1, token2, auctionIndex, auctionStart);
     }
 
     function resetAuctionStart(
@@ -1512,5 +1515,12 @@ contract DutchExchange {
         uint sellVolume,
         uint buyVolume,
         uint auctionIndex
+    );
+
+    event AuctionStartScheduled(
+        address indexed sellToken,
+        address indexed buyToken,
+        uint indexed auctionIndex,
+        uint auctionStart
     );
 }
