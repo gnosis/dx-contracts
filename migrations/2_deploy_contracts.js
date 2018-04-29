@@ -145,7 +145,7 @@ module.exports = function deploy(deployer, network, accounts) {
         TokenMGN.address,
         TokenOWLProxy.address,
         accounts[0],                           // @param _owner will be the admin of the contract
-        '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',                   // @param _ETH               - address of ETH ERC-20 token
+        '0xc778417e063141139fce010982780140aa0cd5ab',                   // @param _ETH               - address of ETH ERC-20 token
         PriceOracleInterface.address,        // @param _priceOracleAddress - address of priceOracle
         10000000000000000000000,            // @param _thresholdNewTokenPair: 10,000 dollar
         1000000000000000000000,            // @param _thresholdNewAuction:     1,000 dollar

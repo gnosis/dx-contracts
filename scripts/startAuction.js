@@ -92,20 +92,19 @@ module.exports = (async () => {
   }
   const setup = async (a, tta) => {
 
-    if( (await web3.eth.getBalance(a)).toNumber()< sellVolumeInETH)
-      throw("Not enough Eth funds availbale")
+    //if( (await web3.eth.getBalance(a)).toNumber()< sellVolumeInETH)
+    //  throw("Not enough Eth funds availbale")
 
     await eth.deposit({ from: a, value: sellVolumeInETH })
     await eth.approve(dx.address, sellVolumeInETH, { from: a })
     await tta.approve(dx.address, startingToken, { from: a })
-
-    if( (await tta.balanceOf(a)).toNumber()< startingToken)
-      throw("Not enough funds of the buyTokens are availbale")
+    //if( (await tta.balanceOf(a)).toNumber()< startingToken)
+    //  throw("Not enough funds of the buyTokens are availbale")
 
     await dx.deposit(tta.address, startingToken, { from: a, gas: 234254})
-    return dx.deposit(eth.address, sellVolumeInETH, { from: a, gas: 234254})
+    await dx.deposit(eth.address, sellVolumeInETH, { from: a, gas: 334254})
   }
-  const checkETHFundingSufficient = async (a, tta) => {
+  const checkETHFundingSufficient = async () => {
     const oracle = await PriceOracleInterface.deployed()
     const price = (await oracle.getUSDETHPrice.call()).toNumber()
     if(price*sellVolumeInETH/1e18 < 10000)
@@ -116,11 +115,8 @@ module.exports = (async () => {
   try {
     const acct = await promisedAcct
     await getContracts()
-
-    console.log(Token.address)
     await checkETHFundingSufficient()
     await setup(acct, Token)
-    console.log(argv.priceNum)
     const receipt = await dx.addTokenPair(eth.address, Token.address, sellVolumeInETH, 0, argv.priceNum ? argv.priceNum : 1, argv.priceDen ? argv.priceDen : 1, { from: acct, gas: 2374235})
     console.log(`
     ===========================
