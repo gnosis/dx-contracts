@@ -1314,7 +1314,7 @@ contract DutchExchange {
 
         uint k;
 
-        for (uint i = 1; i <= runningAuctionIndex; i++) {
+        for (uint i = startingIndex; i <= runningAuctionIndex; i++) {
             if (sellerBalances[auctionSellToken][auctionBuyToken][i][user] > 0) {
                 indices[k] = i;
                 usersBalances[k] = sellerBalances[auctionSellToken][auctionBuyToken][i][user];
@@ -1383,7 +1383,7 @@ contract DutchExchange {
 
         uint k;
 
-        for (uint i = 1; i <= runningAuctionIndex; i++) {
+        for (uint i = startingIndex; i <= runningAuctionIndex; i++) {
             if (buyerBalances[auctionSellToken][auctionBuyToken][i][user] > 0) {
                 indices[k] = i;
                 usersBalances[k] = buyerBalances[auctionSellToken][auctionBuyToken][i][user];
