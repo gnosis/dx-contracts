@@ -1,345 +1,695 @@
-EOS (EOS)
-Infrastructure for Decentralized Applications	 $18.7633
-0.00205533 Btc
-0.027626 Eth
 
- 5.89%	$2,643,170,000	$15,585,896,670   
+Token	Price	%Change	Volume (24h)	 MarketCap
+ 1		
+EOS (EOS)
+Infrastructure for Decentralized Applications	 $18.0119
+0.00182792 Btc
+0.022191 Eth
+
+ 3.83%	$1,668,930,000	$15,073,484,852   
  2		
 Tronix (TRX)
-TRON is a blockchain-based decentralized protocol that aims to construct a worldwide free content entertainment system with the blockchain and distributed storage technology.	 $0.0905
-0.00000991 Btc
-0.000133 Eth
+TRON is a blockchain-based decentralized protocol that aims to construct a worldwide free content entertainment system with the blockchain and distributed storage technology.	 $0.0878
+0.00000891 Btc
+0.000108 Eth
 
- -1.20%	$608,650,000	$5,948,711,622   
+ 1.85%	$529,016,000	$5,774,176,685   
  3		
 VeChain (VEN)
-VeChain aims to connect blockchain technology to the real world by providing a comprehensive governance structure, a robust economic model as well as advanced IoT integration.	 $4.7624
-0.00052167 Btc
-0.007012 Eth
+VeChain aims to connect blockchain technology to the real world by providing a comprehensive governance structure, a robust economic model as well as advanced IoT integration.	 $5.2179
+0.00052954 Btc
+0.006429 Eth
 
- 5.83%	$103,048,000	$2,503,954,792   
+ -2.03%	$138,568,000	$2,744,104,888   
  4		
 OmiseGO (OMG)
-OmiseGO (OMG) is a public Ethereum-based financial technology for use in mainstream digital wallets	 $16.9795
-0.00185994 Btc
-0.025000 Eth
+OmiseGO (OMG) is a public Ethereum-based financial technology for use in mainstream digital wallets	 $17.6193
+0.00178808 Btc
+0.021707 Eth
 
- 1.83%	$54,359,100	$1,732,631,508   
+ -0.79%	$56,451,200	$1,797,918,332   
  5		
 ICON (ICX)
-The ICON Network is comprised of various institutions ranging from: financial institutions, insurance companies, hospitals, universities and more.	 $4.3298
-0.00047429 Btc
-0.006375 Eth
+The ICON Network is comprised of various institutions ranging from: financial institutions, insurance companies, hospitals, universities and more.	 $4.4200
+0.00044856 Btc
+0.005446 Eth
 
- 0.92%	$47,808,200	$1,676,645,909   
+ -0.84%	$55,389,300	$1,711,574,177   
  6		
 BNB (BNB)
-Binance aims to build a world-class crypto exchange, powering the future of crypto finance.	 $14.0937
-0.00154382 Btc
-0.020751 Eth
+Binance aims to build a world-class crypto exchange, powering the future of crypto finance.	 $14.3507
+0.00145637 Btc
+0.017680 Eth
 
- -0.10%	$71,391,600	$1,607,263,730   
+ -0.06%	$70,857,100	$1,636,572,342   
  7		
 Aeternity (AE)
-Scalable smart contracts interfacing with real world data.	 $4.6501
-0.00050937 Btc
-0.006847 Eth
+Scalable smart contracts interfacing with real world data.	 $4.6376
+0.00047064 Btc
+0.005714 Eth
 
- 2.24%	$30,620,600	$1,083,570,828   
+ 3.02%	$45,182,000	$1,080,651,081   
  8		
-Bytom (BTM)
-Transfer assets from atomic world to byteworld	 $0.9760
-0.00010691 Btc
-0.001437 Eth
-
- -1.74%	$88,714,300	$963,295,221   
- 9		
-Populous (PPT)
-Aims to rebuild invoice financing block by block, for invoice buyers and sellers.	 $24.2282
-0.00265395 Btc
-0.035672 Eth
-
- 1.40%	$4,340,370	$896,540,964   
- 10		
 Zilliqa (ZIL)
-Zilliqa is a high-throughput public blockchain platform - designed to scale to thousands ​of transactions per second.	 $0.1068
-0.00001170 Btc
-0.000157 Eth
+Zilliqa is a high-throughput public blockchain platform - designed to scale to thousands ​of transactions per second.	 $0.1436
+0.00001457 Btc
+0.000177 Eth
 
- 3.98%	$34,748,500	$778,006,752   
+ 10.35%	$48,626,100	$1,046,399,466   
+ 9		
+Bytom (BTM)
+Transfer assets from atomic world to byteworld	 $0.8904
+0.00009036 Btc
+0.001097 Eth
+
+ -3.96%	$72,196,400	$878,829,735   
+ 10		
+ZRX (ZRX)
+The Protocol for Trading Tokens	 $1.6407
+0.00016651 Btc
+0.002021 Eth
+
+ -0.74%	$53,474,000	$864,107,716   
  11		
-RHOC (RHOC)
-The RChain Platform aims to be a decentralized, economically sustainable public compute infrastructure.	 $1.8176
-0.0001991 Btc
-0.002676 Eth
+Populous (PPT)
+Aims to rebuild invoice financing block by block, for invoice buyers and sellers.	 $21.6943
+0.00220162 Btc
+0.026728 Eth
 
- 4.77%	$855,019	$654,487,829   
+ 0.75%	$10,213,500	$802,776,461   
  12		
 Maker (MKR)
-Maker is a Decentralized Autonomous Organization that creates and insures the dai stablecoin on the Ethereum blockchain	 $1,052.9900
-0.115296 Btc
-1.550361 Eth
+Maker is a Decentralized Autonomous Organization that creates and insures the dai stablecoin on the Ethereum blockchain	 $1,187.1400
+0.120476 Btc
+1.462571 Eth
 
- 1.32%	$123,996	$650,987,660   
+ 3.42%	$898,686	$733,922,915   
  13		
-ZRX (ZRX)
-The Protocol for Trading Tokens	 $1.2350
-0.00013528 Btc
-0.001818 Eth
+RHOC (RHOC)
+The RChain Platform aims to be a decentralized, economically sustainable public compute infrastructure.	 $1.9919
+0.00020215 Btc
+0.002454 Eth
 
- 5.82%	$9,030,130	$649,139,524   
+ 6.73%	$1,084,380	$717,302,151   
  14		
-StatusNetwork (SNT)
-Status is an open source messaging platform and mobile browser to interact with decentralized applications that run on the Ethereum Network.	 $0.1581
-0.00001732 Btc
-0.000233 Eth
-
- 0.94%	$38,432,700	$548,673,075   
- 15		
-DGD (DGD)
-DigixDAO is a decentralized voting / utility token that allows users to submit and manage proposals that relate to the growth of the Digix ecosystem and platform.	 $271.9460
-0.0297764 Btc
-0.400398 Eth
-
- 3.09%	$10,405,800	$543,892,000   
- 16		
-Loopring (LRC)
-Loopring is not only a protocol but also a decentralized automated execution system that trades across the crypto-token exchanges.	 $0.9250
-0.00010132 Btc
-0.001362 Eth
-
- -3.20%	$24,019,900	$529,158,193   
- 17		
-BAT (BAT)
-The Basic Attention Token is the new token for the digital advertising industry.	 $0.5139
-0.00005627 Btc
-0.000757 Eth
-
- 8.22%	$15,257,500	$513,888,000   
- 18		
 Golem (GNT)
-Golem is going to create the first decentralized global market for computing power	 $0.5970
-0.00006537 Btc
-0.000879 Eth
+Golem is going to create the first decentralized global market for computing power	 $0.7854
+0.00007971 Btc
+0.000968 Eth
 
- 6.10%	$17,861,100	$498,043,569   
- 19		
-AION (AION)
-A multi-tier blockchain system designed to address unsolved questions of scalability, privacy, and interoperability in blockchain networks	 $3.7237
-0.00040789 Btc
-0.005482 Eth
+ 0.23%	$38,981,100	$655,262,745   
+ 15		
+StatusNetwork (SNT)
+Status is an open source messaging platform and mobile browser to interact with decentralized applications that run on the Ethereum Network.	 $0.1769
+0.00001795 Btc
+0.000218 Eth
 
- 3.80%	$8,279,440	$495,518,911   
- 20		
-ELF (ELF)
-Decentralized Cloud Computing Blockchain Network.	 $1.9626
-0.00021498 Btc
-0.002890 Eth
-
- -4.13%	$147,596,000	$490,645,000   
- 21		
+ 6.03%	$56,201,100	$613,768,940   
+ 16		
 IOSToken (IOST)
-A Secure & Scalable Blockchain for Smart Services	 $0.0579
-0.00000635 Btc
-0.000085 Eth
+A Secure & Scalable Blockchain for Smart Services	 $0.0677
+0.00000687 Btc
+0.000083 Eth
 
- 2.81%	$62,020,000	$486,591,000   
- 22		
+ 1.52%	$54,054,500	$568,415,400   
+ 17		
+Loopring (LRC)
+Loopring is not only a protocol but also a decentralized automated execution system that trades across the crypto-token exchanges.	 $0.9393
+0.00009532 Btc
+0.001157 Eth
+
+ 3.73%	$30,398,300	$537,337,707   
+ 18		
 Walton (WTC)
-Value Internet of Things (VIoT) constructs a perfect commercial ecosystem via the integration of the real world and the blockchain	 $15.5352
-0.00170172 Btc
-0.022873 Eth
+Value Internet of Things (VIoT) constructs a perfect commercial ecosystem via the integration of the real world and the blockchain	 $16.6612
+0.00169085 Btc
+0.020527 Eth
 
- 2.04%	$3,929,810	$483,829,813   
- 23		
+ -4.33%	$6,991,120	$518,898,069   
+ 19		
+DGD (DGD)
+DigixDAO is a decentralized voting / utility token that allows users to submit and manage proposals that relate to the growth of the Digix ecosystem and platform.	 $258.7990
+0.026264 Btc
+0.318844 Eth
+
+ -2.15%	$4,029,730	$517,598,000   
+ 20		
+AION (AION)
+A multi-tier blockchain system designed to address unsolved questions of scalability, privacy, and interoperability in blockchain networks	 $3.6831
+0.00037377 Btc
+0.004538 Eth
+
+ 0.12%	$7,697,560	$490,120,122   
+ 21		
 REP (REP)
-Augur combines the magic of prediction markets with the power of a decentralized network to create a stunningly accurate forecasting tool	 $39.5178
-0.00432695 Btc
-0.058184 Eth
+Augur combines the magic of prediction markets with the power of a decentralized network to create a stunningly accurate forecasting tool	 $44.1095
+0.00447642 Btc
+0.054343 Eth
 
- 1.64%	$3,335,420	$434,695,800   
+ 3.71%	$2,396,470	$485,204,500   
+ 22		
+BAT (BAT)
+The Basic Attention Token is the new token for the digital advertising industry.	 $0.4536
+0.00004604 Btc
+0.000559 Eth
+
+ -6.51%	$10,038,600	$453,648,000   
+ 23		
+ELF (ELF)
+Decentralized Cloud Computing Blockchain Network.	 $1.7920
+0.00018186 Btc
+0.002208 Eth
+
+ 6.84%	$77,466,000	$448,005,000   
  24		
 Nebulas (NAS)
-Decentralized Search Framework	 $10.2350
-0.00112114 Btc
-0.015069 Eth
+Decentralized Search Framework	 $10.7553
+0.0010915 Btc
+0.013251 Eth
 
- 5.72%	$40,469,000	$363,342,500   
+ 0.75%	$46,063,000	$381,813,150   
  25		
-KyberNetwork (KNC)
-KyberNetwork is a new system which allows the exchange and conversion of digital assets.	 $2.6310
-0.00028819 Btc
-0.003874 Eth
+Loom (LOOM)
+Online game & social apps	 $0.5965
+0.00006054 Btc
+0.000735 Eth
 
- 1.59%	$14,001,700	$352,897,760   
+ -6.71%	$52,584,700	$344,872,475   
  26		
-Substratum (SUB)
-Substratum is an open-source network that allows anyone to allocate spare computing resources to make the internet a free and fair place for the entire world.	 $0.8425
-0.00009229 Btc
-0.001240 Eth
+KyberNetwork (KNC)
+KyberNetwork is a new system which allows the exchange and conversion of digital assets.	 $2.4508
+0.00024872 Btc
+0.003019 Eth
 
- -1.31%	$11,061,000	$322,703,619   
+ -2.00%	$22,833,900	$328,735,096   
  27		
-QASH (QASH)
-We envision QASH to be the preferred payment token for financial services, like the Bitcoin for financial services. As more financial institutions, fintech startups and partners adopt QASH as a method of payment, the utility of QASH will scale, fueling the Fintech revolution.	 $0.8738
-0.00009571 Btc
-0.001286 Eth
-
- 2.29%	$3,214,180	$305,814,950   
- 28		
 Cortex Coin (CTXC)
-Decentralized AI autonomous system.	 $2.0135
-0.00022056 Btc
-0.002965 Eth
+Decentralized AI autonomous system.	 $2.0331
+0.00020632 Btc
+0.002505 Eth
 
- -1.06%	$85,277,400	$301,605,616   
+ -3.32%	$130,876,000	$304,535,557   
+ 28		
+Substratum (SUB)
+Substratum is an open-source network that allows anyone to allocate spare computing resources to make the internet a free and fair place for the entire world.	 $0.7741
+0.00007856 Btc
+0.000954 Eth
+
+ -5.80%	$10,133,200	$296,514,941   
  29		
-Centrality Token (CENNZ)
- $0.4056
-0.00004443 Btc
-0.000597 Eth
+QASH (QASH)
+We envision QASH to be the preferred payment token for financial services, like the Bitcoin for financial services. As more financial institutions, fintech startups and partners adopt QASH as a method of payment, the utility of QASH will scale, fueling the Fintech revolution.	 $0.8209
+0.00008331 Btc
+0.001011 Eth
 
- 2.09%	$724,347	$279,088,883   
+ 0.57%	$4,756,100	$287,313,250   
  30		
-Ethos (ETHOS)
-People-powered cryptocurrency services for the blockchain	 $3.5304
-0.00038672 Btc
-0.005198 Eth
+Bancor (BNT)
+Bancor Protocol is a standard for a new generation of cryptocurrencies called Smart Tokens	 $5.3862
+0.00054661 Btc
+0.006636 Eth
 
- -0.13%	$9,084,610	$270,064,911   
+ 5.42%	$15,768,300	$277,121,821   
  31		
-Storm (STORM)
-Storm Market aims to make it easier for members to find new ways to earn, engage, and advance with their gamified micro-task platform for STORM tokens.	 $0.0659
-0.00000722 Btc
-0.000097 Eth
+Centrality Token (CENNZ)
+ $0.3860
+0.00003917 Btc
+0.000476 Eth
 
- 1.88%	$57,820,100	$269,688,040   
+ -5.00%	$257,323	$268,124,570   
  32		
-Dragon (DRGN)
-Dragonchain simplifies the integration of real business applications onto a blockchain.	 $1.1011
-0.00012062 Btc
-0.001621 Eth
+Fusion (FSN)
+FUSION is a public blockchain devoting itself to creating an inclusive cryptofinancial platform by providing cross-chain, cross-organization, and cross-datasource smart contracts.	 $8.8335
+0.00089646 Btc
+0.010883 Eth
 
- -3.31%	$4,112,940	$262,533,551   
+ 7.63%	$5,385,370	$262,215,352   
  33		
+Storm (STORM)
+Storm Market aims to make it easier for members to find new ways to earn, engage, and advance with their gamified micro-task platform for STORM tokens.	 $0.0628
+0.00000637 Btc
+0.000077 Eth
+
+ -0.94%	$30,267,400	$256,820,033   
+ 34		
+Ethos (ETHOS)
+People-powered cryptocurrency services for the blockchain	 $3.3294
+0.00033788 Btc
+0.004102 Eth
+
+ -2.72%	$7,280,180	$254,687,533   
+ 35		
+FunFair (FUN)
+FunFair is a decentralised gaming platform powered by Ethereum smart contracts	 $0.0517
+0.00000525 Btc
+0.000064 Eth
+
+ 0.71%	$4,929,850	$251,179,314   
+ 36		
+Dragon (DRGN)
+Dragonchain simplifies the integration of real business applications onto a blockchain.	 $1.0529
+0.00010685 Btc
+0.001297 Eth
+
+ -5.92%	$5,025,760	$251,034,461   
+ 37		
+WAX Token (WAX)
+Global Decentralized Marketplace for Virtual Assets.	 $0.4036
+0.00004096 Btc
+0.000497 Eth
+
+ 4.14%	$5,292,880	$250,976,675   
+ 38		
+Veritaseum (VERI)
+Veritaseum builds blockchain-based, peer-to-peer capital markets as software on a global scale.	 $121.9110
+0.0123721 Btc
+0.150196 Eth
+
+ -1.98%	$878,003	$248,289,482   
+ 39		
 Dentacoin (Dentacoin)
 Aims to be the blockchain solution for the global dental industry.	 $0.0008
-0.00000009 Btc
+0.00000008 Btc
 0.000001 Eth
 
- 9.84%	$306,066	$257,010,656   
- 34		
-Salt (SALT)
-SALT lets you leverage your blockchain assets to secure cash loans. We make it easy to get money without having to sell your favorite investment.	 $4.1707
-0.00045686 Btc
-0.006141 Eth
-
- 4.53%	$7,843,220	$242,046,550   
- 35		
-Loom (LOOM)
-Online game & social apps	 $0.4169
-0.00004566 Btc
-0.000614 Eth
-
- 37.73%	$8,941,030	$240,310,552   
- 36		
-Bancor (BNT)
-Bancor Protocol is a standard for a new generation of cryptocurrencies called Smart Tokens	 $4.6385
-0.0005081 Btc
-0.006830 Eth
-
- 3.31%	$12,568,600	$239,862,458   
- 37		
-FunFair (FUN)
-FunFair is a decentralised gaming platform powered by Ethereum smart contracts	 $0.0493
-0.00000540 Btc
-0.000073 Eth
-
- 4.64%	$5,905,440	$232,992,873   
- 38		
-WAX Token (WAX)
-Global Decentralized Marketplace for Virtual Assets.	 $0.3678
-0.00004028 Btc
-0.000541 Eth
-
- 7.61%	$4,929,160	$228,660,485   
- 39		
-Fusion (FSN)
-FUSION is a public blockchain devoting itself to creating an inclusive cryptofinancial platform by providing cross-chain, cross-organization, and cross-datasource smart contracts.	 $7.6020
-0.00083272 Btc
-0.011193 Eth
-
- 10.37%	$9,365,370	$225,661,176   
+ -2.12%	$443,004	$247,033,029   
  40		
-Veritaseum (VERI)
-Veritaseum builds blockchain-based, peer-to-peer capital markets as software on a global scale.	 $110.6850
-0.0121194 Btc
-0.162966 Eth
+Salt (SALT)
+SALT lets you leverage your blockchain assets to secure cash loans. We make it easy to get money without having to sell your favorite investment.	 $4.1994
+0.00042617 Btc
+0.005174 Eth
 
- 6.83%	$840,939	$225,426,101   
+ 2.62%	$9,279,690	$246,031,739   
  41		
-Gifto (GTO)
-Decentralized Universal Gifting Protocol.	 $0.5183
-0.00005677 Btc
-0.000763 Eth
+CyberMiles (CMT)
+Empowering the Decentralization of Online Marketplaces.	 $0.3478
+0.00003530 Btc
+0.000429 Eth
 
- 4.59%	$33,303,200	$222,699,910   
+ 26.77%	$81,661,100	$220,494,445   
  42		
-PowerLedger (POWR)
-Power Ledger is a peer-to-peer marketplace for renewable energy.	 $0.5649
-0.00006188 Btc
-0.000832 Eth
+Gifto (GTO)
+Decentralized Universal Gifting Protocol.	 $0.5018
+0.00005093 Btc
+0.000618 Eth
 
- 5.54%	$16,904,100	$207,507,776   
+ -4.91%	$39,369,400	$215,626,197   
  43		
-Enigma (ENG)
-Enigma is a privacy protocol that enables truly decentralized applications and unlocks the value of blockchains.	 $2.7200
-0.00029794 Btc
-0.004005 Eth
+Polymath (POLY)
+Polymath aims to enable securities to migrate to the blockchain.	 $0.8940
+0.00009073 Btc
+0.001101 Eth
 
- 2.37%	$8,142,470	$203,552,140   
+ 4.32%	$18,385,200	$214,561,216   
  44		
-NucleusVision (nCash)
-Founded at Harvard University, Nucleus Vision is an IoT-based, contactless identification system that empowers retailers to identify and better serve their customers.	 $0.0487
-0.00000533 Btc
-0.000072 Eth
+Enigma (ENG)
+Enigma is a privacy protocol that enables truly decentralized applications and unlocks the value of blockchains.	 $2.8477
+0.00028899 Btc
+0.003508 Eth
 
- 3.41%	$27,559,800	$200,413,022   
+ -3.49%	$8,854,730	$213,107,223   
  45		
-ChainLink Token (LINK)
-The LINK Network provides smart contracts with data, bank payments and access to APIs.	 $0.5714
-0.00006260 Btc
-0.000841 Eth
+MATRIX AI Network (MAN)
+Aims to be an open source public intelligent blockchain platform	 $1.3759
+0.00013963 Btc
+0.001695 Eth
 
- 3.06%	$11,594,900	$200,003,650   
+ -1.88%	$2,466,010	$206,386,500   
  46		
-Request (REQ)
-A decentralized network built on top of Ethereum, which allows anyone, anywhere to request a payment.	 $0.2856
-0.00003129 Btc
-0.000421 Eth
+PowerLedger (POWR)
+Power Ledger is a peer-to-peer marketplace for renewable energy.	 $0.5544
+0.00005627 Btc
+0.000683 Eth
 
- 2.55%	$5,914,780	$189,348,361   
+ -1.19%	$9,799,540	$204,730,495   
  47		
-Decentraland (MANA)
-Decentraland is a virtual reality platform powered by the Ethereum blockchain. Users can create, experience, and monetize content and applications	 $0.1728
-0.00001892 Btc
-0.000254 Eth
+ChainLink Token (LINK)
+The LINK Network provides smart contracts with data, bank payments and access to APIs.	 $0.5786
+0.00005872 Btc
+0.000713 Eth
 
- 5.22%	$36,245,200	$181,427,698   
+ -1.08%	$9,157,120	$202,497,400   
  48		
+All Sports Coin (SOC)
+All Sports public blockchain hopes to fill in the blank of blockchain application in sports industry through blockchain technology.	 $0.2676
+0.00002715 Btc
+0.000330 Eth
+
+ 86.86%	$86,234,200	$198,202,344   
+ 49		
+NucleusVision (nCash)
+Founded at Harvard University, Nucleus Vision is an IoT-based, contactless identification system that empowers retailers to identify and better serve their customers.	 $0.0473
+0.00000480 Btc
+0.000058 Eth
+
+ 2.14%	$27,285,100	$194,778,321   
+ 50		
+Request (REQ)
+
+
+Token	Price	%Change	Volume (24h)	 MarketCap
+ 51		
+Monaco (MCO)
+Monaco is a cryptocurrency card. Spend and send money globally at interbank exchange rates.	 $12.1038
+0.00122736 Btc
+0.014912 Eth
+
+ 5.29%	$25,028,300	$191,165,373   
+ 52		
+Revain (R)
+Revain is a new-generation feedback platform, based on the blockchain technology that does not allow to change or delete reviews and its authors get rewards for creating them!	 $0.9964
+0.00010104 Btc
+0.001228 Eth
+
+ 0.75%	$2,028,600	$185,781,204   
+ 53		
+Decentraland (MANA)
+Decentraland is a virtual reality platform powered by the Ethereum blockchain. Users can create, experience, and monetize content and applications	 $0.1748
+0.00001773 Btc
+0.000215 Eth
+
+ -1.04%	$11,388,500	$183,616,193   
+ 54		
 Kin (KIN)
 The vision for Kin is rooted in the belief that a broad group of participants can come together to create an open ecosystem of tools for digital communication and commerce that prioritizes consumer experience, bringing a fair and user-oriented model for digital services to the market.	 $0.0002
-0.00000003 Btc
+0.00000002 Btc
 0.000000 Eth
 
- 0.82%	$306,559	$179,130,098   
- 49		
-Monaco (MCO)
-Monaco is a cryptocurrency card. Spend and send money globally at interbank exchange rates.	 $11.3347
-0.00124161 Btc
-0.016689 Eth
-
- -0.22%	$22,058,600	$179,018,337   
- 50		
+ 3.11%	$581,643	$181,970,000   
+ 55		
 TenXPay (PAY)
-TenX connects your blockchain assets for everyday use. TenX’s debit card and banking licence will allow us to be a hub for the blockchain ecosystem to connect for real-world use cases.
+TenX connects your blockchain assets for everyday use. TenX’s debit card and banking licence will allow us to be a hub for the blockchain ecosystem to connect for real-world use cases.	 $1.5679
+0.00015898 Btc
+0.001932 Eth
+
+ -2.00%	$2,835,720	$170,904,204   
+ 56		
+Cindicator (CND)
+Hybrid Intelligence for effective asset management.	 $0.1124
+0.00001140 Btc
+0.000138 Eth
+
+ -1.47%	$2,288,220	$162,498,849   
+ 57		
+Storj (STORJ)
+Blockchain-based, end-to-end encrypted, distributed object storage, where only you have access to your data	 $1.1933
+0.000121 Btc
+0.001470 Eth
+
+ -0.38%	$12,864,900	$162,028,481   
+ 58		
+ICONOMI (ICN)
+ICONOMI Digital Assets Management platform enables simple access to a variety of digital assets and combined Digital Asset Arrays	 $1.6036
+0.00016261 Btc
+0.001976 Eth
+
+ 1.17%	$1,687,950	$159,938,142   
+ 59		
+Civic (CVC)
+Giving businesses and individuals the tools to control and protect identities	 $0.4534
+0.00004598 Btc
+0.000559 Eth
+
+ -0.86%	$3,793,830	$155,395,929   
+ 60		
+Nuls (NULS)
+NULS is a global blockchain open-source project which is a highly customizable modular blockchain infrastructure consisting of a microkernel and functional modules.	 $3.8509
+0.00039049 Btc
+0.004744 Eth
+
+ -1.63%	$15,910,200	$154,036,800   
+ 61		
+ArcBlock (ABT)
+An open source protocol that provides an abstract layer for accessing underlying blockchains, enabling your application to work on different blockchains.	 $1.6526
+0.00016758 Btc
+0.002036 Eth
+
+ 13.48%	$38,402,700	$154,018,587   
+ 62		
+Genaro X (GNX)
+Blockchain 3.0 Ecosystem Built on a Turing-Complete Public Chain with Decentralized Storage.	 $0.6204
+0.00006291 Btc
+0.000764 Eth
+
+ -0.05%	$5,660,080	$149,596,021   
+ 63		
+DENT (DENT)
+Aims to disrupt the mobile operator industry by creating an open marketplace for buying and selling of mobile data.	 $0.0138
+0.00000139 Btc
+0.000017 Eth
+
+ 21.47%	$9,541,440	$146,019,836   
+ 64		
+Quantstamp (QSP)
+Quantstamp – the Protocol for Securing Smart Contracts. We believe in the future of smart contracts and are building a foundational technology to protect users and investors – with scalable proofs-of-audit.	 $0.2362
+0.00002395 Btc
+0.000291 Eth
+
+ 1.05%	$14,587,900	$145,828,127   
+ 65		
+SIRIN (SRN)
+SIRIN LABS’ aims to become the world’s leader in secure open source consumer electronics, bridging the gap between the mass market and the blockchain econom	 $0.6061
+0.00006146 Btc
+0.000747 Eth
+
+ 2.67%	$66,389,300	$138,962,232   
+ 66		
+RUFF (RUFF)
+Decentralized open source blockchain architecture for high efficiency Internet of Things application development	 $0.1491
+0.00001512 Btc
+0.000184 Eth
+
+ 3.39%	$9,312,860	$137,444,989   
+ 67		
+RLC (RLC)
+Blockchain Based distributed cloud computing	 $1.7013
+0.00017252 Btc
+0.002096 Eth
+
+ 1.94%	$1,493,890	$136,224,441   
+ 68		
+HuobiToken (HT)
+Huobi Global is a world-leading cryptocurrency financial services group.	 $2.6981
+0.0002736 Btc
+0.003324 Eth
+
+ -0.90%	$53,305,000	$134,907,040   
+ 69		
+Gnosis (GNO)
+Crowd Sourced Wisdom - The next generation blockchain network. Speculate on anything with an easy-to-use prediction market	 $119.1510
+0.0120822 Btc
+0.146796 Eth
+
+ 0.19%	$786,986	$131,613,003   
+ 70		
+SingularityNET (AGI)
+Decentralized Marketplace for AI.	 $0.2393
+0.00002427 Btc
+0.000295 Eth
+
+ 0.50%	$737,744	$129,143,271   
+ 71		
+Metal (MTL)
+Transfer money instantly around the globe with nothing more than a phone number. Earn rewards every time you spend or make a purchase. Ditch the bank and go digital.	 $5.2398
+0.00053133 Btc
+0.006456 Eth
+
+ -0.73%	$15,331,500	$126,868,209   
+ 72		
+Po.et (POE)
+Po.et aims to reclaim value for content creators, publishers and consumers.	 $0.0551
+0.00000559 Btc
+0.000068 Eth
+
+ -4.74%	$5,765,560	$125,474,399   
+ 73		
+EnjinCoin (ENJ)
+Customizable cryptocurrency and virtual goods platform for gaming.	 $0.1641
+0.00001664 Btc
+0.000202 Eth
+
+ -3.75%	$15,073,300	$124,104,806   
+ 74		
+Aragon (ANT)
+Create and manage unstoppable organizations. Aragon lets you manage entire organizations using the blockchain. This makes Aragon organizations more efficient than their traditional counterparties.	 $4.7064
+0.00047724 Btc
+0.005798 Eth
+
+ 2.42%	$549,791	$124,104,368   
+ 75		
+SAN (SAN)
+A Better Way to Trade Crypto-Markets - Market Datafeeds, Newswires, and Crowd Sentiment Insights for the Blockchain World	 $1.9072
+0.0001934 Btc
+0.002350 Eth
+
+ 1.54%	$1,810,240	$119,508,366   
+ 76		
+Bluzelle (BLZ)
+Aims to be the next-gen database protocol for the decentralized internet.	 $0.6549
+0.00006641 Btc
+0.000807 Eth
+
+ -1.56%	$4,997,860	$117,168,737   
+ 77		
+HPBCoin (HPB)
+HPB (High-Performance Blockchain) is a new kind of block chain hardware and software architecture, which includes a chip acceleration engine and the blockchain platform, aiming to realize the performance extension of distributed applications	 $3.9066
+0.00039613 Btc
+0.004813 Eth
+
+ 3.37%	$8,080,760	$116,035,114   
+ 78		
+Raiden (RDN)
+The Raiden Network is an off-chain scaling solution, enabling near-instant, low-fee and scalable payments. It’s complementary to the Ethereum blockchain and works with any ERC20 compatible token.	 $2.2932
+0.00023254 Btc
+0.002825 Eth
+
+ -1.58%	$3,888,380	$115,048,407   
+ 79		
+Tomocoin (TOMO)
+Building an efficient blockchain infrastructure for decentralized applications, token issuance and integration	 $2.0680
+0.0002097 Btc
+0.002548 Eth
+
+ -0.41%	$259,878	$113,742,200   
+ 80		
+Amber (AMB)
+Combining high-tech sensors, blockchain protocol and smart contracts, we are building a universally verifiable, community-driven ecosystem to assure the quality, safety & origins of products.	 $0.7840
+0.00007949 Btc
+0.000966 Eth
+
+ -5.75%	$7,496,050	$113,352,239   
+ 81		
+I HOUSE TOKEN (IHT)
+Real Estate Blockchain Cloud Platform.	 $0.2220
+0.00002251 Btc
+0.000274 Eth
+
+ 0.89%	$9,794,750	$108,991,820   
+ 82		
+Game.com Token (GTC)
+Game.com is focused on creating a global gaming platform for blockchain digital currencies.	 $0.1819
+0.00001844 Btc
+0.000224 Eth
+
+ -0.80%	$22,005,500	$108,807,953   
+ 83		
+Theta Token (THETA)
+A decentralized peer-to-peer network that aims to offer improved video delivery at lower costs.	 $0.1711
+0.00001735 Btc
+0.000211 Eth
+
+ -1.42%	$7,301,660	$107,554,675   
+ 84		
+SPHTX (SPHTX)
+Integrating Blockchain with Enterprise Applications.	 $0.5461
+0.00005538 Btc
+0.000673 Eth
+
+ 1.27%	$806,576	$104,836,604   
+ 85		
+EthLend (LEND)
+Decentralized and secure financial marketplace for peer to peer lending agreements using Blockchain and Smart Contracts.	 $0.0944
+0.00000957 Btc
+0.000116 Eth
+
+ -3.89%	$3,072,490	$102,528,145   
+ 86		
+SONM (SNM)
+SONM's aims to be a secure and cost-effective fog supercomputer for general-purpose computing, from mobile app hosting to video rendering to DNA analysis.	 $0.2792
+0.00002831 Btc
+0.000344 Eth
+
+ 1.97%	$1,865,430	$100,391,690   
+ 87		
+CREDITS (CS)
+CREDITS is an open blockchain platform with autonomous smart contracts and the internal cryptocurrency. The platform is designed to create services for blockchain systems using self-executing smart contracts and a public data registry.	 $0.7279
+0.00007381 Btc
+0.000897 Eth
+
+ 4.85%	$4,231,040	$100,157,817   
+ 88		
+PILLAR (PLR)
+Building the a cryptocurrency and token wallet that aims to become the dashboard for your digital life.	 $0.4262
+0.00004322 Btc
+0.000525 Eth
+
+ -7.26%	$294,387	$96,912,084   
+ 89		
+PayPie (PPP)
+PayPie platform brings ultimate trust and transparency to the financial markets by introducing the world’s first risk score algorithm based on business accounting.	 $1.1162
+0.00011318 Btc
+0.001375 Eth
+
+ -10.24%	$489,246	$92,085,675   
+ 90		
+IOT Chain (ITC)
+IoT Chain aims to be a A High Security Lite IoT OS	 $1.8416
+0.00018674 Btc
+0.002269 Eth
+
+ -2.33%	$8,428,080	$89,509,600   
+ 91		
+Genesis Vision (GVT)
+A platform for the private trust management market, built on Blockchain technology and Smart Contracts.	 $24.0056
+0.00243423 Btc
+0.029575 Eth
+
+ -3.56%	$9,001,920	$89,463,612   
+ 92		
+CUBE (AUTO)
+CUBE is an autonomous car security platform backed by blockchain technology.	 $0.0141
+0.00000143 Btc
+0.000017 Eth
+
+ 2.34%	$1,544,460	$88,670,550   
+ 93		
+BIX Token (BIX)
+AI Enhanced Encrypted Digital Asset Exchange.	 $0.8366
+0.00008484 Btc
+0.001031 Eth
+
+ 3.68%	$49,432,900	$87,294,785   
+ 94		
+RipioCreditNetwork (RCN)
+Ripio Credit Network is a global credit network based on cosigned smart contracts and blockchain technology that connects lenders and borrowers located anywhere in the world and on any currency	 $0.1773
+0.00001798 Btc
+0.000218 Eth
+
+ 5.88%	$11,654,800	$87,102,119   
+ 95		
+Simple Token (ST)
+OST KIT gives you all the tools you need to run your blockchain-powered economy on open scalable sidechains.	 $0.2583
+0.00002619 Btc
+0.000318 Eth
+
+ -1.70%	$2,609,460	$83,103,336   
+ 96		
+Bread (BRD)
+BRD is the simple and secure bitcoin wallet.	 $0.9193
+0.00009321 Btc
+0.001133 Eth
+
+ 0.83%	$1,011,110	$81,687,764   
+ 97		
+Crypto20 (C20)
+Tokenized Crypto Index Fund.	 $1.9942
+0.00020221 Btc
+0.002457 Eth
+
+ 1.87%	$1,740,730	$79,097,642   
+ 98		
+Eidoo (EDO)
+Aims to be a Fast, easy, and not only a Multicurrency Wallet and Hybrid Exchange.	 $2.6837
+0.00027213 Btc
+0.003306 Eth
+
+ 2.69%	$10,042,200	$78,528,398   
+ 99		
+AirSwap (AST)
+AirSwap is based on the Swap protocol, a peer-to-peer protocol for trading Ethereum tokens	 $0.5151
+0.00005223 Btc
+0.000635 Eth
+
+ 2.10%	$4,221,160	$77,267,100   
+ 100		
+BLOCKv (VEE)
