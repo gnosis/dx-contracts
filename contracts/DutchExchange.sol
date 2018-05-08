@@ -750,6 +750,7 @@ contract DutchExchange {
 
         if (fee > 0) {
             fee = settleFeeSecondPart(primaryToken, fee);
+            
             uint usersExtraTokens = extraTokens[primaryToken][secondaryToken][auctionIndex + 1];
             extraTokens[primaryToken][secondaryToken][auctionIndex + 1] = add(usersExtraTokens, fee);
         }
