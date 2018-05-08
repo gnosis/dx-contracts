@@ -780,6 +780,8 @@ contract DutchExchange {
         // Uses 18 decimal places <> exactly as owlToken tokens: 10**18 owlToken == 1 USD 
         uint feeInUSD = mul(feeInETH, ethUSDPrice);
         uint amountOfowlTokenBurned = min(owlToken.allowance(msg.sender, this), feeInUSD / 2);
+        amountOfowlTokenBurned = min(owlToken.balanceOf(msg.sender), amountOfowlTokenBurned);
+
 
         if (amountOfowlTokenBurned > 0) {
             owlToken.burnOWL(msg.sender, amountOfowlTokenBurned);
