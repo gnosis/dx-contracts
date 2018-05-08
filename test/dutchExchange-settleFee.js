@@ -262,7 +262,7 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
     await mgn.updateMinter(dx.address,{from: master})
     // add tokenPair ETH GNO
-    await dx.addTokenPair(
+    /*await dx.addTokenPair(
       eth.address,
       gno.address,
       (ETHBalance / 2), // 10 ETH
@@ -270,7 +270,7 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
       2,
       1,
       { from: seller1 },
-    )
+    )*/
 
     await mgn.updateMinter(master, { from: master })
     logger('PRICE ORACLE', await oracle.getUSDETHPrice.call())
@@ -290,9 +290,10 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
    * @param {address} user
    * @param {uint} amount
    */
-  const settleFee = (...args) => {
+  const settleFee = async (...args) => {
     log(`\t tx : settling fee for ${args[4]} amount of tokens\n\t*`)
-    return dx.settleFeePub(...args)
+    const amountAfterFee = await dx.settleFeePub(...args)
+    return amountAfterFee
   }
 
   settleFee.call = async (...args) => {
@@ -461,7 +462,6 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
     const amountAfterFee = await settleFee
       .call(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
-
     assert.strictEqual(amountAfterFee, amount - fee, 'amount should be decreased by fee')
 
     await settleFee(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
@@ -479,15 +479,11 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
     const feeInUSD = await calculateFeeInUSD(fee, eth.address)
 
     const owlAmount = Math.floor(feeInUSD / 2) - 1
-    console.log(await owl.balanceOf(master))
-
-    console.log(await owl.totalSupply())
     await owl.transfer(seller1, owlAmount, { from: master })
-    console.log(await owl.balanceOf(seller1))
     console.log(POWL.address)
     console.log(owl.address)
     const owlBalance1 = (await owl.balanceOf(seller1)).toNumber()
-    assert.strictEqual(owlBalance1, owlAmount, 'account should have OWL balance < feeInUSD / 2')
+    assert.strictEqual(owlBalance1, owlAmount, 'account should have OWL balance < feeInUSD / 2 and OWL balance == approved Tokens')
     assert.isAbove(owlBalance1, 0, 'account should have OWL balance > 0')
 
     await owl.approve(dx.address, owlAmount, { from: seller1 })
@@ -535,8 +531,7 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
     await owl.approve(dx.address, owlAmount * 5, { from: seller1 })
 
-    const amountOfOWLBurned = Math.floor(feeInUSD / 2)
-
+    const amountOfOWLBurned = Math.min( Math.floor(feeInUSD / 2), owlAmount);
     fee = adjustFee(fee, amountOfOWLBurned, feeInUSD)
     assert.isAbove(fee, 0, 'fee must be > 0')
 
@@ -552,7 +547,6 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
     await settleFee(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
     const extraTokens2 = await getExtraTokens(eth.address, gno.address, auctionIndex)
-
     assert.strictEqual(extraTokens1 + fee, extraTokens2, 'extraTokens should be increased by fee')
 
     const owlBalance2 = (await owl.balanceOf(seller1)).toNumber()
@@ -560,6 +554,49 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
     assert.strictEqual(owlBalance2, owlBalance1 - amountOfOWLBurned, 'some OWL should have been burned')
     assert.isAbove(owlBalance2, 0, 'some OWL should remain as it was > feeInUSD/2 and not all used up')
+  })
+
+  it('amountAfterFee == amount - fee(adjusted) when fee > 0 and account\'s OWL < feeInUSD / 2 and OWL balance < approved Tokens', async () => {
+    const feeRatio = await makeFeeRatioPercent(0.5, seller1)
+
+    const amount = 1000
+    let fee = calculateFee(amount, feeRatio)
+    const feeInUSD = await calculateFeeInUSD(fee, eth.address)
+
+    const owlAmount = Math.floor(feeInUSD / 2) - 1
+
+    const owlBalanceBefore = (await owl.balanceOf(seller1)).toNumber()
+    await owl.transfer(seller1, owlAmount-owlBalanceBefore, { from: master })
+    const owlBalance1 = (await owl.balanceOf(seller1)).toNumber()
+    assert.strictEqual(owlBalance1, owlAmount, 'account should have OWL balance < feeInUSD / 2')
+    assert.isAbove(owlBalance1, 0, 'account should have OWL balance > 0')
+
+    await owl.approve(dx.address, owlAmount*1000, { from: seller1 })
+    const amountOfOWLBurned = owlBalance1
+
+    fee = adjustFee(fee, amountOfOWLBurned, feeInUSD)
+    assert.isAbove(fee, 0, 'fee must be > 0')
+
+    const auctionIndex = 1
+
+    const extraTokens1 = await getExtraTokens(eth.address, gno.address, auctionIndex)
+
+    const amountAfterFee = await settleFee
+      .call(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
+
+    assert.strictEqual(amountAfterFee, amount - fee, 'amount should be decreased by fee')
+
+    const extraTokens23 = await getExtraTokens(eth.address, gno.address, auctionIndex)
+    
+    await settleFee(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
+    const extraTokens2 = await getExtraTokens(eth.address, gno.address, auctionIndex)
+    assert.strictEqual(extraTokens1 + fee, extraTokens2, 'extraTokens should be increased by fee')
+
+    const owlBalance2 = (await owl.balanceOf(seller1)).toNumber()
+    log(`\tburned OWL == ${amountOfOWLBurned}`)
+
+    assert.strictEqual(owlBalance2, owlBalance1 - amountOfOWLBurned, 'some OWL should have been burned')
+    assert.strictEqual(owlBalance2, 0, 'all OWL should be burned as it was < feeInUSD/2 and all used up')
   })
 })
 
