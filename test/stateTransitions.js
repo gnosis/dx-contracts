@@ -3,7 +3,7 @@
 // https://drive.google.com/drive/folders/0ByHhiGx-ltJZczhjZHhHeGpHcHM
 // States are generated with the function getIntoState and 
 // right state transitions are asserted with the function getState() == expectation
-
+// https://drive.google.com/drive/folders/10_j3bMx6YngR0xKn5PXXiF1_Bi1eqeMR
 // checkState is only a rough check for right updates of the numbers in the smart contract. It allows a big tolerance (Maxrounding error)
 // since there are unpredicted timejumps with an evm_increase time
 
@@ -48,7 +48,7 @@ const valMinusFee = amount => amount - (amount / 200)
 // Testing exact amounts is not needed, since the correct execution of number updates is checked 
 // with our unit tests within dutchExchange-postBuyOrder/dutchExchange-postSellOrder
 const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-  assert.equal((await dx.getAuctionIndex.call(ST.address, BT.address)).toNumber(), auctionIndex, 'auction Index not correct')
+  assert.equal((await dx.getAuctionIndex.call(ST.address, BT.address)).toNumber(), auctionIndex, 'auction index not correct')
   assert.equal((await dx.getAuctionIndex.call(BT.address, ST.address)).toNumber(), auctionIndex)
   let difference = Math.abs((await dx.getAuctionStart.call(ST.address, BT.address)).toNumber() - auctionStart)
   assert.isAtMost(difference, 2, 'time difference bigger than 1 sec')
@@ -77,7 +77,7 @@ const getState = async (ST, BT) => { // eslint-disable-line
   let numBasedOnVolume
   let denBasedOnVolume
   // calculate state of Auction
-  [numP, denP] = (await dx.getCurrentAuctionPriceExt.call(ST.address, BT.address, auctionIndex)) // eslint-disable-line
+  [numP, denP] = (await dx.getCurrentAuctionPrice.call(ST.address, BT.address, auctionIndex)) // eslint-disable-line
   numBasedOnVolume = await dx.buyVolumes.call(ST.address, BT.address)
   denBasedOnVolume = await dx.sellVolumesCurrent.call(ST.address, BT.address)
   const isAuctionTheoreticalClosed = (numP.mul(denBasedOnVolume).sub(numBasedOnVolume.mul(denP)).toNumber() <= 0);
@@ -87,7 +87,7 @@ const getState = async (ST, BT) => { // eslint-disable-line
   // calculate state of OppAuction
   let numP2
   let denP2
-  [numP2, denP2] = (await dx.getCurrentAuctionPriceExt.call(BT.address, ST.address, auctionIndex)) // eslint-disable-line
+  [numP2, denP2] = (await dx.getCurrentAuctionPrice.call(BT.address, ST.address, auctionIndex)) // eslint-disable-line
   numBasedOnVolume = await dx.buyVolumes.call(BT.address, ST.address) 
   denBasedOnVolume = await dx.sellVolumesCurrent.call(BT.address, ST.address)
   const isOppAuctionTheoreticalClosed = (numP2.mul(denBasedOnVolume).minus(numBasedOnVolume.mul(denP2)).toNumber() <= 0);
@@ -472,7 +472,7 @@ const c4 = () => contract('DutchExchange - Stage S1 - Auction is running with v 
 
   after(eventWatcher.stopWatching)
 
-  it('postBuyOrder - posting a buyOrder into 0 sell vol', async () => {
+  it('postBuyOrder - posting a buyOrder into 0 sell volomue', async () => {
     const auctionIndex = await getAuctionIndex()
     const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
     await setAndCheckAuctionStarted(eth, gno)
@@ -623,7 +623,7 @@ const c7 = () => contract('DutchExchange - Stage S2 -  1 Auction is running with
 
   after(eventWatcher.stopWatching)
 
-  it('postBuyOrder - posting a buyOrder into closed Auction', async () => {
+  it('postBuyOrder - posting a buyOrder into closed auction', async () => {
     const auctionIndex = await getAuctionIndex()
     const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
     await setAndCheckAuctionStarted(eth, gno)
@@ -703,7 +703,7 @@ const c8 = () => contract('DutchExchange - Stage S2 -  1 Auction is running with
   })
 })
 
-const c9 = () => contract('DutchExchange - Stage S2 -  1 Auction is running with v > 0, other auctions is closed', (accounts) => {
+const c9 = () => contract('DutchExchange - Stage S2 -  1 auction is running with v > 0, other auctions is closed', (accounts) => {
   const [, seller1, , , seller2] = accounts
 
   afterEach(gasLogger)
@@ -743,7 +743,7 @@ const c9 = () => contract('DutchExchange - Stage S2 -  1 Auction is running with
 })
 
 
-const c10 = () => contract('DutchExchange - Stage S2 -  1 Auction is running with v > 0, other auctions is closed', (accounts) => {
+const c10 = () => contract('DutchExchange - Stage S2 -  1 auction is running with v > 0, other auctions is closed', (accounts) => {
   const [, seller1, , buyer1] = accounts
 
   afterEach(gasLogger)
@@ -782,7 +782,7 @@ const c10 = () => contract('DutchExchange - Stage S2 -  1 Auction is running wit
 })
 
 
-const c11 = () => contract('DutchExchange - Stage S2 -  1 Auction is running with v > 0, other auctions is closed', (accounts) => {
+const c11 = () => contract('DutchExchange - Stage S2 -  1 auction is running with v > 0, other auctions is closed', (accounts) => {
   const [, seller1, , buyer1] = accounts
 
   afterEach(gasLogger)
@@ -830,7 +830,7 @@ const c11 = () => contract('DutchExchange - Stage S2 -  1 Auction is running wit
 //
 
 
-const c12 = () => contract('DutchExchange - Stage S3 -  1 Auction is closed theoretical', (accounts) => {
+const c12 = () => contract('DutchExchange - Stage S3 -  1 auction is closed theoretical', (accounts) => {
   const [, , , buyer1] = accounts
 
   afterEach(gasLogger)
@@ -851,7 +851,7 @@ const c12 = () => contract('DutchExchange - Stage S3 -  1 Auction is closed theo
 
   after(eventWatcher.stopWatching)
 
-  it('postBuyOrder - posting a buyOrder into non- theoretical closed auction staying in S3', async () => {
+  it('postBuyOrder - posting a buyOrder into non-theoretical closed auction staying in S3', async () => {
     const auctionIndex = await getAuctionIndex()
     const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
     await setAndCheckAuctionStarted(eth, gno)
@@ -865,7 +865,7 @@ const c12 = () => contract('DutchExchange - Stage S3 -  1 Auction is closed theo
     await checkInvariants(balanceInvariant, accounts, [eth, gno])
   })
 
-  it('postBuyOrder - posting a buyOrder clearing non-theoretical closed auction getting into S6', async () => {
+  it('postBuyOrder - posting a buyOrder clearing non-theoretical closed auction: getting into S6', async () => {
     const auctionIndex = await getAuctionIndex()
     const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
     await setAndCheckAuctionStarted(eth, gno)
@@ -880,7 +880,7 @@ const c12 = () => contract('DutchExchange - Stage S3 -  1 Auction is closed theo
   })
 })
 
-const c13 = () => contract('DutchExchange - Stage S3 -  1 Auction is closed theoretical', (accounts) => {
+const c13 = () => contract('DutchExchange - Stage S3 -  1 auction is closed theoretical', (accounts) => {
   const [, , , , buyer2] = accounts
 
   afterEach(gasLogger)
@@ -915,7 +915,7 @@ const c13 = () => contract('DutchExchange - Stage S3 -  1 Auction is closed theo
   })
 })
 
-const c14 = () => contract('DutchExchange - Stage S3 -  1 Auction is closed theoretical', (accounts) => {
+const c14 = () => contract('DutchExchange - Stage S3 -  1 auction is closed theoretical', (accounts) => {
   const [, seller1, , , seller2] = accounts
 
   afterEach(gasLogger)
@@ -955,7 +955,7 @@ const c14 = () => contract('DutchExchange - Stage S3 -  1 Auction is closed theo
 })
 
 
-const c15 = () => contract('DutchExchange - Stage S3 -  1 Auction is closed theoretical', (accounts) => {
+const c15 = () => contract('DutchExchange - Stage S3 -  1 auction is closed theoretical', (accounts) => {
   const [, , , buyer1] = accounts
 
   afterEach(gasLogger)
@@ -1039,7 +1039,7 @@ const c16 = () => contract('DutchExchange - Stage S4 -  both Auction are closed 
   })
 })
 
-const c17 = () => contract('DutchExchange - Stage S4 -  both Auction are closed theoretical', (accounts) => {
+const c17 = () => contract('DutchExchange - Stage S4 -  both auction are closed theoretical', (accounts) => {
   const [, seller1, , , seller2] = accounts
 
   afterEach(gasLogger)
@@ -1060,7 +1060,7 @@ const c17 = () => contract('DutchExchange - Stage S4 -  both Auction are closed 
 
   after(eventWatcher.stopWatching)
 
-  it('postSellOrder - posting a SellOrder and stay in this state S4', async () => {
+  it('postSellOrder - posting a sellOrder and stay in this state S4', async () => {
     const auctionIndex = await getAuctionIndex()
     const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
     await setAndCheckAuctionStarted(eth, gno)
@@ -1089,7 +1089,7 @@ const c17 = () => contract('DutchExchange - Stage S4 -  both Auction are closed 
 //
 
 
-const c18 = () => contract('DutchExchange - Stage S7 -  both Auction are closed theoretical with vol=0 in one auction', (accounts) => {
+const c18 = () => contract('DutchExchange - Stage S7 -  both auction are closed theoretical with vol=0 in one auction', (accounts) => {
   const [, , , buyer1] = accounts
 
   afterEach(gasLogger)
@@ -1125,7 +1125,7 @@ const c18 = () => contract('DutchExchange - Stage S7 -  both Auction are closed 
   })
 })
 
-const c19 = () => contract('DutchExchange - Stage S7 -  both Auction are closed theoretical with vol=0 in one auction', (accounts) => {
+const c19 = () => contract('DutchExchange - Stage S7 -  both auction are closed theoretical with vol=0 in one auction', (accounts) => {
   const [, seller1, , , seller2] = accounts
 
   afterEach(gasLogger)
@@ -1164,7 +1164,7 @@ const c19 = () => contract('DutchExchange - Stage S7 -  both Auction are closed 
   })
 })
 
-const c20 = () => contract('DutchExchange - Stage S7 -  both Auction are closed theoretical with vol=0 in one auction', (accounts) => {
+const c20 = () => contract('DutchExchange - Stage S7 -  both auctions are closed theoretical with vol=0 in one auction', (accounts) => {
   const [, seller2, , buyer1] = accounts
 
   afterEach(gasLogger)
@@ -1496,11 +1496,17 @@ const c27 = () => contract('DutchExchange - Stage S5 -  waiting to reach the thr
 
   it('postSellOrder - posting a SellOrders and switch to S0', async () => {
     const auctionIndex = await getAuctionIndex()
+
+        console.log("testing")
     await setAndCheckAuctionStarted(eth, gno)
       
+        console.log("testing")
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
     // clearing first auction
+        console.log("testing")
+
     await postSellOrder(gno, eth, auctionIndex, ether / 10, seller1)
+    console.log("testing")
     const newAuctionStart = timestamp() + 60 * 10
     await postSellOrder(eth, gno, 0, 10.0.toWei() * 30, seller2)
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {

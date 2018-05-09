@@ -159,7 +159,7 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const currentIndex = (await dx.getAuctionIndex.call(ST.address, BT.address)).toNumber()
   const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
   const timeToWaitFor = Math.ceil((86400 - p * 43200) / (1 + p)) + startingTimeOfAuction
-  let [num, den] = (await dx.getCurrentAuctionPriceExt.call(ST.address, BT.address, currentIndex))
+  let [num, den] = (await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex))
   const priceBefore = num.div(den)
   log(`
   Price BEFORE waiting until Price = initial Closing Price (2) * 2
@@ -171,7 +171,7 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   `)
   // wait until the price is good
   await wait(timeToWaitFor - timestamp());
-  ([num, den] = (await dx.getCurrentAuctionPriceExt.call(ST.address, BT.address, currentIndex)))
+  ([num, den] = (await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex)))
   const priceAfter = num.div(den)
   log(`
   Price AFTER waiting until Price = ${p * 100}% of ${priceBefore / 2} (initial Closing Price)
@@ -477,7 +477,7 @@ const assertReturnedPlusMGNs = async (ST, BT, acc, type, idx = 1, eth) => {
 
   // calc closingPrices for both ETH/ERC20 and nonETH trades
   const [num, den] = (await dx.closingPrices.call(ST.address, BT.address, idx)).map(s => s.toNumber())
-  const [hNum, hDen] = (await dx.getPriceInPastAuctionExt.call(type === 'seller' ? ST.address : BT.address, eth.address, idx)).map(s => s.toNumber())
+  const [hNum, hDen] = (await dx.getPriceInPastAuction.call(type === 'seller' ? ST.address : BT.address, eth.address, idx)).map(s => s.toNumber())
 
   // conditionally check sellerBalances and returned/tulipIssued
   if (type === 'seller') {

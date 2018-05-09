@@ -8,6 +8,8 @@ const {
 
 const { getContracts, setupTest } = require('./testFunctions')
 
+const POWL = artifacts.require('TokenOWLProxy')
+
 // Test VARS
 let eth
 let gno
@@ -126,9 +128,7 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
     const totalMgn = await getTotalMGN()
 
     assert.strictEqual(totalMgn, 0, 'initially no MGN tokens')
-    console.log('done')
     const [num, den] = await calculateFeeRatio(seller1)
-    console.log('not done')
     assert.strictEqual(num / den, 0.005, 'feeRatio is 0.5% when total MGN tokens == 0')
   })
 
@@ -259,6 +259,8 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
     // deposit ETHER into DX
     await depositETH(ETHBalance, seller1)
 
+
+    await mgn.updateMinter(dx.address,{from: master})
     // add tokenPair ETH GNO
     await dx.addTokenPair(
       eth.address,
@@ -407,7 +409,7 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
   const calculateFeeInUSD = async (fee, token) => {
     const [ETHUSDPrice, [num, den]] = await Promise.all([
       oracle.getUSDETHPrice.call(),
-      dx.getPriceOfTokenInLastAuctionExt.call(token),
+      dx.getPriceOfTokenInLastAuction.call(token),
     ])
 
     const feeInETH = calculateFee(fee, num.toNumber() / den.toNumber(), false)
@@ -477,9 +479,13 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
     const feeInUSD = await calculateFeeInUSD(fee, eth.address)
 
     const owlAmount = Math.floor(feeInUSD / 2) - 1
+    console.log(await owl.balanceOf(master))
 
+    console.log(await owl.totalSupply())
     await owl.transfer(seller1, owlAmount, { from: master })
-
+    console.log(await owl.balanceOf(seller1))
+    console.log(POWL.address)
+    console.log(owl.address)
     const owlBalance1 = (await owl.balanceOf(seller1)).toNumber()
     assert.strictEqual(owlBalance1, owlAmount, 'account should have OWL balance < feeInUSD / 2')
     assert.isAbove(owlBalance1, 0, 'account should have OWL balance > 0')

@@ -1,4 +1,5 @@
 /* eslint no-console:0 */
+
 module.exports = (web3) => {
   const getTime = (blockNumber = 'latest') => web3.eth.getBlock(blockNumber).timestamp
 

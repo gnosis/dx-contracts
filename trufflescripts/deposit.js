@@ -35,7 +35,7 @@ module.exports = async () => {
   let { ETH, GNO } = await getTokenDeposits(account)
   console.log(`Deposit was:\t${ETH}\tETH,\t${GNO}\tGNO`)
 
-  const tokensToDeposit = { ETH: argv.eth, GNO: argv.gno, TUL: argv.tul, OWL: argv.owl }
+  const tokensToDeposit = { ETH: argv.eth, GNO: argv.gno, FRT: argv.frt, OWL: argv.owl }
 
   await depositToDX(account, tokensToDeposit);
 

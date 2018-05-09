@@ -3,23 +3,29 @@
 const DutchExchange = artifacts.require('DutchExchange')
 const InternalTests = artifacts.require('InternalTests')
 const proxy = artifacts.require('Proxy')
+const TokenMGN = artifacts.require('TokenMGN')
+const Math = artifacts.require('Math')
+
+module.exports = function deploy(deployer, network) {
+  if (network == 'kovan') return
+  if (network == 'rinkeby') return
+  if (network == 'mainnet') return
 
 
-module.exports = function deploy(deployer, networks, accounts) {
   deployer
     .then(() => proxy.deployed())
     .then((p) => {
       const dx = DutchExchange.at(p.address)
 
       const initParams = Promise.all([
-        dx.frtToken.call(),
-        dx.owlToken.call(),
-        dx.auctioneer.call(),
-        dx.ethToken.call(),
-        dx.ethUSDOracle.call(),
-        dx.thresholdNewTokenPair.call(),
-        dx.thresholdNewAuction.call(),
-      ])
-      return initParams
-    }).then(initParams => deployer.deploy(InternalTests, ...initParams))
+      dx.frtToken.call(),
+      dx.owlToken.call(),
+      dx.auctioneer.call(),
+      dx.ethToken.call(),
+      dx.ethUSDOracle.call(),
+      dx.thresholdNewTokenPair.call(),
+      dx.thresholdNewAuction.call(),
+    ])
+    return initParams
+  }).then(initParams => deployer.deploy(InternalTests, ...initParams))
 }

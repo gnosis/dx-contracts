@@ -11,7 +11,6 @@
 */
 
 const TokenGNO2 = artifacts.require('TokenGNO')
-
 const { 
   eventWatcher,
   log,
@@ -43,6 +42,7 @@ let gno
 let dx
 let tokenMGN
 let contracts
+let pp
 
 const setupContracts = async () => {
   contracts = await getContracts();
@@ -52,6 +52,7 @@ const setupContracts = async () => {
     EtherToken: eth,
     TokenGNO: gno,
     TokenMGN: tokenMGN,
+    PriceOracleInterface: pp,
   } = contracts)
 }
 
@@ -81,7 +82,6 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
   before('Before Hook', async () => {
     // get contracts
     await setupContracts()
-    eventWatcher(dx, 'LogNumber', {})
     /*
      * SUB TEST 1: Check passed in ACCT has NO balances in DX for token passed in
      */
@@ -90,7 +90,6 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
 
     // set up accounts and tokens[contracts]
     await setupTest(accounts, contracts, startBal)
-
     /*
      * SUB TEST 2: Check passed in ACCT has NO balances in DX for token passed in
      */
@@ -102,12 +101,12 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
      */
     // approve ETH
     await dx.updateApprovalOfToken(eth.address, true, { from: master })
+
     // approve GNO
     await dx.updateApprovalOfToken(gno.address, true, { from: master })
 
     assert.equal(await dx.approvedTokens.call(eth.address), true, 'ETH is approved by DX')
     assert.equal(await dx.approvedTokens.call(gno.address), true, 'GNO is approved by DX')
-
     /*
      * SUB TEST 4: create new token pair and assert Seller1Balance = 0 after depositing more than Balance
      */
@@ -163,7 +162,7 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(` 
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -214,9 +213,9 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
     `) 
     
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
-    const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
+    const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -353,6 +352,8 @@ const c2 = () => contract('DX MGN Flow --> 1 Seller + 2 Buyers', (accounts) => {
      * SUB TEST 3: assert both eth and gno get approved by DX
      */
     // approve ETH
+
+
     await dx.updateApprovalOfToken(eth.address, true, { from: master })
     // approve GNO
     await dx.updateApprovalOfToken(gno.address, true, { from: master })
@@ -422,7 +423,7 @@ const c2 = () => contract('DX MGN Flow --> 1 Seller + 2 Buyers', (accounts) => {
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -461,7 +462,7 @@ const c2 = () => contract('DX MGN Flow --> 1 Seller + 2 Buyers', (accounts) => {
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -498,7 +499,7 @@ const c2 = () => contract('DX MGN Flow --> 1 Seller + 2 Buyers', (accounts) => {
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -544,7 +545,7 @@ const c2 = () => contract('DX MGN Flow --> 1 Seller + 2 Buyers', (accounts) => {
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -710,6 +711,7 @@ const c3 = () => contract('DX MGN Flow --> withdrawUnlockedTokens', (accounts) =
      * SUB TEST 3: assert both eth and gno get approved by DX
      */
     // approve ETH
+
     await dx.updateApprovalOfToken(eth.address, true, { from: master })
     // approve GNO
     await dx.updateApprovalOfToken(gno.address, true, { from: master })
@@ -772,7 +774,7 @@ const c3 = () => contract('DX MGN Flow --> withdrawUnlockedTokens', (accounts) =
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -825,7 +827,7 @@ const c3 = () => contract('DX MGN Flow --> withdrawUnlockedTokens', (accounts) =
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -1027,6 +1029,8 @@ const c4 = () => contract('DX MGN Flow --> change Owner', (accounts) => {
      * SUB TEST 3: assert both eth and gno get approved by DX
      */
     // approve ETH
+
+
     await dx.updateApprovalOfToken(eth.address, true, { from: master })
     // approve GNO
     await dx.updateApprovalOfToken(gno.address, true, { from: master })
@@ -1238,6 +1242,7 @@ const c6 = () => contract('DX MGN Flow --> 1 SellOrder && 1 BuyOrder', (accounts
     /*
      * SUB TEST 3: assert both eth and gno get approved by DX
      */
+
     // approve ETH
     await dx.updateApprovalOfToken(eth.address, true, { from: master })
     // approve GNO
@@ -1347,6 +1352,7 @@ const c7 = () => contract('DX MGN Flow --> ERC20:ERC20 --> 1 S + 1B', (accounts)
      * SUB TEST 3: assert both eth and gno get approved by DX
      */
     // approve ETH
+
     await dx.updateApprovalOfToken(eth.address, true, { from: master })
     // approve GNO
     await dx.updateApprovalOfToken(gno.address, true, { from: master })
@@ -1413,7 +1419,7 @@ const c7 = () => contract('DX MGN Flow --> ERC20:ERC20 --> 1 S + 1B', (accounts)
     // clear recip
     await postBuyOrder(gno, eth, 1, 100.0.toWei(), buyer1)
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)).map(i => i.toNumber())
     log(`
     Buy Volume AFTER = ${((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()).toEth()}
     Left to clear auction = ${((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber() - ((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()) * (den / num)).toEth()}
@@ -1549,6 +1555,7 @@ const c8 = () => contract('DX MGN Flow --> Seller ERC20/ETH', (accounts) => {
     /*
      * SUB TEST 3: assert both eth and gno get approved by DX
      */
+
     // approve ETH
     await dx.updateApprovalOfToken(eth.address, true, { from: master })
     // approve GNO
@@ -1607,7 +1614,7 @@ const c8 = () => contract('DX MGN Flow --> Seller ERC20/ETH', (accounts) => {
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(gno.address, eth.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(gno.address, eth.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPrice.call(gno.address, eth.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}
@@ -1660,7 +1667,7 @@ const c8 = () => contract('DX MGN Flow --> Seller ERC20/ETH', (accounts) => {
     // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
     const [closingNum, closingDen] = (await dx.closingPrices.call(gno.address, eth.address, 1))
     // Should be 4 here as closing price starts @ 2 and we times by 2
-    const [num, den] = (await dx.getCurrentAuctionPriceExt.call(gno.address, eth.address, 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getCurrentAuctionPrice.call(gno.address, eth.address, 1)).map(i => i.toNumber())
     log(`
     Last Closing Prices:
     closeN        = ${closingNum}

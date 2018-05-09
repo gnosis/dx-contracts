@@ -1,0 +1,324 @@
+{
+  "DutchExchange": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0x48a17d481b3d01f35cc473dc6ace63ec96710e2e",
+      "transactionHash": "0xb7c00ba34746848251be275ceda5d8c32c126050d9c42dea2977f8e121db82d7"
+    }
+  },
+  "EtherToken": {
+    "1": {
+      "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+    },
+    "4": {
+      "events": {},
+      "links": {
+        "Math": "0xbada154102c72e7c565a63fdbf880a1cc35a6305"
+      },
+      "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "transactionHash": "0xb60b4c82d6e6763e1f058216f1832a3a702752297d1190e207d0ab0b7b81e256"
+    }
+  },
+  "Math": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0xbada154102c72e7c565a63fdbf880a1cc35a6305",
+      "transactionHash": "0xf59d839a1a71ff963e2408a10f304cb1c4413bdb1a095bdb0dfe0b5352bc3670"
+    }
+  },
+  "Medianizer": {
+    "1": {
+      "address": "0x729D19f657BD0614b4985Cf1D82531c67569197B"
+    },
+    "4": {
+      "events": {
+        "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
+          "anonymous": true,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "sig",
+              "type": "bytes4"
+            },
+            {
+              "indexed": true,
+              "name": "guy",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "name": "foo",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "name": "bar",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "name": "wad",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "fax",
+              "type": "bytes"
+            }
+          ],
+          "name": "LogNote",
+          "type": "event"
+        },
+        "0x1abebea81bfa2637f28358c371278fb15ede7ea8dd28d2e03b112ff6d936ada4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "authority",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetAuthority",
+          "type": "event"
+        },
+        "0xce241d7ca1f669fee44b6fc00b8eba2df3bb514eed0f6f668f8f89096e81ed94": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetOwner",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xa04e46d838e64f4b6779b24ee555f816a3be8ff2",
+      "transactionHash": "0xbf268f02df1ebf23d5709dabc998c97a1e85a7ec6fc29d8b623f1de8a5de504f"
+    }
+  },
+  "Migrations": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0xe4e5c326f2acbdc2ac136ff9c07028e244a82217",
+      "transactionHash": "0x1ad249f496452d520041da2506e83216a6829a63cfed28b7ee1edcc684abf69f"
+    }
+  },
+  "OWLAirdrop": {
+    "4": {
+      "events": {},
+      "links": {
+        "Math": "0xbada154102c72e7c565a63fdbf880a1cc35a6305"
+      },
+      "address": "0x48286d127cc6b7987bd410c68d994abe5761979a",
+      "transactionHash": "0x2a0f778928b4e518067130e897c9e1886ac0e04ffc001e3d324fd0f38e0db3d7"
+    }
+  },
+  "PriceFeed": {
+    "4": {
+      "events": {
+        "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
+          "anonymous": true,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "sig",
+              "type": "bytes4"
+            },
+            {
+              "indexed": true,
+              "name": "guy",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "name": "foo",
+              "type": "bytes32"
+            },
+            {
+              "indexed": true,
+              "name": "bar",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "name": "wad",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "fax",
+              "type": "bytes"
+            }
+          ],
+          "name": "LogNote",
+          "type": "event"
+        },
+        "0x1abebea81bfa2637f28358c371278fb15ede7ea8dd28d2e03b112ff6d936ada4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "authority",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetAuthority",
+          "type": "event"
+        },
+        "0xce241d7ca1f669fee44b6fc00b8eba2df3bb514eed0f6f668f8f89096e81ed94": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "name": "LogSetOwner",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x1891eb6b60c995e30d2f10a1a6ccfff6b623b0df",
+      "transactionHash": "0x17b737d71481e6a32aeeff0efd68662084dec237cfa04ebe65c5eac2a5b01987"
+    }
+  },
+  "PriceOracleInterface": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0xc2f7995e7d1d8880ad55ff3a3d2d3e9c9b8be1ff",
+      "transactionHash": "0x333a0fe6060315c0ab372f72b581dcfd62aeeeb0dd135089ca5590bbdd9ae85f"
+    }
+  },
+  "Proxy": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0x6af10f3758912816c57e30cecd59c7695e1db2ee",
+      "transactionHash": "0x9718c01f28f8b716ec1ede216d6f8e8b77b18e0c7a05d396dc5dcb36430d5715"
+    }
+  },
+  "StandardToken": {
+    "4": {
+      "events": {},
+      "links": {
+        "Math": "0xbada154102c72e7c565a63fdbf880a1cc35a6305"
+      }
+    }
+  },
+  "TokenGNO": {
+    "1": {
+      "address": "0x6810e776880C02933D47DB1b9fc05908e5386b96"
+    },
+    "4": {
+      "events": {
+        "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "value",
+              "type": "uint256"
+            }
+          ],
+          "name": "Transfer",
+          "type": "event"
+        },
+        "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "name": "spender",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "value",
+              "type": "uint256"
+            }
+          ],
+          "name": "Approval",
+          "type": "event"
+        }
+      },
+      "links": {
+        "Math": "0xbada154102c72e7c565a63fdbf880a1cc35a6305"
+      },
+      "address": "0xcb0591ba2d74edd4211d5200d5d3b19cf598c548",
+      "transactionHash": "0xa5e0368013635d50702c4d8ec02f4f096b5daa819135093f53d664bf74853ae8"
+    }
+  },
+  "TokenMGN": {
+    "4": {
+      "events": {},
+      "links": {
+        "Math": "0xbada154102c72e7c565a63fdbf880a1cc35a6305"
+      },
+      "address": "0x3170d9056370e5851df3ae023c4e4d58f368c1d2",
+      "transactionHash": "0xe7bbb6cabaad373698e30c7324cba96fa8aca553bb6e876aaf437695a8577c7c"
+    }
+  },
+  "TokenOMG": {
+    "4": {
+      "events": {},
+      "links": {
+        "Math": "0xbada154102c72e7c565a63fdbf880a1cc35a6305"
+      },
+      "address": "0xc57b5b272ccfd0f9e4aa8c321ec22180cbb56054",
+      "transactionHash": "0xc4eb5a4d48b3e7294dc6aeb52c50ef7594c50668641b58b3c1e70eb31ab4352a"
+    }
+  },
+  "TokenOWL": {
+    "4": {
+      "events": {},
+      "links": {
+        "Math": "0xbada154102c72e7c565a63fdbf880a1cc35a6305"
+      },
+      "address": "0x6c7f0a1e298c37b3b81b0b544ac347fe77462206",
+      "transactionHash": "0xc15c617f74e58f970f4cd541473b01cdd201ced5ed094732491acc309ea93d6e"
+    }
+  },
+  "TokenOWLProxy": {
+    "4": {
+      "events": {},
+      "links": {
+        "Math": "0xbada154102c72e7c565a63fdbf880a1cc35a6305"
+      },
+      "address": "0xec3dedb61004f2ab2841eb64859fd8f9cffc87b8",
+      "transactionHash": "0xae2606347718cccc72c3e0ed9cff28b05b9fff6b1f39f2e73d326b2c823560f8"
+    }
+  },
+  "TokenRDN": {
+    "4": {
+      "events": {},
+      "links": {
+        "Math": "0xbada154102c72e7c565a63fdbf880a1cc35a6305"
+      },
+      "address": "0x7e2331beaec0ded82866f4a1388628322c8d5af0",
+      "transactionHash": "0x84d71628189f5d09375ffb7f630f30c257b3f80a02444a9efe368a3765aa1031"
+    }
+  }
+}

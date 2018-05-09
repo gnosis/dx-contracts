@@ -37,8 +37,7 @@ module.exports = async () => {
     const {
       auctionStart,
       latestAuctionIndex,
-      // TODO: remove = [1, 1] workaround for ETH token when dx.priceOracle() changes
-      sellTokenOraclePrice = [1, 1],
+      sellTokenOraclePrice,
       buyTokenOraclePrice,
     } = await getExchangeStatsForTokenPair({ sellToken: eth, buyToken: gno })
 
@@ -78,21 +77,19 @@ module.exports = async () => {
 
     if (price && sellTokenOraclePrice && buyTokenOraclePrice) {
       const [num, den] = price
-      const [sellTokenNum] = sellTokenOraclePrice
-      const [, buyTokenDen] = buyTokenOraclePrice
 
       const amountToClearAuction = Math.floor((sellVolume * num) / den) - buyVolume
       console.log(`\n  currentPrice: 1 ETH = ${getNumDenStr(price)} GNO`)
 
       if (amountToClearAuction > 0) console.log(`  to clear auction buy\t${amountToClearAuction} GNO`)
 
-      timeWhenAuctionClears = Math.ceil((86400 / sellTokenNum / buyTokenDen) + auctionStart)
-      const timeUntilAuctionClears = getTimeStr((now - timeWhenAuctionClears) * 1000)
+      timeWhenAuctionClears = 86400 + auctionStart
 
-      if (now - timeWhenAuctionClears >= 0) {
+      if (auctionStart === 1 || auctionStart > now) {
+        console.log('  auction haven\t started yet')
+      } else if (now < timeWhenAuctionClears) {
+        const timeUntilAuctionClears = getTimeStr((now - timeWhenAuctionClears) * 1000)
         console.log(`  will clear with time in ${timeUntilAuctionClears}`)
-      } else {
-        console.log(`  cleared ${timeWhenAuctionClears} ago`)
       }
     }
 

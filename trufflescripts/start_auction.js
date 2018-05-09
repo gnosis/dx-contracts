@@ -16,7 +16,7 @@ const argv = require('minimist')(process.argv.slice(4), { string: 'a' })
 
 /**
  * truffle exec trufflescripts/start_auction.js
- * add a token pair and sets time to auction start + 1 hour
+ * add a token pair as master account and sets time to auction start + 1 hour
  * @flags:
  * --pair <sellToken,buyToken>                 add token pair, eth, gno by default
  * --fund <sellTokenFunding,buyTokenFunding>   prefund auction, 500, 500 by default
@@ -29,8 +29,7 @@ const argv = require('minimist')(process.argv.slice(4), { string: 'a' })
 const hour = 3600
 
 module.exports = async () => {
-  if ((!argv.seller && !argv.buyer && !argv.a)
-    || ((argv.pair && argv.pair.length < 2) || (argv.fund && argv.fund < 2) || (argv.price && argv.price < 2))) {
+  if ((argv.pair && argv.pair.length < 2) || (argv.fund && argv.fund < 2) || (argv.price && argv.price < 2)) {
     console.warn('No valid token pair, fund or accounts specified')
     return
   }
@@ -45,7 +44,29 @@ module.exports = async () => {
     return
   }
 
-  const [sellTokenFunding, buyTokenFunding] = argv.fund ? argv.fund.split(',') : [500, 500]
+  let { auctionStart, latestAuctionIndex } = await getExchangeStatsForTokenPair({ sellToken, buyToken })
+
+  const fastForward = () => {
+    const now = getTime()
+    const timeUntilStart = auctionStart - now
+
+    // auctionStart is in the future
+    if (timeUntilStart > 0) {
+      console.log('auctionStart is set in the future. Skipping to it + 1 hour')
+      increaseTimeBy(timeUntilStart + hour)
+      console.log(`${sell.toUpperCase()} -> ${buy.toUpperCase()} auction ${latestAuctionIndex} started`)
+    }
+  }
+
+  // TokenPair already added
+  if (latestAuctionIndex > 0) {
+    fastForward()
+    return
+  }
+
+  // if sellVolume of opposite auction (made up from token2Funding)isn't 0,
+  // auctionIndex isn't automatically increased on ClearAuction
+  const [sellTokenFunding, buyTokenFunding] = argv.fund ? argv.fund.split(',') : [500, 0]
 
   if (sellTokenFunding < 0 || buyTokenFunding < 0) {
     console.warn('Funding must be a positive number or 0')
@@ -64,9 +85,11 @@ module.exports = async () => {
   if (argv.a) account = argv.a
   else if (argv.buyer) {
     [, account] = accounts
-  } else {
-    // set Seller as default account
+  } else if (argv.seller) {
     [account] = accounts
+  } else {
+    // set Master as default account
+    account = master
   }
 
   const SELL = sell.toUpperCase()
@@ -99,6 +122,7 @@ module.exports = async () => {
     await depositToDX(account, tokensToDeposit)
   }
 
+  // TODO: fails here - dx.updateExchangeParams is not a function
   const { thresholdNewTokenPair } = await getExchangeParams()
 
   const ETHUSDPrice = (await po.getUSDETHPrice()).toNumber()
@@ -147,19 +171,10 @@ module.exports = async () => {
     await updateExchangeParams({ thresholdNewTokenPair })
   }
 
-  const { auctionStart, latestAuctionIndex } = await getExchangeStatsForTokenPair({ sellToken, buyToken })
+  ({ auctionStart, latestAuctionIndex } = await getExchangeStatsForTokenPair({ sellToken, buyToken }))
 
   if (tx) {
-    console.log(`ETH -> GNO auction ${latestAuctionIndex} started`)
-  } else {
-    const now = getTime()
-    const timeUntilStart = auctionStart - now
-
-    // auctionStart is in the future
-    if (timeUntilStart > 0) {
-      console.log('auctionStart is set in the future. Skipping to it + 1 hour')
-      increaseTimeBy(timeUntilStart + hour)
-      console.log(`ETH -> GNO auction ${latestAuctionIndex} started`)
-    }
+    console.log(`${SELL} -> ${BUY} auction ${latestAuctionIndex} started`)
+    fastForward()
   }
 }
