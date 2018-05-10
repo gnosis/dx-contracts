@@ -97,7 +97,7 @@ const promisedAcct = new Promise((a, r) => web3.eth.getAccounts((e, r) => a(r[0]
 
 module.exports = (async () => {
 
-	if(argv.network == 'rinkeby'){
+	if(argv.network == 'mainnet'){
 	// reading top 100 token
 	data = await fs.readFileSync('./scripts/listOfTOP150TokensByMarketCap.txt', 'utf8', function (err,data) {
 	  if (err) {
@@ -154,7 +154,7 @@ module.exports = (async () => {
 	*/
 	}
 
-	if(argv.network == 'rrinkeby'){
+	if(argv.network == 'rinkeby'){
 	// reading top 100 token
 	const eth =await EtherToken.deployed()
 	const omg =await TokenOMG.deployed()
