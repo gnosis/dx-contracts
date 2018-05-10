@@ -15,7 +15,7 @@
   "author": "Gnosis",
   "license": "GPL-2.0+",
   "dependencies": {
-    "@gnosis.pm/gnosis-core-contracts": "^1.0.3",
+    "@gnosis.pm/pm-contracts": "^1.0.3",
     "@gnosis.pm/owl-token": "^0.3.0",
     "truffle-contract": "^3.0.1",
     "truffle-hdwallet-provider": "^0.0.3",

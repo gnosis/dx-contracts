@@ -261,8 +261,8 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
 
     await mgn.updateMinter(dx.address,{from: master})
-    // add tokenPair ETH GNO
-    /*await dx.addTokenPair(
+    /*// add tokenPair ETH GNO
+    await dx.addTokenPair(
       eth.address,
       gno.address,
       (ETHBalance / 2), // 10 ETH
@@ -394,8 +394,15 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
   const getExtraTokens = async (primaryToken, secondaryToken, auctionIndex) => {
     const extraTokens = (await dx.extraTokens.call(primaryToken, secondaryToken, auctionIndex + 1)).toNumber()
-    log(`\textraTokens == ${extraTokens}`)
 
+    log(`\textraTokens == ${extraTokens}`)
+    return extraTokens
+  }
+  // returns number as BigInt
+  const getExtraTokens2 = async (primaryToken, secondaryToken, auctionIndex) => {
+    const extraTokens = (await dx.extraTokens.call(primaryToken, secondaryToken, auctionIndex + 1))
+
+    log(`\textraTokens == ${extraTokens}`)
     return extraTokens
   }
 
@@ -579,18 +586,16 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
     const auctionIndex = 1
 
-    const extraTokens1 = await getExtraTokens(eth.address, gno.address, auctionIndex)
+    const extraTokens1 = await getExtraTokens2(eth.address, gno.address, auctionIndex)
 
     const amountAfterFee = await settleFee
       .call(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
 
     assert.strictEqual(amountAfterFee, amount - fee, 'amount should be decreased by fee')
-
-    const extraTokens23 = await getExtraTokens(eth.address, gno.address, auctionIndex)
     
     await settleFee(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
-    const extraTokens2 = await getExtraTokens(eth.address, gno.address, auctionIndex)
-    assert.strictEqual(extraTokens1 + fee, extraTokens2, 'extraTokens should be increased by fee')
+    const extraTokens2 = await getExtraTokens2(eth.address, gno.address, auctionIndex)
+    assert.isTrue(extraTokens1.add(fee).eq(extraTokens2), 'extraTokens should be increased by fee')
 
     const owlBalance2 = (await owl.balanceOf(seller1)).toNumber()
     log(`\tburned OWL == ${amountOfOWLBurned}`)
