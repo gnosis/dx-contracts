@@ -8,8 +8,21 @@ function getAddressFromName(code, addresses) {
 	}
 return allAddresses[0].address;
 }
+var fs = require('fs');
 
-
+function readFiles(dirname, onFileContent, onError) {
+  fs.readdir(dirname, function(err, filenames) {
+    if (err) {
+      onError(err);
+      return;
+    }
+    d = []
+    filenames.forEach(function(filename) {
+      d.push(JSON.parse(fs.readFileSync(dirname + filename, 'utf-8'))) 
+    });
+  	onFileContent(d)
+  });
+}
 /**
  * node scritps/approveTokenForDutchX.js
  * to add a new TradingPair ETH:Token to the DutchExchange
@@ -86,7 +99,7 @@ module.exports = (async () => {
 
 	if(argv.network == 'rinkeby'){
 	// reading top 100 token
-	data = await fs.readFileSync('./scripts/listOfValueableTokens.txt', 'utf8', function (err,data) {
+	data = await fs.readFileSync('./scripts/listOfTOP150TokensByMarketCap.txt', 'utf8', function (err,data) {
 	  if (err) {
 	    return console.log(err);
 	  }
@@ -100,6 +113,29 @@ module.exports = (async () => {
 		})
 
 	// getting tokenAddresses from 
+	var aa = {}
+	var fruits = ["Banana", "Orange", "Apple", "Mango"];
+
+	readFiles('./../tokens/tokens/eth/', function( content) {
+		addresses = content
+		console.log(addresses)
+		data = data.map(x => getAddressFromName(x, addresses))
+		tokenAddresses = data.filter(      
+		function(x){ return x.length == 42 }
+		)
+
+		//Adding EtherToken as well
+		tokenAddresses.push('0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2')
+		await Promise.all(tokenAddresses.map((address) => {
+    	
+    	approveToken(address)
+		}))
+		}, function(err) {
+  		throw err;
+	})
+
+/*
+
 	addresses = JSON.parse(fs.readFileSync('./scripts/tokenAddresses.json', 'utf8', function (err,data) {
 	  if (err) {
 	    return console.log(err);
@@ -112,9 +148,10 @@ module.exports = (async () => {
 		function(x){ return x.length == 42 }
 		)
 	await Promise.all(tokenAddresses.map((address) => {
-    	/* eslint array-callback-return:0 */
+    	
     	approveToken(address)
 	}))
+	*/
 	}
 
 	if(argv.network == 'rrinkeby'){
