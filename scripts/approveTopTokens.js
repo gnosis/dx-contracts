@@ -98,7 +98,18 @@ const promisedAcct = new Promise((a, r) => web3.eth.getAccounts((e, r) => a(r[0]
 module.exports = (async () => {
 
 	if(argv.network == 'mainnet'){
-	// reading top 100 token
+	// reading top 150 tokens by address
+	data = await fs.readFileSync('./scripts/listOfTOP150TokenAddresses.txt', 'utf8', function (err,data) {
+	  if (err) {
+	    return console.log(err);
+	  }
+	});
+	tokenAddresses = data.split(',');
+	console.log(tokenAddresses)
+
+	// code to generate the list for the first time.
+	/*
+	// reading top 150 token
 	data = await fs.readFileSync('./scripts/listOfTOP150TokensByMarketCap.txt', 'utf8', function (err,data) {
 	  if (err) {
 	    return console.log(err);
@@ -112,10 +123,8 @@ module.exports = (async () => {
 	  	return str.slice(1,-1) // Remove the brackets
 		})
 
+	console.log(data)	
 	// getting tokenAddresses from 
-	var aa = {}
-	var fruits = ["Banana", "Orange", "Apple", "Mango"];
-
 	readFiles('./../tokens/tokens/eth/', function( content) {
 		addresses = content
 		console.log(addresses)
@@ -126,36 +135,25 @@ module.exports = (async () => {
 
 		//Adding EtherToken as well
 		tokenAddresses.push('0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2')
-		await Promise.all(tokenAddresses.map((address) => {
-    	
-    	approveToken(address)
-		}))
+		console.log(tokenAddresses)
+		fs.writeFile("./scripts/listOfTOP150TokenAddresses.txt", tokenAddresses, function(err) {
+    		if(err) {
+        	return console.log(err);
+    	}
+
+    		console.log("The file was saved!");
+		}); 
 		}, function(err) {
   		throw err;
-	})
+	})*/
 
-/*
-
-	addresses = JSON.parse(fs.readFileSync('./scripts/tokenAddresses.json', 'utf8', function (err,data) {
-	  if (err) {
-	    return console.log(err);
-	  }
-	})) 	
-	data = data.map(x => getAddressFromName(x, addresses))
-
-
-	tokenAddresses = data.filter(      
-		function(x){ return x.length == 42 }
-		)
+	//approving all tokens
 	await Promise.all(tokenAddresses.map((address) => {
-    	
     	approveToken(address)
-	}))
-	*/
+		}))
 	}
 
 	if(argv.network == 'rinkeby'){
-	// reading top 100 token
 	const eth =await EtherToken.deployed()
 	const omg =await TokenOMG.deployed()
 	const rdn =await TokenRDN.deployed()
