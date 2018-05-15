@@ -23,6 +23,7 @@
     "web3": "^0.20.2"
   },
   "devDependencies": {
+    "truffle": "4.1.5",
     "@digix/tempo": "^0.2.0",
     "bignumber.js": "^5.0.0",
     "decimal.js": "^7.2.3",
