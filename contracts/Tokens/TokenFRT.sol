@@ -3,7 +3,7 @@ import "@gnosis.pm/gnosis-core-contracts/contracts/Tokens/StandardToken.sol";
 
 
 /// @title Standard token contract with overflow protection
-contract TokenMGN is StandardToken {
+contract TokenFRT is StandardToken {
     string public constant symbol = "MGN";
     string public constant name = "Magnolia Token";
     uint8 public constant decimals = 18;
@@ -30,7 +30,7 @@ contract TokenMGN is StandardToken {
      *  Public functions
      */
 
-    function TokenMGN(
+    function TokenFRT(
         address _owner
     )
         public

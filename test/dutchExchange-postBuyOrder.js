@@ -33,7 +33,7 @@ const setupContracts = async () => {
     DutchExchange: dx,
     EtherToken: eth,
     TokenGNO: gno,
-    TokenMGN: mgn,
+    TokenFRT: mgn,
   } = contracts)
 }
 

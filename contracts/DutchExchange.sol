@@ -1,6 +1,6 @@
 pragma solidity ^0.4.19;
 
-import { TokenMGN as TokenFRT } from "./Tokens/TokenMGN.sol";
+import "./Tokens/TokenFRT.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "./Oracle/PriceOracleInterface.sol";  
 
@@ -661,7 +661,7 @@ contract DutchExchange {
                 // Neither token is ethToken, so we use getHhistoricalPriceOracle()
                 uint pastNum;
                 uint pastDen;
-                (pastNum, pastDen) = getPriceInPastAuction(primaryToken, ethTokenMem, auctionIndex);
+                (pastNum, pastDen) = getPriceInPastAuction(primaryToken, ethTokenMem, auctionIndex - 1);
                 // 10^30 * 10^35 = 10^65
                 frtsIssued = mul(bal, pastNum) / pastDen;
             }
@@ -954,7 +954,13 @@ contract DutchExchange {
         } else {
             // C2
             // R2.1
-            require(auctionIndex > 0);
+            require(auctionIndex >= 0);
+
+
+            // C3
+            // R3.1
+            require(auctionIndex < getAuctionIndex(token1, token2));
+            // auction still running
 
             uint i = 0;
             bool correctPair = false;
@@ -962,7 +968,6 @@ contract DutchExchange {
             fraction memory closingPriceToken2;
 
             while (!correctPair) {
-                i++;
                 closingPriceToken2 = closingPrices[token2][token1][auctionIndex - i];
                 closingPriceToken1 = closingPrices[token1][token2][auctionIndex - i];
                 
@@ -971,6 +976,7 @@ contract DutchExchange {
                 {
                     correctPair = true;
                 }
+                i++;
             }
 
             // At this point at least one closing price is strictly positive
@@ -1003,7 +1009,7 @@ contract DutchExchange {
     {
         uint latestAuctionIndex = getAuctionIndex(token, ethToken);
         // getPriceInPastAuction < 10^30
-        (num, den) = getPriceInPastAuction(token, ethToken, latestAuctionIndex);
+        (num, den) = getPriceInPastAuction(token, ethToken, latestAuctionIndex - 1);
     }
 
     // > getCurrentAuctionPrice()
@@ -1028,7 +1034,7 @@ contract DutchExchange {
             // Auction is running
             uint pastNum;
             uint pastDen;
-            (pastNum, pastDen) = getPriceInPastAuction(sellToken, buyToken, auctionIndex);
+            (pastNum, pastDen) = getPriceInPastAuction(sellToken, buyToken, auctionIndex - 1);
 
             // If we're calling the function into an unstarted auction,
             // it will return the starting price of that auction
@@ -1424,6 +1430,25 @@ contract DutchExchange {
         return buyersBalances;
     }
 
+    //@dev for quick overview of approved Tokens
+    //@param addressesToCheck are the ERC-20 token addresses to be checked whether they are approved
+    function getApprovedAddressesOfList(
+        address[] addressToCheck
+    )
+        external
+        view
+        returns (bool[])
+    {
+        uint length = addressToCheck.length;
+
+        bool[] memory isApproved = new bool[](length);
+
+        for (uint i = 0; i < length; i++) {
+            isApproved[i] = approvedTokens[addressToCheck[i]];
+        }
+
+        return isApproved;
+    }
 
     //@dev for multiple withdraws
     //@param auctionSellTokens are the sellTokens defining an auctionPair

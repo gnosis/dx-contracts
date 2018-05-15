@@ -42,7 +42,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     ({
       EtherToken: eth,
       TokenGNO: gno,
-      TokenMGN: mgn,
+      TokenFRT: mgn,
       DutchExchange: dx,
     } = contracts)
 

@@ -78,7 +78,7 @@ const setupContracts = async () => {
     DutchExchange: dx,
     EtherToken: eth,
     TokenGNO: gno,
-    TokenMGN: tokenMGN,
+    TokenFRT: tokenMGN,
     PriceOracleInterface: oracle,
   } = contracts)
 }
@@ -166,7 +166,7 @@ const c2 = () => contract('DutchExchange - Flow 6', (accounts) => {
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenMGN: tokenMGN,
+      TokenFRT: tokenMGN,
       PriceOracleInterface: oracle,
     } = contracts)
 
@@ -266,7 +266,7 @@ const c3 = () => contract('DutchExchange - Flow 4', (accounts) => {
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenMGN: tokenMGN,
+      TokenFRT: tokenMGN,
       PriceOracleInterface: oracle,
     } = contracts)
 
@@ -370,7 +370,7 @@ const c4 = () => contract('DutchExchange - Flow 1', (accounts) => {
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenMGN: tokenMGN,
+      TokenFRT: tokenMGN,
       PriceOracleInterface: oracle,
     } = contracts)
 
@@ -464,7 +464,7 @@ const c5 = () => contract('DutchExchange - Flow 9', (accounts) => {
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenMGN: tokenMGN,
+      TokenFRT: tokenMGN,
       PriceOracleInterface: oracle,
     } = contracts)
 
@@ -546,7 +546,7 @@ const c6 = () => contract('DutchExchange - Flow 10', (accounts) => {
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenMGN: tokenMGN,
+      TokenFRT: tokenMGN,
       PriceOracleInterface: oracle,
     } = contracts)
 
@@ -656,7 +656,7 @@ const c7 = () => contract('DutchExchange - Flow 7', (accounts) => {
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenMGN: tokenMGN,
+      TokenFRT: tokenMGN,
       PriceOracleInterface: oracle,
     } = contracts)
 
@@ -758,7 +758,7 @@ const c8 = () => contract('DutchExchange - Flow 7 - ERC20vsERC20 trading -', (ac
       DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenMGN: tokenMGN,
+      TokenFRT: tokenMGN,
       PriceOracleInterface: oracle,
     } = contracts)
 
