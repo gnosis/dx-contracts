@@ -17,7 +17,7 @@ module.exports = {
                 },
       network_id: '1',
       gas: 4612388,
-      gasPrice: 6000000000,
+      gasPrice: 10000000000,
     },
     kovan: {
       provider: function() {
