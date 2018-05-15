@@ -163,6 +163,5 @@ module.exports = (async () => {
     	approveToken(address)
 	}))
 	}
-
 })()
 
