@@ -158,7 +158,7 @@ module.exports = function deploy(deployer, network, accounts) {
       .then(() => TokenMGN.deployed())
       .then(T => T.updateMinter(Proxy.address))
       .then(() => getTime)
-    .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, TokenGNO.address, (t + 6 * 60 * 60)))
+    .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, TokenGNO.address, (t + 2 * 60 * 60)))
 
     // At some later point we would change the ownerShip of the MagnoliaTokens
     // .then(() => TokenMGN.deployed())
