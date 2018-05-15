@@ -753,6 +753,8 @@ contract DutchExchange {
             
             uint usersExtraTokens = extraTokens[primaryToken][secondaryToken][auctionIndex + 1];
             extraTokens[primaryToken][secondaryToken][auctionIndex + 1] = add(usersExtraTokens, fee);
+
+            Fee(primaryToken, secondaryToken, msg.sender, auctionIndex, fee);
         }
         
         amountAfterFee = sub(amount, fee);
@@ -1573,5 +1575,13 @@ contract DutchExchange {
         address indexed buyToken,
         uint indexed auctionIndex,
         uint auctionStart
+    );
+
+    event Fee(
+        address indexed primaryToken,
+        address indexed secondarToken,
+        address indexed user,
+        uint auctionIndex,
+        uint fee
     );
 }
