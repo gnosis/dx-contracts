@@ -36,7 +36,7 @@ const contractNames = [
   'EtherToken',
   'TokenGNO',
   'TokenOWLProxy',
-  'TokenMGN',
+  'TokenFRT',
   'PriceOracleInterface',
   'PriceFeed',
   'Medianizer',
@@ -349,7 +349,7 @@ const claimSellerFunds = async (ST, BT, user, aucIdx, acct) => {
    */
 const assertClaimingFundsCreatesMGNs = async (ST, BT, acc, type) => {
   const {
-    DutchExchange: dx, TokenMGN: tokenMGN,
+    DutchExchange: dx, TokenFRT: tokenMGN,
   } = await getContracts()
 
   if (!ST || !BT) throw new Error('No tokens passed in')
@@ -389,7 +389,7 @@ const assertClaimingFundsCreatesMGNs = async (ST, BT, acc, type) => {
    */
 const checkUserReceivesTulipTokens = async (ST, BT, user, idx, lastClosingPrice) => {
   const {
-    DutchExchange: dx, EtherToken: eth, TokenGNO: gno, TokenMGN: tokenMGN,
+    DutchExchange: dx, EtherToken: eth, TokenGNO: gno, TokenFRT: tokenMGN,
   } = await getContracts()
   ST = ST || eth; BT = BT || gno
   const aucIdx = idx || await getAuctionIndex(ST, BT)
@@ -532,18 +532,18 @@ const assertReturnedPlusMGNs = async (ST, BT, acc, type, idx = 1, eth) => {
  * @param {address} user => address to unlock Tokens for
  */
 const unlockMGNTokens = async (user, ST, BT) => {
-  const { TokenMGN: tokenMGN } = await getContracts()
+  const { TokenFRT: tokenMGN } = await getContracts()
   // cache auction index for verification of auciton close
   const aucIdx = await getAuctionIndex(ST, BT)
 
-  // cache locked balances Mapping in TokenMGN contract
-  // filled automatically after auction closes and TokenMGN.mintTokens is called
+  // cache locked balances Mapping in TokenFRT contract
+  // filled automatically after auction closes and TokenFRT.mintTokens is called
   const lockedBalMap = (await tokenMGN.lockedTokenBalances.call(user))
   log(`
   TOKENTUL.lockedTokenBalances[user] === ${lockedBalMap.toNumber().toEth()}
   `)
 
-  // cache the locked Amount of user MGNs from TokenMGN MAP
+  // cache the locked Amount of user MGNs from TokenFRT MAP
   // this map is ONLY calculated and filled AFTER auction clears
   const lockedUserMGNs = (await tokenMGN.lockedTokenBalances.call(user)).toNumber()
   /*

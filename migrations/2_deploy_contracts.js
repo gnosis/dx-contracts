@@ -13,12 +13,12 @@ const TokenOMG = artifacts.require('TokenOMG')
 const TokenOWL = artifacts.require('TokenOWL')
 const TokenOWLProxy = artifacts.require('TokenOWLProxy')
 
-const TokenMGN = artifacts.require('TokenMGN')
+const TokenMGN = artifacts.require('TokenFRT')
 const Medianizer = artifacts.require('Medianizer')
 const Proxy = artifacts.require('Proxy')
 const OWLAirdrop = artifacts.require('OWLAirdrop')
 // ETH price as reported by MakerDAO with 18 decimal places
-const currentETHPrice = (10000 * (10 ** 18))
+const currentETHPrice = (700 * (10 ** 18))
 
 const getTime = new Promise((resolve, reject) => {
           web3.eth.getBlock('pending', (err, block) => {
@@ -55,8 +55,8 @@ module.exports = function deploy(deployer, network, accounts) {
         accounts[0],                           // @param _owner will be the admin of the contract
         '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', // @param _ETH               - address of ETH ERC-20 token
         PriceOracleInterface.address,        // @param _priceOracleAddress - address of priceOracle
-        10000000000000000000000,            // @param _thresholdNewTokenPair: 10,000 dollar
-        1000000000000000000000,            // @param _thresholdNewAuction:     1,000 dollar
+        10000000000000000000,            // @param _thresholdNewTokenPair: 500 dollar
+        1000000000000000000,            // @param _thresholdNewAuction:     500 dollar
       ))
       .then(() => TokenMGN.deployed())
       .then(T => T.updateMinter(Proxy.address))
@@ -120,7 +120,7 @@ module.exports = function deploy(deployer, network, accounts) {
       .then(() => deployer.link(Math, [TokenRDN, TokenOMG]))
 
       // Deployment of Tokens
-      .then(() => deployer.deploy(TokenGNO, 100000 * (10 ** 18)))
+      //.then(() => deployer.deploy(TokenGNO, 100000 * (10 ** 18)))
       .then(() => deployer.deploy(TokenRDN, 100000 * (10 ** 18)))
       .then(() => deployer.deploy(TokenOMG, 100000 * (10 ** 18)))
       .then(() => deployer.deploy(TokenMGN, accounts[0]))
@@ -149,13 +149,13 @@ module.exports = function deploy(deployer, network, accounts) {
         accounts[0],                           // @param _owner will be the admin of the contract
         '0xc778417e063141139fce010982780140aa0cd5ab',                   // @param _ETH               - address of ETH ERC-20 token
         PriceOracleInterface.address,        // @param _priceOracleAddress - address of priceOracle
-        10000000000000000000000,            // @param _thresholdNewTokenPair: 10,000 dollar
-        1000000000000000000000,            // @param _thresholdNewAuction:     1,000 dollar
+        10000000000000000000,            // @param _thresholdNewTokenPair: 10 dollar
+        1000000000000000000,            // @param _thresholdNewAuction:     1 dollar
       ))
       .then(() => TokenMGN.deployed())
       .then(T => T.updateMinter(Proxy.address))
       .then(() => getTime)
-    .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, TokenGNO.address, (t + 30 * 60 * 7)))
+    .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, TokenGNO.address, (t + 6 * 60 * 60)))
 
     // At some later point we would change the ownerShip of the MagnoliaTokens
     // .then(() => TokenMGN.deployed())

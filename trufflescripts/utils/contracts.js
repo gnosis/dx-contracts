@@ -3,7 +3,7 @@
 module.exports = (artifacts) => {
   const TokenETH = artifacts.require('./EtherToken')
   const TokenGNO = artifacts.require('./TokenGNO')
-  const TokenMGN = artifacts.require('./TokenMGN')
+  const TokenFRT = artifacts.require('./TokenFRT')
   const TokenOMG = artifacts.require('./TokenOMG')
   const TokenRDN = artifacts.require('./TokenRDN')
 
@@ -51,7 +51,7 @@ module.exports = (artifacts) => {
   const shortMap = {
     TokenETH: 'eth',
     TokenGNO: 'gno',
-    TokenMGN: 'frt',
+    TokenFRT: 'frt',
     TokenOMG: 'omg',
     TokenRDN: 'rdn',
     TokenOWL: 'owl',

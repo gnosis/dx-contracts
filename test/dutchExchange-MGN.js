@@ -51,7 +51,7 @@ const setupContracts = async () => {
     DutchExchange: dx,
     EtherToken: eth,
     TokenGNO: gno,
-    TokenMGN: tokenMGN,
+    TokenFRT: tokenMGN,
     PriceOracleInterface: pp,
   } = contracts)
 }

@@ -47,7 +47,7 @@ contract('DutchExchange - addTokenPair', (accounts) => {
     ({
       EtherToken: eth,
       TokenGNO: gno,
-      TokenMGN: mgn,
+      TokenFRT: mgn,
       DutchExchange: dx,
       PriceOracleInterface: oracle,
     } = contracts)
