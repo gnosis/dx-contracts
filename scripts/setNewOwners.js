@@ -43,9 +43,15 @@ const ProxyJson = JSON.parse(fs.readFileSync('./build/contracts/Proxy.json'))
 const Proxy = TruffleContract(ProxyJson)
 const DutchExchangeJson = JSON.parse(fs.readFileSync('./build/contracts/DutchExchange.json'))
 const DutchExchange = TruffleContract(DutchExchangeJson)
+const PriceOracleInterfaceJson = JSON.parse(fs.readFileSync('./build/contracts/PriceOracleInterface.json'))
+const PriceOracleInterface = TruffleContract(PriceOracleInterfaceJson)
+const TokenFRTJson = JSON.parse(fs.readFileSync('./build/contracts/TokenFRT.json'))
+const TokenFRT = TruffleContract(TokenFRTJson)
 
 DutchExchange.setProvider(web3.currentProvider)
 Proxy.setProvider(web3.currentProvider)
+PriceOracleInterface.setProvider(web3.currentProvider)
+TokenFRT.setProvider(web3.currentProvider)
 
 module.exports = (async () => {
   const promisedAcct = new Promise((a, r) => web3.eth.getAccounts((e, r) => a(r[0])))
@@ -55,16 +61,19 @@ module.exports = (async () => {
   try {
     const acct = await promisedAcct
     const proxy = await Proxy.deployed()
+    const frt = await TokenFRT.deployed()
     const dx = DutchExchange.at(proxy.address)
+    const priceOracleInterface = await PriceOracleInterface.deployed()
+    const 
     if(42 != argv.newOwner.length){
-      throw("No token address specified")
+      throw("No correct new owner specified")
     }
-    await dx.updateApprovalOfToken(argv.tokenToApprove, true,{from: acct})
-    
+    await dx.updateAuctioneer(argv.newOwner, {from: acct})
+    await priceOracleInterface.updateCurator(argv.newOwner, {from: acct})
+    await frt.updateOwner(proxy.address, {from: acct})
     console.log(`
     ===========================
     Successfully updated the owner to  => [${argv.newOwner}] 
-    New approval status of Token  => [${await dx.approvedTokens.call(argv.tokenToApprove)}] 
     `)
     return
   } catch (error) {
