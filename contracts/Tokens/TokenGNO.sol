@@ -12,7 +12,7 @@ contract TokenGNO is StandardToken {
     )
     	public 
     {
-        totalTokens = add(totalTokens, amount);
+        totalTokens = amount;
     	balances[msg.sender] = amount;
     }
 }
