@@ -477,7 +477,7 @@ const assertReturnedPlusMGNs = async (ST, BT, acc, type, idx = 1, eth) => {
 
   // calc closingPrices for both ETH/ERC20 and nonETH trades
   const [num, den] = (await dx.closingPrices.call(ST.address, BT.address, idx)).map(s => s.toNumber())
-  const [hNum, hDen] = (await dx.getPriceInPastAuction.call(type === 'seller' ? ST.address : BT.address, eth.address, idx)).map(s => s.toNumber())
+  const [hNum, hDen] = (await dx.getPriceInPastAuction.call(type === 'seller' ? ST.address : BT.address, eth.address, idx - 1)).map(s => s.toNumber())
 
   // conditionally check sellerBalances and returned/tulipIssued
   if (type === 'seller') {

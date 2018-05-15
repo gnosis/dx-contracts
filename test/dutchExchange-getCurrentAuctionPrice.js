@@ -76,7 +76,7 @@ contract('DutchExchange - getCurrentAuctionPrice', (accounts) => {
 
     const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
     const currenttime = timestamp()
-    const [numPrevious, denPrevious] = (await dx.getPriceInPastAuction.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
+    const [numPrevious, denPrevious] = (await dx.getPriceInPastAuction.call(eth.address, gno.address, auctionIndex - 1)).map(i => i.toNumber())
     const timeElapsed = currenttime - auctionStart 
     logger('numPrevious', numPrevious)
     logger('timeE', timeElapsed)

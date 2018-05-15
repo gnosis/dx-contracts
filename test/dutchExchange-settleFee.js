@@ -97,7 +97,7 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
       // DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenMGN: mgn,
+      TokenFRT: mgn,
       // using internal contract with settleFeePub calling dx.settleFee internally
       InternalTests: dx,
     } = contracts)
@@ -239,7 +239,7 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
       // DutchExchange: dx,
       EtherToken: eth,
       TokenGNO: gno,
-      TokenMGN: mgn,
+      TokenFRT: mgn,
       TokenOWL: owl,
       // using internal contract with settleFeePub calling dx.settleFee internally
       InternalTests: dx,
@@ -487,8 +487,6 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
 
     const owlAmount = Math.floor(feeInUSD / 2) - 1
     await owl.transfer(seller1, owlAmount, { from: master })
-    console.log(POWL.address)
-    console.log(owl.address)
     const owlBalance1 = (await owl.balanceOf(seller1)).toNumber()
     assert.strictEqual(owlBalance1, owlAmount, 'account should have OWL balance < feeInUSD / 2 and OWL balance == approved Tokens')
     assert.isAbove(owlBalance1, 0, 'account should have OWL balance > 0')
