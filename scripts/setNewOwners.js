@@ -64,7 +64,7 @@ module.exports = (async () => {
     const frt = await TokenFRT.deployed()
     const dx = DutchExchange.at(proxy.address)
     const priceOracleInterface = await PriceOracleInterface.deployed()
-    const 
+    
     if(42 != argv.newOwner.length){
       throw("No correct new owner specified")
     }
