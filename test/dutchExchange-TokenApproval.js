@@ -71,7 +71,7 @@ contract('DutchExchange updating token aprroval', (accounts) => {
 
     logger(`Not owner tries to change ${symbol} approval to ${!approved1}`)
 
-    await assertRejects(dx.updateApprovalOfToken(token.address, !approved1, { from: seller1 }), `not owner can't set ${symbol} token approval`)
+    await assertRejects(dx.updateApprovalOfToken([token.address], !approved1, { from: seller1 }), `not owner can't set ${symbol} token approval`)
 
     const approved2 = await getAndPrintApproval(token, symbol)
 
@@ -88,7 +88,7 @@ contract('DutchExchange updating token aprroval', (accounts) => {
 
     logger(`Owner changes ${symbol} approval to ${!approved1}`)
 
-    await dx.updateApprovalOfToken(token.address, !approved1, { from: master })
+    await dx.updateApprovalOfToken([token.address], !approved1, { from: master })
 
     const approved2 = await getAndPrintApproval(token, symbol)
 
@@ -105,7 +105,7 @@ contract('DutchExchange updating token aprroval', (accounts) => {
 
     logger(`Not owner tries to change ${symbol} approval to ${!approved1}`)
 
-    await assertRejects(dx.updateApprovalOfToken(token.address, !approved1, { from: seller1 }), `not owner can't remove ${symbol} token approval`)
+    await assertRejects(dx.updateApprovalOfToken([token.address], !approved1, { from: seller1 }), `not owner can't remove ${symbol} token approval`)
 
     const approved2 = await getAndPrintApproval(token, symbol)
 
@@ -122,7 +122,7 @@ contract('DutchExchange updating token aprroval', (accounts) => {
 
     logger(`Owner changes ${symbol} approval to ${!approved1}`)
 
-    await dx.updateApprovalOfToken(token.address, !approved1, { from: master })
+    await dx.updateApprovalOfToken([token.address], !approved1, { from: master })
 
     const approved2 = await getAndPrintApproval(token, symbol)
 

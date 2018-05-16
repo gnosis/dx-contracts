@@ -180,14 +180,16 @@ contract DutchExchange {
     }
 
     function updateApprovalOfToken(
-        address token,
+        address[] token,
         bool approved
     )
         public
         onlyAuctioneer
      {  
-        approvedTokens[token] = approved;
-        Approval(token, approved);
+        for(uint i = 0; i < token.length; i++) {
+            approvedTokens[token[i]] = approved;
+            Approval(token[i], approved);
+        }
      }
 
      function startMasterCopyCountdown (

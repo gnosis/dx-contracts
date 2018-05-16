@@ -8,22 +8,18 @@ const Medianizer = artifacts.require('Medianizer')
 const Proxy = artifacts.require('Proxy')
 const OWLAirdrop = artifacts.require('OWLAirdrop')
 // ETH price as reported by MakerDAO with 18 decimal places
-const currentETHPrice = (1100 * (10 ** 18))
 
 module.exports = function deploy(deployer, network, accounts) {
 
-     if (network == 'mainnet'){
-	     deployer
-	    .then(() => TokenOWLProxy.deployed())
-	    .then(T => TokenOWL.at(T.address).setMinter(OWLAirdrop.address))
-     }else {
+    if (network == 'kovan') return
+ 	if (network == 'rinkeby') return
+  	if (network == 'mainnet') return
+	
 	    //Generating enough OWL for testing
 	    deployer
 	    .then((t) => TokenGNO.deployed())
 	    .then(T => T.approve(OWLAirdrop.address, 50000 * (10 ** 18)))
-	    .then(() => TokenOWLProxy.deployed())
-	    .then(T => TokenOWL.at(T.address).setMinter(OWLAirdrop.address))
 	    .then(() => OWLAirdrop.deployed())
 	    .then(A => A.lockGNO(50000 * (10 ** 18)))
-	}
+	
 }

@@ -129,4 +129,5 @@ module.exports = (async () => {
   } catch (error) {
     throw new Error(error)
   }
+  process.exit(0)
 })()

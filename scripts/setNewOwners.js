@@ -3,7 +3,7 @@
  * to set new owners after the deployement script run
  * @flags:
  * --network                    if not specified, testrpc will be used. Otherwise rinkeby             
- * --newOnwer            address of the new owner
+ * --newOwner            address of the new owner
  */
 
 const Web3 = require('web3')
@@ -78,4 +78,5 @@ module.exports = (async () => {
   } catch (error) {
     throw new Error(error)
   }
+  process.exit(0)
 })()

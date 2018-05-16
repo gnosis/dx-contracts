@@ -100,10 +100,10 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
      * SUB TEST 3: assert both eth and gno get approved by DX
      */
     // approve ETH
-    await dx.updateApprovalOfToken(eth.address, true, { from: master })
+    await dx.updateApprovalOfToken([eth.address], true, { from: master })
 
     // approve GNO
-    await dx.updateApprovalOfToken(gno.address, true, { from: master })
+    await dx.updateApprovalOfToken([gno.address], true, { from: master })
 
     assert.equal(await dx.approvedTokens.call(eth.address), true, 'ETH is approved by DX')
     assert.equal(await dx.approvedTokens.call(gno.address), true, 'GNO is approved by DX')
@@ -354,9 +354,9 @@ const c2 = () => contract('DX MGN Flow --> 1 Seller + 2 Buyers', (accounts) => {
     // approve ETH
 
 
-    await dx.updateApprovalOfToken(eth.address, true, { from: master })
+    await dx.updateApprovalOfToken([eth.address], true, { from: master })
     // approve GNO
-    await dx.updateApprovalOfToken(gno.address, true, { from: master })
+    await dx.updateApprovalOfToken([gno.address], true, { from: master })
 
     assert.equal(await dx.approvedTokens.call(eth.address), true, 'ETH is approved by DX')
     assert.equal(await dx.approvedTokens.call(gno.address), true, 'GNO is approved by DX')
@@ -712,9 +712,9 @@ const c3 = () => contract('DX MGN Flow --> withdrawUnlockedTokens', (accounts) =
      */
     // approve ETH
 
-    await dx.updateApprovalOfToken(eth.address, true, { from: master })
+    await dx.updateApprovalOfToken([eth.address], true, { from: master })
     // approve GNO
-    await dx.updateApprovalOfToken(gno.address, true, { from: master })
+    await dx.updateApprovalOfToken([gno.address], true, { from: master })
 
     assert.equal(await dx.approvedTokens.call(eth.address), true, 'ETH is approved by DX')
     assert.equal(await dx.approvedTokens.call(gno.address), true, 'GNO is approved by DX')
@@ -1031,9 +1031,9 @@ const c4 = () => contract('DX MGN Flow --> change Owner', (accounts) => {
     // approve ETH
 
 
-    await dx.updateApprovalOfToken(eth.address, true, { from: master })
+    await dx.updateApprovalOfToken([eth.address], true, { from: master })
     // approve GNO
-    await dx.updateApprovalOfToken(gno.address, true, { from: master })
+    await dx.updateApprovalOfToken([gno.address], true, { from: master })
 
     assert.equal(await dx.approvedTokens.call(eth.address), true, 'ETH is approved by DX')
     assert.equal(await dx.approvedTokens.call(gno.address), true, 'GNO is approved by DX')
@@ -1120,9 +1120,9 @@ const c5 = () => contract('DX MGN Flow --> 2 Sellers || MGN issuance', (accounts
      * SUB TEST 3: assert both eth and gno get approved by DX
      */
     // approve ETH
-    await dx.updateApprovalOfToken(eth.address, true, { from: master })
+    await dx.updateApprovalOfToken([eth.address], true, { from: master })
     // approve GNO
-    await dx.updateApprovalOfToken(gno.address, true, { from: master })
+    await dx.updateApprovalOfToken([gno.address], true, { from: master })
 
     assert.equal(await dx.approvedTokens.call(eth.address), true, 'ETH is approved by DX')
     assert.equal(await dx.approvedTokens.call(gno.address), true, 'GNO is approved by DX')
@@ -1244,9 +1244,9 @@ const c6 = () => contract('DX MGN Flow --> 1 SellOrder && 1 BuyOrder', (accounts
      */
 
     // approve ETH
-    await dx.updateApprovalOfToken(eth.address, true, { from: master })
+    await dx.updateApprovalOfToken([eth.address], true, { from: master })
     // approve GNO
-    await dx.updateApprovalOfToken(gno.address, true, { from: master })
+    await dx.updateApprovalOfToken([gno.address], true, { from: master })
 
     assert.equal(await dx.approvedTokens.call(eth.address), true, 'ETH is approved by DX')
     assert.equal(await dx.approvedTokens.call(gno.address), true, 'GNO is approved by DX')
@@ -1353,11 +1353,11 @@ const c7 = () => contract('DX MGN Flow --> ERC20:ERC20 --> 1 S + 1B', (accounts)
      */
     // approve ETH
 
-    await dx.updateApprovalOfToken(eth.address, true, { from: master })
+    await dx.updateApprovalOfToken([eth.address], true, { from: master })
     // approve GNO
-    await dx.updateApprovalOfToken(gno.address, true, { from: master })
+    await dx.updateApprovalOfToken([gno.address], true, { from: master })
     // approve GNO2
-    await dx.updateApprovalOfToken(gno2.address, true, { from: master })
+    await dx.updateApprovalOfToken([gno2.address], true, { from: master })
 
     assert.equal(await dx.approvedTokens.call(eth.address), true, 'ETH is approved by DX')
     assert.equal(await dx.approvedTokens.call(gno.address), true, 'GNO is approved by DX')
@@ -1557,9 +1557,9 @@ const c8 = () => contract('DX MGN Flow --> Seller ERC20/ETH', (accounts) => {
      */
 
     // approve ETH
-    await dx.updateApprovalOfToken(eth.address, true, { from: master })
+    await dx.updateApprovalOfToken([eth.address], true, { from: master })
     // approve GNO
-    await dx.updateApprovalOfToken(gno.address, true, { from: master })
+    await dx.updateApprovalOfToken([gno.address], true, { from: master })
 
     assert.equal(await dx.approvedTokens.call(eth.address), true, 'ETH is approved by DX')
     assert.equal(await dx.approvedTokens.call(gno.address), true, 'GNO is approved by DX')

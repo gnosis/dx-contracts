@@ -74,21 +74,21 @@ TokenRDN.setProvider(web3.currentProvider)
 DutchExchange.setProvider(web3.currentProvider)
 Proxy.setProvider(web3.currentProvider)
 
-const approveToken = async (tokenAddress) => {
+const approveToken = async (tokenAddresses) => {
   let dx
   try {
     const acct = await promisedAcct
     const proxy = await Proxy.deployed()
     const dx = DutchExchange.at(proxy.address)
-    await dx.updateApprovalOfToken(tokenAddress, true,{from: acct})
+    await dx.updateApprovalOfToken(tokenAddresses, true,{from: acct})
     console.log(`
     ===========================
-    Successfully approved the Token  => [${tokenAddress}] 
-    New approval status of Token  => [${await dx.approvedTokens.call(tokenAddress)}] 
+    Successfully approved the Token  => [${tokenAddresses}] 
+    New approval status of Token  => [${await dx.approvedTokens.call(tokenAddresses[1])}] 
     `)
     return
   } catch (error) {
-    throw new Error("Token"+ tokenAddress + "could not be approved" + error)
+    throw new Error("Tokens,"+ tokenAddresses[1] + "could not be approved" + error)
   }
 }
 
@@ -148,9 +148,19 @@ module.exports = (async () => {
 	})*/
 
 	//approving all tokens
-	await Promise.all(tokenAddresses.map((address) => {
-    	approveToken(address)
-		}))
+	await approveToken(tokenAddresses);
+	}
+	if(argv.network != 'mainnet' && argv.network != 'rinkeby'){
+	// reading top 150 tokens by address
+	data = await fs.readFileSync('./scripts/listOfTOP150TokenAddresses.txt', 'utf8', function (err,data) {
+	  if (err) {
+	    return console.log(err);
+	  }
+	});
+	tokenAddresses = data.split(',');
+	console.log(tokenAddresses.slice(0, 10))
+	//approving all tokens
+	await approveToken(tokenAddresses.slice(0, 10));
 	}
 
 	if(argv.network == 'rinkeby'){
@@ -163,5 +173,6 @@ module.exports = (async () => {
     	approveToken(address)
 	}))
 	}
+	process.exit(0)
 })()
 
