@@ -184,8 +184,7 @@ module.exports = function deploy(deployer, network, accounts) {
       .then(() => deployer.deploy(TokenMGN, accounts[0]))
       .then(() => deployer.deploy(TokenOWL))
       .then(() => deployer.deploy(TokenOWLProxy, TokenOWL.address))
-
-
+      
       // Deployment of PriceFeedInfrastructure
       .then(() => deployer.deploy(PriceFeed))
       .then(() => deployer.deploy(Medianizer))
