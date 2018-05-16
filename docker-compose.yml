@@ -1,0 +1,7 @@
+version: '3'
+services:
+  web:
+    command: npm run start-prod
+    build:
+      context: .
+      dockerfile: Dockerfile
