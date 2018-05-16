@@ -1,10 +1,9 @@
 /**
- * node scritps/approveTokenForDutchX.js
- * to add a new TradingPair ETH:Token to the DutchExchange
+ * node scritps/setNewOwner.js
+ * to set new owners after the deployement script run
  * @flags:
  * --network                    if not specified, testrpc will be used. Otherwise rinkeby             
- * --tokenToApprove             any token that inherits the StandartToken functions can be submitted 
- * --Approved                    bool variable 
+ * --newOnwer            address of the new owner
  */
 
 const Web3 = require('web3')
