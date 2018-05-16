@@ -80,6 +80,8 @@ const approveToken = async (tokenAddresses) => {
     const acct = await promisedAcct
     const proxy = await Proxy.deployed()
     const dx = DutchExchange.at(proxy.address)
+    console.log(acct)
+    console.log(await dx.auctioneer())
     await dx.updateApprovalOfToken(tokenAddresses, true,{from: acct})
     console.log(`
     ===========================
@@ -157,10 +159,19 @@ module.exports = (async () => {
 	    return console.log(err);
 	  }
 	});
+
 	tokenAddresses = data.split(',');
-	console.log(tokenAddresses.slice(0, 10))
+	const firstTenAddresses = tokenAddresses.slice(2, 7)
+	console.log(firstTenAddresses)
 	//approving all tokens
-	await approveToken(tokenAddresses.slice(0, 10));
+
+	const eth =await EtherToken.deployed()
+	const omg =await TokenOMG.deployed()
+	const rdn =await TokenRDN.deployed()
+	tokenAddresses = [eth.address, rdn.address, omg.address]
+	console.log(tokenAddresses)
+	
+	await approveToken(firstTenAddresses);
 	}
 
 	if(argv.network == 'rinkeby'){
@@ -168,11 +179,13 @@ module.exports = (async () => {
 	const omg =await TokenOMG.deployed()
 	const rdn =await TokenRDN.deployed()
 	tokenAddresses = [eth.address, rdn.address, omg.address]
+	await approveToken(tokenAddresses);
+/*
 	await Promise.all(tokenAddresses.map((address) => {
-    	/* eslint array-callback-return:0 */
+    	 eslint array-callback-return:0 
     	approveToken([address])
 	}))
-	}
+*/	}
 	process.exit(0)
 })()
 
