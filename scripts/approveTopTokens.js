@@ -170,7 +170,7 @@ module.exports = (async () => {
 	tokenAddresses = [eth.address, rdn.address, omg.address]
 	await Promise.all(tokenAddresses.map((address) => {
     	/* eslint array-callback-return:0 */
-    	approveToken(address)
+    	approveToken([address])
 	}))
 	}
 	process.exit(0)

@@ -43,7 +43,4 @@ contract InternalTests is DutchExchange {
     (feeRatioNum, feeRatioDen) = super.getFeeRatio(user);
   }
 
-  function getMasterCopy() public view returns (address) {
-    return address(masterCopy);
-  }
 }
