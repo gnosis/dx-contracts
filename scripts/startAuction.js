@@ -4,7 +4,7 @@
  * @flags:
  * --network                    if not specified, testrpc will be used. Otherwise rinkeby             
  * --tokenToAddAddress          any token that inherits the StandartToken functions can be submitted    
- * --priceNum                   price is given in units [EtherToken]/[tokenToAdd]
+ * --priceNum                   price is given in units [tokenToAdd]/[EtherToken] = [buyToken]/[sellToken]
  * --priceDen
  * --fundingETH                 how much Ether should be sold in the first auction
  * --fundingToken               how much Tokens should be deposited on the exchange    
@@ -107,7 +107,7 @@ module.exports = (async () => {
   const checkETHFundingSufficient = async () => {
     const oracle = await PriceOracleInterface.deployed()
     const price = (await oracle.getUSDETHPrice.call()).toNumber()
-    if(price*sellVolumeInETH/1e18 < 10000)
+    if(price*sellVolumeInETH/1e18 < 10)
       throw("ETHFunding not sufficient")
     return;
   }
@@ -129,4 +129,5 @@ module.exports = (async () => {
   } catch (error) {
     throw new Error(error)
   }
+  process.exit(0)
 })()

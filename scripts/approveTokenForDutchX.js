@@ -60,9 +60,9 @@ module.exports = (async () => {
       throw("No token address specified")
     }
     if(argv.Approved.length == 4) // equals 'true'
-      await dx.updateApprovalOfToken(argv.tokenToApprove, true,{from: acct})
+      await dx.updateApprovalOfToken([argv.tokenToApprove], true,{from: acct})
     else{
-      await dx.updateApprovalOfToken(argv.tokenToApprove, false,{from: acct})
+      await dx.updateApprovalOfToken([argv.tokenToApprove], false,{from: acct})
     }
     console.log(`
     ===========================
@@ -73,4 +73,5 @@ module.exports = (async () => {
   } catch (error) {
     throw new Error(error)
   }
+  process.exit(0)
 })()

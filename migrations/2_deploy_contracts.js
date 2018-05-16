@@ -60,10 +60,13 @@ module.exports = function deploy(deployer, network, accounts) {
       ))
       .then(() => TokenMGN.deployed())
       .then(T => T.updateMinter(Proxy.address))
-      
+  
     // deploying the OWLAIRDROP is delayed to later
     //  .then(() => getTime)
-    //  .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, '0x6810e776880C02933D47DB1b9fc05908e5386b96', (t + 30 * 60 * 60)))
+    //  .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, '0x6810e776880C02933D47DB1b9fc05908e5386b96', (t + 30 * 24 * 60 * 60)))
+
+    //  .then(() => TokenOWLProxy.deployed())
+    //   .then(T => TokenOWL.at(T.address).setMinter(OWLAirdrop.address))
 
     // At some later point we would change the ownerShip of the MagnoliaTokens
     // .then(() => TokenMGN.deployed())
@@ -107,7 +110,9 @@ module.exports = function deploy(deployer, network, accounts) {
       .then(() => TokenMGN.deployed())
       .then(T => T.updateMinter(Proxy.address))
       .then(() => getTime)
-    .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, TokenGNO.address, (t + 30 * 60 * 60)))
+      .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, TokenGNO.address, (t + 30 * 24 * 60 * 60))) // in 30 days
+      .then(() => TokenOWLProxy.deployed())
+      .then(T => TokenOWL.at(T.address).setMinter(OWLAirdrop.address))
 
     // At some later point we would change the ownerShip of the MagnoliaTokens
     // .then(() => TokenMGN.deployed())
@@ -158,7 +163,9 @@ module.exports = function deploy(deployer, network, accounts) {
       .then(() => TokenMGN.deployed())
       .then(T => T.updateMinter(Proxy.address))
       .then(() => getTime)
-    .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, TokenGNO.address, (t + 6 * 60 * 60)))
+      .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, TokenGNO.address, (t + 2 * 24 * 60 * 60))) // in 2 days
+      .then(() => TokenOWLProxy.deployed())
+      .then(T => TokenOWL.at(T.address).setMinter(OWLAirdrop.address))
 
     // At some later point we would change the ownerShip of the MagnoliaTokens
     // .then(() => TokenMGN.deployed())
@@ -177,8 +184,7 @@ module.exports = function deploy(deployer, network, accounts) {
       .then(() => deployer.deploy(TokenMGN, accounts[0]))
       .then(() => deployer.deploy(TokenOWL))
       .then(() => deployer.deploy(TokenOWLProxy, TokenOWL.address))
-
-
+      
       // Deployment of PriceFeedInfrastructure
       .then(() => deployer.deploy(PriceFeed))
       .then(() => deployer.deploy(Medianizer))
@@ -206,8 +212,10 @@ module.exports = function deploy(deployer, network, accounts) {
       .then(() => TokenMGN.deployed())
       .then(T => T.updateMinter(Proxy.address))
       .then(() => getTime)
-    .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, TokenGNO.address, (t + 30 * 60 * 60)))
+      .then((t) => deployer.deploy(OWLAirdrop, TokenOWLProxy.address, TokenGNO.address, (t + 30 * 60 * 60)))
 
+      .then(() => TokenOWLProxy.deployed())
+      .then(T => TokenOWL.at(T.address).setMinter(OWLAirdrop.address))
     // At some later point we would change the ownerShip of the MagnoliaTokens
     // .then(() => TokenMGN.deployed())
     // .then(T => T.updateOwner(Proxy.address))
