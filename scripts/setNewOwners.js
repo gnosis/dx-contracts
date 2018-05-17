@@ -46,11 +46,17 @@ const PriceOracleInterfaceJson = JSON.parse(fs.readFileSync('./build/contracts/P
 const PriceOracleInterface = TruffleContract(PriceOracleInterfaceJson)
 const TokenFRTJson = JSON.parse(fs.readFileSync('./build/contracts/TokenFRT.json'))
 const TokenFRT = TruffleContract(TokenFRTJson)
+const TokenOWLJson = JSON.parse(fs.readFileSync('./build/contracts/TokenOWL.json'))
+const TokenOWL = TruffleContract(TokenOWLJson)
+const TokenOWLProxyJson = JSON.parse(fs.readFileSync('./build/contracts/TokenOWLProxy.json'))
+const TokenOWLProxy = TruffleContract(TokenOWLProxyJson)
 
 DutchExchange.setProvider(web3.currentProvider)
 Proxy.setProvider(web3.currentProvider)
 PriceOracleInterface.setProvider(web3.currentProvider)
 TokenFRT.setProvider(web3.currentProvider)
+TokenOWL.setProvider(web3.currentProvider)
+TokenOWLProxy.setProvider(web3.currentProvider)
 
 module.exports = (async () => {
   const promisedAcct = new Promise((a, r) => web3.eth.getAccounts((e, r) => a(r[0])))
@@ -61,6 +67,8 @@ module.exports = (async () => {
     const acct = await promisedAcct
     const proxy = await Proxy.deployed()
     const frt = await TokenFRT.deployed()
+    const owlProxy = TokenOWLProxy.deployed()
+    const owl =TokenOWL.at(owlProxy.address)
     const dx = DutchExchange.at(proxy.address)
     const priceOracleInterface = await PriceOracleInterface.deployed()
     
@@ -70,10 +78,13 @@ module.exports = (async () => {
     await dx.updateAuctioneer(argv.newOwner, {from: acct})
     await priceOracleInterface.updateCurator(argv.newOwner, {from: acct})
     await frt.updateOwner(proxy.address, {from: acct})
+    await owl.setNewOwner(argv.newOwner, {from: acct})
+
     console.log(`
     ===========================
     Successfully updated the owner to  => [${argv.newOwner}] 
     `)
+
     return
   } catch (error) {
     throw new Error(error)
