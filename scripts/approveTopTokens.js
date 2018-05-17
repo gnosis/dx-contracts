@@ -82,15 +82,16 @@ const approveToken = async (tokenAddresses) => {
     const dx = DutchExchange.at(proxy.address)
     console.log(acct)
     console.log(await dx.auctioneer())
-    await dx.updateApprovalOfToken(tokenAddresses, true,{from: acct})
+    console.log(tokenAddresses)
+    await dx.updateApprovalOfToken(tokenAddresses, true, {from: acct, gas: 1050546})
     console.log(`
     ===========================
     Successfully approved the Token  => [${tokenAddresses}] 
-    New approval status of Token  => [${await dx.approvedTokens.call(tokenAddresses[1])}] 
+    New approval status of Token  => [${await dx.approvedTokens.call(tokenAddresses[0])}] 
     `)
     return
   } catch (error) {
-    throw new Error("Tokens,"+ tokenAddresses[1] + "could not be approved" + error)
+    throw new Error("Tokens,"+ tokenAddresses[0] + "could not be approved" + error)
   }
 }
 
@@ -101,15 +102,73 @@ module.exports = (async () => {
 
 	if(argv.network == 'mainnet'){
 	// reading top 150 tokens by address
-	data = await fs.readFileSync('./scripts/listOfTOP150TokenAddresses.txt', 'utf8', function (err,data) {
-	  if (err) {
-	    return console.log(err);
-	  }
-	});
-	tokenAddresses = data.split(',');
-	console.log(tokenAddresses)
+		data = await fs.readFileSync('./scripts/listOfTOP150TokenAddresses.txt', 'utf8', function (err,data) {
+		  if (err) {
+		    return console.log(err);
+		  }
+		});
+		const size = 100
+		tokenAddresses = data.split(',');
+		console.log(tokenAddresses.length)
+		for(i=0; i<tokenAddresses.length / size;i++){
+			console.log((i+1) * size)
+			const fiveAddresses = tokenAddresses.slice((i) * size , (i+1) * size )
+			await approveToken(fiveAddresses);
+		}
+	}
 
-	// code to generate the list for the first time.
+	if(argv.network != 'mainnet' && argv.network != 'rinkeby'){
+		// reading top 150 tokens by address
+		data = await fs.readFileSync('./scripts/listOfTOP150TokenAddresses.txt', 'utf8', function (err,data) {
+		  if (err) {
+		    return console.log(err);
+		  }
+		});
+		const size = 100
+		tokenAddresses = data.split(',');
+		console.log(tokenAddresses.length)
+		for(i=0; i<tokenAddresses.length / size;i++){
+			console.log((i+1) * size)
+			const fiveAddresses = tokenAddresses.slice((i) * size , (i+1) * size )
+			await approveToken(fiveAddresses);
+		}
+		
+		const eth =await EtherToken.deployed()
+		const omg =await TokenOMG.deployed()
+		const rdn =await TokenRDN.deployed()
+		const standardAddresses = [eth.address, rdn.address, omg.address]
+		await approveToken(standardAddresses);
+	}
+
+	if(argv.network == 'rinkeby'){
+
+				// reading top 150 tokens by address
+		data = await fs.readFileSync('./scripts/listOfTOP150TokenAddresses.txt', 'utf8', function (err,data) {
+		  if (err) {
+		    return console.log(err);
+		  }
+		});
+		const size = 100
+		tokenAddresses = data.split(',');
+		console.log(tokenAddresses.length)
+		for(i=0; i<tokenAddresses.length / size;i++){
+			console.log((i+1) * size)
+			const fiveAddresses = tokenAddresses.slice((i) * size , (i+1) * size )
+			await approveToken(fiveAddresses);
+		}
+		
+
+		const eth =await EtherToken.deployed()
+		const omg =await TokenOMG.deployed()
+		const rdn =await TokenRDN.deployed()
+		tokenAddresses = [eth.address, rdn.address, omg.address]
+		await approveToken(tokenAddresses);
+	}
+	process.exit(0)
+})()
+
+
+// code to generate the list for the first time.
 	/*
 	// reading top 150 token
 	data = await fs.readFileSync('./scripts/listOfTOP150TokensByMarketCap.txt', 'utf8', function (err,data) {
@@ -148,44 +207,4 @@ module.exports = (async () => {
 		}, function(err) {
   		throw err;
 	})*/
-
-	//approving all tokens
-	await approveToken(tokenAddresses);
-	}
-	if(argv.network != 'mainnet' && argv.network != 'rinkeby'){
-	// reading top 150 tokens by address
-	data = await fs.readFileSync('./scripts/listOfTOP150TokenAddresses.txt', 'utf8', function (err,data) {
-	  if (err) {
-	    return console.log(err);
-	  }
-	});
-
-	tokenAddresses = data.split(',');
-	const firstTenAddresses = tokenAddresses.slice(2, 7)
-	console.log(firstTenAddresses)
-	//approving all tokens
-
-	const eth =await EtherToken.deployed()
-	const omg =await TokenOMG.deployed()
-	const rdn =await TokenRDN.deployed()
-	tokenAddresses = [eth.address, rdn.address, omg.address]
-	console.log(tokenAddresses)
-	
-	await approveToken(firstTenAddresses);
-	}
-
-	if(argv.network == 'rinkeby'){
-	const eth =await EtherToken.deployed()
-	const omg =await TokenOMG.deployed()
-	const rdn =await TokenRDN.deployed()
-	tokenAddresses = [eth.address, rdn.address, omg.address]
-	await approveToken(tokenAddresses);
-/*
-	await Promise.all(tokenAddresses.map((address) => {
-    	 eslint array-callback-return:0 
-    	approveToken([address])
-	}))
-*/	}
-	process.exit(0)
-})()
 
