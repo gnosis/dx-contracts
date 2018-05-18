@@ -38,3 +38,4 @@ stats.json
 .awcache
 .eslintcache
 .stylelintcache
+.history
