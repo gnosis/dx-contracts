@@ -13,32 +13,32 @@ module.exports = {
     },
     live: {
       provider: function() {
-                  return new HDWalletProvider(mnemonic, 'https://mainnet.infura.io/');
-                },
+        return new HDWalletProvider(mnemonic, 'https://mainnet.infura.io/');
+      },
       network_id: '1',
       gas: 4612388,
       gasPrice: 10000000000,
     },
     kovan: {
       provider: function() {
-                  return new HDWalletProvider(mnemonic, 'https://kovan.infura.io/');
-                },
+        return new HDWalletProvider(mnemonic, 'https://kovan.infura.io/');
+      },
       network_id: '42',
       gas: 6700000,
       gasPrice: 25000000000,
     },
     rinkeby: {
       provider: function() {
-                  return new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/');
-                },
+        return new HDWalletProvider(mnemonic, 'http://node.rinkeby.gnosisdev.com:8545');
+      },
       network_id: '4',
       gas: 6700000,
       gasPrice: 50000000000,
     },
     mainnet: {
       provider: function() {
-                  return new HDWalletProvider(mnemonic, 'https://mainnet.infura.io');
-                },
+        return new HDWalletProvider(mnemonic, 'https://mainnet.infura.io');
+      },
       network_id: '0',
       gas: 6700000,
       gasPrice: 25000000000,
