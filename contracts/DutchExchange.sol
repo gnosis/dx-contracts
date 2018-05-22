@@ -963,7 +963,7 @@ contract DutchExchange {
 
             // C3
             // R3.1
-            require(auctionIndex < getAuctionIndex(token1, token2));
+            require(auctionIndex <= getAuctionIndex(token1, token2));
             // auction still running
 
             uint i = 0;
