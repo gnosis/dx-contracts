@@ -1,9 +1,16 @@
 const path = require('path')
 const assert = require('assert')
-// Example: yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/token-pairs.js
+// Example:
+//  yarn add-token-pairs -h
+//  yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/token-pairs.js
 
 var argv = require('yargs')
-    .usage('Usage: $0 -f <file> [--gas num] [--gas-price num] [--network name]')
+    .usage('Usage: yarn add-token-pairs -f <file> [--gas num] [--gas-price num] [--network name] [--dry-run]')
+    .option('f', {
+      type: 'string',
+      demandOption: true,
+      describe: 'File with the list of token pairs to add'
+    })
     .option('gas', {
       type: 'integer',
       default: 2374235,
@@ -18,11 +25,11 @@ var argv = require('yargs')
       default: 'development',
       describe: 'One of the ethereum networks defined in truffle config'
     })
-    .option('f', {
-      type: 'string',
-      demandOption: true,
-      describe: 'File with the list of token pairs to add'
-    })
+    .option('dryRun', {
+      type: 'boolean',
+      default: false,
+      describe: 'Dry run. Do not approve the token pair, do just the validations.'
+    })    
     .help('h')
     .strict()
     .argv;
@@ -31,10 +38,11 @@ async function addTokenPairs () {
   if (!argv._[0]) {
     cli.showHelp()
   } else {
-    const { f, gas, gasPrice, network } = argv
+    const { f, gas, gasPrice, network, dryRun } = argv
       const tokenPairsFile = path.join('..', f)
   
       console.log(`Adding token pairs for:
+    Dry run: ${dryRun ? 'Yes' : 'No'}
     Network: ${network}
     Token pairs file: ${f}
     Gas: ${gas}
@@ -55,7 +63,8 @@ async function addTokenPairs () {
       const params = {
         gas,
         gasPrice,
-        network
+        network,
+        dryRun
       }
       for (var i=0; i<tokenPairs.length; i++) {
         // Add token (syncronously)
@@ -66,7 +75,7 @@ async function addTokenPairs () {
 
 async function addTokenPair (tokenPair, contractsInfo, params) {
   const { description, tokenA, tokenB, initialPrice } = tokenPair
-  const { gas, gasPrice, network } = params
+  const { gas, gasPrice, network, dryRun } = params
   const {
     dx,
     etherPrice,
@@ -96,18 +105,9 @@ async function addTokenPair (tokenPair, contractsInfo, params) {
   // Ensure that the funding surplus the threshold
   await ensureEnoughFunding(tokenA, tokenB, contractsInfo)
 
-  // Get auction index
-  const auctionIndex = await dx
-    .getAuctionIndex
-    .call(tokenA.address, tokenB.address)
+  // Ensure that the funding surplus the threshold
+  await ensureNonExisingAuction(tokenA.address, tokenB.address, dx)
 
-  // Check if the token pair has already been added
-  if (auctionIndex.isZero()) {
-    console.warn('The token pair is not in the DX, adding token pair')
-
-  } else {
-    console.warn('Skiping the token pair, it has already been deployed. AuctionIndex = ' + auctionIndex.toNumber())
-  }
 }
 
 async function ensureEnoughBalance (token, { account, StandardToken }) {
@@ -168,6 +168,15 @@ tokenA: $${fundingInUsdA.toFixed(2)}, \
 tokenB: $${fundingInUsdB.toFixed(2)}, \
 threshold in USD: $${thresholdInUSD}`)
   }
+}
+
+async function ensureNonExisingAuction (addressA, addressB, dx) {
+  // Get auction index
+  const auctionIndex = await dx
+    .getAuctionIndex
+    .call(tokenA.address, tokenB.address)
+
+  assert(auctionIndex.isZero(), 'The token pair was already in the DX. Auction index: ' + auctionIndex.toNumber())
 }
 
 async function getPriceInPastAuction (addressA, addressB) {
