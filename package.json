@@ -8,6 +8,7 @@
     "prepublishOnly": "npm run netreset",
     "postinstall": "npm install @gnosis.pm/owl-token @gnosis.pm/pm-contracts truffle-hdwallet-provider",
     "contracts": "truffle compile && node scripts/inject_network_info.js",
+    "deploy": "truffle deploy",
     "add-token-pairs": "truffle exec scripts/addTokenPairs.js"
   },
   "repository": {

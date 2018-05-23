@@ -45,6 +45,7 @@ async function addTokenPairs () {
       // Load the DX contract
       const contractsInfo = await loadContractsInfo()
       console.log(`\
+    Deployer account: ${contractsInfo.account}
     DX address: ${contractsInfo.dx.address}
     WETH address: ${contractsInfo.wethAddress}
     Threshold: $${contractsInfo.thresholdInUSD.toFixed(2)}
@@ -71,9 +72,11 @@ async function addTokenPair (tokenPair, contractsInfo, params) {
     etherPrice,
     wethAddress,
     thresholdInUSD,
-    StandardToken
+    StandardToken,
+    account
   } = contractsInfo
-  console.log('\n\n ==============  Add token pair: %s  ==============', description)  
+
+  console.log('\n ==============  Add token pair: %s  ==============', description)  
   const price = initialPrice.numerator / initialPrice.denominator
   console.log('Initial price: ' + price)
 
@@ -86,10 +89,12 @@ async function addTokenPair (tokenPair, contractsInfo, params) {
   printTokenInfo('TokenB', tokenB)
   console.log('')
 
-  await ensureEnoughFunding(tokenA, tokenB, contractsInfo)
+  // Ensure that the user has enogh balance
+  await ensureEnoughBalance(tokenA, contractsInfo)
+  await ensureEnoughBalance(tokenB, contractsInfo)
 
-  const tokenAContract = StandardToken.at(tokenA.address)
-  const tokenBContract = StandardToken.at(tokenB.address)
+  // Ensure that the funding surplus the threshold
+  await ensureEnoughFunding(tokenA, tokenB, contractsInfo)
 
   // Get auction index
   const auctionIndex = await dx
@@ -102,6 +107,21 @@ async function addTokenPair (tokenPair, contractsInfo, params) {
 
   } else {
     console.warn('Skiping the token pair, it has already been deployed. AuctionIndex = ' + auctionIndex.toNumber())
+  }
+}
+
+async function ensureEnoughBalance (token, { account, StandardToken }) {
+  const tokenContract = StandardToken.at(token.address)
+
+  const balance = await tokenContract
+    .balanceOf
+    .call(account)
+
+  const balanceValue = balance.div(1e18)
+  if (balanceValue.lessThanOrEqualTo(token.funding)) {
+    throw new Error(`The account doesn't have enough balance for token ${token.address}. \
+Balance: ${balanceValue}. \
+Funding: ${token.funding}`)
   }
 }
 
@@ -166,14 +186,14 @@ async function loadContractsInfo () {
   const Proxy = artifacts.require('Proxy')
   const DutchExchange = artifacts.require('DutchExchange')
   const StandardToken = artifacts.require('StandardToken')
-  const PriceOracleInterface = artifacts.require('PriceOracleInterface')  
+  const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 
   // Get contract examples
   const proxy = await Proxy.deployed()
-  const dx = await DutchExchange.at(proxy.address)  
+  const dx = DutchExchange.at(proxy.address)  
 
   // Get some data from dx
-  const [ wethAddress, thresholdInUSD, ethUSDOracleAddress ] = await Promise.all([
+  const [ wethAddress, thresholdInUSD, ethUSDOracleAddress, accounts ] = await Promise.all([
     // Get weth address
     dx.ethToken.call(),
 
@@ -183,7 +203,18 @@ async function loadContractsInfo () {
       .then(thresholdInWei => thresholdInWei.div(1e18)),
 
     // Get oracle address
-    dx.ethUSDOracle.call()
+    dx.ethUSDOracle.call(),
+
+    // get Accounts
+    new Promise((resolve, reject) => {
+      web3.eth.getAccounts((error, result) => {
+        if (error) {
+          reject(error)
+        } else {
+          resolve(result)
+        }
+      })
+    })
   ])   
   
   // Get ether price from oracle
@@ -195,15 +226,18 @@ async function loadContractsInfo () {
     etherPrice,
     wethAddress,
     thresholdInUSD,
-    StandardToken
+    StandardToken,
+    account: accounts[0]
   }
 }
 
-module.exports = () => {
+module.exports = (callback) => {
   addTokenPairs()
-    .then('Success! All token pairs has been added')
+    .then(() => {
+      console.log('Success! All token pairs has been added')
+      callback()
+    })
     .catch(error => {
-      console.error(error)
-      process.exit(1)
-    })  
+      callback(error)
+    })
 }
