@@ -56,6 +56,7 @@ async function addTokenPairs () {
     Deployer account: ${contractsInfo.account}
     DX address: ${contractsInfo.dx.address}
     WETH address: ${contractsInfo.wethAddress}
+    Ether balance: ${contractsInfo.etherBalance}    
     Threshold: $${contractsInfo.thresholdInUSD.toFixed(2)}
     Current Ether price: ${contractsInfo.etherPrice}
 `)
@@ -108,20 +109,57 @@ async function addTokenPair (tokenPair, contractsInfo, params) {
   // Ensure that the funding surplus the threshold
   await ensureNonExisingAuction(tokenA.address, tokenB.address, dx)
 
+  if (dryRun) {
+    console.log("Dry run execution Success. All validations were passed.")
+  } else {
+    console.log("Adding token pairs with account: " + account)
+  }
 }
 
-async function ensureEnoughBalance (token, { account, StandardToken }) {
+async function ensureEnoughBalance (token, { account, wethAddress, etherBalance, StandardToken, dx }) {
   const tokenContract = StandardToken.at(token.address)
 
-  const balance = await tokenContract
-    .balanceOf
-    .call(account)
+  // dx.deposit.call(token.address)
+  const [ balanceToken, balanceDx ] = await Promise.all([
+    // Get balance of the token ERC20 for the user
+    tokenContract
+      .balanceOf
+      .call(account),
 
-  const balanceValue = balance.div(1e18)
-  if (balanceValue.lessThanOrEqualTo(token.funding)) {
-    throw new Error(`The account doesn't have enough balance for token ${token.address}. \
-Balance: ${balanceValue}. \
-Funding: ${token.funding}`)
+    // Get balance in DX for the token
+    dx.balances
+      .call(token.address, account)
+  ])
+
+  const balanceDxValue = balanceDx.div(1e18)
+  const balanceTokenValue = balanceToken.div(1e18)
+  if (balanceDxValue.lessThanOrEqualTo(token.funding)) {
+    let totalTokenBalance = balanceDxValue.plus(balanceTokenValue)
+    let balancesString = `\
+Balance DX: ${balanceDxValue}, \
+Balance Token: ${balanceTokenValue}, \
+Funding: ${token.funding}`
+
+    if (totalTokenBalance.lessThan(token.funding)) {
+      if (token.address === wethAddress) {
+        // If the token is WETH, the user may wrap ether
+        totalTokenBalance = totalTokenBalance.plus(etherBalance)
+        balancesString = 'Balance Ether: ' + etherBalance + ', ' + balancesString
+      }
+
+      if (totalTokenBalance.lessThan(token.funding)) {
+        // The user doesn't have enough tokens
+        throw new Error(`The account doesn't have enough balance for token \
+${token.address}. ${balancesString}`)
+      } else {
+        throw new Error(`The account has enough balance for token \
+${token.address}, but it needs to wrap Ether and deposit it into the DX. ${balancesString}`)
+      }
+    } else {
+      // The has enough tokens, but not in the DX
+      throw new Error(`The account has enough balance for token \
+${token.address}, but it needs to deposit it into the DX. ${balancesString}`)
+    }
   }
 }
 
@@ -202,7 +240,12 @@ async function loadContractsInfo () {
   const dx = DutchExchange.at(proxy.address)  
 
   // Get some data from dx
-  const [ wethAddress, thresholdInUSD, ethUSDOracleAddress, accounts ] = await Promise.all([
+  const [
+    wethAddress,
+    thresholdInUSD,
+    ethUSDOracleAddress,
+    accounts
+  ] = await Promise.all([
     // Get weth address
     dx.ethToken.call(),
 
@@ -224,19 +267,32 @@ async function loadContractsInfo () {
         }
       })
     })
-  ])   
+  ])
   
   // Get ether price from oracle
   const oracle = PriceOracleInterface.at(ethUSDOracleAddress)
   const etherPrice = await oracle.getUSDETHPrice.call()
 
+  // Get the ether balance
+  const account = accounts[0]
+  const etherBalance = await new Promise((resolve, reject) => {
+    web3.eth.getBalance(account, (error, result) => {
+      if (error) {
+        reject(error)
+      } else {
+        resolve(result.div(1e18))
+      }
+    })
+  })
+
   return {
     dx,
     etherPrice,
     wethAddress,
+    etherBalance,
     thresholdInUSD,
     StandardToken,
-    account: accounts[0]
+    account
   }
 }
 
