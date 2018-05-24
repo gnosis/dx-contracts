@@ -4,7 +4,7 @@ const { getTokenBalances } = require('./utils/contracts')(artifacts)
 const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
 
 /**
- * truffle exec trufflescripts/get_account_balances.js
+ * truffle exec test/trufflescripts/get_account_balances.js
  * get ETH and GNO balances for seller and buyer accounts
  * @flags:
  * -a <address>       and for the given account

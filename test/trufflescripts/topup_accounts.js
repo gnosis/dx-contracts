@@ -7,7 +7,7 @@ const initBalances = {
 }
 
 /**
- * truffle exec trufflescripts/topup_accounts.js
+ * truffle exec test/trufflescripts/topup_accounts.js
  * deposits ETH tokens in accounts names
  * and transfers other tokens from master account
  * so that seller and buyer balances are no less than initBalances fro respective tokens

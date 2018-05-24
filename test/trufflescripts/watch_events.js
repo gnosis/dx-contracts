@@ -6,7 +6,7 @@ const { deployed } = require('./utils/contracts')(artifacts)
 const argv = require('minimist')(process.argv.slice(2), { alias: { v: 'verbose' } })
 
 /**
- * truffle exec trufflescripts/watch_events.js
+ * truffle exec test/trufflescripts/watch_events.js
  * subscribe and log events for TokenETH, TokenGNO and DutchExchange contracts
  * @flags:
  * --eth                                  watch all events for TokenETH contract

@@ -18,7 +18,7 @@ const getSeconds = ({ h = 0, m = 0, s = 0 }) => (h * 60 * 60) + (m * 60) + s
 const getNumDenStr = ([num, den]) => `${num}/${den} = ${(num / den).toFixed(8)}`
 
 /**
- * truffle exec trufflescripts/increase_timer.js
+ * truffle exec test/trufflescripts/increase_timer.js
  * increases auction time
  * @flags:
  * --start      first, sets time to auction start

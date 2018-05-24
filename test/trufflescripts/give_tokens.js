@@ -4,7 +4,7 @@ const { getTokenBalances, giveTokens } = require('./utils/contracts')(artifacts)
 const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
 
 /**
- * truffle exec trufflescripts/give_tokens.js
+ * truffle exec test/trufflescripts/give_tokens.js
  * give tokens from master
  * @flags:
  * --seller           to seller

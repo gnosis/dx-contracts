@@ -4,19 +4,21 @@ const {
   getTokenDeposits,
   getAccountsStatsForTokenPairAuction,
   getExchangeStatsForTokenPair,
-  postSellOrder,
+  approveForDX,
+  depositAndSell,
 } = require('./utils/contracts')(artifacts)
+const { getTime } = require('./utils')(web3)
 const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
 
 /**
- * truffle exec trufflescripts/sell_order.js
- * to post a sell order to token pair auction as the seller
+ * truffle exec test/trufflescripts/deposit_and_sell.js
+ * to deposit and post a sell order to token pair auction as the seller
+ * it always posts to the current (if not started) or next auction
  * @flags:
  * -n <number>                    for a specific amount of sellToken
  * --pair <sellToken,buyToken>    token pair auction, eth,gno by default
  * --buyer                        as the buyer
  * -a <address>                   as the given account
- * --next                         to the next auction (lastAuctionIndex + 1)
  */
 
 
@@ -53,21 +55,17 @@ module.exports = async () => {
 
   let { [sellTokenName]: sellTokenDeposit = 0 } = await getTokenDeposits(account)
 
-  if (sellTokenDeposit < argv.n) {
-    console.log(`Account's deposit is ${argv.n - sellTokenDeposit} tokens short to submit this order`)
-    return
-  }
+  const { latestAuctionIndex, auctionStart } = await getExchangeStatsForTokenPair({ sellToken, buyToken })
+  const postingToNextAuction = !(auctionStart === 1 || auctionStart > await getTime())
 
-  const { latestAuctionIndex } = await getExchangeStatsForTokenPair({ sellToken, buyToken })
-
-  const index = argv.next ? latestAuctionIndex + 1 : latestAuctionIndex
+  const index = postingToNextAuction ? latestAuctionIndex + 1 : latestAuctionIndex
 
   let [{ sellVolumeCurrent, sellVolumeNext }, { [account]: { sellerBalance } }] = await Promise.all([
     getExchangeStatsForTokenPair({ sellToken, buyToken }),
     getAccountsStatsForTokenPairAuction({ sellToken, buyToken, index, accounts: [account] }),
   ])
 
-  console.log(`Auction ${sellTokenName} -> ${buyTokenName} index ${index} (${argv.next ? 'next' : 'current'})
+  console.log(`Auction ${sellTokenName} -> ${buyTokenName} index ${index} (${postingToNextAuction ? 'next' : 'current'})
   was:
     sellVolumeCurrent:\t${sellVolumeCurrent}
     sellVolumeNext:\t${sellVolumeNext}
@@ -75,12 +73,18 @@ module.exports = async () => {
     sellerDeposit:\t${sellTokenDeposit} ${sellTokenName}
   `)
 
-
   console.log(`
-  Posting order for ${argv.n} ${sellTokenName}
+  Approving transfer of ${argv.n} ${sellTokenName} to DX
   `)
 
-  const tx = await postSellOrder(account, { sellToken, buyToken, index, amount: argv.n })
+  const apprTX = await approveForDX(account, { [sellTokenName]: argv.n })
+  if (!apprTX) return
+
+  console.log(`
+  Posting deposit and sell order for ${argv.n} ${sellTokenName}
+  `)
+
+  const tx = await depositAndSell(account, { sellToken, buyToken, amount: argv.n })
   if (!tx) return
 
   [
@@ -92,7 +96,6 @@ module.exports = async () => {
     getExchangeStatsForTokenPair({ sellToken, buyToken }),
     getAccountsStatsForTokenPairAuction({ sellToken, buyToken, index, accounts: [account] }),
   ])
-
 
   console.log(`  now:
     sellVolumeCurrent:\t${sellVolumeCurrent}

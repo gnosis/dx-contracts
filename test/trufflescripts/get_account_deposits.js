@@ -4,7 +4,7 @@ const { getTokenDeposits } = require('./utils/contracts')(artifacts)
 const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
 
 /**
- * truffle exec trufflescripts/get_account_deposits.js
+ * truffle exec test/trufflescripts/get_account_deposits.js
  * get ETH and GNO deposits for seller and buyer accounts
  * @flags:
  * -a <address>       and for the given account

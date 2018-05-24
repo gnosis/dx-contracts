@@ -15,7 +15,7 @@ const { getTime, increaseTimeBy } = require('./utils')(web3)
 const argv = require('minimist')(process.argv.slice(4), { string: 'a' })
 
 /**
- * truffle exec trufflescripts/start_auction.js
+ * truffle exec test/trufflescripts/start_auction.js
  * add a token pair as master account and sets time to auction start + 1 hour
  * @flags:
  * --pair <sellToken,buyToken>                 add token pair, eth, gno by default
