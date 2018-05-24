@@ -119,9 +119,15 @@ async function addTokenPair (tokenPair, contractsInfo, params) {
 }
 
 async function ensureEnoughBalance (token, { account, wethAddress, etherBalance, StandardToken, dx }) {
-  const tokenContract = StandardToken.at(token.address)
+  const { address: tokenAddress, funding} = token
+  if (funding === 0) {
+    // If we don fund the token, we can skip the balance check
+    return
+  }
 
-  // dx.deposit.call(token.address)
+  const tokenContract = StandardToken.at(tokenAddress)
+
+  // dx.deposit.call(tokenAddress)
   const [ balanceToken, balanceDx ] = await Promise.all([
     // Get balance of the token ERC20 for the user
     tokenContract
@@ -130,37 +136,37 @@ async function ensureEnoughBalance (token, { account, wethAddress, etherBalance,
 
     // Get balance in DX for the token
     dx.balances
-      .call(token.address, account)
+      .call(tokenAddress, account)
   ])
 
   const balanceDxValue = balanceDx.div(1e18)
   const balanceTokenValue = balanceToken.div(1e18)
-  if (balanceDxValue.lessThanOrEqualTo(token.funding)) {
+  if (balanceDxValue.lessThanOrEqualTo(funding)) {
     let totalTokenBalance = balanceDxValue.plus(balanceTokenValue)
     let balancesString = `\
 Balance DX: ${balanceDxValue}, \
 Balance Token: ${balanceTokenValue}, \
-Funding: ${token.funding}`
+Funding: ${funding}`
 
-    if (totalTokenBalance.lessThan(token.funding)) {
-      if (token.address === wethAddress) {
+    if (totalTokenBalance.lessThan(funding)) {
+      if (tokenAddress === wethAddress) {
         // If the token is WETH, the user may wrap ether
         totalTokenBalance = totalTokenBalance.plus(etherBalance)
         balancesString = 'Balance Ether: ' + etherBalance + ', ' + balancesString
       }
 
-      if (totalTokenBalance.lessThan(token.funding)) {
+      if (totalTokenBalance.lessThan(funding)) {
         // The user doesn't have enough tokens
         throw new Error(`The account doesn't have enough balance for token \
-${token.address}. ${balancesString}`)
+${tokenAddress}. ${balancesString}`)
       } else {
         throw new Error(`The account has enough balance for token \
-${token.address}, but it needs to wrap Ether and deposit it into the DX. ${balancesString}`)
+${tokenAddress}, but it needs to wrap Ether and deposit it into the DX. ${balancesString}`)
       }
     } else {
       // The has enough tokens, but not in the DX
       throw new Error(`The account has enough balance for token \
-${token.address}, but it needs to deposit it into the DX. ${balancesString}`)
+${tokenAddress}, but it needs to deposit it into the DX. ${balancesString}`)
     }
   }
 }
@@ -214,7 +220,7 @@ async function ensureNonExisingAuction (addressA, addressB, dx) {
   // Get auction index
   const auctionIndex = await dx
     .getAuctionIndex
-    .call(tokenA.address, tokenB.address)
+    .call(addressA, addressB)
 
   assert(auctionIndex.isZero(), 'The token pair was already in the DX. Auction index: ' + auctionIndex.toNumber())
 }
