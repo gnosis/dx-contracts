@@ -1,7 +1,10 @@
 const path = require('path')
 const assert = require('assert')
 
-// Example:
+const DEFAULT_GAS = 2374235
+const DEFAULT_GAS_PRICE = 1e9
+
+// Usage example:
 //  yarn add-token-pairs -h
 //  yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/token-pairs.js --dry-run
 //  yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/token-pairs.js
@@ -15,11 +18,12 @@ var argv = require('yargs')
     })
     .option('gas', {
       type: 'integer',
-      default: 2374235,
+      default: DEFAULT_GAS,
       describe: 'Gas for approving each token pair'
     })
     .option('gasPrice', {
       type: 'integer',
+      default: DEFAULT_GAS_PRICE,
       describe: 'Gas price for approving each token pair'
     })
     .option('network', {
@@ -42,13 +46,13 @@ async function addTokenPairs () {
   } else {
     const { f, gas, gasPrice, network, dryRun } = argv
       const tokenPairsFile = path.join('..', f)
-  
-      console.log(`Adding token pairs for:
+      console.log('\n **************  Add token pairs  **************\n')  
+      console.log(`Data:
     Dry run: ${dryRun ? 'Yes' : 'No'}
     Network: ${network}
     Token pairs file: ${f}
     Gas: ${gas}
-    Gas Price: ${gasPrice || 'default'}`)
+    Gas Price: ${gasPrice / 1e9} GWei`)
       // Load the file
       const tokenPairs = require(tokenPairsFile)
   
@@ -62,17 +66,18 @@ async function addTokenPairs () {
     Threshold: $${contractsInfo.thresholdInUSD.toFixed(2)}
     Current Ether price: ${contractsInfo.etherPrice}
 `)
-      // Add token pairs
-      const params = {
-        gas,
-        gasPrice,
-        network,
-        dryRun
-      }
-      for (var i=0; i<tokenPairs.length; i++) {
-        // Add token (syncronously)
-        await addTokenPair(tokenPairs[i], contractsInfo, params)
-      }
+    // Add token pairs
+    const params = {
+      gas,
+      gasPrice,
+      network,
+      dryRun
+    }
+    for (var i=0; i<tokenPairs.length; i++) {
+      // Add token (syncronously)
+      await addTokenPair(tokenPairs[i], contractsInfo, params)
+    }
+    console.log('\n **************  End of add token pairs  **************\n')
   }
 }
 
@@ -111,10 +116,39 @@ async function addTokenPair (tokenPair, contractsInfo, params) {
   // Ensure that the funding surplus the threshold
   await ensureNonExisingAuction(tokenA.address, tokenB.address, dx)
 
+  // Prepare the args for addTokenPair
+  const addTokenArgs = [
+    tokenA.address,
+    tokenB.address,
+    tokenA.funding * 1e18,
+    tokenB.funding * 1e18,
+    initialPrice.numerator,
+    initialPrice.denominator
+  ]
+  console.log(`Add token arguments (token1, token2, token1Funding, \
+token2Funding, initialClosingPriceNum, initialClosingPriceDen):\n\t %s\n`,
+  addTokenArgs.join(', ')
+)
+
+
   if (dryRun) {
-    console.log("Dry run execution Success. All validations were passed.")
+    // Dry run
+    console.log("The dry run execution passed all validations")
+    await dx.addTokenPair.call(
+      ...addTokenArgs, {
+      from: account
+    })
+    console.log('Dry run success!')
   } else {
+    // Real add token pair execution
     console.log("Adding token pairs with account: " + account)
+    const addTokenResult = await dx.addTokenPair(
+      ...addTokenArgs, {
+      from: account,
+      gas,
+      gasPrice
+    })
+    console.log('Success! The token pair was added. Transaction: ' + addTokenResult.tx)
   }
 }
 
@@ -304,10 +338,10 @@ async function loadContractsInfo () {
   }
 }
 
-module.exports = (callback) => {
+module.exports = (callback) => {  
   addTokenPairs()
-    .then(() => {
-      console.log('Success! All token pairs has been added')
+    .then(() => {      
+      console.log('Success! All token pairs has been added\n')
       callback()
     })
     .catch(error => {

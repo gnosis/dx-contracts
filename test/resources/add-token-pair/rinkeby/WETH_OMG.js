@@ -15,7 +15,6 @@ module.exports = {
   // Price: https://www.coingecko.com/en/coins/omisego
   //  57 OMG/WETH
   initialPrice: {
-    // 57 OMG/WETH
     numerator: 57,
     denominator: 1
   }
