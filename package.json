@@ -7,6 +7,7 @@
     "netreset": "truffle networks --clean && node scripts/extract_network_info.js",
     "prepublishOnly": "npm run netreset",
     "postinstall": "npm install @gnosis.pm/owl-token @gnosis.pm/pm-contracts truffle-hdwallet-provider",
+    "networks": "truffle networks",
     "contracts": "truffle compile && node scripts/inject_network_info.js",
     "deploy": "truffle deploy",
     "add-token-pairs": "truffle exec trufflescripts/add-token-pairs.js"
