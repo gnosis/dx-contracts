@@ -266,7 +266,7 @@ async function getPriceInPastAuction (tokenA, tokenB, dx) {
     .getAuctionIndex
     .call(addressA, addressB)
   
-  assert(auctionIndex.isZero() > 0, `The token pair ${tokenA.symbol}-${tokenB.symbol} doesn't exist in the DX`)
+  assert(!auctionIndex.isZero(), `The token pair ${tokenA.symbol}-${tokenB.symbol} doesn't exist in the DX`)
 
   const priceFraction = await dx
     .getPriceInPastAuction
