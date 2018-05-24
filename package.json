@@ -9,7 +9,7 @@
     "postinstall": "npm install @gnosis.pm/owl-token @gnosis.pm/pm-contracts truffle-hdwallet-provider",
     "contracts": "truffle compile && node scripts/inject_network_info.js",
     "deploy": "truffle deploy",
-    "add-token-pairs": "truffle exec scripts/addTokenPairs.js"
+    "add-token-pairs": "truffle exec trufflescripts/add-token-pairs.js"
   },
   "repository": {
     "type": "git",

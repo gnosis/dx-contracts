@@ -1,7 +1,9 @@
 const path = require('path')
 const assert = require('assert')
+
 // Example:
 //  yarn add-token-pairs -h
+//  yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/token-pairs.js --dry-run
 //  yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/token-pairs.js
 
 var argv = require('yargs')
