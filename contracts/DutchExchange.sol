@@ -112,13 +112,11 @@ contract DutchExchange {
         require(ethToken == 0);
 
         // Validates inputs
-        require(
-            address(_owlToken) != address(0) &&
-            address(_frtToken) != address(0) &&
-            _auctioneer != 0 &&
-            _ethToken != 0 &&
-            address(_ethUSDOracle) != address(0)
-        );
+        require(address(_owlToken) != address(0));
+        require(address(_frtToken) != address(0));
+        require(_auctioneer != 0);
+        require(_ethToken != 0);
+        require(address(_ethUSDOracle) != address(0));
 
         frtToken = _frtToken;
         owlToken = _owlToken;
@@ -218,7 +216,6 @@ contract DutchExchange {
         newMasterCopy = address(0);
     }
 
-    // > addTokenPair()
     /// @param initialClosingPriceNum initial price will be 2 * initialClosingPrice. This is its numerator
     /// @param initialClosingPriceDen initial price will be 2 * initialClosingPrice. This is its denominator
     function addTokenPair(
@@ -290,7 +287,6 @@ contract DutchExchange {
         addTokenPairSecondPart(token1, token2, token1Funding, token2Funding);
     }
 
-    // > calculateFundedValueTokenToken()
     function calculateFundedValueTokenToken(
         address token1,
         address token2,
@@ -328,7 +324,6 @@ contract DutchExchange {
         fundedValueUSD = mul(fundedValueETH, ethUSDPrice);
     }
 
-    // > addTokenPair2()
     function addTokenPairSecondPart(
         address token1,
         address token2,
@@ -354,7 +349,6 @@ contract DutchExchange {
         NewTokenPair(token1, token2);
     }
 
-    // > deposit()
     function deposit(
         address tokenAddress,
         uint amount
@@ -374,7 +368,6 @@ contract DutchExchange {
         return newBal;
     }
 
-    // > withdraw()
     function withdraw(
         address tokenAddress,
         uint amount
@@ -399,7 +392,6 @@ contract DutchExchange {
         return newBal;
     }
 
-     // > postSellOrder()
     function postSellOrder(
         address sellToken,
         address buyToken,
@@ -477,7 +469,6 @@ contract DutchExchange {
         return (auctionIndex, newSellerBal);
     }
 
-    // > postBuyOrder()
     function postBuyOrder(
         address sellToken,
         address buyToken,
@@ -550,7 +541,6 @@ contract DutchExchange {
         return (newBuyerBal);
     }
     
-    // > claimSellerFunds()
     function claimSellerFunds(
         address sellToken,
         address buyToken,
@@ -589,7 +579,6 @@ contract DutchExchange {
         NewSellerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
     }
 
-    // > claimBuyerFunds()
     function claimBuyerFunds(
         address sellToken,
         address buyToken,
@@ -639,7 +628,6 @@ contract DutchExchange {
         NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
     }
 
-    // > issueFrts()
     function issueFrts(
         address primaryToken,
         address secondaryToken,
@@ -701,7 +689,6 @@ contract DutchExchange {
         }
     }
 
-    // > getUnclaimedBuyerFunds()
     /// @dev Claim buyer funds for one auction
     function getUnclaimedBuyerFunds(
         address sellToken,
@@ -733,7 +720,6 @@ contract DutchExchange {
         }
     }
 
-    // > settleFee()
     function settleFee(
         address primaryToken,
         address secondaryToken,
@@ -762,7 +748,6 @@ contract DutchExchange {
         amountAfterFee = sub(amount, fee);
     }
 
-    // > settleFeeSecondPart()
     function settleFeeSecondPart(
         address primaryToken,
         uint fee
@@ -798,7 +783,6 @@ contract DutchExchange {
         }
     }
     
-    // > getFeeRatio()
     function getFeeRatio(
         address user
     )
@@ -837,7 +821,6 @@ contract DutchExchange {
         }
     }
 
-    // > clearAuction()
     /// @dev clears an Auction
     /// @param sellToken sellToken of the auction
     /// @param buyToken  buyToken of the auction
@@ -900,7 +883,6 @@ contract DutchExchange {
         AuctionCleared(sellToken, buyToken, sellVolume, buyVolume, auctionIndex);
     }
 
-    // > scheduleNextAuction()
     function scheduleNextAuction(
         address sellToken,
         address buyToken
@@ -934,9 +916,6 @@ contract DutchExchange {
         }
     }
 
-
-
-    // > getPriceInPastAuction()
     //@ dev returns price in units [token2]/[token1]
     //@ param token1 first token for price calculation
     //@ param token2 second token for price calculation
@@ -999,7 +978,6 @@ contract DutchExchange {
         } 
     }
 
-    // > getPriceOfTokenInLastAuction()
     /// @dev Gives best estimate for market price of a token in ETH of any price oracle on the Ethereum network
     /// @param token address of ERC-20 token
     /// @return Weighted average of closing prices of opposite Token-ethToken auctions, based on their sellVolume  
@@ -1016,7 +994,6 @@ contract DutchExchange {
         (num, den) = getPriceInPastAuction(token, ethToken, latestAuctionIndex - 1);
     }
 
-    // > getCurrentAuctionPrice()
     function getCurrentAuctionPrice(
         address sellToken,
         address buyToken,
@@ -1059,7 +1036,6 @@ contract DutchExchange {
         }
     }
 
-    // > depositAndSell()
     function depositAndSell(
         address sellToken,
         address buyToken,
@@ -1072,7 +1048,6 @@ contract DutchExchange {
         (auctionIndex, newSellerBal) = postSellOrder(sellToken, buyToken, 0, amount);
     }
 
-    // > claimAndWithdraw()
     function claimAndWithdraw(
         address sellToken,
         address buyToken,
@@ -1087,7 +1062,7 @@ contract DutchExchange {
         newBal = withdraw(buyToken, amount);
     }
 
-    // > helper fns
+    // > Helper fns
     function getTokenOrder(
         address token1,
         address token2
