@@ -27,7 +27,7 @@ if (argv.network) {
     provider = new HDWalletProvider(privKey, 'https://kovan.infura.io/')
   }
   else if(argv.network == 'mainnet'){
-    provider = new HDWalletProvider(privKey, 'https://mainet.infura.io/')
+    provider = new HDWalletProvider(privKey, 'https://mainnet.infura.io/')
   }
   web3 = new Web3(provider.engine)
 } else {
