@@ -182,7 +182,7 @@ async function ensureEnoughBalance (token, { account, wethAddress, etherBalance,
 
   const balanceDxValue = balanceDx.div(1e18)
   const balanceTokenValue = balanceToken.div(1e18)
-  if (balanceDxValue.lessThanOrEqualTo(funding)) {
+  if (balanceDxValue.lessThan(funding)) {
     let totalTokenBalance = balanceDxValue.plus(balanceTokenValue)
     let balancesString = `\
 Balance DX: ${balanceDxValue}, \
