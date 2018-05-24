@@ -8,6 +8,5 @@ module.exports = [
   require('./WETH_RDN.js'),
 
   // RDN-OMG
-  // require('./WETH_RDN.js')
-  // TODO:
+  require('./RDN_OMG.js')
 ]

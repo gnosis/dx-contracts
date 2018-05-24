@@ -1,7 +1,7 @@
 const path = require('path')
 const assert = require('assert')
-
-const DEFAULT_GAS = 2374235
+                     
+const DEFAULT_GAS = 5e5 // 500K
 const DEFAULT_GAS_PRICE = 1e9
 
 // Usage example:
@@ -67,6 +67,8 @@ async function addTokenPairs () {
     Current Ether price: ${contractsInfo.etherPrice}
 `)
     // Add token pairs
+    // const tokens = getTokensFromTokenPair(tokenPairs)
+
     const params = {
       gas,
       gasPrice,
@@ -82,7 +84,7 @@ async function addTokenPairs () {
 }
 
 async function addTokenPair (tokenPair, contractsInfo, params) {
-  const { description, tokenA, tokenB, initialPrice } = tokenPair
+  const { tokenA, tokenB, initialPrice } = tokenPair
   const { gas, gasPrice, network, dryRun } = params
   const {
     dx,
@@ -93,12 +95,13 @@ async function addTokenPair (tokenPair, contractsInfo, params) {
     account
   } = contractsInfo
 
-  console.log('\n ==============  Add token pair: %s  ==============', description)  
+  console.log('\n ==============  Add token pair: %s-%s  ==============',
+    tokenA.symbol, tokenB.symbol)  
   const price = initialPrice.numerator / initialPrice.denominator
   console.log('Initial price: ' + price)
 
-  const printTokenInfo = (name, { address, funding }) => {
-    console.log(`${name}:
+  const printTokenInfo = (name, { symbol, address, funding }) => {
+    console.log(`${symbol}:
     Address: ${address}
     Funding: ${funding}`)
   }
@@ -106,54 +109,58 @@ async function addTokenPair (tokenPair, contractsInfo, params) {
   printTokenInfo('TokenB', tokenB)
   console.log('')
 
-  // Ensure that the user has enogh balance
-  await ensureEnoughBalance(tokenA, contractsInfo)
-  await ensureEnoughBalance(tokenB, contractsInfo)
+  // Get auction index
+  const auctionIndex = await dx
+    .getAuctionIndex
+    .call(tokenA.address, tokenB.address)
 
-  // Ensure that the funding surplus the threshold
-  await ensureEnoughFunding(tokenA, tokenB, contractsInfo)
+  if (auctionIndex.isZero()) {
+    // Ensure that the user has enogh balance
+    await ensureEnoughBalance(tokenA, contractsInfo)
+    await ensureEnoughBalance(tokenB, contractsInfo)
 
-  // Ensure that the funding surplus the threshold
-  await ensureNonExisingAuction(tokenA.address, tokenB.address, dx)
+    // Ensure that the funding surplus the threshold
+    await ensureEnoughFunding(tokenA, tokenB, contractsInfo)
 
-  // Prepare the args for addTokenPair
-  const addTokenArgs = [
-    tokenA.address,
-    tokenB.address,
-    tokenA.funding * 1e18,
-    tokenB.funding * 1e18,
-    initialPrice.numerator,
-    initialPrice.denominator
-  ]
-  console.log(`Add token arguments (token1, token2, token1Funding, \
-token2Funding, initialClosingPriceNum, initialClosingPriceDen):\n\t %s\n`,
-  addTokenArgs.join(', ')
-)
+    // Prepare the args for addTokenPair
+    const addTokenArgs = [
+      tokenA.address,
+      tokenB.address,
+      tokenA.funding * 1e18,
+      tokenB.funding * 1e18,
+      initialPrice.numerator,
+      initialPrice.denominator
+    ]
+    console.log(`Add token arguments (token1, token2, token1Funding, \
+  token2Funding, initialClosingPriceNum, initialClosingPriceDen):\n\t %s\n`,
+      addTokenArgs.join(', '))
 
-
-  if (dryRun) {
-    // Dry run
-    console.log("The dry run execution passed all validations")
-    await dx.addTokenPair.call(
-      ...addTokenArgs, {
-      from: account
-    })
-    console.log('Dry run success!')
+    if (dryRun) {
+      // Dry run
+      console.log("The dry run execution passed all validations")
+      await dx.addTokenPair.call(
+        ...addTokenArgs, {
+        from: account
+      })
+      console.log('Dry run success!')
+    } else {
+      // Real add token pair execution
+      console.log("Adding token pairs with account: " + account)
+      const addTokenResult = await dx.addTokenPair(
+        ...addTokenArgs, {
+        from: account,
+        gas,
+        gasPrice
+      })
+      console.log('Success! The token pair was added. Transaction: ' + addTokenResult.tx)
+    }
   } else {
-    // Real add token pair execution
-    console.log("Adding token pairs with account: " + account)
-    const addTokenResult = await dx.addTokenPair(
-      ...addTokenArgs, {
-      from: account,
-      gas,
-      gasPrice
-    })
-    console.log('Success! The token pair was added. Transaction: ' + addTokenResult.tx)
+    console.log(`The token pair is already in the DX (index=${auctionIndex}). There's nothing to do`)
   }
 }
 
 async function ensureEnoughBalance (token, { account, wethAddress, etherBalance, StandardToken, dx }) {
-  const { address: tokenAddress, funding} = token
+  const { address: tokenAddress, funding, symbol} = token
   if (funding === 0) {
     // If we don fund the token, we can skip the balance check
     return
@@ -192,15 +199,15 @@ Funding: ${funding}`
       if (totalTokenBalance.lessThan(funding)) {
         // The user doesn't have enough tokens
         throw new Error(`The account doesn't have enough balance for token \
-${tokenAddress}. ${balancesString}`)
+${symbol}. ${balancesString}`)
       } else {
         throw new Error(`The account has enough balance for token \
-${tokenAddress}, but it needs to wrap Ether and deposit it into the DX. ${balancesString}`)
+${symbol}, but it needs to wrap Ether and deposit it into the DX. ${balancesString}`)
       }
     } else {
       // The has enough tokens, but not in the DX
       throw new Error(`The account has enough balance for token \
-${tokenAddress}, but it needs to deposit it into the DX. ${balancesString}`)
+${symbol}, but it needs to deposit it into the DX. ${balancesString}`)
     }
   }
 }
@@ -220,11 +227,12 @@ async function ensureEnoughFunding (tokenA, tokenB, {
     fundingInEtherB = tokenB.funding
   } else {
     // None of the tokens is WETH
-    const tokenAPriceInWeth = getPriceInPastAuction(tokenA.address, wethAddress)
-    fundingInEtherA = tokenA.funding.mul(tokenAPriceInWeth)
+    const wethToken = { address: wethAddress, symbol: 'WETH' }
+    const tokenAPriceInWeth = await getPriceInPastAuction(tokenA, wethToken, dx)
+    fundingInEtherA = tokenAPriceInWeth.mul(tokenA.funding)
 
-    const tokenBPriceInWeth = getPriceInPastAuction(tokenB.address, wethAddress)
-    fundingInEtherB = tokenB.funding.mul(tokenBPriceInWeth)
+    const tokenBPriceInWeth = await getPriceInPastAuction(tokenB, wethToken, dx)
+    fundingInEtherB = tokenBPriceInWeth.mul(tokenB.funding)
   }
 
   // Get the funding in USD
@@ -244,31 +252,28 @@ async function ensureEnoughFunding (tokenA, tokenB, {
 
   if (!enoughFunding) {
     throw new Error(`Insufficient funding. \
-tokenA: $${fundingInUsdA.toFixed(2)}, \
-tokenB: $${fundingInUsdB.toFixed(2)}, \
+${tokenA.symbol}: $${fundingInUsdA.toFixed(2)}, \
+${tokenB.symbol}: $${fundingInUsdB.toFixed(2)}, \
 threshold in USD: $${thresholdInUSD}`)
   }
 }
 
-async function ensureNonExisingAuction (addressA, addressB, dx) {
-  // Get auction index
-  const auctionIndex = await dx
-    .getAuctionIndex
-    .call(addressA, addressB)
+async function getPriceInPastAuction (tokenA, tokenB, dx) {
+  const addressA = tokenA.address
+  const addressB = tokenB.address
 
-  assert(auctionIndex.isZero(), 'The token pair was already in the DX. Auction index: ' + auctionIndex.toNumber())
-}
-
-async function getPriceInPastAuction (addressA, addressB) {
   const auctionIndex = await dx
     .getAuctionIndex
     .call(addressA, addressB)
   
-  assert(auctionIndex.isZero() > 0, `The token ${tokenA}-${tokenB} doesn't exist`)
+  assert(auctionIndex.isZero() > 0, `The token pair ${tokenA.symbol}-${tokenB.symbol} doesn't exist in the DX`)
 
-  return dx
+  const priceFraction = await dx
     .getPriceInPastAuction
     .call(addressA, addressB, auctionIndex)
+
+  const [ numerator, denominator ] = priceFraction
+  return numerator.div(denominator)
 }
 
 async function loadContractsInfo () {
@@ -336,6 +341,32 @@ async function loadContractsInfo () {
     StandardToken,
     account
   }
+}
+
+function getTokensFromTokenPair (tokenPairs) {
+  const addToken = (tokens, token) =>{
+    const { symbol, address } = token
+    const token = symbols[symbol]
+
+    if (token) {
+      // We do a validation of coherence (same symbols, must have same addresses)
+      if (token.address !== address) {
+        throw new Error(`The file has an incoherence for token ${symbol}. \
+It has at least 2 different addresses: ${token.address} and ${address}`)
+      }
+    } else {
+      // Add the token
+      tokens[symbol] = token
+    }
+
+  }
+
+  return tokenPairs.reduce((tokens, { tokenA, tokenB }) => {
+    addToken(tokens, tokenA)
+    addToken(tokens, tokenB)
+    
+    return tokens
+  }, {})
 }
 
 module.exports = (callback) => {  
