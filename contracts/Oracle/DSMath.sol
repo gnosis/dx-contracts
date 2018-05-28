@@ -2,11 +2,10 @@ pragma solidity ^0.4.19;
 
 
 contract DSMath {
-    
+
     /*
     standard uint256 functions
      */
-
     function add(uint256 x, uint256 y) constant internal returns (uint256 z) {
         assert((z = x + y) >= x);
     }
@@ -26,6 +25,7 @@ contract DSMath {
     function min(uint256 x, uint256 y) constant internal returns (uint256 z) {
         return x <= y ? x : y;
     }
+
     function max(uint256 x, uint256 y) constant internal returns (uint256 z) {
         return x >= y ? x : y;
     }
@@ -33,8 +33,6 @@ contract DSMath {
     /*
     uint128 functions (h is for half)
      */
-
-
     function hadd(uint128 x, uint128 y) constant internal returns (uint128 z) {
         assert((z = x + y) >= x);
     }
@@ -54,18 +52,18 @@ contract DSMath {
     function hmin(uint128 x, uint128 y) constant internal returns (uint128 z) {
         return x <= y ? x : y;
     }
+
     function hmax(uint128 x, uint128 y) constant internal returns (uint128 z) {
         return x >= y ? x : y;
     }
 
-
     /*
     int256 functions
      */
-
     function imin(int256 x, int256 y) constant internal returns (int256 z) {
         return x <= y ? x : y;
     }
+
     function imax(int256 x, int256 y) constant internal returns (int256 z) {
         return x >= y ? x : y;
     }
@@ -73,7 +71,6 @@ contract DSMath {
     /*
     WAD math
      */
-
     uint128 constant WAD = 10 ** 18;
 
     function wadd(uint128 x, uint128 y) constant internal returns (uint128) {
@@ -95,6 +92,7 @@ contract DSMath {
     function wmin(uint128 x, uint128 y) constant internal returns (uint128) {
         return hmin(x, y);
     }
+
     function wmax(uint128 x, uint128 y) constant internal returns (uint128) {
         return hmax(x, y);
     }
@@ -102,7 +100,6 @@ contract DSMath {
     /*
     RAY math
      */
-
     uint128 constant RAY = 10 ** 27;
 
     function radd(uint128 x, uint128 y) constant internal returns (uint128) {
@@ -136,7 +133,6 @@ contract DSMath {
         //
         //  Also, EVM division is flooring and
         //    floor[(n-1) / 2] = floor[n / 2].
-
         z = n % 2 != 0 ? x : RAY;
 
         for (n /= 2; n != 0; n /= 2) {
@@ -151,6 +147,7 @@ contract DSMath {
     function rmin(uint128 x, uint128 y) constant internal returns (uint128) {
         return hmin(x, y);
     }
+
     function rmax(uint128 x, uint128 y) constant internal returns (uint128) {
         return hmax(x, y);
     }

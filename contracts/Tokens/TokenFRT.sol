@@ -16,8 +16,8 @@ contract TokenFRT is StandardToken {
     /*
      *  Storage
      */
-
     address public owner;
+
     address public minter;
 
     // user => unlockedToken
@@ -29,7 +29,6 @@ contract TokenFRT is StandardToken {
     /*
      *  Public functions
      */
-
     function TokenFRT(
         address _owner
     )
@@ -54,7 +53,7 @@ contract TokenFRT is StandardToken {
 
     // @dev the intention is to set the owner as the DX-proxy, once it is deployed
     // Then only an update of the DX-proxy contract after a 30 days delay could change the minter again.
-    function updateOwner(   
+    function updateOwner(
         address _owner
     )
         public
@@ -85,7 +84,7 @@ contract TokenFRT is StandardToken {
     {
         // Adjust amount by balance
         amount = min(amount, balances[msg.sender]);
-        
+
         // Update state variables
         balances[msg.sender] = sub(balances[msg.sender], amount);
         lockedTokenBalances[msg.sender] = add(lockedTokenBalances[msg.sender], amount);
@@ -106,7 +105,7 @@ contract TokenFRT is StandardToken {
         if (amount > 0) {
             // Update state variables
             lockedTokenBalances[msg.sender] = sub(lockedTokenBalances[msg.sender], amount);
-            unlockedTokens[msg.sender].amountUnlocked =  add(unlockedTokens[msg.sender].amountUnlocked, amount);
+            unlockedTokens[msg.sender].amountUnlocked = add(unlockedTokens[msg.sender].amountUnlocked, amount);
             unlockedTokens[msg.sender].withdrawalTime = now + 24 hours;
         }
 
@@ -123,7 +122,7 @@ contract TokenFRT is StandardToken {
         unlockedTokens[msg.sender].amountUnlocked = 0;
     }
 
-    function min(uint a, uint b) 
+    function min(uint a, uint b)
         public
         pure
         returns (uint)
@@ -134,7 +133,8 @@ contract TokenFRT is StandardToken {
             return b;
         }
     }
-        /// @dev Returns whether an add operation causes an overflow
+
+    /// @dev Returns whether an add operation causes an overflow
     /// @param a First addend
     /// @param b Second addend
     /// @return Did no overflow occur?
@@ -157,7 +157,6 @@ contract TokenFRT is StandardToken {
     {
         return a >= b;
     }
-
 
     /// @dev Returns sum if no overflow occurred
     /// @param a First addend
