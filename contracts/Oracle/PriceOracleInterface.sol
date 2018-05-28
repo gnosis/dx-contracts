@@ -7,6 +7,7 @@ This contract is the interface between the MakerDAO priceFeed and our DX platfor
 import "../Oracle/PriceFeed.sol";
 import "../Oracle/Medianizer.sol";
 
+
 contract PriceOracleInterface {
 
     address public priceFeedSource;
@@ -32,7 +33,8 @@ contract PriceOracleInterface {
         owner = _owner;
         priceFeedSource = _priceFeedSource;
     }
-    /// @dev gives the owner the possibility to put the Interface into an emergencyMode, which will 
+
+    /// @dev gives the owner the possibility to put the Interface into an emergencyMode, which will
     /// output always a price of 600 USD. This gives everyone time to set up a new pricefeed.
     function raiseEmergency(bool _emergencyMode)
         public
@@ -52,13 +54,15 @@ contract PriceOracleInterface {
         owner = _owner;
     }
 
-    /// @dev returns the USDETH price, ie gets the USD price from Maker feed with 18 digits, but last 18 digits are cut off
-    function getUSDETHPrice() 
+    /// @dev returns the USDETH price, ie gets the USD price from Maker feed with 18 digits,
+    /// but last 18 digits are cut off
+    function getUSDETHPrice()
         public
         returns (uint256)
     {
-        // if the contract is in the emergencyMode, because there is an issue with the oracle, we will simply return a price of 600 USD
-        if(emergencyMode){
+        // if the contract is in the emergencyMode, because there is an issue with the oracle,
+        // we will simply return a price of 600 USD
+        if (emergencyMode) {
             return 600;
         }
 
@@ -72,7 +76,7 @@ contract PriceOracleInterface {
         // even if the price is compromised
         uint priceUint = uint256(price)/(1 ether);
         if (priceUint == 0) return 1;
-        if (priceUint > 1000000) return 1000000; 
+        if (priceUint > 1000000) return 1000000;
         return priceUint;
-    }  
+    }
 }

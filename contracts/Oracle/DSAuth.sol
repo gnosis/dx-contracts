@@ -7,10 +7,12 @@ contract DSAuthority {
     ) public view returns (bool);
 }
 
+
 contract DSAuthEvents {
     event LogSetAuthority (address indexed authority);
     event LogSetOwner     (address indexed owner);
 }
+
 
 contract DSAuth is DSAuthEvents {
     DSAuthority  public  authority;

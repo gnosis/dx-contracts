@@ -1,0 +1,12 @@
+{
+  "extends": "default",
+  "rules": {
+    "contract-name-camelcase": "warn",
+    "const-name-snakecase": "warn",
+    "func-order": "warn",
+    "func-param-name-mixedcase": "warn",
+    "visibility-modifier-order": "warn",
+    "avoid-throw": "warn",
+    "code-complexity": "warn"
+  }
+}
