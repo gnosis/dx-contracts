@@ -94,7 +94,6 @@ const startBal = {
 
 // const c1 = () =>
 contract('DutchExchange - TradeFlows', (accounts) => {
-
   const [master, seller1, seller2, buyer1, buyer2, seller3] = accounts
 
   before(async () => {
