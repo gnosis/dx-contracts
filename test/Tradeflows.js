@@ -105,30 +105,16 @@ contract('DutchExchange - TradeFlows', (accounts) => {
 
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
-
-    // // add tokenPair ETH GNO
-    // await dx.addTokenPair(
-    //   eth.address,
-    //   gno.address,
-    //   10 * ether,
-    //   0,
-    //   2,
-    //   1,
-    //   { from: seller1 },
-    // )
-    //
-    // eventWatcher(dx, 'Log', {})
   })
 
   let currentSnapshotId
 
   afterEach(gasLogger)
-  // after(eventWatcher.stopWatching)
+  after(eventWatcher.stopWatching)
 
   describe('DutchExchange - Flow 3', () => {
     before(async () => {
       currentSnapshotId = await makeSnapshot()
-      console.log('beforeEach: ' + currentSnapshotId)
 
       // add tokenPair ETH GNO
       await dx.addTokenPair(
@@ -143,7 +129,6 @@ contract('DutchExchange - TradeFlows', (accounts) => {
     })
 
     after(async () => {
-      console.log('afterEach: ' + currentSnapshotId)
       await revertSnapshot(currentSnapshotId)
       eventWatcher.stopWatching()
     })
@@ -183,47 +168,9 @@ contract('DutchExchange - TradeFlows', (accounts) => {
     })
   })
 
-// })
-
-// const c2 = () => contract('DutchExchange - Flow 6', (accounts) => {
-//   const [, seller1, seller2, buyer1, buyer2] = accounts
-//
-//   before(async () => {
-//     // get contracts
-//     contracts = await getContracts();
-//     // destructure contracts into upper state
-//     ({
-//       DutchExchange: dx,
-//       EtherToken: eth,
-//       TokenGNO: gno,
-//       TokenFRT: tokenMGN,
-//       PriceOracleInterface: oracle,
-//     } = contracts)
-//
-//     // set up accounts and tokens[contracts]
-//     await setupTest(accounts, contracts, startBal)
-//
-//     // calculate the invariants
-//     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
-//
-//     // add tokenPair ETH GNO
-//     await dx.addTokenPair(
-//       eth.address,
-//       gno.address,
-//       10 * ether,
-//       0,
-//       2,
-//       1,
-//       { from: seller1 },
-//     )
-//   })
-//   afterEach(gasLogger)
-//   after(eventWatcher.stopWatching)
-
   describe('DutchExchange - Flow 6', () => {
     before(async () => {
       currentSnapshotId = await makeSnapshot()
-      console.log('beforeEach: ' + currentSnapshotId)
 
       // add tokenPair ETH GNO
       await dx.addTokenPair(
@@ -235,12 +182,9 @@ contract('DutchExchange - TradeFlows', (accounts) => {
         1,
         { from: seller1 },
       )
-
-      // eventWatcher(dx, 'Log', {})
     })
 
     after(async () => {
-      console.log('afterEach: ' + currentSnapshotId)
       await revertSnapshot(currentSnapshotId)
       eventWatcher.stopWatching()
     })
@@ -249,7 +193,6 @@ contract('DutchExchange - TradeFlows', (accounts) => {
       eventWatcher(dx, 'NewTokenPair', {})
 
       const auctionIndex = await getAuctionIndex()
-
 
       // general setup information
       logger('PRICE ORACLE', await oracle.getUSDETHPrice.call())
@@ -309,50 +252,11 @@ contract('DutchExchange - TradeFlows', (accounts) => {
       // TODO testing for extra tokens
     })
   })
-// })
-//
-// const c3 = () => contract('DutchExchange - Flow 4', (accounts) => {
-//   const [, seller1, seller2, buyer1, buyer2, seller3] = accounts
-//
-//   before(async () => {
-//     // get contracts
-//     contracts = await getContracts();
-//     // destructure contracts into upper state
-//     ({
-//       DutchExchange: dx,
-//       EtherToken: eth,
-//       TokenGNO: gno,
-//       TokenFRT: tokenMGN,
-//       PriceOracleInterface: oracle,
-//     } = contracts)
-//
-//     // set up accounts and tokens[contracts]
-//     await setupTest(accounts, contracts, startBal)
-//
-//     // calculate the invariants
-//     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
-//
-//     // add tokenPair ETH GNO
-//     await dx.addTokenPair(
-//       eth.address,
-//       gno.address,
-//       10 * ether,
-//       ether * 5,
-//       2,
-//       1,
-//       { from: seller1 },
-//     )
-//   })
-//
-//   afterEach(gasLogger)
-//   after(eventWatcher.stopWatching)
 
-  // TODO last step failing
+  // FIXME last step failing
   describe.skip('DutchExchange - Flow 4', () => {
-    let flow4SnapshotId
     before(async () => {
-      flow4SnapshotId = await makeSnapshot()
-      console.log('beforeEach: ' + flow4SnapshotId)
+      currentSnapshotId = await makeSnapshot()
 
       // add tokenPair ETH GNO
       await dx.addTokenPair(
@@ -364,13 +268,10 @@ contract('DutchExchange - TradeFlows', (accounts) => {
         1,
         { from: seller1 },
       )
-
-      // eventWatcher(dx, 'Log', {})
     })
 
     after(async () => {
-      console.log('afterEach: ' + flow4SnapshotId)
-      await revertSnapshot(flow4SnapshotId)
+      await revertSnapshot(currentSnapshotId)
       eventWatcher.stopWatching()
     })
 
@@ -441,49 +342,10 @@ contract('DutchExchange - TradeFlows', (accounts) => {
       await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer2 })
     })
   })
-// })
-
-// const c4 = () => contract('DutchExchange - Flow 1', (accounts) => {
-//   const [, seller1, seller2, buyer1, buyer2] = accounts
-//
-//   before(async () => {
-//     // get contracts
-//     contracts = await getContracts();
-//     // destructure contracts into upper state
-//     ({
-//       DutchExchange: dx,
-//       EtherToken: eth,
-//       TokenGNO: gno,
-//       TokenFRT: tokenMGN,
-//       PriceOracleInterface: oracle,
-//     } = contracts)
-//
-//     // set up accounts and tokens[contracts]
-//     await setupTest(accounts, contracts, startBal)
-//
-//     // calculate the invariants
-//     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
-//
-//     // add tokenPair ETH GNO
-//     await dx.addTokenPair(
-//       eth.address,
-//       gno.address,
-//       10 * ether,
-//       ether * 5,
-//       2,
-//       1,
-//       { from: seller1 },
-//     )
-//   })
-//
-//   afterEach(gasLogger)
-//   after(eventWatcher.stopWatching)
 
   describe('DutchExchange - Flow 1', () => {
-    let flow1SnapshotId
     before(async () => {
-      flow1SnapshotId = await makeSnapshot()
-      console.log('beforeEach: ' + flow1SnapshotId)
+      currentSnapshotId = await makeSnapshot()
 
       // add tokenPair ETH GNO
       await dx.addTokenPair(
@@ -495,13 +357,10 @@ contract('DutchExchange - TradeFlows', (accounts) => {
         1,
         { from: seller1 },
       )
-
-      eventWatcher(dx, 'Log', {})
     })
 
     after(async () => {
-      console.log('afterEach: ' + flow1SnapshotId)
-      await revertSnapshot(flow1SnapshotId)
+      await revertSnapshot(currentSnapshotId)
       eventWatcher.stopWatching()
     })
 
@@ -562,47 +421,10 @@ contract('DutchExchange - TradeFlows', (accounts) => {
       await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer2 })
     })
   })
-// })
-
-// const c5 = () => contract('DutchExchange - Flow 9', (accounts) => {
-//   const [, seller1, , buyer1, buyer2] = accounts
-//
-//   before(async () => {
-//     // get contracts
-//     contracts = await getContracts();
-//     // destructure contracts into upper state
-//     ({
-//       DutchExchange: dx,
-//       EtherToken: eth,
-//       TokenGNO: gno,
-//       TokenFRT: tokenMGN,
-//       PriceOracleInterface: oracle,
-//     } = contracts)
-//
-//     // set up accounts and tokens[contracts]
-//     await setupTest(accounts, contracts, startBal)
-//
-//     // calculate the invariants
-//     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
-//
-//     // add tokenPair ETH GNO
-//     await dx.addTokenPair(
-//       eth.address,
-//       gno.address,
-//       10 * ether,
-//       0,
-//       2,
-//       1,
-//       { from: seller1 },
-//     )
-//   })
-//   afterEach(gasLogger)
-//   after(eventWatcher.stopWatching)
 
   describe('DutchExchange - Flow 9', () => {
     before(async () => {
       currentSnapshotId = await makeSnapshot()
-      console.log('beforeEach: ' + currentSnapshotId)
 
       // add tokenPair ETH GNO
       await dx.addTokenPair(
@@ -619,7 +441,6 @@ contract('DutchExchange - TradeFlows', (accounts) => {
     })
 
     after(async () => {
-      console.log('afterEach: ' + currentSnapshotId)
       await revertSnapshot(currentSnapshotId)
       eventWatcher.stopWatching()
     })
@@ -667,50 +488,12 @@ contract('DutchExchange - TradeFlows', (accounts) => {
       // const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
       await checkState(2, 1, 0, 0, 0, 0, 0, eth, gno, 0)
       await checkInvariants(balanceInvariant, accounts, [eth, gno])
-      // await checkInvariants(balanceInvariant, accounts, [eth, gno])
     })
   })
-// })
-
-// const c6 = () => contract('DutchExchange - Flow 10', (accounts) => {
-//   const [, seller1, seller2, buyer1, buyer2] = accounts
-//
-//   before(async () => {
-//     // get contracts
-//     contracts = await getContracts();
-//     // destructure contracts into upper state
-//     ({
-//       DutchExchange: dx,
-//       EtherToken: eth,
-//       TokenGNO: gno,
-//       TokenFRT: tokenMGN,
-//       PriceOracleInterface: oracle,
-//     } = contracts)
-//
-//     // set up accounts and tokens[contracts]
-//     await setupTest(accounts, contracts, startBal)
-//
-//     // calculate the invariants
-//     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
-//
-//     // add tokenPair ETH GNO
-//     await dx.addTokenPair(
-//       eth.address,
-//       gno.address,
-//       10 * ether,
-//       ether * 5,
-//       2,
-//       1,
-//       { from: seller1 },
-//     )
-//   })
-//   afterEach(gasLogger)
-//   after(eventWatcher.stopWatching)
 
   describe('DutchExchange - Flow 10', () => {
     before(async () => {
       currentSnapshotId = await makeSnapshot()
-      console.log('beforeEach: ' + currentSnapshotId)
 
       // add tokenPair ETH GNO
       await dx.addTokenPair(
@@ -722,17 +505,14 @@ contract('DutchExchange - TradeFlows', (accounts) => {
         1,
         { from: seller1 },
       )
-
-      eventWatcher(dx, 'Log', {})
     })
 
     after(async () => {
-      console.log('afterEach: ' + currentSnapshotId)
       await revertSnapshot(currentSnapshotId)
       eventWatcher.stopWatching()
     })
 
-    it('step 2 - clearing one auction theoretical', async () => {
+    it('step 1 - clearing one auction theoretical', async () => {
       const auctionIndex = await getAuctionIndex()
 
       // ASSERT Auction has started
@@ -806,47 +586,10 @@ contract('DutchExchange - TradeFlows', (accounts) => {
       await dx.postBuyOrder(eth.address, gno.address, auctionIndex, 10 ** 9 * 2, { from: buyer2 })
     })
   })
-// })
-//
-// const c7 = () => contract('DutchExchange - Flow 7', (accounts) => {
-//   const [, seller1, seller2, buyer1, buyer2, seller3] = accounts
-//
-//   before(async () => {
-//     // get contracts
-//     contracts = await getContracts();
-//     // destructure contracts into upper state
-//     ({
-//       DutchExchange: dx,
-//       EtherToken: eth,
-//       TokenGNO: gno,
-//       TokenFRT: tokenMGN,
-//       PriceOracleInterface: oracle,
-//     } = contracts)
-//
-//     // set up accounts and tokens[contracts]
-//     await setupTest(accounts, contracts, startBal)
-//
-//     // calculate the invariants
-//     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
-//
-//     // add tokenPair ETH GNO
-//     await dx.addTokenPair(
-//       eth.address,
-//       gno.address,
-//       10 * ether,
-//       ether * 5,
-//       2,
-//       1,
-//       { from: seller1 },
-//     )
-//   })
-//   afterEach(gasLogger)
-//   after(eventWatcher.stopWatching)
 
   describe('DutchExchange - Flow 7', () => {
     before(async () => {
       currentSnapshotId = await makeSnapshot()
-      console.log('beforeEach: ' + currentSnapshotId)
 
       // add tokenPair ETH GNO
       await dx.addTokenPair(
@@ -858,12 +601,9 @@ contract('DutchExchange - TradeFlows', (accounts) => {
         1,
         { from: seller1 },
       )
-
-      eventWatcher(dx, 'Log', {})
     })
 
     after(async () => {
-      console.log('afterEach: ' + currentSnapshotId)
       await revertSnapshot(currentSnapshotId)
       eventWatcher.stopWatching()
     })
@@ -934,77 +674,12 @@ contract('DutchExchange - TradeFlows', (accounts) => {
       await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', gno, eth, valMinusFee(ether * 5 / 2), 10 ** 16)
     })
   })
-// })
+
   const TokenGNO = artifacts.require('TokenGNO')
-// const c8 = () => contract('DutchExchange - Flow 7 - ERC20vsERC20 trading -', (accounts) => {
-  // const [master, seller1, seller2, buyer1, buyer2] = accounts
-  // let gno2
-  // before(async () => {
-  //   // get contracts
-  //   contracts = await getContracts();
-  //   // destructure contracts into upper state
-  //   ({
-  //     DutchExchange: dx,
-  //     EtherToken: eth,
-  //     TokenGNO: gno,
-  //     TokenFRT: tokenMGN,
-  //     PriceOracleInterface: oracle,
-  //   } = contracts)
-  //
-  //   // set up accounts and tokens[contracts]
-  //   await setupTest(accounts, contracts, startBal)
-  //
-  //   // calculate the invariants
-  //   balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])
-  //   logger('invariant calcualted')
-  //   // generate new token and distribute
-  //   const startingGNO2 = 100 * (10 ** 18)
-  //   gno2 = await TokenGNO.new(10000 * (10 ** 18), { from: master })
-  //   await gno2.transfer(seller2, startingGNO2)
-  //   await gno2.transfer(buyer1, startingGNO2)
-  //   await gno2.approve(dx.address, startingGNO2, { from: seller2 })
-  //   await gno2.approve(dx.address, startingGNO2, { from: buyer1 })
-  //   await gno2.approve(dx.address, startingGNO2, { from: master })
-  //   await dx.deposit(gno2.address, startingGNO2, { from: seller2 })
-  //   await dx.deposit(gno2.address, startingGNO2, { from: buyer1 })
-  //   await dx.deposit(gno2.address, startingGNO2, { from: master })
-  //   // add tokenPair all required tokenPairs
-  //   await dx.addTokenPair(
-  //     eth.address,
-  //     gno.address,
-  //     10 * ether,
-  //     ether * 5,
-  //     2,
-  //     1,
-  //     { from: seller1 },
-  //   )
-  //   await dx.addTokenPair(
-  //     eth.address,
-  //     gno2.address,
-  //     10 * ether,
-  //     ether * 5,
-  //     1,
-  //     1,
-  //     { from: seller2 },
-  //   )
-  //   await dx.addTokenPair(
-  //     gno.address,
-  //     gno2.address,
-  //     10 * ether,
-  //     ether * 5,
-  //     1,
-  //     2,
-  //     { from: seller2 },
-  //   )
-  //   logger('gno, gno2 added')
-  // })
-  // afterEach(() => gasLogger())
-  // after(eventWatcher.stopWatching)
 
   describe('DutchExchange - Flow 7 - ERC20vsERC20 trading -', () => {
     before(async () => {
       currentSnapshotId = await makeSnapshot()
-      console.log('beforeEach: ' + currentSnapshotId)
 
       // generate new token and distribute
       const startingGNO2 = 100 * (10 ** 18)
@@ -1046,12 +721,9 @@ contract('DutchExchange - TradeFlows', (accounts) => {
         { from: seller2 },
       )
       logger('gno, gno2 added')
-
-      // eventWatcher(dx, 'Log', {})
     })
 
     after(async () => {
-      console.log('afterEach: ' + currentSnapshotId)
       await revertSnapshot(currentSnapshotId)
       eventWatcher.stopWatching()
     })
@@ -1116,5 +788,3 @@ contract('DutchExchange - TradeFlows', (accounts) => {
     })
   })
 })
-
-// enableContractFlag(c1, c2, c3, c4, c5, c6, c7, c8)
