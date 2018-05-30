@@ -64,7 +64,7 @@ const gasLogWrapper = (contracts) => {
 const gasLogger = () => {
   gasLog && console.info(`
     *******************************
-    TOTAL GAS 
+    TOTAL GAS
     Gas ==> ${totalGas}
     *******************************
   `)
@@ -133,7 +133,7 @@ const eventWatcher = noevents ? () => {} : (contract, eventName, argum = {}) => 
         LOG FOUND:
         ========================
         Event Name: ${event}
-        Args:       
+        Args:
         ${JSON.stringify(args, undefined, 2)}
         ========================
         `)
@@ -218,6 +218,21 @@ const enableContractFlag = (...contractTests) => {
   else contractTests.forEach(c => c())
 }
 
+const makeSnapshot = () => {
+  return web3.currentProvider.send({
+    jsonrpc: '2.0',
+    method: 'evm_snapshot'
+  }).result
+}
+
+const revertSnapshot = snapshotId => {
+  web3.currentProvider.send({
+    jsonrpc: '2.0',
+    method: 'evm_revert',
+    params: [snapshotId]
+  })
+}
+
 module.exports = {
   assertRejects,
   blockNumber,
@@ -229,4 +244,6 @@ module.exports = {
   logger,
   timestamp,
   varLogger,
+  makeSnapshot,
+  revertSnapshot
 }
