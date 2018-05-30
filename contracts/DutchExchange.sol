@@ -1,6 +1,6 @@
 pragma solidity ^0.4.19;
 
-import "./Tokens/TokenFRT.sol";
+import "./TokenFRT.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "./Oracle/PriceOracleInterface.sol";  
 

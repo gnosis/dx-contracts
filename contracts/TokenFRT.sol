@@ -1,7 +1,6 @@
 pragma solidity ^0.4.19;
 import "@gnosis.pm/gnosis-core-contracts/contracts/Tokens/StandardToken.sol";
 
-
 /// @title Standard token contract with overflow protection
 contract TokenFRT is StandardToken {
     string public constant symbol = "MGN";
