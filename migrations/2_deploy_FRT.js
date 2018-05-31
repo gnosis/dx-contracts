@@ -9,15 +9,12 @@ const Math = contract(require('@gnosis.pm/util-contracts/build/contracts/Math'))
 module.exports = function (deployer, network, accounts) {  
   Math.setProvider(deployer.provider)
 
-  const account = accounts[0]
-
-  return Math
-    .deployed()
-    .then(math => {
-      return deployer.link(Math, accounts)
-    })
+  return deployer
+    .then(() => Math.deployed())
+    .then(math => deployer.link(Math, accounts))
     .then(() => {
+      const account = accounts[0]
       console.log('Deploying TokenFRT with owner: %s', account)
-      return deployer.deploy(accounts, account)
+      return deployer.deploy(TokenFRT, account)
     })
 }
