@@ -15,7 +15,7 @@ script:
   - cd $TRAVIS_BUILD_DIR/travscripts
   - "chmod +x ./BranchScript.sh && ./BranchScript.sh"
 before_script:
-  - testrpc > /dev/null &
+  - ganache-cli > /dev/null &
   - sleep 5
 after_script:
   - cd $TRAVIS_BUILD_DIR/travscripts
