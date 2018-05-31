@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "truffle": "4.1.5",
+    "truffle-hdwallet-provider": "^0.0.5",
     "truffle-contract": "^3.0.1",
     "eslint": "^4.19.1",
     "eslint-config-standard": "^11.0.0",
@@ -45,7 +46,6 @@
     "ganache-cli": "^6.1.0",
     "minimist": "^1.2.0",
     "truffle-flattener": "^1.2.5",
-    "truffle-hdwallet-provider": "0.0.3",
     "truffle-hdwallet-provider-privkey": "^0.2.0",
     "web3": "^0.20.2",
     "yargs": "^11.0.0"
