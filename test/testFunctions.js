@@ -467,10 +467,16 @@ const checkUserReceivesTulipTokens = async (ST, BT, user, idx, lastClosingPrice)
  * @param {numb} Auction Index
  */
 const assertReturnedPlusMGNs = async (ST, BT, acc, type, idx = 1, eth) => {
-  const { DutchExchange: dx } = await getContracts()
   let returned, tulipsIssued, userBalances
-  const STName = await ST.name.call()
-  const BTName = await BT.name.call()
+  const [
+    { DutchExchange: dx },
+    STName,
+    BTName
+  ] = await Promise.all([
+    getContracts(),
+    ST.name.call(),
+    BT.name.call()
+  ])
 
   // check if current trade is an ETH:ERC20 trade or not
   const nonETH = STName !== 'Ether Token' && BTName !== 'Ether Token'
@@ -629,15 +635,30 @@ const calculateTokensInExchange = async (Accounts, Tokens) => {
             }
           }
         }
+        const [
+          getBuyVolumes,
+          getSellVolumesCurrent,
+          getSellVolumesNext,
+          getExtraTokens,
+          getExtraTokens1,
+          getExtraTokens2
+        ] = await Promise.all([
+          dx.buyVolumes.call(tokenPartner.address, token.address),
+          dx.sellVolumesCurrent.call(token.address, tokenPartner.address),
+          dx.sellVolumesNext.call(token.address, tokenPartner.address),
+          dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex),
+          dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex + 1),
+          dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex + 2)
+        ])
         // check current auction balances
-        balance = balance.add((await dx.buyVolumes.call(tokenPartner.address, token.address)))
-        balance = balance.add((await dx.sellVolumesCurrent.call(token.address, tokenPartner.address)))
+        balance = balance.add(getBuyVolumes)
+        balance = balance.add(getSellVolumesCurrent)
 
         // check next auction balances
-        balance = balance.add((await dx.sellVolumesNext.call(token.address, tokenPartner.address)))
-        balance = balance.add((await dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex)))
-        balance = balance.add((await dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex + 1)))
-        balance = balance.add((await dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex + 2)))
+        balance = balance.add(getSellVolumesNext)
+        balance = balance.add(getExtraTokens)
+        balance = balance.add(getExtraTokens1)
+        balance = balance.add(getExtraTokens2)
         // logger('extraTokens',(await dx.extraTokens.call(token.address, tokenPartner.address, lastAuctionIndex)).toNumber())
       }
     }

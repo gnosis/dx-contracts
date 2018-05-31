@@ -47,17 +47,38 @@ const valMinusFee = amount => amount - (amount / 200)
 // Testing exact amounts is not needed, since the correct execution of number updates is checked
 // with our unit tests within dutchExchange-postBuyOrder/dutchExchange-postSellOrder
 const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-  assert.equal((await dx.getAuctionIndex.call(ST.address, BT.address)).toNumber(), auctionIndex, 'auction Index not correct')
-  assert.equal((await dx.getAuctionIndex.call(BT.address, ST.address)).toNumber(), auctionIndex)
-  let difference = Math.abs((await dx.getAuctionStart.call(ST.address, BT.address)).toNumber() - auctionStart)
+  const [
+    stBtAuctionIndex,
+    btStAuctionIndex,
+    getAuctionStart,
+    getSellVolumesCurrent,
+    getSellVolumesNext,
+    getBuyVolumes,
+    getClosingPrices
+  ] = await Promise.all([
+    dx.getAuctionIndex.call(ST.address, BT.address),
+    dx.getAuctionIndex.call(BT.address, ST.address),
+    dx.getAuctionStart.call(ST.address, BT.address),
+    dx.sellVolumesCurrent.call(ST.address, BT.address),
+    dx.sellVolumesNext.call(ST.address, BT.address),
+    dx.buyVolumes.call(ST.address, BT.address),
+    dx.closingPrices.call(ST.address, BT.address, auctionIndex)
+  ])
+
+  assert.equal(stBtAuctionIndex.toNumber(), auctionIndex, 'auction Index not correct')
+  assert.equal(btStAuctionIndex.toNumber(), auctionIndex)
+
+  let difference = Math.abs(getAuctionStart.toNumber() - auctionStart)
   assert.isAtMost(difference, 5, 'time difference bigger than 5 sec')
-  assert.equal((await dx.sellVolumesCurrent.call(ST.address, BT.address)).toNumber(), sellVolumesCurrent, ' current SellVolume not correct')
-  assert.equal((await dx.sellVolumesNext.call(ST.address, BT.address)).toNumber(), sellVolumesNext, 'sellVOlumeNext is incorrect')
-  difference = Math.abs((await dx.buyVolumes.call(ST.address, BT.address)).toNumber() - buyVolumes)
+
+  assert.equal(getSellVolumesCurrent.toNumber(), sellVolumesCurrent, ' current SellVolume not correct')
+  assert.equal(getSellVolumesNext.toNumber(), sellVolumesNext, 'sellVOlumeNext is incorrect')
+  difference = Math.abs(getBuyVolumes.toNumber() - buyVolumes)
   logger('buyVolumes', buyVolumes)
-  logger((await dx.buyVolumes.call(ST.address, BT.address)).toNumber())
+  logger(getBuyVolumes.toNumber())
   assert.isAtMost(difference, MaxRoundingError, 'buyVolumes incorrect')
-  const [closingPriceNumReal, closingPriceDenReal] = await dx.closingPrices.call(ST.address, BT.address, auctionIndex)
+
+  const [closingPriceNumReal, closingPriceDenReal] = getClosingPrices
   logger('ClosingPriceNumReal', closingPriceNumReal)
   difference = Math.abs(closingPriceNumReal - closingPriceNum)
   assert.isAtMost(difference, MaxRoundingError, 'ClosingPriceNum not okay')
@@ -254,7 +275,7 @@ contract('DutchExchange - TradeFlows', (accounts) => {
   })
 
   // FIXME last step failing
-  describe.skip('DutchExchange - Flow 4', () => {
+  describe('DutchExchange - Flow 4', () => {
     before(async () => {
       currentSnapshotId = await makeSnapshot()
 

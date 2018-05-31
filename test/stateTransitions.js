@@ -90,35 +90,52 @@ const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVo
 
 // getState returns the current state for a SellToken(ST) - BuyToken(BT) pair
 const getState = async (ST, BT) => { // eslint-disable-line
-  const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
+  const [
+    getAuctionStart,
+    auctionIndex
+  ] = await Promise.all([
+    dx.getAuctionStart.call(eth.address, gno.address),
+    getAuctionIndex()
+  ])
+
+  const auctionStart = getAuctionStart.toNumber()
   if (auctionStart === 1) { return 5 }
-  const auctionIndex = await getAuctionIndex()
-  let numP
-  let denP
-  let numPP
-  let denPP // eslint-disable-line
-  let numBasedOnVolume
-  let denBasedOnVolume
+
   // calculate state of Auction
-  [numP, denP] = (await dx.getCurrentAuctionPrice.call(ST.address, BT.address, auctionIndex)) // eslint-disable-line
-  numBasedOnVolume = await dx.buyVolumes.call(ST.address, BT.address)
-  denBasedOnVolume = await dx.sellVolumesCurrent.call(ST.address, BT.address)
+  const [
+    [numP, denP],
+    numBasedOnVolume,
+    denBasedOnVolume,
+    [numPP, denPP]
+  ] = await Promise.all([
+    (dx.getCurrentAuctionPrice.call(ST.address, BT.address, auctionIndex)),
+    dx.buyVolumes.call(ST.address, BT.address),
+    dx.sellVolumesCurrent.call(ST.address, BT.address),
+    (dx.closingPrices.call(ST.address, BT.address, auctionIndex))
+  ])
+
   const isAuctionTheoreticalClosed = (numP.mul(denBasedOnVolume).sub(numBasedOnVolume.mul(denP)).toNumber() <= 0);
-  [numPP, denPP] = (await dx.closingPrices.call(ST.address, BT.address, auctionIndex))
   const isAuctionClosed = (numPP.toNumber() > 0)
 
   // calculate state of OppAuction
-  let numP2
-  let denP2
-  [numP2, denP2] = (await dx.getCurrentAuctionPrice.call(BT.address, ST.address, auctionIndex)) // eslint-disable-line
-  numBasedOnVolume = await dx.buyVolumes.call(BT.address, ST.address)
-  denBasedOnVolume = await dx.sellVolumesCurrent.call(BT.address, ST.address)
-  const isOppAuctionTheoreticalClosed = (numP2.mul(denBasedOnVolume).minus(numBasedOnVolume.mul(denP2)).toNumber() <= 0);
-  [numPP, denPP] = (await dx.closingPrices.call(BT.address, ST.address, auctionIndex))
-  const isOppAuctionClosed = (numPP.toNumber() > 0)
+  const [
+    [numP2, denP2],
+    numBasedOnVolumeOpp,
+    denBasedOnVolumeOpp,
+    [numPPOpp, denPPOpp]
+  ] = await Promise.all([
+    (dx.getCurrentAuctionPrice.call(BT.address, ST.address, auctionIndex)),
+    dx.buyVolumes.call(BT.address, ST.address),
+    dx.sellVolumesCurrent.call(BT.address, ST.address),
+    (dx.closingPrices.call(BT.address, ST.address, auctionIndex))
+  ])
 
-  const sellVol = (await dx.sellVolumesCurrent.call(ST.address, BT.address)).toNumber()
-  const sellOppVol = (await dx.sellVolumesCurrent.call(BT.address, ST.address)).toNumber()
+  const isOppAuctionTheoreticalClosed = (numP2.mul(denBasedOnVolumeOpp).minus(numBasedOnVolumeOpp.mul(denP2)).toNumber() <= 0);
+  const isOppAuctionClosed = (numPPOpp.toNumber() > 0)
+
+  // Got sellVolumesCurrent as denominator based on volume. Rename for better reading
+  const sellVol = denBasedOnVolume.toNumber()
+  const sellOppVol = denBasedOnVolumeOpp.toNumber()
 
   // calculating final state
   // check for state S1 and S4
@@ -385,6 +402,7 @@ contract('DutchExchange - stateTransitions', (accounts) => {
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
       // clearing first auction
       await postBuyOrder(eth, gno, auctionIndex, 10.0.toWei() * 3, buyer1)
+
       // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
       await checkState(1, auctionStart, valMinusFee(10.0.toWei()), 0, valMinusFee(10.0.toWei() * 3), valMinusFee(10.0.toWei()) * 3, valMinusFee(10.0.toWei()), eth, gno, 10 ** 16)
       assert.equal(2, await getState(eth, gno))
@@ -402,6 +420,7 @@ contract('DutchExchange - stateTransitions', (accounts) => {
       await postSellOrder(eth, gno, 0, 10.0.toWei() * 3, seller2)
       await assertRejects(postSellOrder(eth, gno, auctionIndex, 10.0.toWei() * 3, seller1))
       await assertRejects(postSellOrder(eth, gno, auctionIndex + 2, 10.0.toWei() * 3, seller1))
+
       // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
       await checkState(1, auctionStart, valMinusFee(10.0.toWei()), valMinusFee(10.0.toWei() * 6), 0, 0, 0, eth, gno, 1)
       assert.equal(0, await getState(eth, gno))

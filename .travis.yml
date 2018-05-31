@@ -3,7 +3,7 @@ sudo: required
 dist: trusty
 language: node_js
 node_js:
-  - '9'
+#  - '9'
   - '8'
 before_install:
   - rm -rf node_modules
