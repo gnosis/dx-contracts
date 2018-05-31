@@ -17,6 +17,6 @@ script:
 before_script:
   - ganache-cli --defaultBalanceEther 500000000 > /dev/null &
   - sleep 5
-after_script:
-  - cd $TRAVIS_BUILD_DIR/travscripts
-  - "chmod +x ./AfterScript.sh && ./AfterScript.sh"
+# after_script:
+#   - cd $TRAVIS_BUILD_DIR/travscripts
+#   - "chmod +x ./AfterScript.sh && ./AfterScript.sh"
