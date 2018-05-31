@@ -12,7 +12,7 @@
     "contracts-dev": "truffle compile && cp networks-dev.json networks.json && node scripts/inject_network_info.js",
     "deploy": "truffle deploy",
     "add-token-pairs": "truffle exec trufflescripts/add-token-pairs.js",
-    "test": "truffle test",
+    "test": "truffle test -s",
     "coverage": "./node_modules/.bin/solidity-coverage"
   },
   "repository": {
