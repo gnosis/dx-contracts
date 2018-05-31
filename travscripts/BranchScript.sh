@@ -6,11 +6,14 @@ if [[ $TRAVIS_BRANCH =~ (feature/test-?(\/[a-zA-Z0-9/._-]*)?) ]]; then
   cd $TRAVIS_BUILD_DIR
   echo " ==> JUMPING LOCATIONS: NOW IN $TRAVIS_BUILD_DIR"
   #run solcover
-  echo " ==> RUNNING solidity-coverage" &&
-  ./node_modules/.bin/solidity-coverage
-  #run codecov
-  echo " ==> RUNNING codecov" &&
-  ./node_modules/.bin/codecov
+  echo " ==> RUNNING test"
+
+  npm test;
+  # echo " ==> RUNNING solidity-coverage" &&
+  # ./node_modules/.bin/solidity-coverage
+  # #run codecov
+  # echo " ==> RUNNING codecov" &&
+  # ./node_modules/.bin/codecov
 
   #&& cat coverage/lcov.info | coveralls;
 else

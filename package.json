@@ -11,7 +11,9 @@
     "contracts": "truffle compile && node scripts/inject_network_info.js",
     "contracts-dev": "truffle compile && cp networks-dev.json networks.json && node scripts/inject_network_info.js",
     "deploy": "truffle deploy",
-    "add-token-pairs": "truffle exec trufflescripts/add-token-pairs.js"
+    "add-token-pairs": "truffle exec trufflescripts/add-token-pairs.js",
+    "test": "truffle test",
+    "coverage": "./node_modules/.bin/solidity-coverage"
   },
   "repository": {
     "type": "git",
@@ -21,7 +23,7 @@
   "license": "GPL-2.0+",
   "dependencies": {
     "@gnosis.pm/owl-token": "^0.3.0",
-    "@gnosis.pm/pm-contracts": "^1.0.3",
+    "@gnosis.pm/pm-contracts": "^1.0.4",
     "truffle-contract": "^3.0.1",
     "truffle-hdwallet-provider": "0.0.3",
     "truffle-hdwallet-provider-privkey": "^0.2.0",
@@ -30,9 +32,11 @@
   "devDependencies": {
     "@digix/tempo": "^0.2.0",
     "bignumber.js": "^5.0.0",
+    "coveralls": "^3.0.1",
     "decimal.js": "^7.2.3",
     "diff": "3.4.0",
     "minimist": "^1.2.0",
+    "solidity-coverage": "^0.5.4",
     "truffle": "4.1.5",
     "truffle-flattener": "^1.2.5",
     "yargs": "^11.0.0"

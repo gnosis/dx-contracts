@@ -3,7 +3,7 @@
 
 
 /*
-TUL token issuing will not be covered in these tests, as they are covered in the tulip testing scripts
+MGN token issuing will not be covered in these tests, as they are covered in the magnolia testing scripts
 */
 
 const bn = require('bignumber.js')
@@ -63,17 +63,6 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
     // set up accounts and tokens[contracts]
     await setupTest(accounts, contracts, startBal)
 
-    // // add tokenPair ETH GNO
-    // await dx.addTokenPair(
-    //   eth.address,
-    //   gno.address,
-    //   10e18,
-    //   0,
-    //   2,
-    //   1,
-    //   { from: seller1 },
-    // )
-
     eventWatcher(dx, 'Log', {})
   })
 
@@ -86,7 +75,6 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
   describe('Running dependant tests', () => {
     before(async () => {
       currentSnapshotId = await makeSnapshot()
-      console.log('beforeEach: ' + currentSnapshotId)
 
       // add tokenPair ETH GNO
       await dx.addTokenPair(
@@ -98,12 +86,9 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
         1,
         { from: seller1 },
       )
-
-      // eventWatcher(dx, 'Log', {})
     })
 
     after(async () => {
-      console.log('afterEach: ' + currentSnapshotId)
       await revertSnapshot(currentSnapshotId)
       eventWatcher.stopWatching()
     })
@@ -115,7 +100,7 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
       await assertRejects(dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex + 1))
     })
 
-    // TODO test failing
+    // FIXME this test is dependent from the previous one
     it(' 2. checks that the return value == 0, if price.num == 0 ', async () => {
       // prepare test by starting and clearing new auction
       let auctionIndex = await getAuctionIndex()
@@ -140,7 +125,7 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
       assert.equal(claimedAmount, 0)
     })
 
-    // TODO test failing
+    // FIXME this test is dependent from the previous ones
     it('4. check right amount of coins is returned by claimBuyerFunds if auction is not closed', async () => {
       const auctionIndex = await getAuctionIndex()
 
@@ -185,40 +170,9 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
     })
   })
 
-// })
-
-
-// contract('DutchExchange - claimBuyerFunds', (accounts) => {
-//   const [, seller1, buyer1] = accounts
-//   const totalSellAmount2ndAuction = 10e18
-//
-//   before(async () => {
-//     // get contracts
-//     await setupContracts()
-//
-//     // set up accounts and tokens[contracts]
-//     await setupTest(accounts, contracts, startBal)
-//
-//     // add tokenPair ETH GNO
-//     await dx.addTokenPair(
-//       eth.address,
-//       gno.address,
-//       10e18,
-//       0,
-//       2,
-//       1,
-//       { from: seller1 },
-//     )
-//
-//     eventWatcher(dx, 'Log', {})
-//   })
-//
-//   after(eventWatcher.stopWatching)
-//   afterEach(gasLogger)
   describe ('Running independent tests', () => {
     beforeEach(async () => {
       currentSnapshotId = await makeSnapshot()
-      console.log('beforeEach: ' + currentSnapshotId)
       // add tokenPair ETH GNO
       await dx.addTokenPair(
         eth.address,
@@ -232,9 +186,7 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
     })
 
     afterEach(async () => {
-      console.log('afterEach: ' + currentSnapshotId)
       await revertSnapshot(currentSnapshotId)
-      gasLogger()
     })
 
     it('5. check right amount of coins is returned by claimBuyerFunds if auction is  not closed, but closed theoretical ', async () => {
@@ -255,36 +207,6 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
       const [claimedAmount] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, auctionIndex)).map(i => i.toNumber())
       assert.equal(valMinusFee(totalSellAmount2ndAuction), claimedAmount)
     })
-    // })
-
-
-    /* eslint no-loop-func:0 */
-    // contract('DutchExchange - claimBuyerFunds', (accounts) => {
-    //   const [, seller1, , buyer1] = accounts
-    //
-    //   before(async () => {
-    //     // get contracts
-    //     await setupContracts()
-    //
-    //     // set up accounts and tokens[contracts]
-    //     await setupTest(accounts, contracts, startBal)
-    //
-    //     // add tokenPair ETH GNO
-    //     await dx.addTokenPair(
-    //       eth.address,
-    //       gno.address,
-    //       10e18,
-    //       0,
-    //       2,
-    //       1,
-    //       { from: seller1 },
-    //     )
-    //
-    //     eventWatcher(dx, 'Log', {})
-    //   })
-    //
-    //   after(eventWatcher.stopWatching)
-    //   afterEach(gasLogger)
 
     it('6. check that already claimedBuyerfunds are substracted properly', async () => {
       // prepare test by starting and clearning new auction
@@ -311,34 +233,6 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
       await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)
       assert.equal((bn(valMinusFee(10e18)).sub(bn(valMinusFee(10e18)).div(num2).mul(den2))).toNumber(), claimedAmount2)
     })
-    // })
-    //
-    // contract('DutchExchange - claimBuyerFunds', (accounts) => {
-    //   const [, seller1, , buyer1, buyer2] = accounts
-    //
-    //   before(async () => {
-    //     // get contracts
-    //     await setupContracts()
-    //
-    //     // set up accounts and tokens[contracts]
-    //     await setupTest(accounts, contracts, startBal)
-    //
-    //     // add tokenPair ETH GNO
-    //     await dx.addTokenPair(
-    //       eth.address,
-    //       gno.address,
-    //       10e18,
-    //       0,
-    //       2,
-    //       1,
-    //       { from: seller1 },
-    //     )
-    //
-    //     eventWatcher(dx, 'Log', {})
-    //   })
-    //
-    //   after(eventWatcher.stopWatching)
-    //   afterEach(gasLogger)
 
     it('7. check that extraTokens are distributed correctly', async () => {
       // prepare test by starting and clearning new auction
@@ -356,7 +250,6 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.6)
       await postBuyOrder(eth, gno, auctionIndex, 10e18, buyer2)
 
-
       // Check extra Token balance
       const [claimedAmount] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, auctionIndex)).map(i => i.toNumber())
       const [num, den] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex))
@@ -364,34 +257,6 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
       assert.equal(((bn(valMinusFee(10e18)).div(num).mul(den)).add(extraTokensAvailable.div(2)))
       .toNumber(), claimedAmount)
     })
-    // })
-    //
-    // contract('DutchExchange - claimBuyerFunds', (accounts) => {
-    //   const [, seller1, , buyer1, buyer2] = accounts
-    //
-    //   before(async () => {
-    //     // get contracts
-    //     await setupContracts()
-    //
-    //     // set up accounts and tokens[contracts]
-    //     await setupTest(accounts, contracts, startBal)
-    //
-    //     // add tokenPair ETH GNO
-    //     await dx.addTokenPair(
-    //       eth.address,
-    //       gno.address,
-    //       10e18,
-    //       0,
-    //       2,
-    //       1,
-    //       { from: seller1 },
-    //     )
-    //
-    //     eventWatcher(dx, 'Log', {})
-    //   })
-    //
-    //   after(eventWatcher.stopWatching)
-    //   afterEach(gasLogger)
 
     it('8. check that the acutal accounting of balances is done correctly', async () => {
       // prepare test by starting and clearning new auction
