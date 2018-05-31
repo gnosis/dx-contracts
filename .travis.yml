@@ -15,7 +15,7 @@ script:
   - cd $TRAVIS_BUILD_DIR/travscripts
   - "chmod +x ./BranchScript.sh && ./BranchScript.sh"
 before_script:
-  - ganache-cli > /dev/null &
+  - ganache-cli --defaultBalanceEther 500000000 > /dev/null &
   - sleep 5
 after_script:
   - cd $TRAVIS_BUILD_DIR/travscripts
