@@ -27,9 +27,7 @@
   "author": "Gnosis",
   "license": "GPL-2.0+",
   "dependencies": {
-    "@gnosis.pm/gno-token": "^0.2.1",
-    "@gnosis.pm/owl-token": "^0.3.0",
-    "@gnosis.pm/util-contracts": "^0.2.8"
+    "@gnosis.pm/util-contracts": "^0.2.9"
   },
   "devDependencies": {
     "truffle": "4.1.5",

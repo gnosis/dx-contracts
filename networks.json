@@ -6,5 +6,15 @@
       "address": "0xb520f737b6102ebaba80b9ea8ec914f41da5a643",
       "transactionHash": "0xddec2eb340288380a1fce1b6798050dfa8d020cf370c7e136fd87480ffaf98bf"
     }
+  },
+  "TokenFRT": {
+    "4": {
+      "events": {},
+      "links": {
+        "Math": "0xad53d3a10491410d71ccd23153290e976274389d"
+      },
+      "address": "0x989e6b580a647ad0693f9820babb2127d369e9dc",
+      "transactionHash": "0x677b2cc4baee00af6348496f3317cee0edfd52f3d846f9c64f691d273c037e20"
+    }
   }
 }

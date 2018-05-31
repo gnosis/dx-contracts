@@ -6,25 +6,9 @@
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/@digix/tempo/-/tempo-0.2.0.tgz#5daf91ad788d6b596a19aad22e2e667e4ec808a8"
 
-"@gnosis.pm/gno-token@^0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/gno-token/-/gno-token-0.2.1.tgz#2c2cd0946376076ff388cac1cb6b24065b55d7da"
-  dependencies:
-    "@gnosis.pm/util-contracts" "^0.2.7"
-
-"@gnosis.pm/gnosis-core-contracts@^1.0.1":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/gnosis-core-contracts/-/gnosis-core-contracts-1.0.4.tgz#866e2acd8ffc506280047d8b15079f70172b6dd2"
-
-"@gnosis.pm/owl-token@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/owl-token/-/owl-token-0.3.0.tgz#5ff2ec6c406a1cfcf81fd9d76ca8b850c572aa76"
-  dependencies:
-    "@gnosis.pm/gnosis-core-contracts" "^1.0.1"
-
-"@gnosis.pm/util-contracts@^0.2.7", "@gnosis.pm/util-contracts@^0.2.8":
-  version "0.2.8"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/util-contracts/-/util-contracts-0.2.8.tgz#02276ae6e8faebb305be0d8b5f3b33019bde4976"
+"@gnosis.pm/util-contracts@^0.2.9":
+  version "0.2.9"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/util-contracts/-/util-contracts-0.2.9.tgz#fce60a00f4c0043778e40a7f2449b58557f22906"
 
 "@mrmlnc/readdir-enhanced@^2.2.1":
   version "2.2.1"

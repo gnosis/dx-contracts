@@ -11,7 +11,7 @@ module.exports = function (deployer, network, accounts) {
 
   return deployer
     .then(() => Math.deployed())
-    .then(math => deployer.link(Math, accounts))
+    .then(math => deployer.link(Math, TokenFRT))
     .then(() => {
       const account = accounts[0]
       console.log('Deploying TokenFRT with owner: %s', account)
