@@ -1,8 +1,8 @@
 pragma solidity ^0.4.19;
 
-import "./Tokens/TokenFRT.sol";
+import "../Tokens/TokenFRT.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
-import "./Oracle/PriceOracleInterface.sol";  
+import "../Oracle/PriceOracleInterface.sol";  
 
 /// @title Dutch Exchange - exchange token pairs with the clever mechanism of the dutch auction
 /// @author Alex Herrmann - <alex@gnosis.pm>
