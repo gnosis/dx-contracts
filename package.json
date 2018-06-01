@@ -13,11 +13,12 @@
     "networks": "truffle networks",
     "compile-todo": "eslint --fix . && eslint src && truffle compile",
     "compile": "truffle compile",
-    "restore": "npm run compile && npm run networks-reset",    
+    "restore": "npm run compile && npm run networks-reset",
     "postinstall": "npm install @gnosis.pm/gno-token @gnosis.pm/gno-token truffle-hdwallet-provider",
-    "migrate-utils-contracts": "cd node_modules/@gnosis.pm/util-contracts && npm run migrate",
-    "migrate-gno-token": "cd node_modules/@gnosis.pm/gno-token && npm run migrate",
-    "migrate-dependencies": "npm run migrate-utils-contracts",
+    "migrate-owl": "cd node_modules/@gnosis.pm/util-contracts && npm run migrate",
+    "migrate-utils": "cd node_modules/@gnosis.pm/util-contracts && npm run migrate",
+    "migrate-gno": "cd node_modules/@gnosis.pm/gno-token && npm run migrate",
+    "migrate-dep": "npm run migrate-utils && npm run migrate-gno && npm migrate-owl",
     "migrate": "truffle migrate",
     "lint": "eslint .",
     "add-token-pairs": "truffle exec trufflescripts/add-token-pairs.js"
@@ -30,6 +31,7 @@
   "license": "GPL-2.0+",
   "dependencies": {
     "@gnosis.pm/gno-token": "^0.2.2",
+    "@gnosis.pm/owl-token": "^0.5.0",
     "@gnosis.pm/util-contracts": "^0.2.10"
   },
   "devDependencies": {
