@@ -248,12 +248,4 @@ contract DutchExchange is DXAdminFn, DXAuctionsFn {
         for (uint i = 0; i < length; i++)
             claimBuyerFunds(auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
     }
-
-    function getMasterCopy()
-        external
-        view 
-        returns (address)
-    {
-        return masterCopy;
-    }
 }

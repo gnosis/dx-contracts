@@ -147,6 +147,14 @@ contract DXAdminFn is DXCommonStorage, DXMath {
         newMasterCopy = address(0);
     }
 
+    function getMasterCopy()
+        external
+        view 
+        returns (address)
+    {
+        return masterCopy;
+    }
+
     event Approval(
         address indexed token,
         bool approved
