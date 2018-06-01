@@ -829,32 +829,6 @@ contract DXAuctionsFn is DXAuctionsStorage, DXMath {
         }
     }
 
-    function depositAndSell(
-        address sellToken,
-        address buyToken,
-        uint amount
-    )
-        external
-        returns (uint newBal, uint auctionIndex, uint newSellerBal)
-    {
-        newBal = deposit(sellToken, amount);
-        (auctionIndex, newSellerBal) = postSellOrder(sellToken, buyToken, 0, amount);
-    }
-
-    function claimAndWithdraw(
-        address sellToken,
-        address buyToken,
-        address user,
-        uint auctionIndex,
-        uint amount
-    )
-        external
-        returns (uint returned, uint frtsIssued, uint newBal)
-    {
-        (returned, frtsIssued) = claimSellerFunds(sellToken, buyToken, user, auctionIndex);
-        newBal = withdraw(buyToken, amount);
-    }
-
     // > Helper fns
     function getTokenOrder(
         address token1,
