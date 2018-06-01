@@ -345,9 +345,8 @@ const c3 = () => contract('DutchExchange - Flow 4', (accounts) => {
     logger('auctionStartDate', (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber())
     // post new sell order to start next auction
     // startingTimeOfAuction = await getStartingTimeOfAuction(eth, gno)
-    const timeOfNextAuctionStart = timestamp() + 10 * 60
+    const timeOfNextAuctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
     await dx.postSellOrder(eth.address, gno.address, auctionIndex, 10 * ether, { from: seller2 })
-    
     // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
     await checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether) * 3, 0, 0, 0, 0, eth, gno, 0)
     await checkInvariants(balanceInvariant, accounts, [eth, gno])

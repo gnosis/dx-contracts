@@ -128,8 +128,7 @@ contract('DutchExchange - Proxy', (accounts) => {
     await assertIsAuctioneer(master)
     const params1 = await getExchangeParams()
 
-    assert.isNotFunction(dx.getMasterCopy, 'dx doesn\'t have getMasterCopy method')
-
+    assert.notEqual(await dx.getMasterCopy(), dxNew.address, 'address should not yet be the same')
     log(`DutchExchange contract is at the ${dx.address} address`)
 
     log('calling dx.updateMasterCopy() as auctioneer after time limit')
@@ -140,7 +139,6 @@ contract('DutchExchange - Proxy', (accounts) => {
     const params2 = await getExchangeParams(ndx)
     assert.deepEqual(params1, params2, 'exchange params should stay the same')
 
-    assert.isFunction(ndx.getMasterCopy, 'new updated dx does have getMasterCopy method')
     assert.strictEqual(await ndx.getMasterCopy.call(), dxNew.address, 'masterCopy address should have changed')
     log(`DutchExchange contract is now at the ${dxNew.address} address`)
   })
