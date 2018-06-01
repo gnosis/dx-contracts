@@ -1,8 +1,8 @@
 pragma solidity ^0.4.19;
 
-import "./DXAuctionsFn.sol";
+import "./DXAddTokenPair.sol";
 
-contract DXCombinationFn is DXAuctionsFn {
+contract DXCombinationFn is DXAddTokenPair {
 
     function depositAndSell(
         address sellToken,

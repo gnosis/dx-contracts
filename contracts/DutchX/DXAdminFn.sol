@@ -6,7 +6,7 @@ import "../Oracle/PriceOracleInterface.sol";
 import "./DXCommonStorage.sol";
 import "./DXMath.sol";
 
-contract DXAdminFn is DXCommonStorage, DXMath {
+contract DXAdminFn is DXMath, DXCommonStorage {
 	
     uint constant WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE = 30 days;
 
