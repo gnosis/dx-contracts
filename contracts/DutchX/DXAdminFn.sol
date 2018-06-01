@@ -3,10 +3,10 @@ pragma solidity ^0.4.19;
 import "../Tokens/TokenFRT.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "../Oracle/PriceOracleInterface.sol";  
-import "./DXAdminStorage.sol";
+import "./DXCommonStorage.sol";
 import "./DXMath.sol";
 
-contract DXAdminFn is DXAdminStorage, DXMath {
+contract DXAdminFn is DXCommonStorage, DXMath {
 	
     uint constant WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE = 30 days;
 
@@ -17,6 +17,9 @@ contract DXAdminFn is DXAdminStorage, DXMath {
         require(msg.sender == auctioneer);
         _;
     }
+
+    event LogAddress(string s, address a);
+    event Log(string s);
 
 	/// @dev Constructor-Function creates exchange
     /// @param _frtToken - address of frtToken ERC-20 token

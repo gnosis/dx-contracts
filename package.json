@@ -11,7 +11,8 @@
     "contracts": "truffle compile && node scripts/inject_network_info.js",
     "contracts-dev": "truffle compile && cp networks-dev.json networks.json && node scripts/inject_network_info.js",
     "deploy": "truffle deploy",
-    "add-token-pairs": "truffle exec trufflescripts/add-token-pairs.js"
+    "add-token-pairs": "truffle exec trufflescripts/add-token-pairs.js",
+    "decode": "node ./node_modules/decode-eth/main.js"
   },
   "repository": {
     "type": "git",
@@ -31,6 +32,7 @@
     "@digix/tempo": "^0.2.0",
     "bignumber.js": "^5.0.0",
     "decimal.js": "^7.2.3",
+    "decode-eth": "^0.1.2",
     "diff": "3.4.0",
     "minimist": "^1.2.0",
     "truffle": "4.1.5",

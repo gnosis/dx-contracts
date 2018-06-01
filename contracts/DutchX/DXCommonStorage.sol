@@ -5,6 +5,15 @@ import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "../Oracle/PriceOracleInterface.sol";
 
 contract DXCommonStorage {
+
+    address masterCopy;
+    address public newMasterCopy;
+    // Time when new masterCopy is updatabale
+    uint public masterCopyCountdown;
+
+    // > Storage
+    // auctioneer has the power to manage some variables
+    address public auctioneer;
     // Ether ERC-20 token
     address public ethToken;
     // Price Oracle interface 

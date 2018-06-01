@@ -1,9 +1,9 @@
 pragma solidity ^0.4.19;
 
-import "./DXTypes.sol";  
 import "./DXCommonStorage.sol";
+import "./DXTypes.sol";  
 
-contract DXAuctionsStorage is DXTypes, DXCommonStorage {
+contract DXAuctionsStorage is DXCommonStorage, DXTypes {
 
     // For the following two mappings, there is one mapping for each token pair
     // The order which the tokens should be called is smaller, larger
