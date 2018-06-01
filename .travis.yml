@@ -3,20 +3,15 @@ sudo: required
 dist: trusty
 language: node_js
 node_js:
-#  - '9'
   - '8'
 before_install:
   - rm -rf node_modules
   - npm install -g truffle ganache-cli
 install:
   - npm install
-#CONDITIONALLY run tests or build app
-script:
-  - cd $TRAVIS_BUILD_DIR/travscripts
-  - "chmod +x ./BranchScript.sh && ./BranchScript.sh"
 before_script:
   - ganache-cli --defaultBalanceEther 500000000 > /dev/null &
   - sleep 5
-# after_script:
-#   - cd $TRAVIS_BUILD_DIR/travscripts
-#   - "chmod +x ./AfterScript.sh && ./AfterScript.sh"
+script:
+  - cd $TRAVIS_BUILD_DIR/travscripts
+  - "chmod +x ./BranchScript.sh && ./BranchScript.sh"
