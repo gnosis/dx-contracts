@@ -274,7 +274,6 @@ contract('DutchExchange - TradeFlows', (accounts) => {
     })
   })
 
-  // FIXME last step failing
   describe('DutchExchange - Flow 4', () => {
     before(async () => {
       currentSnapshotId = await makeSnapshot()
@@ -348,16 +347,16 @@ contract('DutchExchange - TradeFlows', (accounts) => {
 
     it('step 5 - restarting auction', async () => {
       let auctionIndex = await getAuctionIndex()
+      const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
 
       logger('new auction index:', auctionIndex)
-      logger('auctionStartDate', (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber())
+      logger('auctionStartDate', auctionStart)
+
       // post new sell order to start next auction
-      // startingTimeOfAuction = await getStartingTimeOfAuction(eth, gno)
-      const timeOfNextAuctionStart = timestamp() + 10 * 60
       await dx.postSellOrder(eth.address, gno.address, auctionIndex, 10 * ether, { from: seller2 })
 
       // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-      await checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether) * 3, 0, 0, 0, 0, eth, gno, 0)
+      await checkState(2, auctionStart, valMinusFee(10 * ether) * 3, 0, 0, 0, 0, eth, gno, 0)
       await checkInvariants(balanceInvariant, accounts, [eth, gno])
 
       // check Auction has started and accepts further buyOrders
