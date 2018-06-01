@@ -310,7 +310,7 @@ contract('DutchExchange - TradeFlows', (accounts) => {
       await checkState(1, auctionStart, valMinusFee(10 * ether), 0, valMinusFee(10 * ether * 3), valMinusFee(10 * ether) * 3, valMinusFee(10 * ether), eth, gno, 10 ** 16)
     })
 
-    it('step 1 - ensuring immediate restart of next auctions', async () => {
+    it('step 2 - ensuring immediate restart of next auctions', async () => {
       const auctionIndex = await getAuctionIndex()
       const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
       await dx.postSellOrder(eth.address, gno.address, auctionIndex + 1, 10 * ether, { from: seller2 })
@@ -320,7 +320,7 @@ contract('DutchExchange - TradeFlows', (accounts) => {
       await checkState(1, auctionStart, valMinusFee(10 * ether), valMinusFee(10 * ether * 2), valMinusFee(10 * ether) * 3, valMinusFee(10 * ether) * 3, valMinusFee(10 * ether), eth, gno, 10 ** 16)
     })
 
-    it('step 2 - clearing second auction', async () => {
+    it('step 3 - clearing second auction', async () => {
       const auctionIndex = await getAuctionIndex()
       await waitUntilPriceIsXPercentOfPreviousPrice(gno, eth, 1.0)
       // clearing second auction
@@ -331,19 +331,22 @@ contract('DutchExchange - TradeFlows', (accounts) => {
       await checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether * 2), 0, 0, 0, 0, eth, gno, 0)
       await checkInvariants(balanceInvariant, accounts, [eth, gno])
     })
-    it('step 3 - just claiming', async () => {
+
+    it('step 4 - just claiming', async () => {
       const auctionIndex = 1
-      // claim buyer1 BUYER funds
-      await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, valMinusFee(10 * ether), 1)
-      // claim seller2 BUYER funds - RECIPROCAL
-      await checkBalanceBeforeClaim(buyer2, auctionIndex, 'buyer', gno, eth, valMinusFee(ether * 5), 1)
-      // claim SELLER funds
-      await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, valMinusFee(10 * ether * 3), 10 ** 16)
-      // claim SELLER funds
-      await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', gno, eth, valMinusFee(ether * 5 / 2), 10 ** 16)
+      await Promise.all([
+        // claim buyer1 BUYER funds
+        checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, valMinusFee(10 * ether), 1),
+        // claim seller2 BUYER funds - RECIPROCAL
+        checkBalanceBeforeClaim(buyer2, auctionIndex, 'buyer', gno, eth, valMinusFee(ether * 5), 1),
+        // claim SELLER funds
+        checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, valMinusFee(10 * ether * 3), 10 ** 16),
+        // claim SELLER funds
+        checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', gno, eth, valMinusFee(ether * 5 / 2), 10 ** 16)
+      ])
     })
 
-    it('step 3 - restarting auction', async () => {
+    it('step 5 - restarting auction', async () => {
       let auctionIndex = await getAuctionIndex()
 
       logger('new auction index:', auctionIndex)
@@ -406,23 +409,27 @@ contract('DutchExchange - TradeFlows', (accounts) => {
       logger('current sell volume', (await dx.sellVolumesCurrent.call(gno.address, eth.address)).toNumber())
       await postBuyOrder(gno, eth, auctionIndex, 10 ** 18 * 5 / 2, buyer2)
       // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-      await checkState(2, 1, 0, 0, 0, 0, 0, gno, eth, 100000)
-      await checkInvariants(balanceInvariant, accounts, [eth, gno])
+      await Promise.all([
+        checkState(2, 1, 0, 0, 0, 0, 0, gno, eth, 100000),
+        checkInvariants(balanceInvariant, accounts, [eth, gno])
+      ])
     })
 
     it('step 3 - just claiming', async () => {
       const auctionIndex = 1
-      // claim buyer1 BUYER funds
-      await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, valMinusFee(10 * ether), 1)
-      // claim seller2 BUYER funds - RECIPROCAL
-      await checkBalanceBeforeClaim(buyer2, auctionIndex, 'buyer', gno, eth, valMinusFee(ether * 5), 1)
-      // claim SELLER funds
-      await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, valMinusFee(10 * ether * 3), 10 ** 16)
-      // claim SELLER funds
-      await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', gno, eth, valMinusFee(ether * 5 / 2), 10 ** 16)
+      await Promise.all([
+        // claim buyer1 BUYER funds
+        checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, valMinusFee(10 * ether), 1),
+        // claim seller2 BUYER funds - RECIPROCAL
+        checkBalanceBeforeClaim(buyer2, auctionIndex, 'buyer', gno, eth, valMinusFee(ether * 5), 1),
+        // claim SELLER funds
+        checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, valMinusFee(10 * ether * 3), 10 ** 16),
+        // claim SELLER funds
+        checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', gno, eth, valMinusFee(ether * 5 / 2), 10 ** 16)
+      ])
     })
 
-    it('step 3 - restarting auction', async () => {
+    it('step 4 - restarting auction', async () => {
       let auctionIndex = await getAuctionIndex()
 
       logger('new auction index:', auctionIndex)
@@ -433,8 +440,10 @@ contract('DutchExchange - TradeFlows', (accounts) => {
       await dx.postSellOrder(eth.address, gno.address, auctionIndex, 10 * ether, { from: seller2 })
 
       // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-      await checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether) * 1, 0, 0, 0, 0, eth, gno, 0)
-      await checkInvariants(balanceInvariant, accounts, [eth, gno])
+      await Promise.all([
+        checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether) * 1, 0, 0, 0, 0, eth, gno, 0),
+        checkInvariants(balanceInvariant, accounts, [eth, gno])
+      ])
 
       // check Auction has started and accepts further buyOrders
       await setAndCheckAuctionStarted(eth, gno)
@@ -577,14 +586,16 @@ contract('DutchExchange - TradeFlows', (accounts) => {
 
     it('step 4 - just claiming', async () => {
       const auctionIndex = 1
-      // claim buyer1 BUYER funds
-      await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, valMinusFee(10 * ether), 1)
-      // claim seller2 BUYER funds - RECIPROCAL
-      await checkBalanceBeforeClaim(buyer2, auctionIndex, 'buyer', gno, eth, valMinusFee(ether * 5), 1)
-      // claim SELLER funds
-      await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, valMinusFee(10 * ether * 2), 10 ** 16)
-      // claim SELLER funds
-      await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', gno, eth, valMinusFee(ether * 5 / 2), 10 ** 16)
+      await Promise.all([
+        // claim buyer1 BUYER funds
+        checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, valMinusFee(10 * ether), 1),
+        // claim seller2 BUYER funds - RECIPROCAL
+        checkBalanceBeforeClaim(buyer2, auctionIndex, 'buyer', gno, eth, valMinusFee(ether * 5), 1),
+        // claim SELLER funds
+        checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, valMinusFee(10 * ether * 2), 10 ** 16),
+        // claim SELLER funds
+        checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', gno, eth, valMinusFee(ether * 5 / 2), 10 ** 16)
+      ])
     })
 
     it('step 5 - restarting auction', async () => {
@@ -685,14 +696,16 @@ contract('DutchExchange - TradeFlows', (accounts) => {
 
     it('step 4 - just claiming', async () => {
       const auctionIndex = 1
-      // claim buyer1 BUYER funds
-      await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, valMinusFee(10 * ether), 1)
-      // claim seller2 BUYER funds - RECIPROCAL
-      await checkBalanceBeforeClaim(buyer2, auctionIndex, 'buyer', gno, eth, valMinusFee(ether * 5), 1)
-      // claim SELLER funds
-      await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, valMinusFee(10 * ether * 2), 10 ** 16)
-      // claim SELLER funds
-      await checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', gno, eth, valMinusFee(ether * 5 / 2), 10 ** 16)
+      await Promise.all([
+        // claim buyer1 BUYER funds
+        checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', eth, gno, valMinusFee(10 * ether), 1),
+        // claim seller2 BUYER funds - RECIPROCAL
+        checkBalanceBeforeClaim(buyer2, auctionIndex, 'buyer', gno, eth, valMinusFee(ether * 5), 1),
+        // claim SELLER funds
+        checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', eth, gno, valMinusFee(10 * ether * 2), 10 ** 16),
+        // claim SELLER funds
+        checkBalanceBeforeClaim(seller1, auctionIndex, 'seller', gno, eth, valMinusFee(ether * 5 / 2), 10 ** 16)
+      ])
     })
   })
 
@@ -707,40 +720,44 @@ contract('DutchExchange - TradeFlows', (accounts) => {
       gno2 = await TokenGNO.new(10000 * (10 ** 18), { from: master })
       await gno2.transfer(seller2, startingGNO2)
       await gno2.transfer(buyer1, startingGNO2)
-      await gno2.approve(dx.address, startingGNO2, { from: seller2 })
-      await gno2.approve(dx.address, startingGNO2, { from: buyer1 })
-      await gno2.approve(dx.address, startingGNO2, { from: master })
-      await dx.deposit(gno2.address, startingGNO2, { from: seller2 })
-      await dx.deposit(gno2.address, startingGNO2, { from: buyer1 })
-      await dx.deposit(gno2.address, startingGNO2, { from: master })
+      await Promise.all([
+        gno2.approve(dx.address, startingGNO2, { from: seller2 }),
+        gno2.approve(dx.address, startingGNO2, { from: buyer1 }),
+        gno2.approve(dx.address, startingGNO2, { from: master }),
+        dx.deposit(gno2.address, startingGNO2, { from: seller2 }),
+        dx.deposit(gno2.address, startingGNO2, { from: buyer1 }),
+        dx.deposit(gno2.address, startingGNO2, { from: master })
+      ])
       // add tokenPair all required tokenPairs
-      await dx.addTokenPair(
-        eth.address,
-        gno.address,
-        10 * ether,
-        ether * 5,
-        2,
-        1,
-        { from: seller1 },
-      )
-      await dx.addTokenPair(
-        eth.address,
-        gno2.address,
-        10 * ether,
-        ether * 5,
-        1,
-        1,
-        { from: seller2 },
-      )
-      await dx.addTokenPair(
-        gno.address,
-        gno2.address,
-        10 * ether,
-        ether * 5,
-        1,
-        2,
-        { from: seller2 },
-      )
+      await Promise.all([
+        dx.addTokenPair(
+          eth.address,
+          gno.address,
+          10 * ether,
+          ether * 5,
+          2,
+          1,
+          { from: seller1 },
+        ),
+        dx.addTokenPair(
+          eth.address,
+          gno2.address,
+          10 * ether,
+          ether * 5,
+          1,
+          1,
+          { from: seller2 },
+        ),
+        dx.addTokenPair(
+          gno.address,
+          gno2.address,
+          10 * ether,
+          ether * 5,
+          1,
+          2,
+          { from: seller2 },
+        )
+      ])
       logger('gno, gno2 added')
     })
 
@@ -792,20 +809,24 @@ contract('DutchExchange - TradeFlows', (accounts) => {
       logger('current sell volume', (await dx.sellVolumesCurrent.call(gno.address, eth.address)).toNumber())
       await postBuyOrder(gno, gno2, auctionIndex, 1, buyer2)
       // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-      await checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether * 2), 0, 0, 0, 0, gno, gno2, 100000)
-      await checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether), 0, 0, 0, 0, gno2, gno, 100000)
+      await Promise.all([
+        checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether * 2), 0, 0, 0, 0, gno, gno2, 100000),
+        checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether), 0, 0, 0, 0, gno2, gno, 100000)
+      ])
     })
 
     it('step 4 - just claiming', async () => {
       const auctionIndex = 1
-      // claim buyer1 BUYER funds
-      await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', gno, gno2, valMinusFee(10 * ether), 1)
-      // claim seller2 BUYER funds - RECIPROCAL
-      await checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', gno2, gno, valMinusFee(ether * 5), 1)
-      // claim SELLER funds
-      await checkBalanceBeforeClaim(seller2, auctionIndex, 'seller', gno, gno2, valMinusFee(5 * ether), 10 ** 16)
-      // claim SELLER funds
-      await checkBalanceBeforeClaim(seller2, auctionIndex, 'seller', gno2, gno, valMinusFee(ether * 10), 10 ** 16)
+      await Promise.all([
+        // claim buyer1 BUYER funds
+        checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', gno, gno2, valMinusFee(10 * ether), 1),
+        // claim seller2 BUYER funds - RECIPROCAL
+        checkBalanceBeforeClaim(buyer1, auctionIndex, 'buyer', gno2, gno, valMinusFee(ether * 5), 1),
+        // claim SELLER funds
+        checkBalanceBeforeClaim(seller2, auctionIndex, 'seller', gno, gno2, valMinusFee(5 * ether), 10 ** 16),
+        // claim SELLER funds
+        checkBalanceBeforeClaim(seller2, auctionIndex, 'seller', gno2, gno, valMinusFee(ether * 10), 10 ** 16)
+      ])
     })
   })
 })

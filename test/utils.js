@@ -234,6 +234,7 @@ const revertSnapshot = snapshotId => {
 }
 
 module.exports = {
+  silent,
   assertRejects,
   blockNumber,
   enableContractFlag,

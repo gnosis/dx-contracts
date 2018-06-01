@@ -12,10 +12,11 @@
 const bn = require('bignumber.js')
 const { wait } = require('@digix/tempo')(web3)
 const {
+  silent,
   gasLogWrapper,
   log,
   timestamp,
-  varLogger,
+  varLogger
 } = require('./utils')
 
 // I know, it's gross
@@ -156,31 +157,43 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
  */
 const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const { DutchExchange: dx } = await getContracts()
-  const currentIndex = (await dx.getAuctionIndex.call(ST.address, BT.address)).toNumber()
-  const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
+  const [ getAuctionIndex, getAuctionStart ] = await Promise.all([
+    dx.getAuctionIndex.call(ST.address, BT.address),
+    dx.getAuctionStart.call(ST.address, BT.address)
+  ])
+
+  const currentIndex = getAuctionIndex.toNumber()
+  const startingTimeOfAuction = getAuctionStart.toNumber()
+
+  if (!silent) {
+    let [num, den] = (await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex))
+    const priceBefore = num.div(den)
+    log(`
+      Price BEFORE waiting until Price = initial Closing Price (2) * 2
+      ==============================
+      Price.num             = ${num.toNumber()}
+      Price.den             = ${den.toNumber()}
+      Price at this moment  = ${(priceBefore)}
+      ==============================
+    `)
+  }
+
   const timeToWaitFor = Math.ceil((86400 - p * 43200) / (1 + p)) + startingTimeOfAuction
-  let [num, den] = (await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex))
-  const priceBefore = num.div(den)
-  log(`
-  Price BEFORE waiting until Price = initial Closing Price (2) * 2
-  ==============================
-  Price.num             = ${num.toNumber()}
-  Price.den             = ${den.toNumber()}
-  Price at this moment  = ${(priceBefore)}
-  ==============================
-  `)
   // wait until the price is good
   await wait(timeToWaitFor - timestamp());
-  ([num, den] = (await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex)))
-  const priceAfter = num.div(den)
-  log(`
-  Price AFTER waiting until Price = ${p * 100}% of ${priceBefore / 2} (initial Closing Price)
-  ==============================
-  Price.num             = ${num.toNumber()}
-  Price.den             = ${den.toNumber()}
-  Price at this moment  = ${(priceAfter)}
-  ==============================
-  `)
+
+  if (!silent) {
+    ([num, den] = (await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex)))
+    const priceAfter = num.div(den)
+    log(`
+      Price AFTER waiting until Price = ${p * 100}% of ${priceBefore / 2} (initial Closing Price)
+      ==============================
+      Price.num             = ${num.toNumber()}
+      Price.den             = ${den.toNumber()}
+      Price at this moment  = ${(priceAfter)}
+      ==============================
+    `)
+  }
   assert.equal(timestamp() >= timeToWaitFor, true)
   // assert.isAtLeast(priceAfter, (priceBefore / 2) * p)
 }
@@ -258,17 +271,19 @@ const postBuyOrder = async (ST, BT, aucIdx, amt, acct) => {
   ST = ST || eth; BT = BT || gno
   let auctionIdx = aucIdx || await getAuctionIndex(ST, BT)
 
-  log(`
-  Current Auction Index -> ${auctionIdx}
-  `)
-  const buyVolumes = (await dx.buyVolumes.call(ST.address, BT.address)).toNumber()
-  const sellVolumes = (await dx.sellVolumesCurrent.call(ST.address, BT.address)).toNumber()
-  log(`
-    Current Buy Volume BEFORE Posting => ${buyVolumes.toEth()}
-    Current Sell Volume               => ${sellVolumes.toEth()}
-    ----
-    Posting Buy Amt -------------------> ${amt.toEth()} in GNO for ETH
-  `)
+  if (!silent) {
+    log(`
+    Current Auction Index -> ${auctionIdx}
+    `)
+    const buyVolumes = (await dx.buyVolumes.call(ST.address, BT.address)).toNumber()
+    const sellVolumes = (await dx.sellVolumesCurrent.call(ST.address, BT.address)).toNumber()
+    log(`
+      Current Buy Volume BEFORE Posting => ${buyVolumes.toEth()}
+      Current Sell Volume               => ${sellVolumes.toEth()}
+      ----
+      Posting Buy Amt -------------------> ${amt.toEth()} in GNO for ETH
+    `)
+  }
   // log('POSTBUYORDER TX RECEIPT ==', await dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct }))
   return dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct })
 }
@@ -287,14 +302,16 @@ const postSellOrder = async (ST, BT, aucIdx, amt, acct) => {
   ST = ST || eth; BT = BT || gno
   let auctionIdx = aucIdx || 0
 
-  const buyVolumes = (await dx.buyVolumes.call(ST.address, BT.address)).toNumber()
-  const sellVolumes = (await dx.sellVolumesCurrent.call(ST.address, BT.address)).toNumber()
-  log(`
-    Current Buy Volume BEFORE Posting => ${buyVolumes.toEth()}
-    Current Sell Volume               => ${sellVolumes.toEth()}
-    ----
-    Posting Sell Amt -------------------> ${amt.toEth()} in ${await ST.symbol()} for ${await BT.symbol()} in auction ${auctionIdx}
-  `)
+  if (!silent) {
+    const buyVolumes = (await dx.buyVolumes.call(ST.address, BT.address)).toNumber()
+    const sellVolumes = (await dx.sellVolumesCurrent.call(ST.address, BT.address)).toNumber()
+    log(`
+      Current Buy Volume BEFORE Posting => ${buyVolumes.toEth()}
+      Current Sell Volume               => ${sellVolumes.toEth()}
+      ----
+      Posting Sell Amt -------------------> ${amt.toEth()} in ${await ST.symbol()} for ${await BT.symbol()} in auction ${auctionIdx}
+    `)
+  }
   // log('POSTBUYORDER TX RECEIPT ==', await dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct }))
   return dx.postSellOrder(ST.address, BT.address, auctionIdx, amt, { from: acct })
 }
