@@ -3,7 +3,7 @@
 const DutchExchange = artifacts.require('DutchExchange')
 const InternalTests = artifacts.require('InternalTests')
 const proxy = artifacts.require('Proxy')
-const TokenMGN = artifacts.require('TokenFRT')
+const TokenFRT = artifacts.require('TokenFRT')
 const Math = artifacts.require('Math')
 
 module.exports = function deploy(deployer, network) {

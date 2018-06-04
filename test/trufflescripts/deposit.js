@@ -1,11 +1,11 @@
 /* eslint no-console:0 */
-const { getTokenDeposits, withrawFromDX } = require('./utils/contracts')(artifacts)
+const { getTokenDeposits, depositToDX } = require('./utils/contracts')(artifacts)
 
 const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
 
 /**
- * truffle exec trufflescripts/withdraw.js
- * to withdraw funds from DutchExchange contract
+ * truffle exec test/trufflescripts/deposit.js
+ * to deposit funds to DutchExchange contracts
  * @flags:
  * --seller                     as the seller
  * --buyer                      as the buyer
@@ -35,9 +35,9 @@ module.exports = async () => {
   let { ETH, GNO } = await getTokenDeposits(account)
   console.log(`Deposit was:\t${ETH}\tETH,\t${GNO}\tGNO`)
 
-  const tokensToWithdraw = { ETH: argv.eth, GNO: argv.gno, TUL: argv.tul, OWL: argv.owl }
+  const tokensToDeposit = { ETH: argv.eth, GNO: argv.gno, FRT: argv.frt, OWL: argv.owl }
 
-  await withrawFromDX(account, tokensToWithdraw);
+  await depositToDX(account, tokensToDeposit);
 
   ({ ETH, GNO } = await getTokenDeposits(account))
   console.log(`Deposit is:\t${ETH}\tETH,\t${GNO}\tGNO`)

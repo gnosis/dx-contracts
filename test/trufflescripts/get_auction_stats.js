@@ -15,7 +15,7 @@ const getTimeStr = (timestamp) => {
 const getNumDenStr = ([num, den]) => `${num}/${den} = ${(num / den).toFixed(8)}`
 
 /**
- * truffle exec trufflescripts/get_auction_stats.js
+ * truffle exec test/trufflescripts/get_auction_stats.js
  * prints stats for the current and past ETH -> GNO auctions
  *  * @flags:
  * --pair <sellToken,buyToken>                 add token pair, eth, gno by default

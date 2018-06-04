@@ -36,7 +36,7 @@ module.exports = (artifacts) => {
   const contracts = {
     TokenETH,
     TokenGNO,
-    TokenMGN,
+    TokenFRT,
     TokenOMG,
     TokenRDN,
     TokenOWL,
@@ -100,7 +100,7 @@ module.exports = (artifacts) => {
  * @typedef {Object} DeployedContracts - deployed contracts map
  * @prop {DeployedContract} eth - deployed EtherToken contract
  * @prop {DeployedContract} gno - deployed TokenGNO contract
- * @prop {DeployedContract} frt - deployed TokenMGN contract
+ * @prop {DeployedContract} frt - deployed TokenFRT contract
  * @prop {DeployedContract} rdn - deployed TokenRDN contract
  * @prop {DeployedContract} omg - deployed TokenOMG contract
  * @prop {DeployedContract} owl - deployed TokenOWL contract (proxy)

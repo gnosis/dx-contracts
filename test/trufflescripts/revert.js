@@ -4,7 +4,7 @@ const { revertSnapshot } = require('./utils')(web3)
 const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
 
 /**
- * truffle exec trufflescripts/claim_funds.js
+ * truffle exec test/trufflescripts/claim_funds.js
  * to claim funds for the current auction for both seller and buyer,
  * from auction's sellerBalances and buyerBalances respectively
  * @flags:

@@ -10,7 +10,7 @@ const Proxy = artifacts.require('Proxy')
 const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
 
 /**
- * truffle exec trufflescripts/add_token_pair.js
+ * truffle exec test/trufflescripts/add_token_pair.js
  * adds a new TokenPair as master account by default
  * @flags:
  * --seller                     as the seller
