@@ -181,7 +181,7 @@ npx truffle-flattener contracts/DutchExchange.sol > build/DutchExchange-EtherSca
 ```
 
 Go to Etherscan validation page:
-* Go to[https://rinkeby.etherscan.io/verifyContract?a=]()
+* Go to [Verify Contract Code (version 2.0)](https://rinkeby.etherscan.io/verifyContract2?a=)
 * Fill the information:
   * Use the flattened contract
   * Set the exact compiler version used for the compilation i.e. `v0.4.24+commit.e67f0147`
