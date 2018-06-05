@@ -68,10 +68,6 @@ async function approveTokens () {
       console.log(`\
     Deployer account: ${contractsInfo.account}
     DX address: ${contractsInfo.dx.address}
-    WETH address: ${contractsInfo.wethAddress}
-    Ether balance: ${contractsInfo.etherBalance}    
-    Threshold: $${contractsInfo.thresholdInUSD.toFixed(2)}
-    Current Ether price: ${contractsInfo.etherPrice}
 `)
 
     const params = {
@@ -106,10 +102,6 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
   const { gas, gasPrice, network, dryRun, batchSize } = params
   const {
     dx,
-    etherPrice,
-    wethAddress,
-    thresholdInUSD,
-    StandardToken,
     account
   } = contractsInfo
 
@@ -204,8 +196,6 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
 async function loadContractsInfo () {
   const Proxy = artifacts.require('Proxy')
   const DutchExchange = artifacts.require('DutchExchange')
-  const StandardToken = artifacts.require('StandardToken')
-  const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 
   // Get contract examples
   const proxy = await Proxy.deployed()
@@ -213,22 +203,9 @@ async function loadContractsInfo () {
 
   // Get some data from dx
   const [
-    wethAddress,
-    thresholdInUSD,
-    ethUSDOracleAddress,
     accounts
   ] = await Promise.all([
-    // Get weth address
-    dx.ethToken.call(),
-
-    // Get threshold in USD
-    dx.thresholdNewTokenPair
-      .call()
-      .then(thresholdInWei => thresholdInWei.div(1e18)),
-
-    // Get oracle address
-    dx.ethUSDOracle.call(),
-
+    
     // get Accounts
     new Promise((resolve, reject) => {
       web3.eth.getAccounts((error, result) => {
@@ -241,29 +218,8 @@ async function loadContractsInfo () {
     })
   ])
   
-  // Get ether price from oracle
-  const oracle = PriceOracleInterface.at(ethUSDOracleAddress)
-  const etherPrice = await oracle.getUSDETHPrice.call()
-
-  // Get the ether balance
-  const account = accounts[0]
-  const etherBalance = await new Promise((resolve, reject) => {
-    web3.eth.getBalance(account, (error, result) => {
-      if (error) {
-        reject(error)
-      } else {
-        resolve(result.div(1e18))
-      }
-    })
-  })
-
   return {
     dx,
-    etherPrice,
-    wethAddress,
-    etherBalance,
-    thresholdInUSD,
-    StandardToken,
     account
   }
 }
