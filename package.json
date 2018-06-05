@@ -21,6 +21,7 @@
     "migrate-utils": "cd node_modules/@gnosis.pm/util-contracts && npm run migrate",
     "migrate-dep": "npm run networks-inject-dep && npm run migrate-utils && npm run migrate-gno && npm run migrate-owl",
     "migrate": "truffle migrate",
+    "migrate-all": "npm run migrate-dep && npm run migrate",
     "lint": "eslint .",
     "add-token-pairs": "truffle exec trufflescripts/add-token-pairs.js"
   },
@@ -32,7 +33,7 @@
   "license": "GPL-2.0+",
   "dependencies": {
     "@gnosis.pm/gno-token": "^0.3.0",
-    "@gnosis.pm/owl-token": "^0.6.0",
+    "@gnosis.pm/owl-token": "^0.7.1",
     "@gnosis.pm/util-contracts": "^0.2.11"
   },
   "devDependencies": {
