@@ -4,17 +4,18 @@ const DEFAULT_GAS = 5e5 // 500K
 const DEFAULT_GAS_PRICE = 1e9
 // How many tokens we approve at once
 const DEFAULT_BATCH = 50
+const DEFAULT_FILE_LOCATION = "./test/resources/approve-tokens/top150tokens.js"
 
 // Usage example:
 //  yarn approve-tokens -h
-//  yarn approve-tokens -f ./test/resources/approve-tokens/rinkeby/approve-tokens/top150tokens.js --dry-run
-//  yarn approve-tokens -f ./test/resources/approve-tokens/rinkeby/approve-tokens/top150tokens.js
+//  yarn approve-tokens --dry-run
+//  yarn approve-tokens
 
 var argv = require('yargs')
     .usage('Usage: yarn approve-tokens -f <file> [--gas num] [--gas-price num] [--network name] [--dry-run] [--batch-size]')
     .option('f', {
       type: 'string',
-      demandOption: true,
+      default: DEFAULT_FILE_LOCATION,
       describe: 'File with the list of tokens to approve'
     })
     .option('gas', {
@@ -91,7 +92,7 @@ async function approveTokens () {
       }
     }
 
-    await approveAndDisapprove(contractInfo, params, tokensToApprove, tokensToDisapprove)
+    await approveAndDisapprove(contractsInfo, params, tokensToApprove, tokensToDisapprove)
 
     console.log('\n **************  End of approve & disapprove tokens  **************\n')
   }
@@ -134,7 +135,7 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
   }
 
   for (let j = 0; j < tokensToDisapprove.length; j++) {
-    const token = tokensToApprove[j]
+    const token = tokensToDisapprove[j]
     const approved = await dx.approvedTokens.call(token.address)
     if (approved) {
       printTokenInfo(token, false, true)
@@ -151,7 +152,7 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
     for (let j = 0; j < tokensToApprove.length / batchSize; j++) {
       const batch = tokensToApprove.slice(j * batchSize, (j + 1) * batchSize)
       await dx.updateApprovalOfToken.call(
-        batch, true {
+        batch, true, {
         from: account
       })
     }
@@ -159,7 +160,7 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
     for (let j = 0; j < tokensToDisapprove.length / batchSize; j++) {
       const batch = tokensToDisapprove.slice(j * batchSize, (j + 1) * batchSize)
       await dx.updateApprovalOfToken.call(
-        batch, false {
+        batch, false, {
         from: account
       })
     }
@@ -172,7 +173,7 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
     for (let j = 0; j < tokensToApprove.length / batchSize; j++) {
       const batch = tokensToApprove.slice(j * batchSize, (j + 1) * batchSize)
       const approveTokens = await dx.updateApprovalOfToken(
-        batch, true {
+        batch, true, {
         from: account,
         gas,
         gasPrice
@@ -183,7 +184,7 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
     for (let j = 0; j < tokensToDisapprove.length / batchSize; j++) {
       const batch = tokensToDisapprove.slice(j * batchSize, (j + 1) * batchSize)
       const disapproveTokens = await dx.updateApprovalOfToken(
-        batch, false {
+        batch, false, {
         from: account,
         gas,
         gasPrice
@@ -205,7 +206,7 @@ async function loadContractsInfo () {
   const [
     accounts
   ] = await Promise.all([
-    
+
     // get Accounts
     new Promise((resolve, reject) => {
       web3.eth.getAccounts((error, result) => {
@@ -217,6 +218,8 @@ async function loadContractsInfo () {
       })
     })
   ])
+
+  const account = accounts[0]
   
   return {
     dx,
