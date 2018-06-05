@@ -3,7 +3,7 @@ const path = require('path')
 const DEFAULT_GAS = 5e5 // 500K
 const DEFAULT_GAS_PRICE = 1e9
 // How many tokens we approve at once
-const DEFAULT_BATCH = 50
+const DEFAULT_BATCH = 20
 const DEFAULT_FILE_LOCATION = "./test/resources/approve-tokens/top150tokens.js"
 
 // Usage example:
@@ -12,7 +12,7 @@ const DEFAULT_FILE_LOCATION = "./test/resources/approve-tokens/top150tokens.js"
 //  yarn approve-tokens
 
 var argv = require('yargs')
-    .usage('Usage: yarn approve-tokens -f <file> [--gas num] [--gas-price num] [--network name] [--dry-run] [--batch-size]')
+    .usage('Usage: yarn approve-tokens -f <file> [--gas num] [--gas-price num] [--network name] [--dry-run] [--batch-size num]')
     .option('f', {
       type: 'string',
       default: DEFAULT_FILE_LOCATION,
@@ -128,7 +128,7 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
     const approved = await dx.approvedTokens.call(token.address)
     if (!approved) {
       printTokenInfo(token, true, false)
-      addressesToApprove[j] = token.address
+      addressesToApprove.push(token.address)
     } else {
       printTokenInfo(token, true, true)
     }
@@ -139,7 +139,7 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
     const approved = await dx.approvedTokens.call(token.address)
     if (approved) {
       printTokenInfo(token, false, true)
-      addressesToDisapprove[j] = token.address
+      addressesToDisapprove.push(token.address)
     } else {
       printTokenInfo(token, false, false)
     }
@@ -149,16 +149,16 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
     // Dry run
     console.log("The dry run execution passed all validations")
 
-    for (let j = 0; j < tokensToApprove.length / batchSize; j++) {
-      const batch = tokensToApprove.slice(j * batchSize, (j + 1) * batchSize)
+    for (let j = 0; j < addressesToApprove.length / batchSize; j++) {
+      const batch = addressesToApprove.slice(j * batchSize, (j + 1) * batchSize)
       await dx.updateApprovalOfToken.call(
         batch, true, {
         from: account
       })
     }
 
-    for (let j = 0; j < tokensToDisapprove.length / batchSize; j++) {
-      const batch = tokensToDisapprove.slice(j * batchSize, (j + 1) * batchSize)
+    for (let j = 0; j < addressesToDisapprove.length / batchSize; j++) {
+      const batch = addressesToDisapprove.slice(j * batchSize, (j + 1) * batchSize)
       await dx.updateApprovalOfToken.call(
         batch, false, {
         from: account
@@ -170,8 +170,8 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
     // Real add token pair execution
     console.log("Approving tokens with account: " + account)
 
-    for (let j = 0; j < tokensToApprove.length / batchSize; j++) {
-      const batch = tokensToApprove.slice(j * batchSize, (j + 1) * batchSize)
+    for (let j = 0; j < addressesToApprove.length / batchSize; j++) {
+      const batch = addressesToApprove.slice(j * batchSize, (j + 1) * batchSize)
       const approveTokens = await dx.updateApprovalOfToken(
         batch, true, {
         from: account,
@@ -181,8 +181,8 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
       console.log(`Success! The ${j}th batch of tokens was approved. Transaction: ${approveTokens.tx}`)
     }
 
-    for (let j = 0; j < tokensToDisapprove.length / batchSize; j++) {
-      const batch = tokensToDisapprove.slice(j * batchSize, (j + 1) * batchSize)
+    for (let j = 0; j < addressesToDisapprove.length / batchSize; j++) {
+      const batch = addressesToDisapprove.slice(j * batchSize, (j + 1) * batchSize)
       const disapproveTokens = await dx.updateApprovalOfToken(
         batch, false, {
         from: account,
@@ -230,7 +230,7 @@ async function loadContractsInfo () {
 module.exports = (callback) => {  
   approveTokens()
     .then(() => {      
-      console.log('Success! All token pairs has been added\n')
+      console.log('Success! All tokens have been approved!\n')
       callback()
     })
     .catch(error => {

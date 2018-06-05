@@ -12,8 +12,10 @@
     "contracts-dev": "truffle compile && cp networks-dev.json networks.json && node scripts/inject_network_info.js",
     "deploy": "truffle deploy",
     "add-token-pairs": "truffle exec trufflescripts/add-token-pairs.js",
+    "approve-tokens": "truffle exec trufflescripts/approve-tokens.js",
     "test": "truffle test -s",
-    "coverage": "./node_modules/.bin/solidity-coverage"
+    "coverage": "./node_modules/.bin/solidity-coverage",
+    "decode": "node ./node_modules/decode-eth/main.js"
   },
   "repository": {
     "type": "git",
