@@ -54,7 +54,7 @@ Security is one of the main focus for the Dutch X, so the code was subjected
 to several reviews, audits and bug bunties.
 
 ## Audit
-The contracts were subjected thorough audit, the report can be finded in:
+The contracts were subjected to a thorough audit, the report can be finded in:
 * [Audit Report inc. known weaknesses](https://drive.google.com/file/d/15aH3edp5IvkMS5R5pjzjg7wj08Vqh9OV/view)
 
 ## Bug bunty
@@ -62,7 +62,7 @@ Read Gnosis blog post:
 * [Gnosis DutchX and Initial OWL Generation Bug Bounty](https://blog.gnosis.pm/gnosis-dutchx-and-initial-owl-generation-bug-bounty-71ba53dfd2db)
 
 # Get started - Use DX in your project
-Just add it to your project:
+Add it to your project:
 
 ```bash
 # Install the dependencies
@@ -100,7 +100,6 @@ Proxy.deployed(async proxy => {
 
 # Development
 ## Setup and show the networks
-The easiest way to 
 ```bash
 # Install dependencies
 yarn install
@@ -148,7 +147,7 @@ The flag -s runs the tests in a silence mode. Additionally the flag -g can be ad
 # Migrate the version to the testnets, at least rinkeby, and posibly mainnet
 # You can optionally change the gas price using the GAS_PRICE env variable
 yarn restore
-MNEMONIC=$MNEMONIC_OWL yarn migrate --network rinkeby
+MNEMONIC=$MNEMONIC_DX yarn migrate --network rinkeby
 
 # Extract the network file
 yarn networks-extract
@@ -177,15 +176,14 @@ git merge vX.Y.X
 ## Verify contract on Etherscan
 Flatten the smart contract:
 ```bash
-npx truffle-flattener contracts/TokenOWL.sol > build/TokenOWL-EtherScan.sol
-npx truffle-flattener contracts/TokenOWLProxy.sol > build/TokenOWLProxy-EtherScan.sol
-npx truffle-flattener contracts/OWLAirdrop.sol > build/OWLAirdrop-EtherScan.sol
+npx truffle-flattener contracts/Proxy.sol > build/Proxy-EtherScan.sol
+npx truffle-flattener contracts/DutchExchange.sol > build/DutchExchange-EtherScan.sol
 ```
 
 Go to Etherscan validation page:
 * Go to[https://rinkeby.etherscan.io/verifyContract?a=]()
 * Fill the information:
-  * Use `build/TokenOWL-EtherScan.sol`
+  * Use the flattened contract
   * Set the exact compiler version used for the compilation i.e. `v0.4.24+commit.e67f0147`
   * Optimization: `No`
 * Press validate
