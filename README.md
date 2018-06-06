@@ -12,7 +12,7 @@ Audit
 -----
 ### Audit Report:
 
-[Audit Report inc. known weaknesses](docs/Solidity_Audit_Report.pdf)
+[Audit Report inc. known weaknesses](docs/Solidified_Audit_Report.pdf)
 
 
 Install
@@ -75,13 +75,13 @@ node scripts/extract_artifacts.js
 Documentation
 -------------
 
-There is a copy version hosted online at [docs/DutchX_Documentation.pdf]
+There is a copy version hosted online at <docs/DutchX_Documentation.pdf>
 You may want to download the pdf for external hyperlinks to work.
 
 Auction state-diagram overview:
 -------------------------------
 
-There is a copy version hosted online at [docs/StateDiagram.png]
+There is a copy version hosted online at <docs/StateDiagram.png>
 
 PriceOracle
 -----------
