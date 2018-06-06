@@ -9,7 +9,8 @@
     "truffle": "truffle",
     "networks-extract": "node src/extract_network_info.js",
     "networks-inject": "node src/inject_network_info.js",
-    "networks-inject-dep": "node src/inject_network_info_deps.js",
+    "networks-inject-dep-utils": "node src/inject_network_info_deps_utils.js",
+    "networks-inject-dep-gno": "node src/inject_network_info_deps_gno.js",
     "networks-reset": "mkdir -p build/contracts && truffle networks --clean && npm run networks-inject",
     "networks": "truffle networks",
     "compile-todo": "eslint --fix . && eslint src && truffle compile",
@@ -19,7 +20,7 @@
     "migrate-owl": "cd node_modules/@gnosis.pm/owl-token && npm run migrate",
     "migrate-gno": "cd node_modules/@gnosis.pm/gno-token && npm run migrate",
     "migrate-utils": "cd node_modules/@gnosis.pm/util-contracts && npm run migrate",
-    "migrate-dep": "npm run networks-inject-dep && npm run migrate-utils && npm run migrate-gno && npm run migrate-owl",
+    "migrate-dep": "npm run migrate-utils && npm run networks-inject-dep-utils && npm run migrate-gno && npm run networks-inject-dep-gno && npm run migrate-owl",
     "migrate": "truffle migrate",
     "migrate-all": "npm run migrate-dep && npm run migrate",
     "lint": "eslint .",
@@ -32,9 +33,9 @@
   "author": "Gnosis",
   "license": "GPL-2.0+",
   "dependencies": {
-    "@gnosis.pm/gno-token": "^0.3.0",
-    "@gnosis.pm/owl-token": "^0.7.1",
-    "@gnosis.pm/util-contracts": "^0.2.11"
+    "@gnosis.pm/gno-token": "^0.3.4",
+    "@gnosis.pm/owl-token": "^0.7.4",
+    "@gnosis.pm/util-contracts": "^0.2.14"
   },
   "devDependencies": {
     "@digix/tempo": "^0.2.0",
@@ -47,7 +48,6 @@
     "eslint-plugin-node": "^6.0.0",
     "eslint-plugin-promise": "^3.7.0",
     "eslint-plugin-standard": "^3.1.0",
-    "ganache-cli": "^6.1.0",
     "minimist": "^1.2.0",
     "truffle": "4.1.5",
     "truffle-contract": "^3.0.1",
