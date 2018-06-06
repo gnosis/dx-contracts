@@ -75,13 +75,13 @@ node scripts/extract_artifacts.js
 Documentation
 -------------
 
-There is a copy version hosted online at <docs/DutchX_Documentation.pdf>
+The DutchX Documentation can be found in this repo [here](docs/DutchX_Documentation.pdf).
 You may want to download the pdf for external hyperlinks to work.
 
 Auction state-diagram overview:
 -------------------------------
 
-There is a copy version hosted online at <docs/StateDiagram.png>
+The state diagram is available in this repo [here](docs/StateDiagram.png).
 
 PriceOracle
 -----------
