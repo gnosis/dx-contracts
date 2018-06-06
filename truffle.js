@@ -1,7 +1,7 @@
 const truffleConfig = require('@gnosis.pm/util-contracts/src/util/truffleConfig')
 
 const DEFAULT_GAS_PRICE = 5e9
-const GAS_LIMIT = 5e6
+const GAS_LIMIT = 6.5e6
 const DEFAULT_MNEMONIC = 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat'
 
 // Get the mnemonic
@@ -18,5 +18,6 @@ module.exports = truffleConfig({
   gasPrice,
   gas,
   aditionalNetwork,
+  optimizedEnabled: true,
   urlRinkeby: 'https://rinkeby.infura.io/' // 'http://node.rinkeby.gnosisdev.com:8545'
 })
