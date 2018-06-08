@@ -4,7 +4,7 @@ import "../Tokens/TokenFRT.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "../Oracle/PriceOracleInterface.sol";
 
-contract DXCommonStorage {
+contract DXAdminStorage {
 
     address masterCopy;
     address public newMasterCopy;

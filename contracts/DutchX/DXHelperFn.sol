@@ -1,8 +1,8 @@
 pragma solidity ^0.4.19;
 
-import "./DXAuctionsFn.sol";
+import "./DXEvents.sol";
 
-contract DXHelperFn is DXAuctionsFn {
+contract DXHelperFn is DXEvents {
 	// > Helper fns
     function getTokenOrder(
         address token1,
@@ -79,31 +79,4 @@ contract DXHelperFn is DXAuctionsFn {
         (token1, token2) = getTokenOrder(token1, token2);
         auctionIndex = latestAuctionIndices[token1][token2];
     }
-
-    // > Events
-    event NewDeposit(
-         address indexed token,
-         uint amount
-    );
-
-    event NewWithdrawal(
-        address indexed token,
-        uint amount
-    );
-    
-    event NewSellOrder(
-        address indexed sellToken,
-        address indexed buyToken,
-        address indexed user,
-        uint auctionIndex,
-        uint amount
-    );
-
-    event NewBuyOrder(
-        address indexed sellToken,
-        address indexed buyToken,
-        address indexed user,
-        uint auctionIndex,
-        uint amount
-    );
 }

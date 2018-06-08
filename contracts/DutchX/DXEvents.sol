@@ -1,13 +1,35 @@
 pragma solidity ^0.4.19;
 
-import "./DXAuctionsStorage.sol";
-import "./DXMath.sol";
+import "./DXAuctionsStorage";
+import "./DXMath";
 
-contract DXAuctionsFn is DXMath, DXAuctionsStorage {
+contract DXEvents is DXAuctionsStorage, DXMath {
+	// > Events
+    event NewDeposit(
+         address indexed token,
+         uint amount
+    );
 
-    uint constant WAITING_PERIOD_NEW_TOKEN_PAIR = 6 hours;
-    uint constant WAITING_PERIOD_NEW_AUCTION = 10 minutes;
-    uint constant AUCTION_START_WAITING_FOR_FUNDING = 1;
+    event NewWithdrawal(
+        address indexed token,
+        uint amount
+    );
+    
+    event NewSellOrder(
+        address indexed sellToken,
+        address indexed buyToken,
+        address indexed user,
+        uint auctionIndex,
+        uint amount
+    );
+
+    event NewBuyOrder(
+        address indexed sellToken,
+        address indexed buyToken,
+        address indexed user,
+        uint auctionIndex,
+        uint amount
+    );
 
     event NewSellerFundsClaim(
         address indexed sellToken,

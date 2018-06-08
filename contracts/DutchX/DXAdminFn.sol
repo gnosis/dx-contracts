@@ -3,10 +3,10 @@ pragma solidity ^0.4.19;
 import "../Tokens/TokenFRT.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "../Oracle/PriceOracleInterface.sol";  
-import "./DXCommonStorage.sol";
+import "./DXAdminStorage.sol";
 import "./DXMath.sol";
 
-contract DXAdminFn is DXMath, DXCommonStorage {
+contract DXAdminFn is DXMath, DXAdminStorage {
 	
     uint constant WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE = 30 days;
 
