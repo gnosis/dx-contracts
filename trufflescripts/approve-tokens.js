@@ -1,7 +1,7 @@
 const path = require('path')
                      
-const DEFAULT_GAS = 5e5 // 500K
-const DEFAULT_GAS_PRICE = 1e9
+const DEFAULT_GAS = 8e5 // 800K
+const DEFAULT_GAS_PRICE = 50e9
 // How many tokens we approve at once
 const DEFAULT_BATCH = 20
 const DEFAULT_FILE_LOCATION = "./test/resources/approve-tokens/top150tokens.js"
@@ -110,9 +110,9 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
   const printTokenInfo = ({ symbol, address }, approve, approved) => {
     let text
     if (approve == approved) {
-      text = approve ? 'Token already approved:' : 'Token already disapproved:'
+      text = approve ? 'Token already approved' : 'Token already disapproved'
     } else {
-      text = approve ? 'Approving token:' : 'Disapproving token:'
+      text = approve ? 'Approving token' : 'Disapproving token'
     }
     console.log(`${text}:
     Symbol: ${symbol}
