@@ -1,9 +1,6 @@
 pragma solidity ^0.4.19;
 
-import "./DXAuctionsStorage";
-import "./DXMath";
-
-contract DXEvents is DXAuctionsStorage, DXMath {
+contract DXEvents {
 	// > Events
     event NewDeposit(
          address indexed token,

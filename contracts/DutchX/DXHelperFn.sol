@@ -1,8 +1,11 @@
 pragma solidity ^0.4.19;
 
+import "./DXAuctionsStorage.sol";
+import "./DXMath.sol";
 import "./DXEvents.sol";
+import "./DXConstants.sol";
 
-contract DXHelperFn is DXEvents {
+contract DXHelperFn is DXAuctionsStorage, DXMath, DXEvents, DXConstants {
 	// > Helper fns
     function getTokenOrder(
         address token1,

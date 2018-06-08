@@ -2,7 +2,7 @@ pragma solidity ^0.4.19;
 
 import "./DXHelperFn.sol";
 
-contract DXCoreFn is DXHelperFn {
+contract DXAuctionsFn is DXHelperFn {
 	function issueFrts(
         address primaryToken,
         address secondaryToken,

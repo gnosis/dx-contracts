@@ -1,9 +1,9 @@
 pragma solidity ^0.4.19;
 
-import "./DXPublicFn.sol";
+import "./DXInteractionFn.sol";
 import "./DXMath.sol";
 
-contract DXAddTokenPair is DXPublicFn {
+contract DXAddTokenPair is DXInteractionFn {
 	/// @param initialClosingPriceNum initial price will be 2 * initialClosingPrice. This is its numerator
     /// @param initialClosingPriceDen initial price will be 2 * initialClosingPrice. This is its denominator
     function addTokenPair(

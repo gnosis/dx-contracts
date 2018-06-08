@@ -4,9 +4,9 @@ import "../Tokens/TokenFRT.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "../Oracle/PriceOracleInterface.sol";  
 import "./DXAdminStorage.sol";
-import "./DXMath.sol";
+// import "./DXMath.sol";
 
-contract DXAdminFn is DXMath, DXAdminStorage {
+contract DXAdminFn is DXAdminStorage {
 	
     uint constant WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE = 30 days;
 
@@ -153,6 +153,31 @@ contract DXAdminFn is DXMath, DXAdminStorage {
         returns (address)
     {
         return masterCopy;
+    }
+
+    /// @dev Returns whether an add operation causes an overflow
+    /// @param a First addend
+    /// @param b Second addend
+    /// @return Did no overflow occur?
+    function safeToAdd(uint a, uint b)
+        public
+        pure
+        returns (bool)
+    {
+        return a + b >= a;
+    }
+
+    /// @dev Returns sum if no overflow occurred
+    /// @param a First addend
+    /// @param b Second addend
+    /// @return Sum
+    function add(uint a, uint b)
+        public
+        pure
+        returns (uint)
+    {
+        require(safeToAdd(a, b));
+        return a + b;
     }
 
     event Approval(
