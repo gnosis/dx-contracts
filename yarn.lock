@@ -16,7 +16,7 @@
   dependencies:
     "@gnosis.pm/gnosis-core-contracts" "^1.0.1"
 
-"@gnosis.pm/pm-contracts@^1.0.3":
+"@gnosis.pm/pm-contracts@^1.0.4":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@gnosis.pm/pm-contracts/-/pm-contracts-1.0.4.tgz#3d86b145b5094aac41e23b33783692341cf86fe1"
 
