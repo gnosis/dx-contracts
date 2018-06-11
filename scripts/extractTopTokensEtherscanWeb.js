@@ -9,7 +9,7 @@ var tokens = rows
   .map(row => row.querySelector(':nth-child(3) h5 a'))
   .map(link => {
     var nameAndSymbolRegex = /([\w\s]+) \((\w+)\)/gi
-    var addressRegex = /http:\/\/etherscan.io\/token\/0x(\w+)/gi
+    var addressRegex = /https?:\/\/etherscan.io\/token\/0x(\w+)/gi
     let nameAndSymbolMatch = nameAndSymbolRegex.exec(link.innerText)
     let addressMatch = addressRegex.exec(link.href)
 
