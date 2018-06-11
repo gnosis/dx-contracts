@@ -6,8 +6,8 @@ const DEFAULT_GAS_PRICE = 1e9
 
 // Usage example:
 //  yarn add-token-pairs -h
-//  yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/token-pairs.js --dry-run
-//  yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/token-pairs.js
+//  yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/token-pairs-all.js --dry-run
+//  yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/token-pairs-all.js
 
 var argv = require('yargs')
     .usage('Usage: yarn add-token-pairs -f <file> [--gas num] [--gas-price num] [--network name] [--dry-run]')
@@ -19,12 +19,12 @@ var argv = require('yargs')
     .option('gas', {
       type: 'integer',
       default: DEFAULT_GAS,
-      describe: 'Gas for approving each token pair'
+      describe: 'Gas for adding each token pair'
     })
     .option('gasPrice', {
       type: 'integer',
       default: DEFAULT_GAS_PRICE,
-      describe: 'Gas price for approving each token pair'
+      describe: 'Gas price for adding each token pair'
     })
     .option('network', {
       type: 'string',
@@ -34,7 +34,7 @@ var argv = require('yargs')
     .option('dryRun', {
       type: 'boolean',
       default: false,
-      describe: 'Dry run. Do not approve the token pair, do just the validations.'
+      describe: 'Dry run. Do not add the token pair, do just the validations.'
     })    
     .help('h')
     .strict()
