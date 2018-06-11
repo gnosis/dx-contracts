@@ -19,7 +19,7 @@ var tokens = rows
       symbol = nameAndSymbolMatch[2]
     }
     if (addressMatch) {
-      address = addressMatch[1]
+      address = '0x' + addressMatch[1]
     }
 
     if (nameAndSymbolMatch)
