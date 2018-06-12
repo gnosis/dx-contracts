@@ -1,6 +1,5 @@
-pragma solidity ^0.4.19;
-import "@gnosis.pm/gnosis-core-contracts/contracts/Tokens/StandardToken.sol";
-
+pragma solidity ^0.4.21;
+import "@gnosis.pm/util-contracts/contracts/StandardToken.sol";
 
 /// @title Standard token contract with overflow protection
 contract TokenFRT is StandardToken {

@@ -1,14 +1,16 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.21;
 
-import "./Tokens/TokenFRT.sol";
-import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
+import "./TokenFRT.sol";
 import "./Oracle/PriceOracleInterface.sol";  
+import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
+import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
+
 
 /// @title Dutch Exchange - exchange token pairs with the clever mechanism of the dutch auction
 /// @author Alex Herrmann - <alex@gnosis.pm>
 /// @author Dominik Teiml - <dominik@gnosis.pm>
 
-contract DutchExchange {
+contract DutchExchange is Proxied {
 
     // The price is a rational number, so we need a concept of a fraction
     struct fraction {

@@ -1,0 +1,5 @@
+build
+test
+contracts
+.*
+node_modules
