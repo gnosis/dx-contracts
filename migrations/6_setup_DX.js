@@ -1,12 +1,9 @@
 /* global artifacts */
 /* eslint no-undef: "error" */
-/* global artifacts */
-/* eslint no-undef: "error" */
-
-const deployDx = require('../src/migrations/6_setup_DX')
+const setupDx = require('../src/migrations/6_setup_DX')
 
 module.exports = function (deployer, network, accounts) {
-  return deployDx({
+  return setupDx({
     artifacts,
     deployer,
     network,
