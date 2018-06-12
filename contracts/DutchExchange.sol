@@ -1476,6 +1476,56 @@ contract DutchExchange {
             claimBuyerFunds(auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
     }
 
+    //@dev for multiple withdraws
+    //@param auctionSellTokens are the sellTokens defining an auctionPair
+    //@param auctionBuyTokens are the buyTokens defining an auctionPair
+    //@param auctionIndices are the auction indices on which an token should be claimedAmounts
+    //@param user is the user who wants to his tokens
+    function claimAndWithdrawTokensFromSeveralAuctionsAsSeller(
+        address auctionSellToken,
+        address auctionBuyToken,
+        uint[] auctionIndices,
+        address user
+    )
+        external
+        returns (uint totalClaimableAmount, uint totalFrtsIssued, uint newBal)
+
+    {
+        uint length = auctionIndices.length;
+        uint returned = 0;
+        uint frtsIssued = 0;
+        for (uint i = 0; i < length; i++) {
+            (returned, frtsIssued) = claimSellerFunds(auctionSellToken, auctionBuyToken, user, auctionIndices[i]);
+            totalClaimableAmount += returned;
+            totalFrtsIssued += frtsIssued;
+        }
+        newBal = withdraw(auctionBuyToken, totalClaimableAmount);
+    }
+    //@dev for multiple withdraws
+    //@param auctionSellTokens are the sellTokens defining an auctionPair
+    //@param auctionBuyTokens are the buyTokens defining an auctionPair
+    //@param auctionIndices are the auction indices on which an token should be claimedAmounts
+    //@param user is the user who wants to his tokens
+    function claimAndWithdrawTokensFromSeveralAuctionsAsBuyer(
+        address auctionSellToken,
+        address auctionBuyToken,
+        uint[] auctionIndices,
+        address user
+    )
+        external
+        returns (uint totalClaimableAmount, uint totalFrtsIssued, uint newBal)
+    {
+        uint length = auctionIndices.length;
+        uint returned = 0;
+        uint frtsIssued = 0;      
+        for (uint i = 0; i < length; i++) {
+            (returned, frtsIssued) = claimBuyerFunds(auctionSellToken, auctionBuyToken, user, auctionIndices[i]);
+            totalClaimableAmount += returned;
+            totalFrtsIssued += frtsIssued;
+        }
+        newBal = withdraw(auctionSellToken, totalClaimableAmount);
+    }
+
     function getMasterCopy()
         external
         view 
