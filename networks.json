@@ -1,4 +1,20 @@
 {
+  "DutchExchange": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0xa42f804dbcbd560c0d3732e8a9cc45a19143bd8f",
+      "transactionHash": "0xbc9baac97f5ede94a8cb92358f0f2acde97a654269668faaa091a4cdb7204b83"
+    }
+  },
+  "DutchExchangeProxy": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0x93a8ff189f5c10cdf3dbb3c6e2042d87cca137fa",
+      "transactionHash": "0x3a9ec38c4d83590dcdc487dc607dbd84f1a2cd495974d3bf35df4692a4d8de11"
+    }
+  },
   "Math": {
     "4": {
       "events": {},
@@ -76,8 +92,8 @@
         }
       },
       "links": {},
-      "address": "0xf055b146a57a760c7793cf094caa69ada6386ccb",
-      "transactionHash": "0x4353b7c4b88c51a23781ca574d181277aff3f3fdd642d229ecfeb0e8e1f007c0"
+      "address": "0xbfff80b73f081cc159534d922712551c5ed8b3d3",
+      "transactionHash": "0xe420016bb602c45b06c71a37007a8d7742223f45a0099e70de64f7822135d8c7"
     }
   },
   "Migrations": {
@@ -154,16 +170,16 @@
         }
       },
       "links": {},
-      "address": "0xd70144b1dd7fa5da7019a7294e3063847171795f",
-      "transactionHash": "0xf29cb495919e633bcadd57e6ac8674f0d6505c894b80deb565d29e17690ffc16"
+      "address": "0xc20beab9c3aec406437fbf5c2c979a7c6c3101d9",
+      "transactionHash": "0xdff2b776aa25882be176d19ee3cc5377dea07baeabbb75bc0fbdbe630b80a420"
     }
   },
   "PriceOracleInterface": {
     "4": {
       "events": {},
       "links": {},
-      "address": "0x0ee5bdb0c5b0372bcada5dfe190d14854f0fc949",
-      "transactionHash": "0xe43bd95d442cbeefe567d1cb45c044b8eb6f04f81bb3cacb20a13045f175a608"
+      "address": "0x7fa26cd1e115481ad120a3e1a9acd12f4f2cf973",
+      "transactionHash": "0x3e5ab03b92bd4ad18ac97cb5e3be244d70d2456203f5a39b9a4af37cbab7bc25"
     }
   },
   "TokenFRT": {
@@ -172,8 +188,8 @@
       "links": {
         "Math": "0xbf0dacc0d3897dda763f90cfaf1d0e36c61ae68c"
       },
-      "address": "0x1800c020a878e6f5c09823efdc0adb41591c890e",
-      "transactionHash": "0x3e9d441df624488efb58ed194f9d68b6bc9c26d50e3a2aff711964762fdabedb"
+      "address": "0x6cde435a6eec9531601b1725ddf52099c02dbe15",
+      "transactionHash": "0x0799dc3d1e57230119226da1daecb5b05c29d9a12781b27fc61315b659b13d6b"
     }
   }
 }
