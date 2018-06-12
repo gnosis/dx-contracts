@@ -28,6 +28,6 @@ module.exports = (deployer, network, accounts) => {
       .then(() => deployAirdrop(deployParams))
       .then(() => setupMinter(deployParams))
   } else {
-    throw new Error('Migrations are just for development. Current network is %s', network)
+    console.log('Not in development, so nothing to do. Current network is %s', network)
   }
 }
