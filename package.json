@@ -4,7 +4,7 @@
   "description": "DutchX - Gnosis Dutch Auction Trading Platform. This npm package provides all smartcontracts used in the project",
   "scripts": {
     "rpc": "ganache-cli -d --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --defaultBalanceEther '500'",
-    "prepack": "npm run restore",
+    "preversion": "npm run restore",
     "test": "truffle test",
     "truffle": "truffle",
     "networks-extract": "node src/extract_network_info.js",
@@ -27,9 +27,9 @@
   "author": "Gnosis",
   "license": "GPL-2.0+",
   "dependencies": {
-    "@gnosis.pm/gno-token": "^0.6.0",
-    "@gnosis.pm/owl-token": "^0.9.0",
-    "@gnosis.pm/util-contracts": "^0.4.0"
+    "@gnosis.pm/gno-token": "^0.6.1",
+    "@gnosis.pm/owl-token": "^0.13.1",
+    "@gnosis.pm/util-contracts": "^0.4.1"
   },
   "devDependencies": {
     "@digix/tempo": "^0.2.0",
