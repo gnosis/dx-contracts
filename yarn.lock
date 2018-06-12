@@ -6,32 +6,22 @@
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/@digix/tempo/-/tempo-0.2.0.tgz#5daf91ad788d6b596a19aad22e2e667e4ec808a8"
 
-"@gnosis.pm/gno-token@^0.3.1":
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/gno-token/-/gno-token-0.3.1.tgz#53856b88b5422464d07b63ef3295eff76a4736e6"
+"@gnosis.pm/gno-token@^0.6.0":
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/gno-token/-/gno-token-0.6.0.tgz#5b2d4b6dcafebfbf3af813a3f8fbfed7869a7669"
   dependencies:
-    "@gnosis.pm/util-contracts" "^0.2.12"
+    "@gnosis.pm/util-contracts" "^0.4.0"
 
-"@gnosis.pm/gno-token@^0.3.2":
-  version "0.3.2"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/gno-token/-/gno-token-0.3.2.tgz#766fa8cdb7575822241cdbecc3259f1cad41b969"
+"@gnosis.pm/owl-token@^0.9.0":
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/owl-token/-/owl-token-0.9.0.tgz#f7a80a2caabbe534632a6d50218cfd4a11b52ebc"
   dependencies:
-    "@gnosis.pm/util-contracts" "^0.2.13"
+    "@gnosis.pm/gno-token" "^0.6.0"
+    "@gnosis.pm/util-contracts" "^0.4.0"
 
-"@gnosis.pm/owl-token@^0.7.4":
-  version "0.7.4"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/owl-token/-/owl-token-0.7.4.tgz#11feb1b48adb1eb368df4a97f0ba6b40a4c785e8"
-  dependencies:
-    "@gnosis.pm/gno-token" "^0.3.1"
-    "@gnosis.pm/util-contracts" "^0.2.12"
-
-"@gnosis.pm/util-contracts@^0.2.12":
-  version "0.2.12"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/util-contracts/-/util-contracts-0.2.12.tgz#fc75dd01c8e3a8ff289be1290047359dc1db52ad"
-
-"@gnosis.pm/util-contracts@^0.2.13":
-  version "0.2.13"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/util-contracts/-/util-contracts-0.2.13.tgz#144d3537ba5d2f44baba36f3fc665b726f623f0e"
+"@gnosis.pm/util-contracts@^0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/util-contracts/-/util-contracts-0.4.0.tgz#6b4b3437e75b508c7d03bee316e9d517128854d3"
 
 abstract-leveldown@~2.6.0:
   version "2.6.3"
