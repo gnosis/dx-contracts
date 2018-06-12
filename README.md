@@ -113,17 +113,14 @@ yarn networks
 
 ## Execute migrations into a local ganache-cli
 ```bash
-# Run ganache CLU
-yarn rpc
+# Make sure ganache cli is installed globally
+npm install -g ganache-cli
 
-# Execute the migrations for the dependencies
-yarn migrate-dep
+# Run ganache
+yarn rpc
 
 # Execute the migrations
 yarn migrate
-
-# Or you can do all at once using
-yarn migrate-all
 ```
 
 ## Set the Ether price and Feed expire date for development
@@ -133,6 +130,15 @@ at deploy time:
   local ganache-cli. It's `500 USD/ETH` by default.
 * `FEED_EXPIRE_PERIOD_DAYS`: Allows to set the expiration date for the feed. 
   It's `365 days` by default
+
+## Set a different threshold for adding a new token and starting a new auction
+The migration that setup the Dutch X contract is parametrized, so you can 
+change the defalt value of the thresholds:
+* `THRESHOLD_NEW_TOKEN_PAIR_USD`: Minimun USD worth of a token that the contract
+requires in order to add a new token pair in the Dutch X. It's `10.000 USD` by 
+default.
+* `THRESHOLD_AUCTION_START_USD`: Liquidity in USD required for the auction to
+start. It's `1.000 USD` by default.
 
 ## Run all tests 
 ```bash
@@ -162,8 +168,7 @@ git commit -m 'Update the networks file'
 # Generate version using Semantic Version: https://semver.org/
 # For example, for a minor version
 npm version minor
-git push
-git push --tags
+git push && git push --tags
 
 # Deploy npm package
 npm publish --access=public
@@ -185,7 +190,7 @@ Go to Etherscan validation page:
 * Fill the information:
   * Use the flattened contract
   * Set the exact compiler version used for the compilation i.e. `v0.4.24+commit.e67f0147`
-  * Optimization: `No`
+  * Optimization: `Yes`
 * Press validate
 
 # Contributors
