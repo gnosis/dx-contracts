@@ -2,6 +2,7 @@
 /* eslint no-undef: "error" */
 
 const deployMath = require('@gnosis.pm/util-contracts/src/migrations/2_deploy_math')
+const deployWeth = require('@gnosis.pm/util-contracts/src/migrations/3_deploy_WETH')
 const deployGno = require('@gnosis.pm/gno-token/src/migrations/3_deploy_GNO')
 const deployOwl = require('@gnosis.pm/owl-token/src/migrations/3_deploy_OWL.js')
 const deployAirdrop = require('@gnosis.pm/owl-token/src/migrations/4_deploy_OWL_airdrop.js')
@@ -16,11 +17,12 @@ module.exports = (deployer, network, accounts) => {
       network,
       accounts,
       web3,
-      initialTokenAmount: process.env.DEV_GNO_TOKEN_AMOUNT,
-      gnoLockPeriodInHours: process.env.DEV_GNO_LOCK_PERIOD_IN_HOURS
+      initialTokenAmount: process.env.GNO_TOKEN_AMOUNT,
+      gnoLockPeriodInHours: process.env.GNO_LOCK_PERIOD_IN_HOURS
     }
     deployer
       .then(() => deployMath(deployParams))
+      .then(() => deployWeth(deployParams))
       .then(() => deployGno(deployParams))
       .then(() => deployOwl(deployParams))
       .then(() => deployAirdrop(deployParams))
