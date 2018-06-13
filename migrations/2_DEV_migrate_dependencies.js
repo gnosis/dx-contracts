@@ -8,7 +8,6 @@ const deployOwl = require('@gnosis.pm/owl-token/src/migrations/3_deploy_OWL.js')
 const deployAirdrop = require('@gnosis.pm/owl-token/src/migrations/4_deploy_OWL_airdrop.js')
 const setupMinter = require('@gnosis.pm/owl-token/src/migrations/5_set_airdrop_as_OWL_minter')
 
-
 module.exports = (deployer, network, accounts) => {
   if (network === 'development') {
     const deployParams = {

@@ -2,7 +2,7 @@ const path = require('path')
 const assert = require('assert')
                      
 const DEFAULT_GAS = 5e5 // 500K
-const DEFAULT_GAS_PRICE = 1e9
+const DEFAULT_GAS_PRICE_GWEI = 1e9
 
 // Usage example:
 //  yarn add-token-pairs -h

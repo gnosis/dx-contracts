@@ -151,7 +151,7 @@ The flag -s runs the tests in a silence mode. Additionally the flag -g can be ad
 ```bash
 # In a release branch (i.e. release/vX.Y.X)
 # Migrate the version to the testnets, at least rinkeby, and posibly mainnet
-# You can optionally change the gas price using the GAS_PRICE env variable
+# You can optionally change the gas price using the GAS_PRICE_GWEI env variable
 yarn restore
 MNEMONIC=$MNEMONIC_DX yarn migrate --network rinkeby
 

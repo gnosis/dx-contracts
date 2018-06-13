@@ -1,12 +1,12 @@
 const truffleConfig = require('@gnosis.pm/util-contracts/src/util/truffleConfig')
 
-const DEFAULT_GAS_PRICE = 5e9
+const DEFAULT_GAS_PRICE_GWEI = 5
 const GAS_LIMIT = 6.5e6
 const DEFAULT_MNEMONIC = 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat'
 
 // Get the mnemonic
 const mnemonic = process.env.MNEMONIC || DEFAULT_MNEMONIC
-const gasPrice = process.env.GAS_PRICE || DEFAULT_GAS_PRICE
+const gasPriceGWei = process.env.GAS_PRICE_GWEI || DEFAULT_GAS_PRICE_GWEI
 const gas = GAS_LIMIT
 
 // Allow to add an aditional network (useful for docker-compose setups)
@@ -15,9 +15,11 @@ let aditionalNetwork = process.env.NETWORK ? JSON.parse(process.env.NETWORK) : n
 
 module.exports = truffleConfig({
   mnemonic,
-  gasPrice,
+  gasPriceGWei,
   gas,
   aditionalNetwork,
   optimizedEnabled: true,
-  urlRinkeby: 'https://rinkeby.infura.io/' // 'http://node.rinkeby.gnosisdev.com:8545'
+  urlMainnet: 'https://node-green.mainnet.gnosis.pm',
+  urlRinkeby: 'https://rinkeby.infura.io/', // 'http://node.rinkeby.gnosisdev.com:8545'
+  
 })
