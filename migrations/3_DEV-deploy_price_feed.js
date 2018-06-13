@@ -1,6 +1,6 @@
 /* global artifacts, web3 */
 /* eslint no-undef: "error" */
-const deployPriceFeed = require('../src/migrations/3_DEV-deploy_price_feed')
+const deployPriceFeed = require('../src/migrations/3_deploy_price_feed')
 
 module.exports = function (deployer, network, accounts) {
   return deployPriceFeed({

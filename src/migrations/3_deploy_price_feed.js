@@ -10,13 +10,13 @@ function migrate ({
   ethUsdPrice = DEFAULT_ETH_USD_PRICE,
   feedExpirePeriodDays = DEFAULT_FEED_EXPIRE_PERIOD_DAYS
 }) {
-  const medianizerAddress = getMedianizerAddress()
-  if (!medianizerAddress) {
-    const account = accounts[0]
-    const PriceFeed = artifacts.require('PriceFeed')
-    const Medianizer = artifacts.require('Medianizer')
-    const PriceOracleInterface = artifacts.require('PriceOracleInterface')
+  const Medianizer = artifacts.require('Medianizer')
+  const PriceOracleInterface = artifacts.require('PriceOracleInterface')
+  const PriceFeed = artifacts.require('PriceFeed')
 
+  const medianizerAddress = getMedianizerAddress(Medianizer)
+  const account = accounts[0]
+  if (!medianizerAddress) {
     console.log(`Deploying Maker Dao feed contracts, because they weren published in network "${network}" yet`)
     // Deployment of PriceFeedInfrastructure
     deployer.deploy([ PriceFeed, Medianizer ])
@@ -35,7 +35,10 @@ function migrate ({
         })
       )
   } else {
-    console.log(`No need to deploy the Maker Dao feed contracts. Using ${medianizerAddress} as the Medianizer address`)
+    console.log(`No need to deploy the Medianizer. Using ${medianizerAddress} as the Medianizer address`)
+    console.log('Deploying PriceOracleInterface with owner: %s', account)
+    return deployer
+      .deploy(PriceOracleInterface, account, Medianizer.address)
   }
 }
 
