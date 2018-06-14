@@ -33,7 +33,7 @@ Number.prototype.toEth = function toEth() {
 const MaxRoundingError = 100
 
 const contractNames = [
-  'Proxy',
+  'DutchExchangeProxy',
   'EtherToken',
   'TokenGNO',
   'TokenOWLProxy',
@@ -41,7 +41,6 @@ const contractNames = [
   'PriceOracleInterface',
   'PriceFeed',
   'Medianizer',
-  'InternalTests',
 ]
 // DutchExchange and TokenOWL are added after their respective Proxy contracts are deployed
 
@@ -62,7 +61,7 @@ const getContracts = async () => {
   }, {});
 
   [deployedContracts.DutchExchange, deployedContracts.TokenOWL] = gasLogWrapper([
-    artifacts.require('DutchExchange').at(deployedContracts.Proxy.address),
+    artifacts.require('DutchExchange').at(deployedContracts.DutchExchangeProxy.address),
     artifacts.require('TokenOWL').at(deployedContracts.TokenOWLProxy.address),
   ])
   return deployedContracts
@@ -164,10 +163,10 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
 
   const currentIndex = getAuctionIndex.toNumber()
   const startingTimeOfAuction = getAuctionStart.toNumber()
-
+  let priceBefore = 1
   if (!silent) {
     let [num, den] = (await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex))
-    const priceBefore = num.div(den)
+    priceBefore = num.div(den)
     log(`
       Price BEFORE waiting until Price = initial Closing Price (2) * 2
       ==============================

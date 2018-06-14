@@ -23,9 +23,6 @@ contract DutchExchange is Proxied {
     uint constant WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE = 30 days;
     uint constant AUCTION_START_WAITING_FOR_FUNDING = 1;
 
-    // variables for Proxy Construction
-    //
-    address masterCopy;
     address public newMasterCopy;
     // Time when new masterCopy is updatabale
     uint public masterCopyCountdown;
