@@ -5,7 +5,7 @@ const TokenGNO = artifacts.require('TokenGNO')
 const PriceOracle = artifacts.require('PriceFeed')
 const Medianizer = artifacts.require('Medianizer')
 const DutchExchange = artifacts.require('DutchExchange')
-const Proxy = artifacts.require('Proxy')
+const Proxy = artifacts.require('DutchExchangeProxy')
 
 const argv = require('minimist')(process.argv.slice(2), { string: 'a' })
 

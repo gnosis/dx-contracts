@@ -31,37 +31,38 @@ contract('DutchExchange - Proxy', (accounts) => {
       DutchExchange: dx,
       EtherToken: ethToken,
       // dxNew has new code as it is an InternalTests contract
-      InternalTests: dxNew,
-      Proxy: pr,
+      DutchExchangeProxy: pr,
     } = contracts)
+    const initParams = await getExchangeParams(dx)
+    dxNew = await InternalTests.new(...initParams)
   })
 
   const getExchangeParams = async (dxContr = dx) => {
-    const [auctioneer,
-      frtToken,
+    const [frtToken,
       owlToken,
+      auctioneer,
       eth,
       ethUSDOracle,
       thresholdNewTokenPair,
       thresholdNewAuction] = await Promise.all([
-      dxContr.auctioneer.call(),
       dxContr.frtToken.call(),
       dxContr.owlToken.call(),
+      dxContr.auctioneer.call(),
       dxContr.ethToken.call(),
       dxContr.ethUSDOracle.call(),
       dxContr.thresholdNewTokenPair.call(),
       dxContr.thresholdNewAuction.call(),
     ])
 
-    return {
-      auctioneer,
+    return [
       frtToken,
       owlToken,
+      auctioneer,
       eth,
       ethUSDOracle,
-      thresholdNewTokenPair: thresholdNewTokenPair.toNumber(),
-      thresholdNewAuction: thresholdNewAuction.toNumber(),
-    }
+      thresholdNewTokenPair.toNumber(),
+      thresholdNewAuction.toNumber(),
+    ]
   }
 
   const assertIsAuctioneer = async (acc) => {
