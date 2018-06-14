@@ -1,4 +1,4 @@
-const DEFAULT_ETH_USD_PRICE = process.env.ETH_USD_PRICE || 500 // 500 USD/ETH
+const DEFAULT_ETH_USD_PRICE = process.env.ETH_USD_PRICE || 1100 // 500 USD/ETH
 const DEFAULT_FEED_EXPIRE_PERIOD_DAYS = process.env.FEED_EXPIRE_PERIOD_DAYS || 365 // 1 year
 
 function migrate ({
