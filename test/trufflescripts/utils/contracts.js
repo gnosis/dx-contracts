@@ -4,13 +4,13 @@ module.exports = (artifacts) => {
   const TokenETH = artifacts.require('./EtherToken')
   const TokenGNO = artifacts.require('./TokenGNO')
   const TokenFRT = artifacts.require('./TokenFRT')
-  const TokenOMG = artifacts.require('./TokenOMG')
-  const TokenRDN = artifacts.require('./TokenRDN')
+  const TokenOMG = artifacts.require('TokenOMG')
+  const TokenRDN = artifacts.require('TokenRDN')
 
   const TokenOWLProxy = artifacts.require('./TokenOWLProxy')
   const TokenOWL = artifacts.require('./TokenOWL')
 
-  const Proxy = artifacts.require('./Proxy')
+  const Proxy = artifacts.require('./DutchExchangeProxy')
   const DutchExchange = artifacts.require('./DutchExchange')
 
   const PriceOracleInterface = artifacts.require('./PriceOracleInterface')
@@ -37,8 +37,6 @@ module.exports = (artifacts) => {
     TokenETH,
     TokenGNO,
     TokenFRT,
-    TokenOMG,
-    TokenRDN,
     TokenOWL,
     TokenOWLProxy,
     DutchExchange,
@@ -83,7 +81,8 @@ module.exports = (artifacts) => {
 
     deployedMap[shortMap.TokenOWL] = await TokenOWL.at(TokenOWLProxy.address)
     deployedMap[shortMap.DutchExchange] = await artifacts.require('DutchExchange').at(Proxy.address)
-
+    deployedMap[shortMap.TokenOMG] = await TokenOMG.new(5000000e18)
+    deployedMap[shortMap.TokenRDN] =await TokenRDN.new(5000000e18)
     // remove extra non-tokens
     // delete deployedMap.owlProxy
     // delete deployedMap.proxy

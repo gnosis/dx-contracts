@@ -9,7 +9,7 @@ const {
 const { getContracts, setupTest } = require('./testFunctions')
 
 const POWL = artifacts.require('TokenOWLProxy')
-
+const InternalTests = artifacts.require('InternalTests')
 // Test VARS
 let eth
 let gno
@@ -17,8 +17,38 @@ let mgn
 let owl
 let dx
 let oracle
-
+let dxOld
+let owlA
 let contracts
+
+
+const getExchangeParams = async (dxContr = dx) => {
+  const [frtToken,
+    owlToken,
+    auctioneer,
+    eth,
+    ethUSDOracle,
+    thresholdNewTokenPair,
+    thresholdNewAuction] = await Promise.all([
+    dxContr.frtToken.call(),
+    dxContr.owlToken.call(),
+    dxContr.auctioneer.call(),
+    dxContr.ethToken.call(),
+    dxContr.ethUSDOracle.call(),
+    dxContr.thresholdNewTokenPair.call(),
+    dxContr.thresholdNewAuction.call(),
+  ])
+
+  return [
+    frtToken,
+    owlToken,
+    auctioneer,
+    eth,
+    ethUSDOracle,
+    thresholdNewTokenPair.toNumber(),
+    thresholdNewAuction.toNumber(),
+  ]
+}
 
 const separateLogs = () => log('\n    ----------------------------------')
 
@@ -99,8 +129,13 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
       TokenGNO: gno,
       TokenFRT: mgn,
       // using internal contract with settleFeePub calling dx.settleFee internally
-      InternalTests: dx,
+      DutchExchange: dxOld,
     } = contracts)
+
+
+    const initParams = await getExchangeParams(dxOld)
+    dx = await InternalTests.new(...initParams)
+    contracts.DutchExchange = dx
 
     // set up initial balances for accounts and allowance for dx in accounts' names
     await Promise.all(testingAccs.map(acct => Promise.all([
@@ -241,12 +276,23 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
       TokenGNO: gno,
       TokenFRT: mgn,
       TokenOWL: owl,
+      OWLAirdrop: owlA,
       // using internal contract with settleFeePub calling dx.settleFee internally
-      InternalTests: dx,
+      DutchExchange: dxOld,
       PriceOracleInterface: oracle,
     } = contracts)
 
+
+    const initParams = await getExchangeParams(dxOld)
+    dx = await InternalTests.new(...initParams)
+    contracts.DutchExchange = dx
+
     await setupTest(accounts, contracts, startBal)
+
+    //generatae OWL
+
+      gno.approve(owlA.address, 50000 * (10 ** 18))
+      owlA.lockGNO(50000 * (10 ** 18))
 
     const depositETH = async (amt, acct) => {
       await eth.deposit({ from: acct, value: amt })
