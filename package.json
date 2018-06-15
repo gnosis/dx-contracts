@@ -6,6 +6,7 @@
     "rpc": "ganache-cli -d --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --defaultBalanceEther '50000000000000000000000'",
     "preversion": "npm run restore",
     "test": "truffle test -s",
+    "test-file": "truffle test test/contracts/InternalTests.sol test/contracts/TokenOMG.sol test/contracts/TokenRDN.sol",
     "truffle": "truffle",
     "networks-extract": "node src/extract_network_info.js",
     "networks-inject": "node src/inject_network_info.js",

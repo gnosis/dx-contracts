@@ -1,6 +1,6 @@
 pragma solidity ^0.4.21;
 
-import "../DutchExchange.sol";
+import "../../contracts/DutchExchange.sol";
 
 contract InternalTests is DutchExchange {
   function settleFeePub(
@@ -15,18 +15,18 @@ contract InternalTests is DutchExchange {
   {
     return super.settleFee(primaryToken, secondaryToken, auctionIndex, amount);
   }
-  
+
   function InternalTests(
         TokenFRT _FRT,
         TokenOWL _OWL,
-        address _owner, 
+        address _owner,
         address _ETH,
         PriceOracleInterface _ETHUSDOracle,
         uint _thresholdNewTokenPair,
         uint _thresholdNewAuction
     )
     {
-    setupDutchExchange( 
+    setupDutchExchange(
           _FRT,
           _OWL,
           _owner,
