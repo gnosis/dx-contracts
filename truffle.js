@@ -20,6 +20,5 @@ module.exports = truffleConfig({
   aditionalNetwork,
   optimizedEnabled: true,
   urlMainnet: 'https://node-green.mainnet.gnosis.pm',
-  urlRinkeby: 'https://rinkeby.infura.io/', // 'http://node.rinkeby.gnosisdev.com:8545'
-  
+  urlRinkeby: 'https://rinkeby.infura.io/' // 'http://node.rinkeby.gnosisdev.com:8545'
 })

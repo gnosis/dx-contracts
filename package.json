@@ -28,8 +28,8 @@
   "license": "GPL-2.0+",
   "dependencies": {
     "@gnosis.pm/gno-token": "^0.6.1",
-    "@gnosis.pm/owl-token": "^0.13.1",
-    "@gnosis.pm/util-contracts": "^0.4.1"
+    "@gnosis.pm/owl-token": "^0.17.0",
+    "@gnosis.pm/util-contracts": "^0.5.0"
   },
   "devDependencies": {
     "@digix/tempo": "^0.2.0",
