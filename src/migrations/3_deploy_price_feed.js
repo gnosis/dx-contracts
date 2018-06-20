@@ -17,9 +17,10 @@ function migrate ({
   const medianizerAddress = getMedianizerAddress(Medianizer)
   const account = accounts[0]
   if (!medianizerAddress) {
-    console.log(`Deploying Maker Dao feed contracts, because they weren published in network "${network}" yet`)
+    console.log(`[*1] Deploying Maker Dao feed contracts, because they weren published in network "${network}" yet`)
     // Deployment of PriceFeedInfrastructure
-    deployer.deploy([ PriceFeed, Medianizer ])
+    return deployer
+      .deploy([ PriceFeed, Medianizer ])
       .then(() => deployer.deploy(PriceOracleInterface, account, Medianizer.address))
       .then(() => Medianizer.deployed())
       .then(medianizer => medianizer.set(PriceFeed.address, { from: account }))
@@ -35,7 +36,8 @@ function migrate ({
         })
       )
   } else {
-    console.log(`No need to deploy the Medianizer. Using ${medianizerAddress} as the Medianizer address`)
+    throw Error('2')
+    console.log(`[*2] No need to deploy the Medianizer. Using ${medianizerAddress} as the Medianizer address`)
     console.log('Deploying PriceOracleInterface with owner: %s', account)
     return deployer
       .deploy(PriceOracleInterface, account, Medianizer.address)
