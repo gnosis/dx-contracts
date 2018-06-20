@@ -27,9 +27,9 @@
   "author": "Gnosis",
   "license": "GPL-2.0+",
   "dependencies": {
-    "@gnosis.pm/gno-token": "^0.6.1",
-    "@gnosis.pm/owl-token": "^0.17.0",
-    "@gnosis.pm/util-contracts": "^0.5.0"
+    "@gnosis.pm/gno-token": "^1.0.1",
+    "@gnosis.pm/owl-token": "^1.0.2",
+    "@gnosis.pm/util-contracts": "^1.0.1"
   },
   "devDependencies": {
     "@digix/tempo": "^0.2.0",
