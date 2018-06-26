@@ -9,8 +9,8 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0xa42f804dbcbd560c0d3732e8a9cc45a19143bd8f",
-      "transactionHash": "0xbc9baac97f5ede94a8cb92358f0f2acde97a654269668faaa091a4cdb7204b83"
+      "address": "0xc46329370c301b75127f406443214ca9d37a2961",
+      "transactionHash": "0x4024294e55793a9120a0dd2a5b097e8e94098dd20c941882a2ef739e464791e8"
     }
   },
   "DutchExchangeProxy": {
@@ -23,8 +23,8 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0x93a8ff189f5c10cdf3dbb3c6e2042d87cca137fa",
-      "transactionHash": "0x3a9ec38c4d83590dcdc487dc607dbd84f1a2cd495974d3bf35df4692a4d8de11"
+      "address": "0x2ade4c3d9fd649ff6e97dcb50b684984bc8f6375",
+      "transactionHash": "0x459627b79241153fbd9faf8e885bb76ebb0539d3f29c17d8e5f6e00a6217988d"
     }
   },
   "Math": {
@@ -120,8 +120,8 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0xf28a14fad9442844d37050543fd36f1b2cb2bcde",
-      "transactionHash": "0x8b122e083555eb4c1c7c570bb8fd183acc821d4567d5ed175a903b6f3e7b206e"
+      "address": "0xbfd040592b797b5bf86938426a92dbf24768a0d7",
+      "transactionHash": "0x3071183de04af4bf1a37e21351920d1023795f6272713a3029ee361e9ad4a4d0"
     }
   },
   "PriceFeed": {
@@ -204,8 +204,8 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0x7fa26cd1e115481ad120a3e1a9acd12f4f2cf973",
-      "transactionHash": "0x3e5ab03b92bd4ad18ac97cb5e3be244d70d2456203f5a39b9a4af37cbab7bc25"
+      "address": "0x3288c50d05c1f49bd876a32467c7b5294ac56dae",
+      "transactionHash": "0xdf6b89b095ccb8791f9cb825e1fe7f00878b75a3c71f3b707fecfdc58faa0285"
     }
   },
   "TokenFRT": {
@@ -220,8 +220,8 @@
       "links": {
         "Math": "0xbf0dacc0d3897dda763f90cfaf1d0e36c61ae68c"
       },
-      "address": "0x6cde435a6eec9531601b1725ddf52099c02dbe15",
-      "transactionHash": "0x0799dc3d1e57230119226da1daecb5b05c29d9a12781b27fc61315b659b13d6b"
+      "address": "0x2ebf79168d4fd6b159574f0c3395afdad9eb87a7",
+      "transactionHash": "0xb2fe5aa8cb65cc3d0e56bfd8940264d95d4368a90bad463e5a02e3e369a46fa7"
     }
   }
 }
