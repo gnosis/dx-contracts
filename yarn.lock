@@ -6664,7 +6664,7 @@ truffle-contract-schema@^2.0.0:
     crypto-js "^3.1.9-1"
     debug "^3.1.0"
 
-truffle-contract@^3.0.1, truffle-contract@^3.0.5:
+truffle-contract@^3.0.5:
   version "3.0.5"
   resolved "https://registry.yarnpkg.com/truffle-contract/-/truffle-contract-3.0.5.tgz#c25d07042dcd519413bfee21034ed6ee7fc373bf"
   dependencies:
@@ -6702,7 +6702,7 @@ truffle-hdwallet-provider-privkey@^0.2.0:
     web3 "^0.20.6"
     web3-provider-engine "^13.8.0"
 
-truffle-hdwallet-provider@^0.0.5:
+truffle-hdwallet-provider@0.0.5:
   version "0.0.5"
   resolved "https://registry.yarnpkg.com/truffle-hdwallet-provider/-/truffle-hdwallet-provider-0.0.5.tgz#6e3dc0fb607a40c8bf02312b9a6aa1ce49883902"
   dependencies:
