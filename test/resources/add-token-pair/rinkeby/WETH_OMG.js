@@ -7,7 +7,7 @@ module.exports = {
     //   https://makerdao.com/feeds/#0x729d19f657bd0614b4985cf1d82531c67569197b
     //   Price: 423.960
     //   20$ = 20/423.960 ETH = 0.04717426172
-    funding: 0.0137
+    funding: 0.04717426172
   },
   // OMG
   tokenB: {

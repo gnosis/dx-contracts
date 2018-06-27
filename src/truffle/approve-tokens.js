@@ -195,12 +195,12 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
 }
 
 async function loadContractsInfo () {
-  const Proxy = artifacts.require('Proxy')
+  const Proxy = artifacts.require('DutchExchangeProxy')
   const DutchExchange = artifacts.require('DutchExchange')
 
   // Get contract examples
   const proxy = await Proxy.deployed()
-  const dx = DutchExchange.at(proxy.address)  
+  const dx = DutchExchange.at(proxy.address)
 
   // Get some data from dx
   const [

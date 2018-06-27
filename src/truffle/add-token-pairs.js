@@ -1,64 +1,63 @@
+/* global artifacts, web3 */
+/* eslint no-undef: "error" */
+
 const path = require('path')
 const assert = require('assert')
-                     
-const DEFAULT_GAS = 5e5 // 500K
-const DEFAULT_GAS_PRICE = 1e9
+
+const GAS = 5e5 // 500K
+const DEFAULT_GAS_PRICE_GWEI = 5 // 5 GWei
 
 // Usage example:
 //  yarn add-token-pairs -h
-//  MNEMONIC="your mnemonic ..." yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/01_RDN-WETH.js --dry-run
-//  MNEMONIC="your mnemonic ..." yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/01_RDN-WETH.js
+//  MNEMONIC="your mnemonic ..." yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/01_RDN-WETH.js --network rinkeby --dry-run
+//  MNEMONIC="your mnemonic ..." yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/01_RDN-WETH.js --network rinkeby
 
 var argv = require('yargs')
-    .usage('Usage: yarn add-token-pairs -f <file> [--gas num] [--gas-price num] [--network name] [--dry-run]')
-    .option('f', {
-      type: 'string',
-      demandOption: true,
-      describe: 'File with the list of token pairs to add'
-    })
-    .option('gas', {
-      type: 'integer',
-      default: DEFAULT_GAS,
-      describe: 'Gas for adding each token pair'
-    })
-    .option('gasPrice', {
-      type: 'integer',
-      default: DEFAULT_GAS_PRICE,
-      describe: 'Gas price for adding each token pair'
-    })
-    .option('network', {
-      type: 'string',
-      default: 'development',
-      describe: 'One of the ethereum networks defined in truffle config'
-    })
-    .option('dryRun', {
-      type: 'boolean',
-      default: false,
-      describe: 'Dry run. Do not add the token pair, do just the validations.'
-    })    
-    .help('h')
-    .strict()
-    .argv;
+  .usage('Usage: yarn add-token-pairs -f <file> [--gas num] [--gas-price num] [--network name] [--dry-run]')
+  .option('f', {
+    type: 'string',
+    demandOption: true,
+    describe: 'File with the list of token pairs to add'
+  })
+  .option('gasPrice', {
+    type: 'integer',
+    default: process.env.GAS_PRICE_GWEI || DEFAULT_GAS_PRICE_GWEI,
+    describe: 'Gas price for adding each token pair'
+  })
+  .option('network', {
+    type: 'string',
+    default: 'development',
+    describe: 'One of the ethereum networks defined in truffle config'
+  })
+  .option('dryRun', {
+    type: 'boolean',
+    default: false,
+    describe: 'Dry run. Do not add the token pair, do just the validations.'
+  })    
+  .help('h')
+  .strict()
+  .argv;
 
 async function addTokenPairs () {
   if (!argv._[0]) {
-    cli.showHelp()
+    argv.showHelp()
   } else {
-    const { f, gas, gasPrice, network, dryRun } = argv
-      const tokenPairsFile = path.join('..', f)
-      console.log('\n **************  Add token pairs  **************\n')  
-      console.log(`Data:
+    const { f, gasPrice, network, dryRun } = argv
+    const tokenPairsFile = path.join('../..', f)
+    console.log('\n **************  Add token pairs  **************\n')  
+    console.log(`Data:
     Dry run: ${dryRun ? 'Yes' : 'No'}
     Network: ${network}
     Token pairs file: ${f}
-    Gas: ${gas}
-    Gas Price: ${gasPrice / 1e9} GWei`)
-      // Load the file
-      const tokenPairs = require(tokenPairsFile)
-  
-      // Load the DX contract
-      const contractsInfo = await loadContractsInfo()
-      console.log(`\
+    Gas: ${GAS}
+    Gas Price: ${gasPrice} GWei`)
+
+    // Load the file
+    const tokenPairs = require(tokenPairsFile)
+
+    // Load the DX contract
+    const contractsInfo = await loadContractsInfo()
+    console.log(`\
     Deployer account: ${contractsInfo.account}
     DX address: ${contractsInfo.dx.address}
     WETH address: ${contractsInfo.wethAddress}
@@ -70,12 +69,10 @@ async function addTokenPairs () {
     // const tokens = getTokensFromTokenPair(tokenPairs)
 
     const params = {
-      gas,
       gasPrice,
-      network,
       dryRun
     }
-    for (var i=0; i<tokenPairs.length; i++) {
+    for (let i = 0; i < tokenPairs.length; i++) {
       // Add token (syncronously)
       await addTokenPair(tokenPairs[i], contractsInfo, params)
     }
@@ -85,15 +82,8 @@ async function addTokenPairs () {
 
 async function addTokenPair (tokenPair, contractsInfo, params) {
   const { tokenA, tokenB, initialPrice } = tokenPair
-  const { gas, gasPrice, network, dryRun } = params
-  const {
-    dx,
-    etherPrice,
-    wethAddress,
-    thresholdInUSD,
-    StandardToken,
-    account
-  } = contractsInfo
+  const { gasPrice, dryRun } = params
+  const { dx, account } = contractsInfo
 
   console.log('\n ==============  Add token pair: %s-%s  ==============',
     tokenA.symbol, tokenB.symbol)  
@@ -133,25 +123,25 @@ async function addTokenPair (tokenPair, contractsInfo, params) {
     ]
     console.log(`Add token arguments (token1, token2, token1Funding, \
   token2Funding, initialClosingPriceNum, initialClosingPriceDen):\n\t %s\n`,
-      addTokenArgs.join(', '))
+    addTokenArgs.join(', '))
 
     if (dryRun) {
       // Dry run
-      console.log("The dry run execution passed all validations")
+      console.log('The dry run execution passed all validations')
       await dx.addTokenPair.call(
         ...addTokenArgs, {
-        from: account
-      })
+          from: account
+        })
       console.log('Dry run success!')
     } else {
       // Real add token pair execution
-      console.log("Adding token pairs with account: " + account)
+      console.log('Adding token pairs with account: ' + account)
       const addTokenResult = await dx.addTokenPair(
         ...addTokenArgs, {
-        from: account,
-        gas,
-        gasPrice
-      })
+          from: account,
+          gas: GAS,
+          gasPrice: gasPrice * 1e9
+        })
       console.log('Success! The token pair was added. Transaction: ' + addTokenResult.tx)
     }
   } else {
@@ -160,7 +150,7 @@ async function addTokenPair (tokenPair, contractsInfo, params) {
 }
 
 async function ensureEnoughBalance (token, { account, wethAddress, etherBalance, StandardToken, dx }) {
-  const { address: tokenAddress, funding, symbol} = token
+  const { address: tokenAddress, funding, symbol } = token
   if (funding === 0) {
     // If we don fund the token, we can skip the balance check
     return
@@ -215,7 +205,6 @@ ${symbol}, but it needs to deposit it into the DX. ${balancesString}`)
 async function ensureEnoughFunding (tokenA, tokenB, {
   dx, etherPrice, wethAddress, thresholdInUSD
 }) {
-  
   let fundingInEtherA, fundingInEtherB
   if (tokenA.address === wethAddress) {
     // tokenA is WETH
@@ -265,7 +254,7 @@ async function getPriceInPastAuction (tokenA, tokenB, dx) {
   const auctionIndex = await dx
     .getAuctionIndex
     .call(addressA, addressB)
-  
+
   assert(!auctionIndex.isZero(), `The token pair ${tokenA.symbol}-${tokenB.symbol} doesn't exist in the DX`)
 
   const priceFraction = await dx
@@ -277,7 +266,7 @@ async function getPriceInPastAuction (tokenA, tokenB, dx) {
 }
 
 async function loadContractsInfo () {
-  const Proxy = artifacts.require('Proxy')
+  const Proxy = artifacts.require('DutchExchangeProxy')
   const DutchExchange = artifacts.require('DutchExchange')
   const StandardToken = artifacts.require('StandardToken')
   const PriceOracleInterface = artifacts.require('PriceOracleInterface')
@@ -315,7 +304,7 @@ async function loadContractsInfo () {
       })
     })
   ])
-  
+
   // Get ether price from oracle
   const oracle = PriceOracleInterface.at(ethUSDOracleAddress)
   const etherPrice = await oracle.getUSDETHPrice.call()
@@ -343,39 +332,34 @@ async function loadContractsInfo () {
   }
 }
 
-function getTokensFromTokenPair (tokenPairs) {
-  const addToken = (tokens, token) =>{
-    const { symbol, address } = token
-    const token = symbols[symbol]
+// function getTokensFromTokenPair (tokenPairs) {
+//   const addToken = (tokens, token) =>{
+//     const { symbol, address } = token
+//     const token = symbols[symbol]
 
-    if (token) {
-      // We do a validation of coherence (same symbols, must have same addresses)
-      if (token.address !== address) {
-        throw new Error(`The file has an incoherence for token ${symbol}. \
-It has at least 2 different addresses: ${token.address} and ${address}`)
-      }
-    } else {
-      // Add the token
-      tokens[symbol] = token
-    }
+//     if (token) {
+//       // We do a validation of coherence (same symbols, must have same addresses)
+//       if (token.address !== address) {
+//         throw new Error(`The file has an incoherence for token ${symbol}. \
+// It has at least 2 different addresses: ${token.address} and ${address}`)
+//       }
+//     } else {
+//       // Add the token
+//       tokens[symbol] = token
+//     }
 
-  }
+//   }
 
-  return tokenPairs.reduce((tokens, { tokenA, tokenB }) => {
-    addToken(tokens, tokenA)
-    addToken(tokens, tokenB)
-    
-    return tokens
-  }, {})
-}
+//   return tokenPairs.reduce((tokens, { tokenA, tokenB }) => {
+//     addToken(tokens, tokenA)
+//     addToken(tokens, tokenB)
 
-module.exports = (callback) => {  
+//     return tokens
+//   }, {})
+// }
+
+module.exports = callback => {
   addTokenPairs()
-    .then(() => {      
-      console.log('Success! All token pairs has been added\n')
-      callback()
-    })
-    .catch(error => {
-      callback(error)
-    })
+    .then(callback)
+    .catch(callback)
 }
