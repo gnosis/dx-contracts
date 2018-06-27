@@ -16,8 +16,8 @@
     "restore": "rm -rf build && npm run compile && npm run networks-reset",
     "migrate": "truffle migrate",
     "lint": "eslint .",
-    "add-token-pairs": "truffle exec trufflescripts/add-token-pairs.js",
-    "approve-tokens": "truffle exec trufflescripts/approve-tokens.js",
+    "add-token-pairs": "truffle exec src/truffle/add-token-pairs.js",
+    "approve-tokens": "truffle exec src/truffle/approve-tokens.js",
     "decode": "node ./node_modules/decode-eth/main.js"
   },
   "repository": {

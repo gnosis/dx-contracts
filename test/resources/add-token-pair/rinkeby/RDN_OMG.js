@@ -17,7 +17,7 @@ module.exports = {
     funding: 0
   },  
   // Price: 
-  //    https://www.coingecko.com/en/coins/omisego
+  //    https://www.coingecko.com/en/price_charts/omisego/eth
   //    https://www.coingecko.com/en/price_charts/raiden-network/eth
   //  
   //  The price should be in OMG/RDN (since its the RDN-OMG auction)

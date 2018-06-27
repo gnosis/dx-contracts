@@ -2,12 +2,12 @@ const path = require('path')
 const assert = require('assert')
                      
 const DEFAULT_GAS = 5e5 // 500K
-const DEFAULT_GAS_PRICE_GWEI = 1e9
+const DEFAULT_GAS_PRICE = 1e9
 
 // Usage example:
 //  yarn add-token-pairs -h
-//  yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/token-pairs-all.js --dry-run
-//  yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/token-pairs-all.js
+//  MNEMONIC="your mnemonic ..." yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/01_RDN-WETH.js --dry-run
+//  MNEMONIC="your mnemonic ..." yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/01_RDN-WETH.js
 
 var argv = require('yargs')
     .usage('Usage: yarn add-token-pairs -f <file> [--gas num] [--gas-price num] [--network name] [--dry-run]')

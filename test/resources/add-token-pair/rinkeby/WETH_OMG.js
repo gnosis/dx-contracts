@@ -3,8 +3,10 @@ module.exports = {
   tokenA: {
     symbol: 'WETH',
     address: "0xc778417e063141139fce010982780140aa0cd5ab",
-    // Check ETH oracle
-    // 10$ = 10/730 ETH = 0.01369863014
+    // Check ETH oracle:
+    //   https://makerdao.com/feeds/#0x729d19f657bd0614b4985cf1d82531c67569197b
+    //   Price: 423.960
+    //   20$ = 20/423.960 ETH = 0.04717426172
     funding: 0.0137
   },
   // OMG
@@ -13,10 +15,12 @@ module.exports = {
     address: "0xc57b5b272ccfd0f9e4aa8c321ec22180cbb56054",
     funding: 0
   },
-  // Price: https://www.coingecko.com/en/coins/omisego
-  //  57 OMG/WETH
+  // Price:
+  //   https://www.coingecko.com/en/price_charts/omisego/eth
+  //   1 ETH = 60.63636408838016 OMG
+  //   initial price = 61 OMG/WETH
   initialPrice: {
-    numerator: 57,
+    numerator: 61,
     denominator: 1
   }
 }
