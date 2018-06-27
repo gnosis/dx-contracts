@@ -3,10 +3,10 @@
 
 const path = require('path')
 
-const GAS = 8e5 // 800K
+const GAS = 16e5 // 800K
 const DEFAULT_GAS_PRICE_GWEI = 50
 // How many tokens we approve at once
-const DEFAULT_BATCH = 20
+const DEFAULT_BATCH = 50
 
 // Usage example:
 //  yarn approve-tokens -h
@@ -141,6 +141,7 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
     // Dry run
     console.log('The dry run execution passed all validations')
 
+    console.log(`Approving ${addressesToApprove.length} tokens with account: ${account}`)
     for (let j = 0; j < addressesToApprove.length / batchSize; j++) {
       const batch = addressesToApprove.slice(j * batchSize, (j + 1) * batchSize)
       await dx.updateApprovalOfToken.call(batch, true, {
@@ -148,6 +149,7 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
       })
     }
 
+    console.log(`Disapproving ${addressesToDisapprove.length} tokens with account: ${account}`)
     for (let j = 0; j < addressesToDisapprove.length / batchSize; j++) {
       const batch = addressesToDisapprove.slice(j * batchSize, (j + 1) * batchSize)
       await dx.updateApprovalOfToken.call(batch, false, {
@@ -160,11 +162,10 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
     // Real add token pair execution
     console.log(`Approving ${addressesToApprove.length} tokens with account: ${account}`)
     for (let j = 0; j < addressesToApprove.length / batchSize; j++) {
-      console.log(`Approving ${addressesToApprove.length} tokens with account: ${account}`)
       const startIndex = j * batchSize
       const count = (j + 1) * batchSize
       const tokenAddressesBatch = addressesToApprove.slice(startIndex, count)
-      console.log(`Approving ${j + 1}th batch of tokens: From ${startIndex} to ${startIndex + count}`)
+      console.log(`Approving ${j + 1}th batch of tokens: From ${startIndex} to ${startIndex + count}: ${tokenAddressesBatch.length} addresses`)
       const approveTokens = await dx.updateApprovalOfToken(tokenAddressesBatch, true, {
         from: account,
         gas: GAS,
@@ -179,7 +180,7 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
       const startIndex = j * batchSize
       const count = (j + 1) * batchSize
       const tokenAddressesBatch = addressesToDisapprove.slice(startIndex, count)
-      console.log(`Disapproving ${j + 1}th batch of tokens: From ${startIndex} to ${startIndex + count}`)
+      console.log(`Disapproving ${j + 1}th batch of tokens: From ${startIndex} to ${startIndex + count}: ${tokenAddressesBatch.length} addresses`)
       const disapproveTokens = await dx.updateApprovalOfToken(tokenAddressesBatch, false, {
         from: account,
         gas: GAS,
