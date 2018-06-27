@@ -33,10 +33,10 @@ var argv = require('yargs')
     type: 'boolean',
     default: false,
     describe: 'Dry run. Do not add the token pair, do just the validations.'
-  })    
+  })
   .help('h')
   .strict()
-  .argv;
+  .argv
 
 async function addTokenPairs () {
   if (!argv._[0]) {
@@ -44,7 +44,7 @@ async function addTokenPairs () {
   } else {
     const { f, gasPrice, network, dryRun } = argv
     const tokenPairsFile = path.join('../..', f)
-    console.log('\n **************  Add token pairs  **************\n')  
+    console.log('\n **************  Add token pairs  **************\n')
     console.log(`Data:
     Dry run: ${dryRun ? 'Yes' : 'No'}
     Network: ${network}
@@ -86,7 +86,7 @@ async function addTokenPair (tokenPair, contractsInfo, params) {
   const { dx, account } = contractsInfo
 
   console.log('\n ==============  Add token pair: %s-%s  ==============',
-    tokenA.symbol, tokenB.symbol)  
+    tokenA.symbol, tokenB.symbol)
   const price = initialPrice.numerator / initialPrice.denominator
   console.log('Initial price: ' + price)
 
@@ -273,7 +273,7 @@ async function loadContractsInfo () {
 
   // Get contract examples
   const proxy = await Proxy.deployed()
-  const dx = DutchExchange.at(proxy.address)  
+  const dx = DutchExchange.at(proxy.address)
 
   // Get some data from dx
   const [

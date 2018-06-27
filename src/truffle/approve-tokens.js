@@ -1,80 +1,77 @@
+/* global artifacts, web3 */
+/* eslint no-undef: "error" */
+
 const path = require('path')
-                     
-const DEFAULT_GAS = 8e5 // 800K
-const DEFAULT_GAS_PRICE = 50e9
+
+const GAS = 8e5 // 800K
+const DEFAULT_GAS_PRICE_GWEI = 50
 // How many tokens we approve at once
 const DEFAULT_BATCH = 20
-const DEFAULT_FILE_LOCATION = "./test/resources/approve-tokens/top150tokens.js"
 
 // Usage example:
 //  yarn approve-tokens -h
-//  yarn approve-tokens --dry-run
-//  yarn approve-tokens
+//  MNEMONIC="your mnemonic here.." yarn approve-tokens -f test/resources/approve-tokens/top150tokens.js --network rinkeby --dry-run
+//  MNEMONIC="your mnemonic here.." yarn approve-tokens -f test/resources/approve-tokens/top150tokens.js --network rinkeby
 
 var argv = require('yargs')
-    .usage('Usage: yarn approve-tokens -f <file> [--gas num] [--gas-price num] [--network name] [--dry-run] [--batch-size num]')
-    .option('f', {
-      type: 'string',
-      default: DEFAULT_FILE_LOCATION,
-      describe: 'File with the list of tokens to approve'
-    })
-    .option('gas', {
-      type: 'integer',
-      default: DEFAULT_GAS,
-      describe: 'Gas for approving each token'
-    })
-    .option('gasPrice', {
-      type: 'integer',
-      default: DEFAULT_GAS_PRICE,
-      describe: 'Gas price for approving each token'
-    })
-    .option('network', {
-      type: 'string',
-      default: 'development',
-      describe: 'One of the ethereum networks defined in truffle config'
-    })
-    .option('dryRun', {
-      type: 'boolean',
-      default: false,
-      describe: 'Dry run. Do not approve the token, do just the validations.'
-    })
-    .option('batchSize', {
-      type: 'integer',
-      default: DEFAULT_BATCH,
-      describe: 'How many tokens are approved at once'
-    })
-    .help('h')
-    .strict()
-    .argv;
+  .usage('Usage: yarn approve-tokens -f <file> [--gas num] [--gas-price num] [--network name] [--dry-run] [--batch-size num]')
+
+  .option('f', {
+    type: 'string',
+    demandOption: true,
+    describe: 'File with the list of tokens to approve'
+  })
+  .option('gasPrice', {
+    type: 'integer',
+    default: process.env.GAS_PRICE_GWEI || DEFAULT_GAS_PRICE_GWEI,
+    describe: 'Gas price for approving each token'
+  })
+  .option('network', {
+    type: 'string',
+    default: 'development',
+    describe: 'One of the ethereum networks defined in truffle config'
+  })
+  .option('dryRun', {
+    type: 'boolean',
+    default: false,
+    describe: 'Dry run. Do not approve the token, do just the validations.'
+  })
+  .option('batchSize', {
+    type: 'integer',
+    default: DEFAULT_BATCH,
+    describe: 'How many tokens are approved at once'
+  })
+  .help('h')
+  .strict()
+  .argv
 
 async function approveTokens () {
   if (!argv._[0]) {
-    cli.showHelp()
+    argv.showHelp()
   } else {
     const { f, gas, gasPrice, network, dryRun, batchSize } = argv
-      const tokensFile = path.join('..', f)
-      console.log('\n **************  Approve tokens  **************\n')  
-      console.log(`Data:
+    const tokensFile = path.join('../..', f)
+    console.log('\n **************  Approve tokens  **************\n')
+    console.log(`Data:
     Dry run: ${dryRun ? 'Yes' : 'No'}
     Network: ${network}
     Tokens file: ${f}
     Gas: ${gas}
-    Gas Price: ${gasPrice / 1e9} GWei
+    Gas Price: ${gasPrice} GWei
     Batch size: ${batchSize}`)
-      // Load the file
-      const tokens = require(tokensFile)
-  
-      // Load the DX contract
-      const contractsInfo = await loadContractsInfo()
-      console.log(`\
+
+    // Load the file
+    const tokens = require(tokensFile)
+
+    // Load the DX contract
+    const contractsInfo = await loadContractsInfo()
+    console.log(`\
     Deployer account: ${contractsInfo.account}
     DX address: ${contractsInfo.dx.address}
 `)
 
     const params = {
-      gas,
       gasPrice,
-      network,
       dryRun,
       batchSize
     }
@@ -99,17 +96,12 @@ async function approveTokens () {
 }
 
 async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tokensToDisapprove) {
-  
-  const { gas, gasPrice, network, dryRun, batchSize } = params
-  const {
-    dx,
-    account
-  } = contractsInfo
-
+  const { gasPrice, dryRun, batchSize } = params
+  const { dx, account } = contractsInfo
 
   const printTokenInfo = ({ symbol, address }, approve, approved) => {
     let text
-    if (approve == approved) {
+    if (approve === approved) {
       text = approve ? 'Token already approved' : 'Token already disapproved'
     } else {
       text = approve ? 'Approving token' : 'Disapproving token'
@@ -147,20 +139,18 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
 
   if (dryRun) {
     // Dry run
-    console.log("The dry run execution passed all validations")
+    console.log('The dry run execution passed all validations')
 
     for (let j = 0; j < addressesToApprove.length / batchSize; j++) {
       const batch = addressesToApprove.slice(j * batchSize, (j + 1) * batchSize)
-      await dx.updateApprovalOfToken.call(
-        batch, true, {
+      await dx.updateApprovalOfToken.call(batch, true, {
         from: account
       })
     }
 
     for (let j = 0; j < addressesToDisapprove.length / batchSize; j++) {
       const batch = addressesToDisapprove.slice(j * batchSize, (j + 1) * batchSize)
-      await dx.updateApprovalOfToken.call(
-        batch, false, {
+      await dx.updateApprovalOfToken.call(batch, false, {
         from: account
       })
     }
@@ -168,28 +158,34 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
     console.log('Dry run success!')
   } else {
     // Real add token pair execution
-    console.log("Approving tokens with account: " + account)
-
+    console.log(`Approving ${addressesToApprove.length} tokens with account: ${account}`)
     for (let j = 0; j < addressesToApprove.length / batchSize; j++) {
-      const batch = addressesToApprove.slice(j * batchSize, (j + 1) * batchSize)
-      const approveTokens = await dx.updateApprovalOfToken(
-        batch, true, {
+      console.log(`Approving ${addressesToApprove.length} tokens with account: ${account}`)
+      const startIndex = j * batchSize
+      const count = (j + 1) * batchSize
+      const tokenAddressesBatch = addressesToApprove.slice(startIndex, count)
+      console.log(`Approving ${j + 1}th batch of tokens: From ${startIndex} to ${startIndex + count}`)
+      const approveTokens = await dx.updateApprovalOfToken(tokenAddressesBatch, true, {
         from: account,
-        gas,
-        gasPrice
+        gas: GAS,
+        gasPrice: gasPrice * 1e9
       })
-      console.log(`Success! The ${j}th batch of tokens was approved. Transaction: ${approveTokens.tx}`)
+      console.log(`Success! The ${j + 1}th batch of tokens was approved. Transaction: ${approveTokens.tx}`)
     }
 
+    console.log(`Disapproving ${addressesToDisapprove.length} tokens with account: ${account}`)
     for (let j = 0; j < addressesToDisapprove.length / batchSize; j++) {
-      const batch = addressesToDisapprove.slice(j * batchSize, (j + 1) * batchSize)
-      const disapproveTokens = await dx.updateApprovalOfToken(
-        batch, false, {
+      // TODO: Refactor
+      const startIndex = j * batchSize
+      const count = (j + 1) * batchSize
+      const tokenAddressesBatch = addressesToDisapprove.slice(startIndex, count)
+      console.log(`Disapproving ${j + 1}th batch of tokens: From ${startIndex} to ${startIndex + count}`)
+      const disapproveTokens = await dx.updateApprovalOfToken(tokenAddressesBatch, false, {
         from: account,
-        gas,
-        gasPrice
+        gas: GAS,
+        gasPrice: gasPrice * 1e9
       })
-      console.log(`Success! The ${j}th batch of tokens was disapproved. Transaction: ${disapproveTokens.tx}`)
+      console.log(`Success! The ${j + 1}th batch of tokens was disapproved. Transaction: ${disapproveTokens.tx}`)
     }
   }
 }
@@ -220,20 +216,14 @@ async function loadContractsInfo () {
   ])
 
   const account = accounts[0]
-  
   return {
     dx,
     account
   }
 }
 
-module.exports = (callback) => {  
+module.exports = callback => {
   approveTokens()
-    .then(() => {      
-      console.log('Success! All tokens have been approved!\n')
-      callback()
-    })
-    .catch(error => {
-      callback(error)
-    })
+    .then(callback)
+    .catch(callback)
 }

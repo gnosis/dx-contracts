@@ -1,8 +1,8 @@
 // http://etherscan.io/tokens
 function toArray (items) {
-  return [].slice.call(items)   
- }
- 
+  return [].slice.call(items)
+}
+
 var rowsHtml = document.querySelectorAll('#ContentPlaceHolder1_divresult tr')
 var rows = toArray(rowsHtml).slice(1)
 var tokens = rows
@@ -22,14 +22,14 @@ var tokens = rows
       address = '0x' + addressMatch[1]
     }
 
-    if (nameAndSymbolMatch)
-
-    return {
-      name,
-      symbol,
-      address,
-      approve: true,
-      etherScanLink: link.href
+    if (nameAndSymbolMatch) {
+      return {
+        name,
+        symbol,
+        address,
+        approve: true,
+        etherScanLink: link.href
+      }
     }
   })
 
