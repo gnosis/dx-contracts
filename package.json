@@ -18,6 +18,7 @@
     "lint": "eslint .",
     "add-token-pairs": "truffle exec src/truffle/add-token-pairs.js",
     "approve-tokens": "truffle exec src/truffle/approve-tokens.js",
+    "get-abi-encoded-params": "truffle exec src/truffle/get-abi-encoded-params.js",
     "decode": "node ./node_modules/decode-eth/main.js"
   },
   "repository": {

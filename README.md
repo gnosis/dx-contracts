@@ -181,7 +181,7 @@ git merge vX.Y.X
 ## Verify contract on Etherscan
 Flatten the smart contract:
 ```bash
-npx truffle-flattener contracts/Proxy.sol > build/Proxy-EtherScan.sol
+npx truffle-flattener contracts/DutchExchangeProxy.sol > build/DutchExchangeProxy-EtherScan.sol
 npx truffle-flattener contracts/DutchExchange.sol > build/DutchExchange-EtherScan.sol
 ```
 
@@ -191,6 +191,9 @@ Go to Etherscan validation page:
   * Use the flattened contract
   * Set the exact compiler version used for the compilation i.e. `v0.4.24+commit.e67f0147`
   * Optimization: `Yes`
+  * For the proxy, you'll need the ABI encoded params, you can get them by running
+  the following script (specify the right network).
+    * `yarn get-abi-encoded-params --network rinkeby`
 * Press validate
 
 # Contributors
