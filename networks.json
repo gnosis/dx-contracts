@@ -9,8 +9,8 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0x5b568f689c09368a13f9137f3ab995657089736e",
-      "transactionHash": "0x4f0ed61304da1882015a22da6b6135d4558c18e7c10cd89de4ad7c33868d2ad3"
+      "address": "0x9e5e05700045dc70fc42c125d4bd661c798d4ce9",
+      "transactionHash": "0xfaab156196761d478c513caf9004f14ebe391bd2f2ce08e5732c09a34ae9b614"
     }
   },
   "DutchExchangeProxy": {
@@ -23,8 +23,8 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0x38c96b2a1687c171bf5a218249f8e1d56f2444a5",
-      "transactionHash": "0x027464e8b9259d54e4de5fb9c09bd73a6e4efee78e83361acfb23ac8c9d61e6d"
+      "address": "0x4e69969d9270ff55fc7c5043b074d4e45f795587",
+      "transactionHash": "0xc87660777daf90619d0c48248bb06d4c3ec683847389cef675c0105583e30450"
     }
   },
   "Math": {
