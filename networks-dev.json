@@ -1,11 +1,5 @@
 {
   "DutchExchange": {
-    "1": {
-      "events": {},
-      "links": {},
-      "address": "0x902b4b1882621e02893a1330aa42221939b27447",
-      "transactionHash": "0xd6a7bbe53267afc0533db12a0cdb374b3cd55db3f83bb3ff98b6cd85ab2cf378"
-    },
     "4": {
       "events": {},
       "links": {},
@@ -14,12 +8,6 @@
     }
   },
   "DutchExchangeProxy": {
-    "1": {
-      "events": {},
-      "links": {},
-      "address": "0xe938e574afef9a75d8d6b6b5bd7dc44f3df1add9",
-      "transactionHash": "0xb3ce62bbbdcc27a43c926f9318b31f27577280b0b6ffb1febed841e2fc2a5d86"
-    },
     "4": {
       "events": {},
       "links": {},
@@ -36,11 +24,6 @@
     }
   },
   "Medianizer": {
-    "1": {
-      "address": "0x729D19f657BD0614b4985Cf1D82531c67569197B",
-      "links": {},
-      "events": {}
-    },
     "4": {
       "events": {
         "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
@@ -111,12 +94,6 @@
     }
   },
   "Migrations": {
-    "1": {
-      "events": {},
-      "links": {},
-      "address": "0xdf42ce6fafcb999e9c3aea829ed4482401190604",
-      "transactionHash": "0x50458c97fe30ed4a56b2da8cb4d5df3b0f21d74d0fec6e1dbe70a965835a7a0c"
-    },
     "4": {
       "events": {},
       "links": {},
@@ -195,12 +172,6 @@
     }
   },
   "PriceOracleInterface": {
-    "1": {
-      "events": {},
-      "links": {},
-      "address": "0xff29b0b15a0a1da474bc9a132077153c53a2373b",
-      "transactionHash": "0x9ce1ef77f6435059101f7820759a50d69c6c0a19ed2be0b7e060897b5316faae"
-    },
     "4": {
       "events": {},
       "links": {},
@@ -209,12 +180,6 @@
     }
   },
   "TokenFRT": {
-    "1": {
-      "events": {},
-      "links": {},
-      "address": "0xb9625381f086e7b8512e4825f6af1117e9c84d43",
-      "transactionHash": "0xdcbdb3b7ad84790aadce9ccbf744d8f94403c26f2b440fe02a2da14abc3d103a"
-    },
     "4": {
       "events": {},
       "links": {
