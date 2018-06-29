@@ -1,5 +1,12 @@
 module.exports = [
   {
+    "name": "Wrapped Ether",
+    "symbol": "WETH",
+    "approve": true,
+    "etherScanLink": "https://etherscan.io/token/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+  },
+  {
     "name": "EOS",
     "symbol": "EOS",
     "approve": true,
