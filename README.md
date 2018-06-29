@@ -183,6 +183,7 @@ Flatten the smart contract:
 ```bash
 npx truffle-flattener contracts/DutchExchangeProxy.sol > build/DutchExchangeProxy-EtherScan.sol
 npx truffle-flattener contracts/DutchExchange.sol > build/DutchExchange-EtherScan.sol
+npx truffle-flattener contracts/TokenFRT.sol > build/TokenFRT-EtherScan.sol
 ```
 
 Go to Etherscan validation page:
