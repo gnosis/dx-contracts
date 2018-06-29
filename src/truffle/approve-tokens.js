@@ -166,6 +166,7 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
       const count = (j + 1) * batchSize
       const tokenAddressesBatch = addressesToApprove.slice(startIndex, count)
       console.log(`Approving ${j + 1}th batch of tokens: From ${startIndex} to ${startIndex + count}: ${tokenAddressesBatch.length} addresses`)
+      // console.log(tokenAddressesBatch)
       const approveTokens = await dx.updateApprovalOfToken(tokenAddressesBatch, true, {
         from: account,
         gas: GAS,

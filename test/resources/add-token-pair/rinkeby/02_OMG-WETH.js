@@ -2,5 +2,5 @@
 
 module.exports = [
   // WETH-OMG
-  require('./WETH_RDN.js')
+  require('./WETH_OMG.js')
 ]

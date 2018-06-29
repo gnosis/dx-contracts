@@ -6,8 +6,8 @@ module.exports = {
     // Check ETH oracle:
     //   https://makerdao.com/feeds/#0x729d19f657bd0614b4985cf1d82531c67569197b
     //   Price: 423.960
-    //   20$ = 20/423.960 ETH = 0.04717426172
-    funding: 0.04717426172
+    //   10$ = 10/423.960 ETH = 0.02358713086
+    funding: 0.025
   },
   // RDN
   tokenB: {
@@ -20,7 +20,7 @@ module.exports = {
   //   1 ETH = 585.9071747263082 RDN
   //   initial price = 586 RDN/WETH
   initialPrice: {
-    numerator: 586,
+    numerator: 621,
     denominator: 1
   }
 }
