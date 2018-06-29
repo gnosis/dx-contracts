@@ -78,16 +78,16 @@ For example:
 const contract = require('truffle-contract')
 
 // Create the truffle contracts
-const Proxy = contract(require('@gnosis.pm/dx-contracts/build/contracts/Proxy'))
+const DutchExchangeProxy = contract(require('@gnosis.pm/dx-contracts/build/contracts/DutchExchangeProxy'))
 const DutchExchange = contract(require('@gnosis.pm/dx-contracts/build/contracts/DutchExchange'))
 
 // Setup your provider
 // provider = ...
 DutchExchange.setProvider(provider)
-Proxy.setProvider(provider)
+DutchExchangeProxy.setProvider(provider)
 
 // Get the contract instance
-Proxy.deployed(async proxy => {
+DutchExchangeProxy.deployed(async proxy => {
   const dx = DutchExchange.at(proxy.address)
 
   // Use any of the dx methods
@@ -97,6 +97,19 @@ Proxy.deployed(async proxy => {
   console.log(auctionIndex)
 })
 ```
+
+## Contract addresses
+The token and contract can be reviewed in **Etherscan**:
+
+* **Rinkeby**:
+  * DutchExchange (proxy): [https://rinkeby.etherscan.io/address/0x4e69969d9270ff55fc7c5043b074d4e45f795587]()
+  * DutchExchange (master): [https://rinkeby.etherscan.io/address/0x9e5e05700045dc70fc42c125d4bd661c798d4ce9]()
+  * PriceOracleInterface: [https://rinkeby.etherscan.io/address/0xa6a644ef9da924b3ecea6cbfd137a825d1ff2a91]()
+  * Medianizer: [https://rinkeby.etherscan.io/address/0xbfff80b73f081cc159534d922712551c5ed8b3d3]()
+    * [https://developer.makerdao.com/feeds]()
+    * [https://makerdao.com/feeds]()
+  * TokenFRT: [https://rinkeby.etherscan.io/token/0x152af9ad40ccef2060cd14356647ee1773a43437]()
+  * TokenOWL (proxy): [https://rinkeby.etherscan.io/token/0xa7d1c04faf998f9161fc9f800a99a809b84cfc9d]()
 
 # Development
 ## Setup and show the networks
@@ -184,6 +197,7 @@ Flatten the smart contract:
 npx truffle-flattener contracts/DutchExchangeProxy.sol > build/DutchExchangeProxy-EtherScan.sol
 npx truffle-flattener contracts/DutchExchange.sol > build/DutchExchange-EtherScan.sol
 npx truffle-flattener contracts/TokenFRT.sol > build/TokenFRT-EtherScan.sol
+npx truffle-flattener contracts/Oracle/PriceOracleInterface.sol > build/PriceOracleInterface-EtherScan.sol
 ```
 
 Go to Etherscan validation page:
