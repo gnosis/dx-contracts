@@ -5,7 +5,7 @@ module.exports = [
     "approve": true,
     "etherScanLink": "https://rinkeby.etherscan.io/token/0xc778417e063141139fce010982780140aa0cd5ab",
     "address": "0xc778417e063141139fce010982780140aa0cd5ab"
-  }/*,  
+  },  
   {
     "name": "Raiden",
     "symbol": "RDN",
@@ -1064,5 +1064,5 @@ module.exports = [
     "approve": true,
     "etherScanLink": "https://etherscan.io/token/0xe3fedaecd47aa8eab6b23227b0ee56f092c967a9",
     "address": "0xe3fedaecd47aa8eab6b23227b0ee56f092c967a9"
-  }*/
+  }
 ]
