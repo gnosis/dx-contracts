@@ -4,7 +4,6 @@
 migrations/4_deploy_internalTestContracts.js
 scripts/startAuctionTruffleScript.js
 scripts/listOfTOP150TokensByMarketCap.txt
-test/*
 travscripts/*
 .gitattributes
 .solcover.js
