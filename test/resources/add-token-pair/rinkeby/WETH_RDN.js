@@ -12,7 +12,7 @@ module.exports = {
   // RDN
   tokenB: {
     symbol: 'RDN',
-    address: "0x7e2331beaec0ded82866f4a1388628322c8d5af0",
+    address: "0x3615757011112560521536258c1e7325ae3b48ae",
     funding: 0
   },
   // Price:

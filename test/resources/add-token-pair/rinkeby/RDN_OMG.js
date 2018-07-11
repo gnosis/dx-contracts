@@ -2,7 +2,7 @@ module.exports = {
   // RDN
   tokenA: {
     symbol: 'RDN',
-    address: "0x7e2331beaec0ded82866f4a1388628322c8d5af0",
+    address: "0x3615757011112560521536258c1e7325ae3b48ae",
     // Check ETH oracle (i.e 730 USD/ETH)
     //   10$ = 10/730 ETH = 0.01369863014 ETH
     // Check price for WETH-RDN in the DX (i.e. 450 RDN/ETH)
@@ -13,7 +13,7 @@ module.exports = {
   // OMG
   tokenB: {
     symbol: 'OMG',
-    address: "0xc57b5b272ccfd0f9e4aa8c321ec22180cbb56054",
+    address: "0x00df91984582e6e96288307e9c2f20b38c8fece9",
     funding: 0
   },  
   // Price: 
