@@ -19,6 +19,7 @@ contract TestToken is StandardToken {
       name = _name;
       decimals = _decimals;
     	balances[minter] = amount;
+      totalTokens = amount;
 
       emit SetMinter(minter);
       emit Mint(minter, amount);
@@ -26,6 +27,7 @@ contract TestToken is StandardToken {
 
     function mint (address _address, uint amount) public onlyMinter {
       balances[_address] += amount;
+      totalTokens += amount;
       emit Mint(_address, amount);
     }
 
