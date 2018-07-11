@@ -1,0 +1,20 @@
+{
+  "name": "rinkeby-test-tokens",
+  "version": "1.0.0",
+  "description": "Just a small truffle project to deploy test tokens for testing in rinkeby.",
+  "main": "index.js",
+  "scripts": {
+    "preversion": "npm run restore",
+    "restore": "rm -rf build && npm run compile && npm run networks-reset",
+    "networks-extract": "node src/extract_network_info.js",
+    "networks-inject": "node src/inject_network_info.js",
+    "networks": "truffle networks",
+    "migrate": "truffle migrate"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@gnosis.pm/util-contracts": "^1.0.1",
+    "truffle-contract": "^3.0.6",
+    "truffle-hdwallet-provider": "0.0.5"
+  }
+}

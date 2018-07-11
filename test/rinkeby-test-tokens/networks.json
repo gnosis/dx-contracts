@@ -1,0 +1,18 @@
+{
+  "TokenOMG": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0x0b56b21b0dabb2e84def7c1db580c1d8e8753451",
+      "transactionHash": "0xe1e7f7190c3048b28da4dbd1ccd18f60c77c1654ffcaa4f92e9f450a41349779"
+    }
+  },
+  "TokenRDN": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0x2d3f31cac1b36ea6985419d1625131b42465357b",
+      "transactionHash": "0x773110126ed0edc959c9f4ff33feaecefad38a1b659b537dee7a833145874f9f"
+    }
+  }
+}
