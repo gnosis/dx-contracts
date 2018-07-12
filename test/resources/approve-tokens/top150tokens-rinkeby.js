@@ -10,8 +10,8 @@ module.exports = [
     "name": "Raiden",
     "symbol": "RDN",
     "approve": true,
-    "etherScanLink": "https://rinkeby.etherscan.io/token/0x7E2331beAeC0deD82866F4A1388628322c8D5af0",
-    "address": "0x7E2331beAeC0deD82866F4A1388628322c8D5af0"
+    "etherScanLink": "https://rinkeby.etherscan.io/token/0x3615757011112560521536258c1e7325ae3b48ae",
+    "address": "0x3615757011112560521536258c1e7325ae3b48ae"
   },
   // The rest is just for testing the approve script
   // they don't exist in Rinkeby
