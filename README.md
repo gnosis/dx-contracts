@@ -221,6 +221,17 @@ Go to Etherscan validation page:
     * `yarn get-abi-encoded-params --network rinkeby`
 * Press validate
 
+# License
+This Program (as defined by the GNU General Public License) is made available on
+ an as-is basis open source under the GNU General Public License and by doing so
+ , no personal data is collected, used, stored, disclosed or secured by the 
+ creators. Depending on how you use this Program, you may be required to provide
+  and apply an appropriate privacy policy to comply with law.
+
+An API gathers publicly available data from the Ethereum blockchain on the usage
+ of this Program.
+
+
 # Contributors
 - Dominik ([dteiml](https://github.com/dteiml))
 - David ([W3stside](https://github.com/w3stside))
