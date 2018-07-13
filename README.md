@@ -1,10 +1,10 @@
-# Dutch X
+# DutchX
 
 [![Logo](https://raw.githubusercontent.com/gnosis/gnosis-contracts/master/assets/logo.png)](https://gnosis.pm/)
 
 [![Build Status](https://travis-ci.org/gnosis/dutch-exchange.svg)](https://travis-ci.org/gnosis/dutch-exchange?branch=SmartContractAudit1.0)
 
-Dutch X contracts is a collection of smart contracts for a decentraized exchange 
+DutchX contracts is a collection of smart contracts for a decentraized exchange 
 that uses the dutch auction principle to provide a fare mechanism to exchange 
 any ERC20 token pair.
 
@@ -18,12 +18,12 @@ While this mechanism eliminates the bottlenecks of decentralized order book
 exchanges, such as front-running and scaling difficulties, it also allows for a 
 more streamlined trading experience.
 
-Read more about the Dutch X mechanisms in the 
-[Dutch X Documentation](docs/DutchX_Documentation.pdf).
+Read more about the DutchX mechanisms in the 
+[DutchX Documentation](docs/DutchX_Documentation.pdf).
 
 For a introduction to the mechanisms make sure your read:
-* [Introducing the Gnosis Dutch Exchange](https://blog.gnosis.pm/introducing-the-gnosis-dutch-exchange-53bd3d51f9b2)
-* [The Mechanism Design of the Gnosis Dutch Exchange](https://blog.gnosis.pm/the-mechanism-design-of-the-gnosis-dutch-exchange-4299a045d523)
+* [Introducing the Gnosis DutchX](https://blog.gnosis.pm/introducing-the-gnosis-dutch-exchange-53bd3d51f9b2)
+* [The Mechanism Design of the Gnosis DutchX](https://blog.gnosis.pm/the-mechanism-design-of-the-gnosis-dutch-exchange-4299a045d523)
 * [The Main Benefits of the DutchX Mechanism](https://blog.gnosis.pm/the-main-benefits-of-the-dutchx-mechanism-6fc2ef6ee8b4)
 * For other articles, check the blog: [https://blog.gnosis.pm/tagged/dutchx]()
 
@@ -32,11 +32,11 @@ links:
 
 * [Gitter Channel](https://gitter.im/gnosis/DutchX): Participate in the gitter channel.
 * [Github: dx-examples-api](https://github.com/gnosis/dx-examples-api): 
-Example project and documentation on how to use the Dutch X API.
+Example project and documentation on how to use the DutchX API.
 * [Github: dx-contracts](https://github.com/gnosis/dx-contracts): Smart 
 contracts of the Duch X
 * [Github: dx-react](https://github.com/gnosis/dx-react): Front end web 
-application for the Dutch X seller interface
+application for the DutchX seller interface
 * [Github: dx-services](https://github.com/gnosis/dx-services): Services, 
 repositories and bots to interact with DX.
 * [CLI](https://github.com/gnosis/dx-example-cli-rinkeby): Project that provides
@@ -45,12 +45,12 @@ a simple example of one way you can interact with the DX from the command line.
 Project that implements some bots with the goal of watching some token pairs and
 ensuring the liquidity for the market.
 * [https://github.com/gnosis/dx-examples-api](): Example poject on how to use 
-the public API of the Dutch X.
+the public API of the DutchX.
 * [Auction state-diagram overview](https://drive.google.com/file/d/1hWHtf2_GnBhtb85Yj7I7Xe3mF6jPe08U/view):
 States of the auctions and the transitions between them.
 
 # Security of the contracts
-Security is one of the main focus for the Dutch X, so the code was subjected 
+Security is one of the main focus for the DutchX, so the code was subjected 
 to several reviews, audits and bug bunties.
 
 ## Audit
@@ -155,10 +155,10 @@ at deploy time:
   It's `365 days` by default
 
 ## Set a different threshold for adding a new token and starting a new auction
-The migration that setup the Dutch X contract is parametrized, so you can 
+The migration that setup the DutchX contract is parametrized, so you can 
 change the defalt value of the thresholds:
 * `THRESHOLD_NEW_TOKEN_PAIR_USD`: Minimun USD worth of a token that the contract
-requires in order to add a new token pair in the Dutch X. It's `10.000 USD` by 
+requires in order to add a new token pair in the DutchX. It's `10.000 USD` by 
 default.
 * `THRESHOLD_AUCTION_START_USD`: Liquidity in USD required for the auction to
 start. It's `1.000 USD` by default.
