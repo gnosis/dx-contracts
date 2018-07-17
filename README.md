@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/gnosis/dx-contracts.svg?branch=master)](https://travis-ci.org/gnosis/dx-contracts?branch=master)
 [![npm version](https://badge.fury.io/js/%40gnosis.pm%2Fdx-contracts.svg)](https://badge.fury.io/js/%40gnosis.pm%2Fdx-contracts)
 
-<p align="center" style="padding: 10px 0 40px 0;">
+<p align="center" padding="10px 0 40px 0;">
   <img width="350px" src="http://dutchx.readthedocs.io/en/latest/_static/DutchX-logo_blue.svg" />
 </p>
 
