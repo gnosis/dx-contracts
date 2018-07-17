@@ -1,10 +1,11 @@
-# DutchX - Smart Contracts
 [![Build Status](https://travis-ci.org/gnosis/dx-contracts.svg?branch=master)](https://travis-ci.org/gnosis/dx-contracts?branch=master)
 [![npm version](https://badge.fury.io/js/%40gnosis.pm%2Fdx-contracts.svg)](https://badge.fury.io/js/%40gnosis.pm%2Fdx-contracts)
 
-<div style="text-align:center; margin: 10px 0 40px 0;">
-  <img width="350px" src ="http://dutchx.readthedocs.io/en/latest/_static/DutchX-logo_blue.svg" />
-</div>
+<p align="center" style="padding: 10px 0 40px 0;">
+  <img width="350px" src="http://dutchx.readthedocs.io/en/latest/_static/DutchX-logo_blue.svg" />
+</p>
+
+# DutchX - Smart Contracts
 
 The **Dutch Exchange (DutchX)** is a fully decentralized exchange, which
 allows **everyone** to add any trading token pair.
