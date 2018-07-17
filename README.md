@@ -1,104 +1,24 @@
-# DutchX
+# DutchX - Smart Contracts
+[![Build Status](https://travis-ci.org/gnosis/dx-contracts.svg?branch=master)](https://travis-ci.org/gnosis/dx-contracts?branch=master)
+[![npm version](https://badge.fury.io/js/%40gnosis.pm%2Fdx-contracts.svg)](https://badge.fury.io/js/%40gnosis.pm%2Fdx-contracts)
 
-[![Logo](https://raw.githubusercontent.com/gnosis/gnosis-contracts/master/assets/logo.png)](https://gnosis.pm/)
+<div style="text-align:center; margin: 10px 0 40px 0;">
+  <img width="350px" src ="http://dutchx.readthedocs.io/en/latest/_static/DutchX-logo_blue.svg" />
+</div>
 
-[![Build Status](https://travis-ci.org/gnosis/dutch-exchange.svg)](https://travis-ci.org/gnosis/dutch-exchange?branch=SmartContractAudit1.0)
+The **Dutch Exchange (DutchX)** is a fully decentralized exchange, which
+allows **everyone** to add any trading token pair.
 
-DutchX contracts is a collection of smart contracts for a decentraized exchange 
-that uses the dutch auction principle to provide a fare mechanism to exchange 
-any ERC20 token pair.
+It uses the [Dutch auction] principle, to prevent the problems that
+other exchanges are experiencing (such as front running) getting a
+fairer ecosystem for everyone to use.
 
-It is a fully decentralized, featuring a price mechanism that starts with a 
-high price which falls monotonically.
+There is no restriction besides the fact that tokens must be
+[ERC20][Dutch auction] compliant.
 
-Eventually, every successful buyer pays the same price once the auction closes, 
-ensuring orders don’t have to be cancelled when markets fluctuate. 
+Checkout the [DutchX Documentation](http://dutchx.readthedocs.io/en/latest).
 
-While this mechanism eliminates the bottlenecks of decentralized order book 
-exchanges, such as front-running and scaling difficulties, it also allows for a 
-more streamlined trading experience.
-
-Read more about the DutchX mechanisms in the 
-[DutchX Documentation](docs/DutchX_Documentation.pdf).
-
-For a introduction to the mechanisms make sure your read:
-* [Introducing the Gnosis DutchX](https://blog.gnosis.pm/introducing-the-gnosis-dutch-exchange-53bd3d51f9b2)
-* [The Mechanism Design of the Gnosis DutchX](https://blog.gnosis.pm/the-mechanism-design-of-the-gnosis-dutch-exchange-4299a045d523)
-* [The Main Benefits of the DutchX Mechanism](https://blog.gnosis.pm/the-main-benefits-of-the-dutchx-mechanism-6fc2ef6ee8b4)
-* For other articles, check the blog: [https://blog.gnosis.pm/tagged/dutchx]()
-
-For aditional information and for reference, check out the following 
-links:
-
-* [Gitter Channel](https://gitter.im/gnosis/DutchX): Participate in the gitter channel.
-* [Github: dx-examples-api](https://github.com/gnosis/dx-examples-api): 
-Example project and documentation on how to use the DutchX API.
-* [Github: dx-contracts](https://github.com/gnosis/dx-contracts): Smart 
-contracts of the Duch X
-* [Github: dx-react](https://github.com/gnosis/dx-react): Front end web 
-application for the DutchX seller interface
-* [Github: dx-services](https://github.com/gnosis/dx-services): Services, 
-repositories and bots to interact with DX.
-* [CLI](https://github.com/gnosis/dx-example-cli-rinkeby): Project that provides
-a simple example of one way you can interact with the DX from the command line.
-* [Liquidity Bots](https://github.com/gnosis/dx-examples-liquidity-bots): 
-Project that implements some bots with the goal of watching some token pairs and
-ensuring the liquidity for the market.
-* [https://github.com/gnosis/dx-examples-api](): Example poject on how to use 
-the public API of the DutchX.
-* [Auction state-diagram overview](https://drive.google.com/file/d/1hWHtf2_GnBhtb85Yj7I7Xe3mF6jPe08U/view):
-States of the auctions and the transitions between them.
-
-# Security of the contracts
-Security is one of the main focus for the DutchX, so the code was subjected 
-to several reviews, audits and bug bunties.
-
-## Audit
-The contracts were subjected to a thorough audit, the report can be finded in:
-* [Audit Report inc. known weaknesses](docs/Solidified_Audit_Report.pdf)
-
-## Bug bunty
-Read Gnosis blog post:
-* [Gnosis DutchX and Initial OWL Generation Bug Bounty](https://blog.gnosis.pm/gnosis-dutchx-and-initial-owl-generation-bug-bounty-71ba53dfd2db)
-
-# Get started - Use DX in your project
-Add it to your project:
-
-```bash
-# Install the dependencies
-yarn add truffle-contract @gnosis.pm/dx-contracts --save # or npm install @gnosis.pm/dx-contracts --save
-```
-
-You will find the compiled truffle contracts in the `build/contracts` folder,
-these contract abstractions will also contain the addresses for the DX for 
-**mainnet** and the **testnets**.
-
-For example:
-```js
-const contract = require('truffle-contract')
-
-// Create the truffle contracts
-const DutchExchangeProxy = contract(require('@gnosis.pm/dx-contracts/build/contracts/DutchExchangeProxy'))
-const DutchExchange = contract(require('@gnosis.pm/dx-contracts/build/contracts/DutchExchange'))
-
-// Setup your provider
-// provider = ...
-DutchExchange.setProvider(provider)
-DutchExchangeProxy.setProvider(provider)
-
-// Get the contract instance
-DutchExchangeProxy.deployed(async proxy => {
-  const dx = DutchExchange.at(proxy.address)
-
-  // Use any of the dx methods
-  const token1 = '0x123456'
-  const token1 = '0x654321'
-  const auctionIndex = await dx.getAuctionIndex.call(token1, token2)
-  console.log(auctionIndex)
-})
-```
-
-## Contract addresses
+# Contract addresses
 The token and contract can be reviewed in **Etherscan**:
 
 * **Mainnet**:
@@ -122,6 +42,9 @@ The token and contract can be reviewed in **Etherscan**:
   * TokenOWL (proxy): [https://rinkeby.etherscan.io/token/0xa7d1c04faf998f9161fc9f800a99a809b84cfc9d]()
 
 # Development
+For developer we recomend to read the documentation and guides in 
+[DutchX Documentation](http://dutchx.readthedocs.io/en/latest).
+
 ## Setup and show the networks
 ```bash
 # Install dependencies
@@ -230,7 +153,6 @@ This Program (as defined by the GNU General Public License) is made available on
 
 An API gathers publicly available data from the Ethereum blockchain on the usage
  of this Program.
-
 
 # Contributors
 - Dominik ([dteiml](https://github.com/dteiml))
