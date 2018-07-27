@@ -26,7 +26,7 @@
     "url": "https://github.com/gnosis/dx-contracts.git"
   },
   "author": "Gnosis",
-  "license": "GPL-2.0+",
+  "license": "LGPL-3",
   "dependencies": {
     "@gnosis.pm/gno-token": "^1.0.1",
     "@gnosis.pm/owl-token": "^1.1.0",
