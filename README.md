@@ -5,6 +5,12 @@
   <img width="350px" src="http://dutchx.readthedocs.io/en/latest/_static/DutchX-logo_blue.svg" />
 </p>
 
+<p align="center">
+  <a href="./docs/Solidified_Audit_Report.pdf">
+  <img width="75px" src="http://dutchx.readthedocs.io/en/latest/_static/Sol_Badge_SlateOnTrans@2x.png" />
+  </a>
+</p>
+
 # DutchX - Smart Contracts
 
 The **Dutch Exchange (DutchX)** is a fully decentralized exchange, which
@@ -26,7 +32,7 @@ Check out the addresses for the deployed contracts in `rinkeby` and `mainnet` in
   * [Documentation > Smart Contracts Addresses](http://dutchx.readthedocs.io/en/latest/smart-contracts_addresses.html)
 
 # Development
-For developer we recomend to read the documentation and guides in 
+For developer we recommend to read the documentation and guides in
 [DutchX Documentation](http://dutchx.readthedocs.io/en/latest).
 
 ## Setup and show the networks
@@ -56,21 +62,21 @@ yarn migrate
 ## Set the Ether price and Feed expire date for development
 Some migrations allow you to specify some parameter so you can change some values
 at deploy time:
-* `ETH_USD_PRICE`: Allows to set the price of the ETH-USD oracle feed. Just for 
+* `ETH_USD_PRICE`: Allows to set the price of the ETH-USD oracle feed. Just for
   local ganache-cli. It's `500 USD/ETH` by default.
-* `FEED_EXPIRE_PERIOD_DAYS`: Allows to set the expiration date for the feed. 
+* `FEED_EXPIRE_PERIOD_DAYS`: Allows to set the expiration date for the feed.
   It's `365 days` by default
 
 ## Set a different threshold for adding a new token and starting a new auction
-The migration that setup the DutchX contract is parametrized, so you can 
-change the defalt value of the thresholds:
-* `THRESHOLD_NEW_TOKEN_PAIR_USD`: Minimun USD worth of a token that the contract
-requires in order to add a new token pair in the DutchX. It's `10.000 USD` by 
+The migration that setup the DutchX contract is parametrized, so you can
+change the default value of the thresholds:
+* `THRESHOLD_NEW_TOKEN_PAIR_USD`: Minimum USD worth of a token that the contract
+requires in order to add a new token pair in the DutchX. It's `10.000 USD` by
 default.
 * `THRESHOLD_AUCTION_START_USD`: Liquidity in USD required for the auction to
 start. It's `1.000 USD` by default.
 
-## Run all tests 
+## Run all tests
 ```bash
 yarn test -s
 ```
@@ -80,7 +86,7 @@ The flag -s runs the tests in a silence mode. Additionally the flag -g can be ad
 ## Generate a new version
 ```bash
 # In a release branch (i.e. release/vX.Y.X)
-# Migrate the version to the testnets, at least rinkeby, and posibly mainnet
+# Migrate the version to the testnets, at least rinkeby, and possibly mainnet
 # You can optionally change the gas price using the GAS_PRICE_GWEI env variable
 yarn restore
 MNEMONIC=$MNEMONIC_DX yarn migrate --network rinkeby
@@ -131,7 +137,7 @@ Go to Etherscan validation page:
 # License
 This Program (as defined by the [GNU Lesser General Public License](./LICENSE.md)) is made available on
  an as-is basis open source under the GNU General Public License and by doing so
- , no personal data is collected, used, stored, disclosed or secured by the 
+ , no personal data is collected, used, stored, disclosed or secured by the
  creators. Depending on how you use this Program, you may be required to provide
   and apply an appropriate privacy policy to comply with law.
 
