@@ -5,6 +5,12 @@
       "links": {},
       "address": "0x00df91984582e6e96288307e9c2f20b38c8fece9",
       "transactionHash": "0x423816d0a4a72568b7371c8232e12f61c894198d419ac2ab28e46b3b723a549d"
+    },
+    "42": {
+      "events": {},
+      "links": {},
+      "address": "0xde6efd396e18a950b45e24d6225505f48d0c627b",
+      "transactionHash": "0x4d675f03b12a7c9cba3dc4b63008612f197d6b705e8853c586e9ced0d4844e89"
     }
   },
   "TokenRDN": {
@@ -13,6 +19,12 @@
       "links": {},
       "address": "0x3615757011112560521536258c1e7325ae3b48ae",
       "transactionHash": "0x41eb07f89a71e8a1b3a7237bc3d9a350dcba58f777ed61fdb3da9073454b6796"
+    },
+    "42": {
+      "events": {},
+      "links": {},
+      "address": "0x1f7f270df126ba464228cc8d8203d2768429e085",
+      "transactionHash": "0xdc8798e1fcc5994649384d3567982eb0df1e77ad5a4a5623ab60f9ee7c0b9b81"
     }
   }
 }
