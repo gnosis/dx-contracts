@@ -12,9 +12,9 @@
   dependencies:
     "@gnosis.pm/util-contracts" "^1.0.1"
 
-"@gnosis.pm/owl-token@^1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/owl-token/-/owl-token-1.1.0.tgz#52d9901bdf2beae2283a6e9ffcd533b96f147f18"
+"@gnosis.pm/owl-token@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/owl-token/-/owl-token-1.1.2.tgz#1b4ba92de4a3b278c81dd920a2fa56b33dfbe43c"
   dependencies:
     "@gnosis.pm/gno-token" "^1.0.1"
     "@gnosis.pm/util-contracts" "^1.0.1"
