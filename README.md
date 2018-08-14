@@ -21,7 +21,7 @@ other exchanges are experiencing (such as front running) getting a
 fairer ecosystem for everyone to use.
 
 There is no restriction besides the fact that tokens must be
-[ERC20][Dutch auction] compliant.
+[ERC20](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md) compliant.
 
 # Documentation
 Checkout the [DutchX Documentation](http://dutchx.readthedocs.io/en/latest).
