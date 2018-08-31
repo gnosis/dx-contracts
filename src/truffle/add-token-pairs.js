@@ -58,7 +58,7 @@ async function addTokenPairs () {
     // Load the DX contract
     const contractsInfo = await loadContractsInfo()
     console.log(`\
-    Deployer account: ${contractsInfo.account}
+    User account: ${contractsInfo.account}
     DX address: ${contractsInfo.dx.address}
     WETH address: ${contractsInfo.wethAddress}
     Ether balance: ${contractsInfo.etherBalance}    
