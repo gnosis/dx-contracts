@@ -13,8 +13,8 @@
 
 # DutchX - Smart Contracts
 
-The **Dutch Exchange (DutchX)** is a fully decentralized exchange, which
-allows **everyone** to add any trading token pair.
+The **DutchX** is a fully decentralized trading protocol, which
+allows **anyone** to add any trading token pair.
 
 It uses the [Dutch auction] principle, to prevent the problems that
 other exchanges are experiencing (such as front running) getting a
