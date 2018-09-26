@@ -18,6 +18,8 @@
     "lint": "eslint .",
     "add-token-pairs": "truffle exec src/truffle/add-token-pairs.js",
     "approve-tokens": "truffle exec src/truffle/approve-tokens.js",
+    "unlock-mgn": "truffle exec src/truffle/unlock-mgn.js",
+    "claim-unlocked-mgn": "truffle exec src/truffle/claim-unlocked-mgn.js",    
     "set-auctioneer": "truffle exec src/truffle/set-auctioneer.js",
     "get-abi-encoded-params": "truffle exec src/truffle/get-abi-encoded-params.js",
     "decode": "node ./node_modules/decode-eth/main.js"
