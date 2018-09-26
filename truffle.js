@@ -5,7 +5,12 @@ const GAS_LIMIT = 6.5e6
 const DEFAULT_MNEMONIC = 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat'
 
 // Get the mnemonic
-const mnemonic = process.env.MNEMONIC || DEFAULT_MNEMONIC
+const privateKey = process.env.PK
+let mnemonic = process.env.MNEMONIC
+if (!privateKey && !mnemonic) {
+  mnemonic = DEFAULT_MNEMONIC
+}
+
 const gasPriceGWei = process.env.GAS_PRICE_GWEI || DEFAULT_GAS_PRICE_GWEI
 const gas = GAS_LIMIT
 
@@ -15,10 +20,11 @@ let aditionalNetwork = process.env.NETWORK ? JSON.parse(process.env.NETWORK) : n
 
 module.exports = truffleConfig({
   mnemonic,
+  privateKey,
   gasPriceGWei,
   gas,
   aditionalNetwork,
   optimizedEnabled: true,
   urlMainnet: 'https://node-green.mainnet.gnosis.pm',
-  urlRinkeby: 'https://rinkeby.infura.io/' // 'http://node.rinkeby.gnosisdev.com:8545'
+  urlRinkeby: 'https://rinkeby.infura.io/' // 'https://node.rinkeby.gnosisdev.com'
 })

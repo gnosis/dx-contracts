@@ -19,7 +19,7 @@
     "add-token-pairs": "truffle exec src/truffle/add-token-pairs.js",
     "approve-tokens": "truffle exec src/truffle/approve-tokens.js",
     "unlock-mgn": "truffle exec src/truffle/unlock-mgn.js",
-    "claim-unlocked-mgn": "truffle exec src/truffle/claim-unlocked-mgn.js",    
+    "claim-unlocked-mgn": "truffle exec src/truffle/claim-unlocked-mgn.js",
     "set-auctioneer": "truffle exec src/truffle/set-auctioneer.js",
     "get-abi-encoded-params": "truffle exec src/truffle/get-abi-encoded-params.js",
     "decode": "node ./node_modules/decode-eth/main.js"
@@ -33,7 +33,7 @@
   "dependencies": {
     "@gnosis.pm/gno-token": "^1.0.1",
     "@gnosis.pm/owl-token": "^1.1.2",
-    "@gnosis.pm/util-contracts": "^1.0.1"
+    "@gnosis.pm/util-contracts": "^1.0.2"
   },
   "devDependencies": {
     "@digix/tempo": "^0.2.0",
@@ -54,7 +54,6 @@
     "truffle-contract": "^3.0.5",
     "truffle-flattener": "^1.2.5",
     "truffle-hdwallet-provider": "0.0.5",
-    "truffle-hdwallet-provider-privkey": "^0.2.0",
     "web3": "^0.20.2",
     "yargs": "^11.0.0"
   }
