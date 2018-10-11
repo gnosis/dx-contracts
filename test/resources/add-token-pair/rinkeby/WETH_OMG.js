@@ -5,9 +5,9 @@ module.exports = {
     address: "0xc778417e063141139fce010982780140aa0cd5ab",
     // Check ETH oracle:
     //   https://makerdao.com/feeds/#0x729d19f657bd0614b4985cf1d82531c67569197b
-    //   Price: 423.960
-    //   10$ = 10/423.960 ETH = 0.02358713086
-    funding: 0.025
+    //   Price: 197.500
+    //   10000$ = 10000/197.500 ETH = 50.63291139240506
+    funding: 50.1
   },
   // OMG
   tokenB: {
@@ -17,10 +17,10 @@ module.exports = {
   },
   // Price:
   //   https://www.coingecko.com/en/price_charts/omisego/eth
-  //   1 ETH = 60.63636408838016 OMG
-  //   initial price = 61 OMG/WETH
+  //   1 ETH = 64,2873200911311 OMG
+  //   initial price = 65 OMG/WETH
   initialPrice: {
-    numerator: 61,
+    numerator: 65,
     denominator: 1
   }
 }
