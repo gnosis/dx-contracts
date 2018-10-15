@@ -790,33 +790,51 @@ contract DutchExchange is Proxied {
         // feeRatio < 10^4
         returns (uint num, uint den)
     {
-        uint t = frtToken.totalSupply();
-        uint b = frtToken.lockedTokenBalances(user);
+        uint totalSupply = frtToken.totalSupply();
+        uint lockedFrt = frtToken.lockedTokenBalances(user);
 
-        if (b * 100000 < t || t == 0) {
-            // 0.5%
+        /*
+          Fee Model:
+            locked FRT range     Fee
+            -----------------   ------
+            [0, 0.001%)          0.5%
+            [0.001%, 0.01%)      0.4%
+            [0.01%, 0.1%)        0.3%
+            [0.1%, 1%)           0.2%
+            [1%, 10%)            0.1%
+            [10%, 100%)          0.05%
+        */
+
+        if (lockedFrt * 100000 < totalSupply || totalSupply == 0) {
+            // Maximum fee, if user has locked less than 0.001% of the total FRT
+            // Fee: 0.5%
             num = 1;
             den = 200;
-        } else if (b * 10000 < t) {
-            // 0.4%
+        } else if (lockedFrt * 10000 < totalSupply) {
+            // If user has locked more than 0.001% and less than 0.01% of the total FRT
+            // Fee: 0.4%
             num = 1;
             den = 250;
-        } else if (b * 1000 < t) {
-            // 0.3%
+        } else if (lockedFrt * 1000 < totalSupply) {
+            // If user has locked more than 0.01% and less than 0.1% of the total FRT
+            // Fee: 0.3%
             num = 3;
             den = 1000;
-        } else if (b * 100 < t) {
-            // 0.2%
+        } else if (lockedFrt * 100 < totalSupply) {
+            // If user has locked more than 0.1% and less than 1% of the total FRT
+            // Fee: 0.2%
             num = 1;
             den = 500;
-        } else if (b * 10 < t) {
-            // 0.1%
+        } else if (lockedFrt * 10 < totalSupply) {
+            // If user has locked more than 1% and less than 10% of the total FRT
+            // Fee: 0.1%
             num = 1;
             den = 1000;
         } else {
-            // 0% 
-            num = 0; 
-            den = 1;
+            // Minimum fee, if user has locked 10% of the total FRT or more
+            // 0.05%
+            num = 5;
+            den = 10000;
         }
     }
 
