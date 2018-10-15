@@ -72,6 +72,7 @@ async function addTokenPairs () {
       gasPrice,
       dryRun
     }
+    console.log(`Adding ${tokenPairs.length} token pairs`)
     for (let i = 0; i < tokenPairs.length; i++) {
       // Add token (syncronously)
       await addTokenPair(tokenPairs[i], contractsInfo, params)
@@ -229,12 +230,10 @@ async function ensureEnoughFunding (tokenA, tokenB, {
   const fundingInUsdB = etherPrice.mul(fundingInEtherB)
 
   let enoughFunding = false
-  console.debug(`Is ${fundingInUsdA} grater than ${thresholdInUSD}?`)
   if (fundingInUsdA.greaterThanOrEqualTo(thresholdInUSD)) {
     enoughFunding = true
   }
 
-  console.debug(`Is ${fundingInUsdB} grater than ${thresholdInUSD}?`)
   if (fundingInUsdB.mul(etherPrice).greaterThanOrEqualTo(thresholdInUSD)) {
     enoughFunding = true
   }
