@@ -4,6 +4,8 @@ const {
   logger,
   log,
   enableContractFlag,
+  makeSnapshot,
+  revertSnapshot
 } = require('./utils')
 
 const { getContracts, setupTest } = require('./testFunctions')
@@ -117,7 +119,13 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
 
   const GNOBalance = 15.0.toWei()
 
-  beforeEach(separateLogs)
+  let currentSnapshotId
+
+  beforeEach(async () => {
+    currentSnapshotId = await makeSnapshot()
+
+    separateLogs()
+  })
 
   before(async () => {
     // get contracts
@@ -148,7 +156,11 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
     await mgn.updateMinter(master, { from: master })
   })
 
-  afterEach(gasLogger)
+  afterEach(async () => {
+    gasLogger()
+
+    await revertSnapshot(currentSnapshotId)
+  })
   after(eventWatcher.stopWatching)
 
   const {
@@ -180,23 +192,9 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
     assert.strictEqual(num / den, 0.005, 'feeRatio is 0.5% when total MGN tokens > 0 but account\'s MGN balance == 0')
   })
 
-  it('feeRatio == 0.4% when account has 0.00005 of total MGN', async () => {
+  it('feeRatio == 0.4% when account has 0.0005 of total MGN', async () => {
     await mintTokens(master, 1000000)
 
-    await mintPercent(seller1, 0.00005)
-
-    const totalMgn = await getTotalMGN()
-    assert.isAbove(totalMgn, 0, 'there are available total MGN tokens')
-
-    const lockedMGNBalance = await getLockedMGN(seller1)
-    assert.strictEqual(lockedMGNBalance, Math.round(totalMgn * 0.00005), 'seller has 1% of total MGN')
-
-    const [num, den] = await calculateFeeRatio(seller1)
-    // round feeRatio a bit
-    assert.equal((num / den).toFixed(4), 0.004, 'feeRatio is 0.4% when total MGN tokens > 0 ')
-  })
-
-  it('feeRatio == 0.3% when account has 0.0005 of total MGN', async () => {
     await mintPercent(seller1, 0.0005)
 
     const totalMgn = await getTotalMGN()
@@ -207,10 +205,12 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
 
     const [num, den] = await calculateFeeRatio(seller1)
     // round feeRatio a bit
-    assert.equal((num / den).toFixed(4), 0.003, 'feeRatio is 0.3% when total MGN tokens > 0')
+    assert.equal((num / den).toFixed(4), 0.004, 'feeRatio is 0.4% when total MGN tokens > 0 ')
   })
 
-  it('feeRatio == 0.2% when account has 0.005 of total MGN', async () => {
+  it('feeRatio == 0.3% when account has 0.005 of total MGN', async () => {
+    await mintTokens(master, 1000000)
+
     await mintPercent(seller1, 0.005)
 
     const totalMgn = await getTotalMGN()
@@ -221,10 +221,12 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
 
     const [num, den] = await calculateFeeRatio(seller1)
     // round feeRatio a bit
-    assert.equal((num / den).toFixed(4), 0.0020, 'feeRatio is 0.20% when total MGN tokens > 0 ')
+    assert.equal((num / den).toFixed(4), 0.003, 'feeRatio is 0.3% when total MGN tokens > 0')
   })
 
-  it('feeRatio == 0.1% when account has 0.05 of total MGN', async () => {
+  it('feeRatio == 0.2% when account has 0.05 of total MGN', async () => {
+    await mintTokens(master, 1000000)
+
     await mintPercent(seller1, 0.05)
 
     const totalMgn = await getTotalMGN()
@@ -235,21 +237,39 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
 
     const [num, den] = await calculateFeeRatio(seller1)
     // round feeRatio a bit
+    assert.equal((num / den).toFixed(4), 0.0020, 'feeRatio is 0.20% when total MGN tokens > 0 ')
+  })
+
+  it('feeRatio == 0.1% when account has >= 10% of total MGN', async () => {
+    await mintTokens(master, 1000000)
+
+    await mintPercent(seller1, 0.11)
+
+    const totalMgn = await getTotalMGN()
+    assert.isAbove(totalMgn, 0, 'there are available total MGN tokens')
+
+    const lockedMGNBalance = await getLockedMGN(seller1)
+    assert.strictEqual(lockedMGNBalance, Math.round(totalMgn * 0.11), 'seller has 1% of total MGN')
+
+    const [num, den] = await calculateFeeRatio(seller1)
+    // round feeRatio a bit
     assert.equal((num / den).toFixed(4), 0.0010, 'feeRatio is 0.10% when total MGN tokens > 0 ')
   })
 
-  it('feeRatio == 0% when account has >= 10% of total MGN', async () => {
-    await mintPercent(seller1, 0.11)
-
-    const totalMgn2 = await getTotalMGN()
-    assert.isAbove(totalMgn2, 0, 'there are available total MGN tokens')
-
-    const lockedMGNBalance2 = await getLockedMGN(seller1)
-    assert.isAtLeast(lockedMGNBalance2, Math.round(totalMgn2 * 0.1), 'seller has >= 10% of total MGN')
-
-    const [num, den] = await calculateFeeRatio(seller1)
-    assert.equal(num / den, 0, 'feeRatio is 0% when total MGN tokens > 0 but account\'s MGN balance == 10% total MGN')
-  })
+  // it('feeRatio == 0% when account has >= 10% of total MGN', async () => {
+  //   await mintTokens(master, 1000000)
+  //
+  //   await mintPercent(seller1, 0.11)
+  //
+  //   const totalMgn2 = await getTotalMGN()
+  //   assert.isAbove(totalMgn2, 0, 'there are available total MGN tokens')
+  //
+  //   const lockedMGNBalance2 = await getLockedMGN(seller1)
+  //   assert.isAtLeast(lockedMGNBalance2, Math.round(totalMgn2 * 0.1), 'seller has >= 10% of total MGN')
+  //
+  //   const [num, den] = await calculateFeeRatio(seller1)
+  //   assert.equal(num / den, 0, 'feeRatio is 0% when total MGN tokens > 0 but account\'s MGN balance == 10% total MGN')
+  // })
 })
 
 const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
@@ -367,18 +387,18 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
   }
 
   const feeRatioShortcuts = {
-    '0%': async (account) => {
+    '0.1%': async (account) => {
       let [num, den] = await calculateFeeRatio(account, false)
       let feeRatio = num / den
-      if (feeRatio === 0) return feeRatio
+      if (feeRatio === 0.1) return feeRatio
 
-      // fee is 0% when account has >= 10% of total MGN
+      // fee is 0.1% when account has >= 10% of total MGN
       await ensureTotalMGN()
       await mintPercent(account, 0.11);
 
       ([num, den] = await calculateFeeRatio(account))
       feeRatio = num / den
-      assert.equal(feeRatio, 0, 'feeRatio is 0% when total MGN tokens > 0 and account\'s MGN balance >= 10% total MGN')
+      assert.equal(feeRatio, 0.001, 'feeRatio is 0.1% when total MGN tokens > 0 and account\'s MGN balance >= 10% total MGN')
 
       return feeRatio
     },
@@ -425,8 +445,8 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
   }
 
   /**
-   * Sets MGN tokens so that feeRatio would be 0, 0.5 or 0.25 %
-   * @param {0 | 0.5 | 0.25} percent
+   * Sets MGN tokens so that feeRatio would be 0.1, 0.5 or 0.25 %
+   * @param {0.1 | 0.5 | 0.25} percent
    * @param {address} account
    */
   const makeFeeRatioPercent = (percent, account) => {
@@ -478,24 +498,28 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
   }
 
 
-  it('amountAfterFee == amount when fee == 0', async () => {
-    await makeFeeRatioPercent(0, seller1)
-
-    const amount = 10
-    const auctionIndex = 1
-
-    const extraTokens1 = await getExtraTokens(eth.address, gno.address, auctionIndex)
-
-    const amountAfterFee = await settleFee
-      .call(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
-
-    assert.strictEqual(amountAfterFee, amount, 'amount should not change when fee == 0')
-
-    await settleFee(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
-    const extraTokens2 = await getExtraTokens(eth.address, gno.address, auctionIndex)
-
-    assert.strictEqual(extraTokens1, extraTokens2, 'extraTokens should not change when fee == 0')
-  })
+  // it('amountAfterFee == amount when fee == 0.1', async () => {
+  //   const feeRatio = await makeFeeRatioPercent(0.1, seller1)
+  //
+  //   const amount = 1000
+  //   const auctionIndex = 1
+  //
+  //   const extraTokens1 = await getExtraTokens(eth.address, gno.address, auctionIndex)
+  //
+  //   const fee = calculateFee(amount, feeRatio)
+  //
+  //   assert.isAbove(fee, 0, 'fee must be > 0')
+  //
+  //   const amountAfterFee = await settleFee
+  //     .call(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
+  //
+  //   assert.strictEqual(amountAfterFee, amount - fee, 'amount should be decreased by fee')
+  //
+  //   await settleFee(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
+  //   const extraTokens2 = await getExtraTokens(eth.address, gno.address, auctionIndex)
+  //
+  //   assert.strictEqual(extraTokens1 + fee, extraTokens2, 'extraTokens should be increased by fee')
+  // })
 
   it('amountAfterFee == amount - fee when fee > 0 and account\'s OWL == 0', async () => {
     const owlBalance = (await owl.balanceOf(seller1)).toNumber()
@@ -636,7 +660,7 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
       .call(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
 
     assert.strictEqual(amountAfterFee, amount - fee, 'amount should be decreased by fee')
-    
+
     await settleFee(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
     const extraTokens2 = await getExtraTokens2(eth.address, gno.address, auctionIndex)
     assert.isTrue(extraTokens1.add(fee).eq(extraTokens2), 'extraTokens should be increased by fee')
