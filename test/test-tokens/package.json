@@ -6,8 +6,10 @@
   "scripts": {
     "preversion": "npm run restore",
     "restore": "rm -rf build && npm run compile && npm run networks-reset",
+    "networks-reset": "mkdir -p build/contracts && truffle networks --clean && npm run networks-inject",
     "networks-extract": "node src/extract_network_info.js",
     "networks-inject": "node src/inject_network_info.js",
+    "compile": "truffle compile",
     "networks": "truffle networks",
     "migrate": "truffle migrate"
   },
@@ -16,5 +18,8 @@
     "@gnosis.pm/util-contracts": "^1.0.1",
     "truffle-contract": "^3.0.6",
     "truffle-hdwallet-provider": "0.0.5"
+  },
+  "devDependencies": {
+    "truffle": "4.1.5"
   }
 }
