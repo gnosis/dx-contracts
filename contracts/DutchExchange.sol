@@ -1,17 +1,18 @@
 pragma solidity ^0.4.21;
 
 import "./TokenFRT.sol";
-import "./Oracle/PriceOracleInterface.sol";  
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
 import "./base/TokenWhitelist.sol";
 import "./base/DxMath.sol";
+import "./base/EthOracle.sol";
 
 /// @title Dutch Exchange - exchange token pairs with the clever mechanism of the dutch auction
 /// @author Alex Herrmann - <alex@gnosis.pm>
 /// @author Dominik Teiml - <dominik@gnosis.pm>
 
-contract DutchExchange is Proxied, TokenWhitelist, DxMath {
+contract DutchExchange is Proxied, TokenWhitelist, EthOracle {
+    uint constant WAITING_PERIOD_CHANGE_MASTERCOPY = 30 days;
 
     // The price is a rational number, so we need a concept of a fraction
     struct fraction {
@@ -20,8 +21,7 @@ contract DutchExchange is Proxied, TokenWhitelist, DxMath {
     }
 
     uint constant WAITING_PERIOD_NEW_TOKEN_PAIR = 6 hours;
-    uint constant WAITING_PERIOD_NEW_AUCTION = 10 minutes;
-    uint constant WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE = 30 days;
+    uint constant WAITING_PERIOD_NEW_AUCTION = 10 minutes;    
     uint constant AUCTION_START_WAITING_FOR_FUNDING = 1;
 
     address public newMasterCopy;
@@ -31,11 +31,7 @@ contract DutchExchange is Proxied, TokenWhitelist, DxMath {
     // > Storage
     // Ether ERC-20 token
     address public ethToken;
-    // Price Oracle interface 
-    PriceOracleInterface public ethUSDOracle;
-    // Price Oracle interface proposals during update process
-    PriceOracleInterface public newProposalEthUSDOracle;
-    uint public oracleInterfaceCountdown;
+    
     // Minimum required sell funding for adding a new token pair, in USD
     uint public thresholdNewTokenPair;
     // Minimum required sell funding for starting antoher auction, in USD
@@ -117,28 +113,6 @@ contract DutchExchange is Proxied, TokenWhitelist, DxMath {
         thresholdNewAuction = _thresholdNewAuction;
     }
 
-    function initiateEthUsdOracleUpdate(
-        PriceOracleInterface _ethUSDOracle
-    )
-        public
-        onlyAuctioneer
-    {         
-        require(address(_ethUSDOracle) != address(0));
-        newProposalEthUSDOracle = _ethUSDOracle;
-        oracleInterfaceCountdown = add(now, WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE);
-        NewOracleProposal(_ethUSDOracle);
-    }
-
-    function updateEthUSDOracle()
-        public
-        onlyAuctioneer
-    {
-        require(address(newProposalEthUSDOracle) != address(0));
-        require(oracleInterfaceCountdown < now);
-        ethUSDOracle = newProposalEthUSDOracle;
-        newProposalEthUSDOracle = PriceOracleInterface(0);
-    }
-
     function updateThresholdNewTokenPair(
         uint _thresholdNewTokenPair
     )
@@ -157,9 +131,9 @@ contract DutchExchange is Proxied, TokenWhitelist, DxMath {
         thresholdNewAuction = _thresholdNewAuction;
     }
 
-     function startMasterCopyCountdown (
+    function startMasterCopyCountdown (
         address _masterCopy
-     )
+    )
         public
         onlyAuctioneer
     {
@@ -167,7 +141,7 @@ contract DutchExchange is Proxied, TokenWhitelist, DxMath {
 
         // Update masterCopyCountdown
         newMasterCopy = _masterCopy;
-        masterCopyCountdown = add(now, WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE);
+        masterCopyCountdown = add(now, WAITING_PERIOD_CHANGE_MASTERCOPY);
         NewMasterCopyProposal(_masterCopy);
     }
 
@@ -239,8 +213,9 @@ contract DutchExchange is Proxied, TokenWhitelist, DxMath {
             fundedValueUSD = mul(token2Funding, ethUSDPrice);
         } else {
             // C3: Neither token is ethToken
-            fundedValueUSD = calculateFundedValueTokenToken(token1, token2, 
-                token1Funding, token2Funding, ethTokenMem, ethUSDPrice);
+            fundedValueUSD = calculateFundedValueTokenToken(
+                token1, token2, token1Funding, token2Funding, ethTokenMem,
+                ethUSDPrice);
         }
 
         // R5
@@ -285,8 +260,10 @@ contract DutchExchange is Proxied, TokenWhitelist, DxMath {
 
         // Compute funded value in ethToken and USD
         // 10^30 * 10^30 = 10^60
-        uint fundedValueETH = add(mul(token1Funding, priceToken1Num) / priceToken1Den,
-            token2Funding * priceToken2Num / priceToken2Den);
+        uint fundedValueETH = add(
+            mul(token1Funding, priceToken1Num) / priceToken1Den,
+            token2Funding * priceToken2Num / priceToken2Den
+        );
 
         fundedValueUSD = mul(fundedValueETH, ethUSDPrice);
     }
@@ -1336,10 +1313,6 @@ contract DutchExchange is Proxied, TokenWhitelist, DxMath {
     event NewDeposit(
          address indexed token,
          uint amount
-    );
-
-    event NewOracleProposal(
-         PriceOracleInterface priceOracleInterface
     );
 
 
