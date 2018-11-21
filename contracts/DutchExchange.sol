@@ -4,13 +4,13 @@ import "./TokenFRT.sol";
 import "./Oracle/PriceOracleInterface.sol";  
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
-
+import "./base/TokenWhitelist.sol";
 
 /// @title Dutch Exchange - exchange token pairs with the clever mechanism of the dutch auction
 /// @author Alex Herrmann - <alex@gnosis.pm>
 /// @author Dominik Teiml - <dominik@gnosis.pm>
 
-contract DutchExchange is Proxied {
+contract DutchExchange is Proxied, TokenWhitelist {
 
     // The price is a rational number, so we need a concept of a fraction
     struct fraction {
@@ -175,19 +175,6 @@ contract DutchExchange is Proxied {
     {
         thresholdNewAuction = _thresholdNewAuction;
     }
-
-    function updateApprovalOfToken(
-        address[] token,
-        bool approved
-    )
-        public
-        onlyAuctioneer
-     {  
-        for(uint i = 0; i < token.length; i++) {
-            approvedTokens[token[i]] = approved;
-            Approval(token[i], approved);
-        }
-     }
 
      function startMasterCopyCountdown (
         address _masterCopy
@@ -1408,26 +1395,6 @@ contract DutchExchange is Proxied {
         return buyersBalances;
     }
 
-    //@dev for quick overview of approved Tokens
-    //@param addressesToCheck are the ERC-20 token addresses to be checked whether they are approved
-    function getApprovedAddressesOfList(
-        address[] addressToCheck
-    )
-        external
-        view
-        returns (bool[])
-    {
-        uint length = addressToCheck.length;
-
-        bool[] memory isApproved = new bool[](length);
-
-        for (uint i = 0; i < length; i++) {
-            isApproved[i] = approvedTokens[addressToCheck[i]];
-        }
-
-        return isApproved;
-    }
-
     //@dev for multiple withdraws
     //@param auctionSellTokens are the sellTokens defining an auctionPair
     //@param auctionBuyTokens are the buyTokens defining an auctionPair
@@ -1548,11 +1515,6 @@ contract DutchExchange is Proxied {
         uint sellVolume,
         uint buyVolume,
         uint indexed auctionIndex
-    );
-
-    event Approval(
-        address indexed token,
-        bool approved
     );
 
     event AuctionStartScheduled(
