@@ -5,12 +5,13 @@ import "./Oracle/PriceOracleInterface.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
 import "./base/TokenWhitelist.sol";
+import "./base/DxMath.sol";
 
 /// @title Dutch Exchange - exchange token pairs with the clever mechanism of the dutch auction
 /// @author Alex Herrmann - <alex@gnosis.pm>
 /// @author Dominik Teiml - <dominik@gnosis.pm>
 
-contract DutchExchange is Proxied, TokenWhitelist {
+contract DutchExchange is Proxied, TokenWhitelist, DxMath {
 
     // The price is a rational number, so we need a concept of a fraction
     struct fraction {
@@ -28,8 +29,6 @@ contract DutchExchange is Proxied, TokenWhitelist {
     uint public masterCopyCountdown;
 
     // > Storage
-    // auctioneer has the power to manage some variables
-    address public auctioneer;
     // Ether ERC-20 token
     address public ethToken;
     // Price Oracle interface 
@@ -81,14 +80,6 @@ contract DutchExchange is Proxied, TokenWhitelist {
     mapping (address => mapping (address => mapping (uint => mapping (address => uint)))) public buyerBalances;
     mapping (address => mapping (address => mapping (uint => mapping (address => uint)))) public claimedAmounts;
 
-    // > Modifiers
-    modifier onlyAuctioneer() {
-        // Only allows auctioneer to proceed
-        // R1
-        require(msg.sender == auctioneer);
-        _;
-    }
-
     /// @dev Constructor-Function creates exchange
     /// @param _frtToken - address of frtToken ERC-20 token
     /// @param _owlToken - address of owlToken ERC-20 token
@@ -124,16 +115,6 @@ contract DutchExchange is Proxied, TokenWhitelist {
         ethUSDOracle = _ethUSDOracle;
         thresholdNewTokenPair = _thresholdNewTokenPair;
         thresholdNewAuction = _thresholdNewAuction;
-    }
-
-    function updateAuctioneer(
-        address _auctioneer
-    )
-        public
-        onlyAuctioneer
-    {
-        require(_auctioneer != address(0));
-        auctioneer = _auctioneer;
     }
 
     function initiateEthUsdOracleUpdate(
@@ -1123,105 +1104,6 @@ contract DutchExchange is Proxied, TokenWhitelist {
     {
         (token1, token2) = getTokenOrder(token1, token2);
         auctionIndex = latestAuctionIndices[token1][token2];
-    }
-
-    // > Math fns
-    function min(uint a, uint b) 
-        public
-        pure
-        returns (uint)
-    {
-        if (a < b) {
-            return a;
-        } else {
-            return b;
-        }
-    }
-
-    function atleastZero(int a)
-        public
-        pure
-        returns (uint)
-    {
-        if (a < 0) {
-            return 0;
-        } else {
-            return uint(a);
-        }
-    }
-    /// @dev Returns whether an add operation causes an overflow
-    /// @param a First addend
-    /// @param b Second addend
-    /// @return Did no overflow occur?
-    function safeToAdd(uint a, uint b)
-        public
-        pure
-        returns (bool)
-    {
-        return a + b >= a;
-    }
-
-    /// @dev Returns whether a subtraction operation causes an underflow
-    /// @param a Minuend
-    /// @param b Subtrahend
-    /// @return Did no underflow occur?
-    function safeToSub(uint a, uint b)
-        public
-        pure
-        returns (bool)
-    {
-        return a >= b;
-    }
-
-    /// @dev Returns whether a multiply operation causes an overflow
-    /// @param a First factor
-    /// @param b Second factor
-    /// @return Did no overflow occur?
-    function safeToMul(uint a, uint b)
-        public
-        pure
-        returns (bool)
-    {
-        return b == 0 || a * b / b == a;
-    }
-
-    /// @dev Returns sum if no overflow occurred
-    /// @param a First addend
-    /// @param b Second addend
-    /// @return Sum
-    function add(uint a, uint b)
-        public
-        pure
-        returns (uint)
-    {
-        require(safeToAdd(a, b));
-        return a + b;
-    }
-
-    /// @dev Returns difference if no overflow occurred
-    /// @param a Minuend
-    /// @param b Subtrahend
-    /// @return Difference
-    function sub(uint a, uint b)
-        public
-        pure
-        returns (uint)
-    {
-        require(safeToSub(a, b));
-        return a - b;
-    }
-
-    /// @dev Returns product if no overflow occurred
-    /// @param a First factor
-    /// @param b Second factor
-    /// @return Product
-    function mul(uint a, uint b)
-        public
-        pure
-        returns (uint)
-    {
-        require(safeToMul(a, b));
-        return a * b;
     }
 
     function getRunningTokenPairs(
