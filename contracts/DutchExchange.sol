@@ -2,17 +2,17 @@ pragma solidity ^0.4.21;
 
 import "./TokenFRT.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
-import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
 import "./base/TokenWhitelist.sol";
 import "./base/DxMath.sol";
 import "./base/EthOracle.sol";
+import "./base/DxUpgrade.sol";
+
 
 /// @title Dutch Exchange - exchange token pairs with the clever mechanism of the dutch auction
 /// @author Alex Herrmann - <alex@gnosis.pm>
 /// @author Dominik Teiml - <dominik@gnosis.pm>
 
-contract DutchExchange is Proxied, TokenWhitelist, EthOracle {
-    uint constant WAITING_PERIOD_CHANGE_MASTERCOPY = 30 days;
+contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
 
     // The price is a rational number, so we need a concept of a fraction
     struct fraction {
@@ -24,10 +24,7 @@ contract DutchExchange is Proxied, TokenWhitelist, EthOracle {
     uint constant WAITING_PERIOD_NEW_AUCTION = 10 minutes;    
     uint constant AUCTION_START_WAITING_FOR_FUNDING = 1;
 
-    address public newMasterCopy;
-    // Time when new masterCopy is updatabale
-    uint public masterCopyCountdown;
-
+    
     // > Storage
     // Ether ERC-20 token
     address public ethToken;
@@ -40,11 +37,6 @@ contract DutchExchange is Proxied, TokenWhitelist, EthOracle {
     TokenFRT public frtToken;
     // Token for paying fees
     TokenOWL public owlToken;
-
-    // mapping that stores the tokens, which are approved
-    // Token => approved
-    // Only tokens approved by auctioneer generate frtToken tokens
-    mapping (address => bool) public approvedTokens;
 
     // For the following two mappings, there is one mapping for each token pair
     // The order which the tokens should be called is smaller, larger
@@ -131,31 +123,7 @@ contract DutchExchange is Proxied, TokenWhitelist, EthOracle {
         thresholdNewAuction = _thresholdNewAuction;
     }
 
-    function startMasterCopyCountdown (
-        address _masterCopy
-    )
-        public
-        onlyAuctioneer
-    {
-        require(_masterCopy != address(0));
-
-        // Update masterCopyCountdown
-        newMasterCopy = _masterCopy;
-        masterCopyCountdown = add(now, WAITING_PERIOD_CHANGE_MASTERCOPY);
-        NewMasterCopyProposal(_masterCopy);
-    }
-
-    function updateMasterCopy()
-        public
-        onlyAuctioneer
-    {
-        require(newMasterCopy != address(0));
-        require(now >= masterCopyCountdown);
-
-        // Update masterCopy
-        masterCopy = newMasterCopy;
-        newMasterCopy = address(0);
-    }
+    
 
     /// @param initialClosingPriceNum initial price will be 2 * initialClosingPrice. This is its numerator
     /// @param initialClosingPriceDen initial price will be 2 * initialClosingPrice. This is its denominator
@@ -1313,11 +1281,6 @@ contract DutchExchange is Proxied, TokenWhitelist, EthOracle {
     event NewDeposit(
          address indexed token,
          uint amount
-    );
-
-
-    event NewMasterCopyProposal(
-         address newMasterCopy
     );
 
     event NewWithdrawal(
