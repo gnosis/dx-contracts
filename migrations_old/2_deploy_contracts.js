@@ -6,7 +6,7 @@ const DutchExchange = artifacts.require('DutchExchange')
 const EtherToken = artifacts.require('EtherToken')
 const PriceFeed = artifacts.require('PriceFeed')
 const PriceOracleInterface = artifacts.require('PriceOracleInterface')
-const StandardToken = artifacts.require('StandardToken')
+const GnosisStandardToken = artifacts.require('GnosisStandardToken')
 const TokenGNO = artifacts.require('TokenGNO')
 const TokenRDN = artifacts.require('TokenRDN')
 const TokenOMG = artifacts.require('TokenOMG')
@@ -32,7 +32,7 @@ module.exports = function deploy (deployer, network, accounts) {
     deployer.deploy(Math)
 
       // Linking
-      .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenFRT, TokenOWL, TokenOWLProxy, OWLAirdrop]))
+      .then(() => deployer.link(Math, [GnosisStandardToken, EtherToken, TokenGNO, TokenFRT, TokenOWL, TokenOWLProxy, OWLAirdrop]))
       // Deployment of Tokens
       .then(() => deployer.deploy(TokenFRT, accounts[0]))
       .then(() => deployer.deploy(TokenOWL))
@@ -73,7 +73,7 @@ module.exports = function deploy (deployer, network, accounts) {
     deployer.deploy(Math)
 
       // Linking
-      .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenFRT, TokenOWL, TokenOWLProxy, OWLAirdrop]))
+      .then(() => deployer.link(Math, [GnosisStandardToken, EtherToken, TokenGNO, TokenFRT, TokenOWL, TokenOWLProxy, OWLAirdrop]))
       .then(() => deployer.link(Math, [TokenRDN, TokenOMG]))
       // Deployment of Tokens
       .then(() => deployer.deploy(EtherToken))
@@ -117,7 +117,7 @@ module.exports = function deploy (deployer, network, accounts) {
 
     deployer.deploy(Math)
       // Linking
-      .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenFRT, TokenOWL, TokenOWLProxy, OWLAirdrop]))
+      .then(() => deployer.link(Math, [GnosisStandardToken, EtherToken, TokenGNO, TokenFRT, TokenOWL, TokenOWLProxy, OWLAirdrop]))
       .then(() => deployer.link(Math, [TokenRDN, TokenOMG]))
 
       // Deployment of Tokens
@@ -165,7 +165,7 @@ module.exports = function deploy (deployer, network, accounts) {
   } else {
     deployer.deploy(Math)
       // Linking
-      .then(() => deployer.link(Math, [StandardToken, EtherToken, TokenGNO, TokenFRT, TokenOWL, TokenOWLProxy, OWLAirdrop]))
+      .then(() => deployer.link(Math, [GnosisStandardToken, EtherToken, TokenGNO, TokenFRT, TokenOWL, TokenOWLProxy, OWLAirdrop]))
       .then(() => deployer.link(Math, [TokenRDN, TokenOMG]))
 
       // Deployment of Tokens

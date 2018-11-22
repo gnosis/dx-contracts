@@ -1,8 +1,8 @@
 pragma solidity ^0.4.21;
 
-import "@gnosis.pm/util-contracts/contracts/StandardToken.sol";
+import "@gnosis.pm/util-contracts/contracts/GnosisStandardToken.sol";
 
-contract TestToken is StandardToken {
+contract TestToken is GnosisStandardToken {
     address public minter;
     string public symbol;
     string public name;

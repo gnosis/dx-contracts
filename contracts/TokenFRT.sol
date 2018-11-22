@@ -1,8 +1,8 @@
 pragma solidity ^0.4.21;
-import "@gnosis.pm/util-contracts/contracts/StandardToken.sol";
+import "@gnosis.pm/util-contracts/contracts/GnosisStandardToken.sol";
 
 /// @title Standard token contract with overflow protection
-contract TokenFRT is StandardToken {
+contract TokenFRT is GnosisStandardToken {
     string public constant symbol = "MGN";
     string public constant name = "Magnolia Token";
     uint8 public constant decimals = 18;
