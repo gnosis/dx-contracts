@@ -29,7 +29,7 @@ async function migrate ({
     console.log('Deploy PriceOracleInterface:')
     console.log('  - account: %s', account)
     console.log('  - medianizer address: %s', medianizer.address)
-    const priceOracleInterface = await deployer.deploy(
+    await deployer.deploy(
       PriceOracleInterface,
       account,
       medianizer.address
@@ -39,13 +39,13 @@ async function migrate ({
     console.log('  - price feed address: %s', PriceFeed.address)
     await medianizer.set(PriceFeed.address)
 
-
+    const now = await getTime(web3)
     const expireTime = now + feedExpirePeriodDays * 24 * 60 * 60
+
     console.log('Post price for price feed:')
     console.log('  - ETH-USD: %s', ethUsdPrice)
     console.log('  - Expire time: %s', new Date(expireTime * 1000))
     console.log('  - Medianizer address: %s', medianizer.address)
-    const now = await getTime(web3)
     priceFeed.post(
       ethUsdPrice * 1e18,
       expireTime,

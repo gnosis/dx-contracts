@@ -6,9 +6,11 @@ async function migrate ({
   deployer,
   network,
   accounts,
+  web3,
   thresholdNewTokenPairUsd = DEFAULT_THRESHOLD_NEW_TOKEN_PAIR_USD,
   thresholdAuctionStartUsd = DEFAULT_THRESHOLD_AUCTION_START_USD
 }) {
+  const BN = web3.utils.BN
   const owner = accounts[0]
   const TokenFRT = artifacts.require('TokenFRT')
   const DutchExchange = artifacts.require('DutchExchange')
@@ -32,7 +34,7 @@ async function migrate ({
   const priceOracleInterface = await PriceOracleInterface.deployed()
   const dxProxy = await DutchExchangeProxy.deployed()
   await DutchExchange.deployed()
-  const dx = DutchExchange.at(dxProxy.address)
+  const dx = await DutchExchange.at(dxProxy.address)
 
   const frtAddress = tokenFRT.address
   const owlAddress = tokenOWLProxy.address
@@ -54,8 +56,14 @@ async function migrate ({
     owner,
     wethAddress,
     oracleAddress,
-    thresholdNewTokenPairUsd * 1e18,
-    thresholdAuctionStartUsd * 1e18
+    web3.utils.toWei(
+      new BN(thresholdNewTokenPairUsd),
+      'ether'
+    ),
+    web3.utils.toWei(
+      new BN(thresholdAuctionStartUsd),
+      'ether'
+    )
   )
 }
 
