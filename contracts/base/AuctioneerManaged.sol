@@ -3,10 +3,6 @@ pragma solidity ^0.4.11;
 contract AuctioneerManaged {
     // auctioneer has the power to manage some variables
     address public auctioneer;
-    
-    function AuctioneerManaged () public {
-        auctioneer = msg.sender;
-    }
 
     function updateAuctioneer(
         address _auctioneer
