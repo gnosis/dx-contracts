@@ -7,14 +7,14 @@
   resolved "https://registry.yarnpkg.com/@digix/tempo/-/tempo-0.2.0.tgz#5daf91ad788d6b596a19aad22e2e667e4ec808a8"
   integrity sha1-Xa+RrXiNa1lqGarSLi5mfk7ICKg=
 
-"@gnosis.pm/gno-token@^1.0.1":
+"@gnosis.pm/gno-token@1.0.1", "@gnosis.pm/gno-token@^1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@gnosis.pm/gno-token/-/gno-token-1.0.1.tgz#cec451196ec94754a1772bd47b87b3906c9880c3"
   integrity sha1-zsRRGW7JR1ShdyvUe4ezkGyYgMM=
   dependencies:
     "@gnosis.pm/util-contracts" "^1.0.1"
 
-"@gnosis.pm/owl-token@^1.1.2":
+"@gnosis.pm/owl-token@1.1.2":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@gnosis.pm/owl-token/-/owl-token-1.1.2.tgz#1b4ba92de4a3b278c81dd920a2fa56b33dfbe43c"
   integrity sha512-OP2JeVxZFNQxiwG9sPTHgXnocjFgVpmpou6p1kxcz1kFiKCzF28MrabiDNrVRo1PIZ1lfUiVe+Ser0n5r0ckwg==
@@ -22,15 +22,15 @@
     "@gnosis.pm/gno-token" "^1.0.1"
     "@gnosis.pm/util-contracts" "^1.0.1"
 
+"@gnosis.pm/util-contracts@1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/util-contracts/-/util-contracts-1.0.2.tgz#ce2011e0ca939e3b463267eadc363d08bf1b5825"
+  integrity sha512-RHv65Hxxixx2zwoQdAC345RV9MySTsLIaLFblSD2QPcncppBJSeewfqBY0ZZWxARaJqvCuFa4A2ZF9xOBwftqg==
+
 "@gnosis.pm/util-contracts@^1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@gnosis.pm/util-contracts/-/util-contracts-1.0.1.tgz#69a5661eb49b35aff9d166ea8089cc7495e2dab6"
   integrity sha1-aaVmHrSbNa/50WbqgInMdJXi2rY=
-
-"@gnosis.pm/util-contracts@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/util-contracts/-/util-contracts-1.0.2.tgz#ce2011e0ca939e3b463267eadc363d08bf1b5825"
-  integrity sha512-RHv65Hxxixx2zwoQdAC345RV9MySTsLIaLFblSD2QPcncppBJSeewfqBY0ZZWxARaJqvCuFa4A2ZF9xOBwftqg==
 
 "@mrmlnc/readdir-enhanced@^2.2.1":
   version "2.2.1"
