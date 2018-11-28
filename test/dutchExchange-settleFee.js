@@ -67,7 +67,7 @@ const getHelperFunctions = (master) => {
     return lockedMgn
   }
 
-  const unlockMGN = (account, amount) => mgn.unlockTokens(amount, { from: account })
+  const unlockMGN = (account, amount) => mgn.unlockTokens({ from: account })
 
   const mintTokens = (account, amount) => mgn.mintTokens(account, amount, { from: master })
 
@@ -636,7 +636,7 @@ const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
       .call(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
 
     assert.strictEqual(amountAfterFee, amount - fee, 'amount should be decreased by fee')
-    
+
     await settleFee(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
     const extraTokens2 = await getExtraTokens2(eth.address, gno.address, auctionIndex)
     assert.isTrue(extraTokens1.add(fee).eq(extraTokens2), 'extraTokens should be increased by fee')
