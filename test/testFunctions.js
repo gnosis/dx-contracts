@@ -136,6 +136,7 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
   ST = ST || eth; BT = BT || gno
 
   const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
+  assert.equal(startingTimeOfAuction > 1, true, 'Auction hasn`t started yet')
 
   // wait for the right time to send buyOrder
   // implements isAtLeastZero (aka will not go BACK in time)
@@ -215,7 +216,7 @@ const checkBalanceBeforeClaim = async (
   ST,
   BT,
   amt = (10 ** 9),
-  round = (MaxRoundingError),
+  round = (MaxRoundingError)
 ) => {
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno } = await getContracts()
   ST = ST || eth; BT = BT || gno

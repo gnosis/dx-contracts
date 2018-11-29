@@ -78,7 +78,7 @@ contract('DutchExchange - claimSellerFunds', accounts => {
     await assertRejects(dx.claimSellerFunds(eth.address, gno.address, seller1, auctionIndex + 1))
   })
 
-  it(' 2. check for a throw, if seller contribution ==0', async () => {
+  it(' 2. check for a throw, if seller contribution == 0', async () => {
     // prepare by clearning auction
     let auctionIndex = await getAuctionIndex()
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
@@ -91,6 +91,7 @@ contract('DutchExchange - claimSellerFunds', accounts => {
     // now claiming should not be possible and return == 0
     await assertRejects(dx.claimSellerFunds(eth.address, gno.address, seller2, 1))
   })
+
   it(' 3. check for the correct return value', async () => {
     const auctionIndex = await getAuctionIndex()
     const [claimedAmount] = (await dx.claimSellerFunds.call(eth.address, gno.address, seller1, auctionIndex - 1)).map(i => i.toNumber())

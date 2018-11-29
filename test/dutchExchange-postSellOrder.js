@@ -3,7 +3,7 @@ const {
   log: utilsLog,
   assertRejects,
   timestamp,
-  gasLogger,
+  gasLogger
 } = require('./utils')
 
 const { getContracts, setupTest, wait } = require('./testFunctions')
@@ -16,20 +16,19 @@ let dx
 
 let feeRatio
 
-
 let contracts
 
 const separateLogs = () => utilsLog('\n    ----------------------------------')
 const log = (...args) => utilsLog('\t', ...args)
 
-contract('DutchExchange - postSellOrder', (accounts) => {
+contract('DutchExchange - postSellOrder', accounts => {
   const [, seller1] = accounts
 
   const startBal = {
     startingETH: 0,
     startingGNO: 90.0.toWei(),
     ethUSDPrice: 1100.0.toWei(),
-    sellingAmount: 50.0.toWei(),
+    sellingAmount: 50.0.toWei()
   }
 
   beforeEach(separateLogs)
@@ -43,7 +42,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
       EtherToken: eth,
       TokenGNO: gno,
       TokenFRT: mgn,
-      DutchExchange: dx,
+      DutchExchange: dx
     } = contracts)
 
     await setupTest(accounts, contracts, startBal)
@@ -88,13 +87,13 @@ contract('DutchExchange - postSellOrder', (accounts) => {
       getTokenBalance(account, sellToken),
       getSellerBalance(account, sellToken, buyToken, auctionIndex),
       getSellVolumeCurrent(sellToken, buyToken),
-      getSellVolumeNext(sellToken, buyToken),
+      getSellVolumeNext(sellToken, buyToken)
     ])
 
     log(`
       balance\t\t==\t${balance}
       sellerBalance\t==\t${sellerBalance}
-      
+
       for auctionIndex ${auctionIndex}
       sellVolumeCurrent\t==\t${sellVolumeCurrent}
       sellVolumeNext\t==\t${sellVolumeNext}
@@ -104,12 +103,12 @@ contract('DutchExchange - postSellOrder', (accounts) => {
       balance,
       sellerBalance,
       sellVolumeCurrent,
-      sellVolumeNext,
+      sellVolumeNext
     }
   }
 
   const assertChangedAmounts = (oldAmounts, newAmounts, amount, amountAfterFee, postedToCurrentAuction) =>
-    Object.keys(newAmounts).forEach((key) => {
+    Object.keys(newAmounts).forEach(key => {
       const oldVal = oldAmounts[key]
       const newVal = newAmounts[key]
 

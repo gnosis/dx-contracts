@@ -1,7 +1,7 @@
 pragma solidity ^0.4.21;
 
 import "./TokenFRT.sol";
-import "./Oracle/PriceOracleInterface.sol";  
+import "./Oracle/PriceOracleInterface.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
 
@@ -32,7 +32,7 @@ contract DutchExchange is Proxied {
     address public auctioneer;
     // Ether ERC-20 token
     address public ethToken;
-    // Price Oracle interface 
+    // Price Oracle interface
     PriceOracleInterface public ethUSDOracle;
     // Price Oracle interface proposals during update process
     PriceOracleInterface public newProposalEthUSDOracle;
@@ -99,7 +99,7 @@ contract DutchExchange is Proxied {
     function setupDutchExchange(
         TokenFRT _frtToken,
         TokenOWL _owlToken,
-        address _auctioneer, 
+        address _auctioneer,
         address _ethToken,
         PriceOracleInterface _ethUSDOracle,
         uint _thresholdNewTokenPair,
@@ -141,7 +141,7 @@ contract DutchExchange is Proxied {
     )
         public
         onlyAuctioneer
-    {         
+    {
         require(address(_ethUSDOracle) != address(0));
         newProposalEthUSDOracle = _ethUSDOracle;
         oracleInterfaceCountdown = add(now, WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE);
@@ -182,7 +182,7 @@ contract DutchExchange is Proxied {
     )
         public
         onlyAuctioneer
-     {  
+     {
         for(uint i = 0; i < token.length; i++) {
             approvedTokens[token[i]] = approved;
             Approval(token[i], approved);
@@ -223,7 +223,7 @@ contract DutchExchange is Proxied {
         uint token1Funding,
         uint token2Funding,
         uint initialClosingPriceNum,
-        uint initialClosingPriceDen 
+        uint initialClosingPriceDen
     )
         public
     {
@@ -271,7 +271,7 @@ contract DutchExchange is Proxied {
             fundedValueUSD = mul(token2Funding, ethUSDPrice);
         } else {
             // C3: Neither token is ethToken
-            fundedValueUSD = calculateFundedValueTokenToken(token1, token2, 
+            fundedValueUSD = calculateFundedValueTokenToken(token1, token2,
                 token1Funding, token2Funding, ethTokenMem, ethUSDPrice);
         }
 
@@ -343,7 +343,7 @@ contract DutchExchange is Proxied {
         sellVolumesCurrent[token2][token1] = token2FundingAfterFee;
         sellerBalances[token1][token2][1][msg.sender] = token1FundingAfterFee;
         sellerBalances[token2][token1][1][msg.sender] = token2FundingAfterFee;
-        
+
         setAuctionStart(token1, token2, WAITING_PERIOD_NEW_TOKEN_PAIR);
         NewTokenPair(token1, token2);
     }
@@ -407,11 +407,11 @@ contract DutchExchange is Proxied {
 
         // R1
         require(amount > 0);
-        
+
         // R2
         uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
         require(latestAuctionIndex > 0);
-      
+
         // R3
         uint auctionStart = getAuctionStart(sellToken, buyToken);
         if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING || auctionStart > now) {
@@ -487,19 +487,19 @@ contract DutchExchange is Proxied {
 
         // R4
         require(auctionIndex == getAuctionIndex(sellToken, buyToken));
-        
+
         // R5: auction must not be in waiting period
         require(auctionStart > AUCTION_START_WAITING_FOR_FUNDING);
-        
+
         // R6: auction must be funded
         require(sellVolumesCurrent[sellToken][buyToken] > 0);
-        
+
         uint buyVolume = buyVolumes[sellToken][buyToken];
         amount = min(amount, balances[buyToken][msg.sender]);
 
         // R7
         require(add(buyVolume, amount) < 10 ** 30);
-        
+
         // Overbuy is when a part of a buy order clears an auction
         // In that case we only process the part before the overbuy
         // To calculate overbuy, we first get current price
@@ -539,7 +539,7 @@ contract DutchExchange is Proxied {
 
         return (newBuyerBal);
     }
-    
+
     function claimSellerFunds(
         address sellToken,
         address buyToken,
@@ -588,7 +588,7 @@ contract DutchExchange is Proxied {
         returns (uint returned, uint frtsIssued)
     {
         closeTheoreticalClosedAuction(sellToken, buyToken, auctionIndex);
-        
+
         uint num;
         uint den;
         (returned, num, den) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
@@ -616,14 +616,14 @@ contract DutchExchange is Proxied {
             // Auction has closed
             // Reset buyerBalances and claimedAmounts
             buyerBalances[sellToken][buyToken][auctionIndex][user] = 0;
-            claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0; 
+            claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0;
         }
 
         // Claim tokens
         if (returned > 0) {
             balances[sellToken][user] = add(balances[sellToken][user], returned);
         }
-        
+
         NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
     }
 
@@ -664,7 +664,7 @@ contract DutchExchange is Proxied {
 
     //@dev allows to close possible theoretical closed markets
     //@param sellToken sellToken of an auction
-    //@param buyToken buyToken of an auction 
+    //@param buyToken buyToken of an auction
     //@param index is the auctionIndex of the auction
     function closeTheoreticalClosedAuction(
         address sellToken,
@@ -681,7 +681,7 @@ contract DutchExchange is Proxied {
             (num, den) = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
             // 10^30 * 10^37 = 10^67
             uint outstandingVolume = atleastZero(int(mul(sellVolume, num) / den - buyVolume));
-            
+
             if(outstandingVolume == 0) {
                 postBuyOrder(sellToken, buyToken, auctionIndex, 0);
             }
@@ -713,7 +713,7 @@ contract DutchExchange is Proxied {
             uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
             // < 10^30 * 10^37 = 10^67
             unclaimedBuyerFunds = atleastZero(int(
-                mul(buyerBalance, den) / num - 
+                mul(buyerBalance, den) / num -
                 claimedAmounts[sellToken][buyToken][auctionIndex][user]
             ));
         }
@@ -737,13 +737,13 @@ contract DutchExchange is Proxied {
 
         if (fee > 0) {
             fee = settleFeeSecondPart(primaryToken, fee);
-            
+
             uint usersExtraTokens = extraTokens[primaryToken][secondaryToken][auctionIndex + 1];
             extraTokens[primaryToken][secondaryToken][auctionIndex + 1] = add(usersExtraTokens, fee);
 
             Fee(primaryToken, secondaryToken, msg.sender, auctionIndex, fee);
         }
-        
+
         amountAfterFee = sub(amount, fee);
     }
 
@@ -765,7 +765,7 @@ contract DutchExchange is Proxied {
 
         uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
         // 10^29 * 10^6 = 10^35
-        // Uses 18 decimal places <> exactly as owlToken tokens: 10**18 owlToken == 1 USD 
+        // Uses 18 decimal places <> exactly as owlToken tokens: 10**18 owlToken == 1 USD
         uint feeInUSD = mul(feeInETH, ethUSDPrice);
         uint amountOfowlTokenBurned = min(owlToken.allowance(msg.sender, this), feeInUSD / 2);
         amountOfowlTokenBurned = min(owlToken.balanceOf(msg.sender), amountOfowlTokenBurned);
@@ -781,7 +781,7 @@ contract DutchExchange is Proxied {
             newFee = fee;
         }
     }
-    
+
     function getFeeRatio(
         address user
     )
@@ -814,8 +814,8 @@ contract DutchExchange is Proxied {
             num = 1;
             den = 1000;
         } else {
-            // 0% 
-            num = 0; 
+            // 0%
+            num = 0;
             den = 1;
         }
     }
@@ -907,7 +907,7 @@ contract DutchExchange is Proxied {
         // < 10^30 * 10^31 * 10^6 = 10^67
         uint sellVolume = mul(mul(sellVolumesCurrent[sellToken][buyToken], sellNum), ethUSDPrice) / sellDen;
         uint sellVolumeOpp = mul(mul(sellVolumesCurrent[buyToken][sellToken], buyNum), ethUSDPrice) / buyDen;
-        if (sellVolume >= thresholdNewAuction || sellVolumeOpp >= thresholdNewAuction) {
+        if (sellVolume >= thresholdNewAuction && sellVolumeOpp >= thresholdNewAuction) {
             // Schedule next auction
             setAuctionStart(sellToken, buyToken, WAITING_PERIOD_NEW_AUCTION);
         } else {
@@ -952,8 +952,8 @@ contract DutchExchange is Proxied {
             while (!correctPair) {
                 closingPriceToken2 = closingPrices[token2][token1][auctionIndex - i];
                 closingPriceToken1 = closingPrices[token1][token2][auctionIndex - i];
-                
-                if (closingPriceToken1.num > 0 && closingPriceToken1.den > 0 || 
+
+                if (closingPriceToken1.num > 0 && closingPriceToken1.den > 0 ||
                     closingPriceToken2.num > 0 && closingPriceToken2.den > 0)
                 {
                     correctPair = true;
@@ -974,12 +974,12 @@ contract DutchExchange is Proxied {
                 num = closingPriceToken2.den + closingPriceToken1.num;
                 den = closingPriceToken2.num + closingPriceToken1.den;
             }
-        } 
+        }
     }
 
     /// @dev Gives best estimate for market price of a token in ETH of any price oracle on the Ethereum network
     /// @param token address of ERC-20 token
-    /// @return Weighted average of closing prices of opposite Token-ethToken auctions, based on their sellVolume  
+    /// @return Weighted average of closing prices of opposite Token-ethToken auctions, based on their sellVolume
     function getPriceOfTokenInLastAuction(
         address token
     )
@@ -1084,7 +1084,7 @@ contract DutchExchange is Proxied {
     )
         internal
     {
-        (token1, token2) = getTokenOrder(token1, token2);        
+        (token1, token2) = getTokenOrder(token1, token2);
         uint auctionStart = now + value;
         uint auctionIndex = latestAuctionIndices[token1][token2];
         auctionStarts[token1][token2] = auctionStart;
@@ -1132,14 +1132,14 @@ contract DutchExchange is Proxied {
     )
         public
         view
-        returns (uint auctionIndex) 
+        returns (uint auctionIndex)
     {
         (token1, token2) = getTokenOrder(token1, token2);
         auctionIndex = latestAuctionIndices[token1][token2];
     }
 
     // > Math fns
-    function min(uint a, uint b) 
+    function min(uint a, uint b)
         public
         pure
         returns (uint)
@@ -1269,13 +1269,13 @@ contract DutchExchange is Proxied {
             }
         }
     }
-    
+
     //@dev for quick overview of possible sellerBalances to calculate the possible withdraw tokens
     //@param auctionSellToken is the sellToken defining an auctionPair
     //@param auctionBuyToken is the buyToken defining an auctionPair
     //@param user is the user who wants to his tokens
     //@param lastNAuctions how many auctions will be checked. 0 means all
-    //@returns returns sellbal for all indices for all tokenpairs 
+    //@returns returns sellbal for all indices for all tokenpairs
     function getIndicesWithClaimableTokensForSellers(
         address auctionSellToken,
         address auctionBuyToken,
@@ -1289,7 +1289,7 @@ contract DutchExchange is Proxied {
         uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
 
         uint arrayLength;
-        
+
         uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
 
         for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
@@ -1310,7 +1310,7 @@ contract DutchExchange is Proxied {
                 k++;
             }
         }
-    }    
+    }
 
     //@dev for quick overview of current sellerBalances for a user
     //@param auctionSellTokens are the sellTokens defining an auctionPair
@@ -1344,7 +1344,7 @@ contract DutchExchange is Proxied {
     //@param auctionBuyToken is the buyToken defining an auctionPair
     //@param user is the user who wants to his tokens
     //@param lastNAuctions how many auctions will be checked. 0 means all
-    //@returns returns sellbal for all indices for all tokenpairs 
+    //@returns returns sellbal for all indices for all tokenpairs
     function getIndicesWithClaimableTokensForBuyers(
         address auctionSellToken,
         address auctionBuyToken,
@@ -1358,7 +1358,7 @@ contract DutchExchange is Proxied {
         uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
 
         uint arrayLength;
-        
+
         uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
 
         for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
@@ -1379,7 +1379,7 @@ contract DutchExchange is Proxied {
                 k++;
             }
         }
-    }    
+    }
 
     //@dev for quick overview of current sellerBalances for a user
     //@param auctionSellTokens are the sellTokens defining an auctionPair
@@ -1477,7 +1477,7 @@ contract DutchExchange is Proxied {
 
     function getMasterCopy()
         external
-        view 
+        view
         returns (address)
     {
         return masterCopy;
@@ -1502,7 +1502,7 @@ contract DutchExchange is Proxied {
         address indexed token,
         uint amount
     );
-    
+
     event NewSellOrder(
         address indexed sellToken,
         address indexed buyToken,
