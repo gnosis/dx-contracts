@@ -1,14 +1,11 @@
 /* global artifacts, web3 */
 /* eslint no-undef: "error" */
 
-const deployMath = require('@gnosis.pm/util-contracts/src/migrations/2_deploy_math')
-const deployWeth = require('@gnosis.pm/util-contracts/src/migrations/3_deploy_WETH')
-const deployGno = require('@gnosis.pm/gno-token/src/migrations/3_deploy_GNO')
-const deployOwl = require('@gnosis.pm/owl-token/src/migrations/3_deploy_OWL.js')
-const deployAirdrop = require('@gnosis.pm/owl-token/src/migrations/4_deploy_OWL_airdrop.js')
-const setupMinter = require('@gnosis.pm/owl-token/src/migrations/5_set_airdrop_as_OWL_minter')
+const deployUtils = require('@gnosis.pm/util-contracts/src/migrations-truffle-5')
+const deployGno = require('@gnosis.pm/gno-token/src/migrations-truffle-5')
+const deployOwl = require('@gnosis.pm/owl-token/src/migrations-truffle-5')
 
-const migrationsDx = require('@gnosis.pm/dx-contracts/src/migrations')
+const migrationsDx = require('@gnosis.pm/dx-contracts/src/migrations-truffle-5')
 
 module.exports = async (deployer, network, accounts) => {
   if (network === 'development') {
@@ -24,12 +21,9 @@ module.exports = async (deployer, network, accounts) => {
       thresholdAuctionStartUsd: process.env.GNO_LOCK_PERIOD_IN_HOURS
     }
 
-    await deployMath(deployParams)
-    await deployWeth(deployParams)
+    await deployUtils(deployParams)
     await deployGno(deployParams)
     await deployOwl(deployParams)
-    await deployAirdrop(deployParams)
-    await setupMinter(deployParams)
     await migrationsDx(deployParams)
   } else {
     throw new Error('Migrations are just for development. Current network is %s', network)

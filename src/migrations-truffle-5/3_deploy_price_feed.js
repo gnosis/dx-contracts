@@ -10,7 +10,7 @@ async function migrate ({
   ethUsdPrice = DEFAULT_ETH_USD_PRICE,
   feedExpirePeriodDays = DEFAULT_FEED_EXPIRE_PERIOD_DAYS
 }) {
-  const BN = web3.utils.BN
+  // const BN = web3.utils.BN
 
   const Medianizer = artifacts.require('Medianizer')
   const PriceOracleInterface = artifacts.require('PriceOracleInterface')
@@ -23,10 +23,12 @@ async function migrate ({
     // Deployment of PriceFeedInfrastructure
 
     console.log('Deploy PriceFeed')
-    const priceFeed = await deployer.deploy(PriceFeed)
+    await deployer.deploy(PriceFeed)
+    const priceFeed = await PriceFeed.deployed()
 
     console.log('Deploy Medianizer')
-    const medianizer = await deployer.deploy(Medianizer)
+    await deployer.deploy(Medianizer)
+    const medianizer = await Medianizer.deployed()
 
     console.log('Deploy PriceOracleInterface:')
     console.log('  - account: %s', account)
@@ -52,6 +54,7 @@ async function migrate ({
     //   new BN(ethUsdPrice),
     //   'ether'
     // )
+    console.log(priceFeed)
     priceFeed.post(
       ethUsdPrice * 1e18,
       expireTime,
