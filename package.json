@@ -42,6 +42,7 @@
     "decimal.js": "^7.2.3",
     "decode-eth": "^0.1.2",
     "diff": "3.4.0",
+    "dotenv": "^6.1.0",
     "eslint": "^4.19.1",
     "eslint-config-standard": "^11.0.0",
     "eslint-plugin-import": "^2.11.0",
