@@ -51,10 +51,10 @@
     "eslint-plugin-standard": "^3.1.0",
     "minimist": "^1.2.0",
     "solidity-coverage": "^0.5.4",
-    "truffle": "^4.1.14",
+    "truffle": "^5.0.0-beta.2",
     "truffle-contract": "^3.0.6",
     "truffle-flattener": "^1.2.5",
-    "truffle-hdwallet-provider": "0.0.6",
+    "truffle-hdwallet-provider": "^1.0.0-web3one.1",
     "yargs": "^11.0.0"
   }
 }
