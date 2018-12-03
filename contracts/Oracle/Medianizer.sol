@@ -17,9 +17,8 @@ contract Medianizer is DSValue {
     }
 
     function set(bytes12 pos, address wat) public note auth {
-        require(pos == 0x0, "pos cannot be 0x0");
-
-        require(wat != 0 && indexes[wat] != 0, "wat should be valid address and be part of the indexes");
+        require(pos != 0x0, "pos cannot be 0x0");
+        require(wat == 0 || indexes[wat] == 0, "wat is not defined or it has an index");
 
         indexes[values[pos]] = 0; // Making sure to remove a possible existing address in that position
 
@@ -31,12 +30,12 @@ contract Medianizer is DSValue {
     }
 
     function setMin(uint96 min_) public note auth {
-        require(min_ == 0x0, "min cannot be 0x0");
+        require(min_ != 0x0, "min cannot be 0x0");
         min = min_;
     }
 
     function setNext(bytes12 next_) public note auth {
-        require(next_ == 0x0, "next cannot be 0x0");
+        require(next_ != 0x0, "next cannot be 0x0");
         next = next_;
     }
 
