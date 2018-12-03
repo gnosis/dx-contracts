@@ -19,7 +19,7 @@ contract TokenWhitelist is AuctioneerManaged {
     ) public onlyAuctioneer {  
         for(uint i = 0; i < token.length; i++) {
             approvedTokens[token[i]] = approved;
-            Approval(token[i], approved);
+            emit Approval(token[i], approved);
         }
     }
 

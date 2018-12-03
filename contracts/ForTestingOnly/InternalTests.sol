@@ -16,7 +16,7 @@ contract InternalTests is DutchExchange {
     return super.settleFee(primaryToken, secondaryToken, auctionIndex, amount);
   }
   
-  function InternalTests(
+  constructor(
         TokenFRT _FRT,
         TokenOWL _OWL,
         address _owner, 

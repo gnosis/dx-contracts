@@ -10,8 +10,7 @@ contract AuctioneerManaged {
         public
         onlyAuctioneer
     {
-        // require(_auctioneer != address(0), "New auctioneer cannot be 0x0");
-        require(_auctioneer != address(0));
+        require(_auctioneer != address(0), "The auctioneer must be a valid address");
         auctioneer = _auctioneer;
     }
 
@@ -20,7 +19,7 @@ contract AuctioneerManaged {
         // Only allows auctioneer to proceed
         // R1
         // require(msg.sender == auctioneer, "Only auctioneer can perform this operation");
-        require(msg.sender == auctioneer);
+        require(msg.sender == auctioneer, "Only the auctioneer can nominate a new one");
         _;
     }
 }

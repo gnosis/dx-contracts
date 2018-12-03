@@ -21,20 +21,20 @@ contract DxUpgrade is Proxied, AuctioneerManaged, DxMath {
         public
         onlyAuctioneer
     {
-        require(_masterCopy != address(0));
+        require(_masterCopy != address(0), "The new master copy must be a valid address");
 
         // Update masterCopyCountdown
         newMasterCopy = _masterCopy;
-        masterCopyCountdown = add(now, WAITING_PERIOD_CHANGE_MASTERCOPY);
-        NewMasterCopyProposal(_masterCopy);
+        masterCopyCountdown = add(block.timestamp, WAITING_PERIOD_CHANGE_MASTERCOPY);
+        emit NewMasterCopyProposal(_masterCopy);
     }
 
     function updateMasterCopy()
         public
         onlyAuctioneer
     {
-        require(newMasterCopy != address(0));
-        require(now >= masterCopyCountdown);
+        require(newMasterCopy != address(0), "The new master copy must be a valid address");
+        require(block.timestamp >= masterCopyCountdown, "The master contract cannot be updated in a waiting period");
 
         // Update masterCopy
         masterCopy = newMasterCopy;

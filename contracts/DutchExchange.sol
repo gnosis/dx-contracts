@@ -87,14 +87,14 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         public
     {
         // Make sure contract hasn't been initialised
-        require(ethToken == 0);
+        require(ethToken == 0, "The contract must be uninitialized");
 
         // Validates inputs
-        require(address(_owlToken) != address(0));
-        require(address(_frtToken) != address(0));
-        require(_auctioneer != 0);
-        require(_ethToken != 0);
-        require(address(_ethUSDOracle) != address(0));
+        require(address(_owlToken) != address(0), "The OWL address must be valid");
+        require(address(_frtToken) != address(0), "The FRT address must be valid");
+        require(_auctioneer != 0, "The auctioneer address must be valid");
+        require(_ethToken != 0, "The WETH address must be valid");
+        require(address(_ethUSDOracle) != address(0), "The oracle address must be valid");
 
         frtToken = _frtToken;
         owlToken = _owlToken;
@@ -138,22 +138,22 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         public
     {
         // R1
-        require(token1 != token2);
+        require(token1 != token2, "You cannot add a token pair using the same token");
 
         // R2
-        require(initialClosingPriceNum != 0);
+        require(initialClosingPriceNum != 0, "You must set the numerator for the initial price");
 
         // R3
-        require(initialClosingPriceDen != 0);
+        require(initialClosingPriceDen != 0, "You must set the denominator for the initial price");
 
         // R4
-        require(getAuctionIndex(token1, token2) == 0);
+        require(getAuctionIndex(token1, token2) == 0, "The token pair was already added");
 
         // R5: to prevent overflow
-        require(initialClosingPriceNum < 10 ** 18);
+        require(initialClosingPriceNum < 10 ** 18, "You must set a smaller numerator for the initial price");
 
         // R6
-        require(initialClosingPriceDen < 10 ** 18);
+        require(initialClosingPriceDen < 10 ** 18, "You must set a smaller denominator for the initial price");
 
         setAuctionIndex(token1, token2);
 
@@ -161,10 +161,10 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         token2Funding = min(token2Funding, balances[token2][msg.sender]);
 
         // R7
-        require(token1Funding < 10 ** 30);
+        require(token1Funding < 10 ** 30, "You should use a smaller funding for token 1");
 
         // R8
-        require(token2Funding < 10 ** 30);
+        require(token2Funding < 10 ** 30, "You should use a smaller funding for token 2");
 
         uint fundedValueUSD;
         uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
@@ -187,7 +187,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         }
 
         // R5
-        require(fundedValueUSD >= thresholdNewTokenPair);
+        require(fundedValueUSD >= thresholdNewTokenPair, "You should surplus the threshold for adding token pairs");
 
         // Save prices of opposite auctions
         closingPrices[token1][token2][0] = fraction(initialClosingPriceNum, initialClosingPriceDen);
@@ -258,7 +258,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         sellerBalances[token2][token1][1][msg.sender] = token2FundingAfterFee;
         
         setAuctionStart(token1, token2, WAITING_PERIOD_NEW_TOKEN_PAIR);
-        NewTokenPair(token1, token2);
+        emit NewTokenPair(token1, token2);
     }
 
     function deposit(
@@ -269,13 +269,13 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         returns (uint)
     {
         // R1
-        require(Token(tokenAddress).transferFrom(msg.sender, this, amount));
+        require(Token(tokenAddress).transferFrom(msg.sender, this, amount), "The deposit transaction must succeed");
 
         uint newBal = add(balances[tokenAddress][msg.sender], amount);
 
         balances[tokenAddress][msg.sender] = newBal;
 
-        NewDeposit(tokenAddress, amount);
+        emit NewDeposit(tokenAddress, amount);
 
         return newBal;
     }
@@ -291,7 +291,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         amount = min(amount, usersBalance);
 
         // R1
-        require(amount > 0);
+        require(amount > 0, "The amount must be greater than 0");
 
         // R2
         require(Token(tokenAddress).transfer(msg.sender, amount));
@@ -299,7 +299,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint newBal = sub(usersBalance, amount);
         balances[tokenAddress][msg.sender] = newBal;
 
-        NewWithdrawal(tokenAddress, amount);
+        emit NewWithdrawal(tokenAddress, amount);
 
         return newBal;
     }
@@ -376,7 +376,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             scheduleNextAuction(sellToken, buyToken);
         }
 
-        NewSellOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
+        emit NewSellOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
 
         return (auctionIndex, newSellerBal);
     }
@@ -441,7 +441,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             uint newBuyerBal = add(buyerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
             buyerBalances[sellToken][buyToken][auctionIndex][msg.sender] = newBuyerBal;
             buyVolumes[sellToken][buyToken] = add(buyVolumes[sellToken][buyToken], amountAfterFee);
-            NewBuyOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
+            emit NewBuyOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
         }
 
         // Checking for equality would suffice here. nevertheless:
@@ -488,7 +488,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         if (returned > 0) {
             balances[buyToken][user] = add(balances[buyToken][user], returned);
         }
-        NewSellerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
+        emit NewSellerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
     }
 
     function claimBuyerFunds(
@@ -537,7 +537,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             balances[sellToken][user] = add(balances[sellToken][user], returned);
         }
         
-        NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
+        emit NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
     }
 
     function issueFrts(
@@ -654,7 +654,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             uint usersExtraTokens = extraTokens[primaryToken][secondaryToken][auctionIndex + 1];
             extraTokens[primaryToken][secondaryToken][auctionIndex + 1] = add(usersExtraTokens, fee);
 
-            Fee(primaryToken, secondaryToken, msg.sender, auctionIndex, fee);
+            emit Fee(primaryToken, secondaryToken, msg.sender, auctionIndex, fee);
         }
         
         amountAfterFee = sub(amount, fee);
@@ -792,7 +792,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             scheduleNextAuction(sellToken, buyToken);
         }
 
-        AuctionCleared(sellToken, buyToken, sellVolume, buyVolume, auctionIndex);
+        emit AuctionCleared(sellToken, buyToken, sellVolume, buyVolume, auctionIndex);
     }
 
     function scheduleNextAuction(
@@ -1001,7 +1001,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint auctionStart = now + value;
         uint auctionIndex = latestAuctionIndices[token1][token2];
         auctionStarts[token1][token2] = auctionStart;
-        AuctionStartScheduled(token1, token2, auctionIndex, auctionStart);
+        emit AuctionStartScheduled(token1, token2, auctionIndex, auctionStart);
     }
 
     function resetAuctionStart(

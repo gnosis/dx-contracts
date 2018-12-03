@@ -3,22 +3,27 @@ pragma solidity ^0.4.25;
 
 contract DSAuthority {
     function canCall(
-        address src, address dst, bytes4 sig
-    ) public view returns (bool);
+        address src,
+        address dst,
+        bytes4 sig
+    )
+        public 
+        view 
+        returns (bool);
 }
 
 contract DSAuthEvents {
     event LogSetAuthority (address indexed authority);
-    event LogSetOwner     (address indexed owner);
+    event LogSetOwner (address indexed owner);
 }
 
 contract DSAuth is DSAuthEvents {
     DSAuthority  public  authority;
     address      public  owner;
 
-    function DSAuth() public {
+    constructor () public {
         owner = msg.sender;
-        LogSetOwner(msg.sender);
+        emit LogSetOwner(msg.sender);
     }
 
     function setOwner(address owner_)
@@ -26,7 +31,7 @@ contract DSAuth is DSAuthEvents {
         auth
     {
         owner = owner_;
-        LogSetOwner(owner);
+        emit LogSetOwner(owner);
     }
 
     function setAuthority(DSAuthority authority_)
@@ -34,11 +39,11 @@ contract DSAuth is DSAuthEvents {
         auth
     {
         authority = authority_;
-        LogSetAuthority(authority);
+        emit LogSetAuthority(authority);
     }
 
     modifier auth {
-        require(isAuthorized(msg.sender, msg.sig));
+        require(isAuthorized(msg.sender, msg.sig), "It must be an authorized call");
         _;
     }
 

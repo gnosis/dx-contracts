@@ -7,7 +7,7 @@ contract TokenRDN is GnosisStandardToken {
     string public constant name = "Raiden network tokens";
     uint8 public constant decimals = 18;
 
-    function TokenRDN(
+    constructor(
     	uint amount
     )
     	public 

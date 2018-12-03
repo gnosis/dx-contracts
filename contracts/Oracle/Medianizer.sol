@@ -9,17 +9,17 @@ contract Medianizer is DSValue {
 
     uint96 public min = 0x1;
 
-    function set(address wat) auth {
+    function set(address wat) public auth {
         bytes12 nextId = bytes12(uint96(next) + 1);
         assert(nextId != 0x0);
         set(next, wat);
         next = nextId;
     }
 
-    function set(bytes12 pos, address wat) note auth {
-        if (pos == 0x0) throw;
+    function set(bytes12 pos, address wat) public note auth {
+        require(pos == 0x0, "pos cannot be 0x0");
 
-        if (wat != 0 && indexes[wat] != 0) throw;
+        require(wat != 0 && indexes[wat] != 0, "wat should be valid address and be part of the indexes");
 
         indexes[values[pos]] = 0; // Making sure to remove a possible existing address in that position
 
@@ -30,38 +30,38 @@ contract Medianizer is DSValue {
         values[pos] = wat;
     }
 
-    function setMin(uint96 min_) note auth {
-        if (min_ == 0x0) throw;
+    function setMin(uint96 min_) public note auth {
+        require(min_ == 0x0, "min cannot be 0x0");
         min = min_;
     }
 
-    function setNext(bytes12 next_) note auth {
-        if (next_ == 0x0) throw;
+    function setNext(bytes12 next_) public note auth {
+        require(next_ == 0x0, "next cannot be 0x0");
         next = next_;
     }
 
-    function unset(bytes12 pos) {
+    function unset(bytes12 pos) public {
         set(pos, 0);
     }
 
-    function unset(address wat) {
+    function unset(address wat) public {
         set(indexes[wat], 0);
     }
 
-    function poke() {
+    function poke() public {
         poke(0);
     }
 
-    function poke(bytes32) note {
+    function poke(bytes32) public note {
         (val, has) = compute();
     }
 
-    function compute() constant returns (bytes32, bool) {
+    function compute() public view returns (bytes32, bool) {
         bytes32[] memory wuts = new bytes32[](uint96(next) - 1);
         uint96 ctr = 0;
         for (uint96 i = 1; i < uint96(next); i++) {
             if (values[bytes12(i)] != 0) {
-                var (wut, wuz) = DSValue(values[bytes12(i)]).peek();
+                (bytes32 wut, bool wuz) = DSValue(values[bytes12(i)]).peek();
                 if (wuz) {
                     if (ctr == 0 || wut >= wuts[ctr - 1]) {
                         wuts[ctr] = wut;

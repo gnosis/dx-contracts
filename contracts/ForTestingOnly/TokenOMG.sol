@@ -7,7 +7,7 @@ contract TokenOMG is GnosisStandardToken {
     string public constant name = "OMG Test Token";
     uint8 public constant decimals = 18;
 
-    function TokenOMG(
+    constructor(
     	uint amount
     )
     	public 

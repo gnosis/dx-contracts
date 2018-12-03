@@ -26,8 +26,8 @@ contract EthOracle is AuctioneerManaged, DxMath {
     {         
         require(address(_ethUSDOracle) != address(0));
         newProposalEthUSDOracle = _ethUSDOracle;
-        oracleInterfaceCountdown = add(now, WAITING_PERIOD_CHANGE_ORACLE);
-        NewOracleProposal(_ethUSDOracle);
+        oracleInterfaceCountdown = add(block.timestamp, WAITING_PERIOD_CHANGE_ORACLE);
+        emit NewOracleProposal(_ethUSDOracle);
     }
 
 
@@ -35,8 +35,8 @@ contract EthOracle is AuctioneerManaged, DxMath {
         public
         onlyAuctioneer
     {
-        require(address(newProposalEthUSDOracle) != address(0));
-        require(oracleInterfaceCountdown < now);
+        require(address(newProposalEthUSDOracle) != address(0), "The new proposal must be a valid addres");
+        require(oracleInterfaceCountdown < block.timestamp, "It's not possible to update the oracle during the waiting period");
         ethUSDOracle = newProposalEthUSDOracle;
         newProposalEthUSDOracle = PriceOracleInterface(0);
     }
