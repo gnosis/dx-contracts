@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.25;
 /// price-feed.sol
 
 // Copyright (C) 2017  DappHub, LLC
