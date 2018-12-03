@@ -1,6 +1,6 @@
 {
   "name": "@gnosis.pm/dx-contracts",
-  "version": "2.0.0-RC1",
+  "version": "2.0.0-RC2",
   "description": "DutchX - Gnosis Dutch Auction Trading Platform. This npm package provides all smartcontracts used in the project",
   "scripts": {
     "rpc": "ganache-cli -d --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --defaultBalanceEther '500000000000000000000'",
@@ -31,7 +31,7 @@
   "author": "Gnosis",
   "license": "LGPL-3.0",
   "dependencies": {
-    "@gnosis.pm/owl-token": "^1.3.0-RC3",
+    "@gnosis.pm/owl-token": "^1.3.0-RC4",
     "@gnosis.pm/gno-token": "^1.2.0-RC4",
     "@gnosis.pm/util-contracts": "^1.2.0-RC5"
   },
