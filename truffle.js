@@ -16,9 +16,8 @@ if (!privateKey && !mnemonic) {
 
 // TODO: Uncomment next lines once the project is migrated to truffle5
 // Solidity compiler (solc) config:
-// const solcUseDocker = process.env.SOLC_USE_DOCKER === 'true' || false
-// const solcVersion = '0.4.25'
-const compatibilityTruffle4 = true
+const solcUseDocker = process.env.SOLC_USE_DOCKER === 'true' || false
+const solcVersion = '0.4.24'
 
 // Gas price
 const gasPriceGWei = process.env.GAS_PRICE_GWEI || DEFAULT_GAS_PRICE_GWEI
@@ -37,9 +36,6 @@ module.exports = truffleConfig({
   gas,
   aditionalNetwork,
   optimizedEnabled: true,
-  compatibilityTruffle4
-  /*
   solcUseDocker,
   solcVersion
-  */
 })
