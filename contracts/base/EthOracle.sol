@@ -24,7 +24,7 @@ contract EthOracle is AuctioneerManaged, DxMath {
         public
         onlyAuctioneer
     {         
-        require(address(_ethUSDOracle) != address(0));
+        require(address(_ethUSDOracle) != address(0), "The oracle address must be valid");
         newProposalEthUSDOracle = _ethUSDOracle;
         oracleInterfaceCountdown = add(block.timestamp, WAITING_PERIOD_CHANGE_ORACLE);
         emit NewOracleProposal(_ethUSDOracle);
