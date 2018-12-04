@@ -293,12 +293,11 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         // R1
         require(amount > 0, "The amount must be greater than 0");
 
-        // R2
-        require(Token(tokenAddress).transfer(msg.sender, amount));
-
         uint newBal = sub(usersBalance, amount);
         balances[tokenAddress][msg.sender] = newBal;
 
+        // R2
+        require(Token(tokenAddress).transfer(msg.sender, amount), "The withdraw transfer must succeed");
         emit NewWithdrawal(tokenAddress, amount);
 
         return newBal;
