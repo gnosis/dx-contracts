@@ -9,8 +9,7 @@ async function migrate ({
   web3,
   thresholdNewTokenPairUsd = DEFAULT_THRESHOLD_NEW_TOKEN_PAIR_USD,
   thresholdAuctionStartUsd = DEFAULT_THRESHOLD_AUCTION_START_USD
-}) {
-  const BN = web3.utils.BN
+}) {  
   const owner = accounts[0]
   const TokenFRT = artifacts.require('TokenFRT')
   const DutchExchange = artifacts.require('DutchExchange')
@@ -50,19 +49,18 @@ async function migrate ({
   console.log('\t Threshold for new token pair: %s', thresholdNewTokenPairUsd)
   console.log('\t Threshold for auction to start: %s', thresholdAuctionStartUsd)
 
+  const BN = web3.utils.BN
   await dx.setupDutchExchange(
     frtAddress,
     owlAddress,
     owner,
     wethAddress,
-    oracleAddress,
+    oracleAddress,    
     web3.utils.toWei(
-      new BN(thresholdNewTokenPairUsd),
-      'ether'
+      new BN(thresholdNewTokenPairUsd)
     ),
     web3.utils.toWei(
-      new BN(thresholdAuctionStartUsd),
-      'ether'
+      new BN(thresholdAuctionStartUsd)
     )
   )
 }

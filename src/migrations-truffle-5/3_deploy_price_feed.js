@@ -51,11 +51,9 @@ async function migrate ({
 
     const BN = web3.utils.BN
     const ethUsdPriceWei = web3.utils.toWei(
-      new BN(ethUsdPrice),
-      'ether'
+      new BN(ethUsdPrice)
     )
-    console.log(priceFeed)
-    priceFeed.post(
+    await priceFeed.post(
       ethUsdPriceWei,
       expireTime,
       medianizer.address
