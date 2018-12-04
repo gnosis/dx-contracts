@@ -1,32 +1,42 @@
-/*
-eslint no-console:0,
-no-confusing-arrow:0,
-no-unused-expressions:0,
-*/
 // `truffle test --silent` or `truffle test -s` to suppress logs
+const BigNumber = require('bignumber.js')
+
 const {
   silent,
   contract: contractFlag,
   gas: gasLog,
   gasTx,
-  noevents,
+  noevents
 } = require('minimist')(process.argv.slice(2), { alias: { silent: 's', contract: 'c', gas: 'g', gasTx: 'gtx' } })
 
 const log = silent ? () => {} : console.log.bind(console)
-const logger = (desc, fn) => log(`---- \n => ${desc} ${fn ? `|| - - - - - - - - - -  - > ${fn}` : ''}`)
+const logger = async (desc, fn) => {
+  if (!silent) {
+    let value
+    if (fn instanceof Promise) {
+      value = await fn
+    } else {
+      value = fn
+    }
+    if (value instanceof BigNumber) {
+      value = value.toNumber()
+    }
+
+    log(`---- \n => ${desc} ${value ? `|| - - - - - - - - - - - > ${value}` : ''}`)
+  }
+}
 
 const varLogger = (varName, varValue) => log(varName, '--->', varValue)
-
 
 /**
  * gasLogWrapper
  * @param {*} obj
  */
 let totalGas = 0
-const gasLogWrapper = (contracts) => {
+const gasLogWrapper = contracts => {
   const handler = {
     // intercept all GETS to contracts
-    get(target, propKey) {
+    get (target, propKey) {
       const origMethod = target[propKey]
       // if prompted prop !== a FUNCTION return prop
       if (typeof origMethod !== 'function' || !origMethod.sendTransaction) {
@@ -35,7 +45,7 @@ const gasLogWrapper = (contracts) => {
       // go one level deeper into actual METHOD - here access to (.call, .apply etc)
       return new Proxy(origMethod, {
         // called if @transaction function
-        async apply(target, thisArg, argumentsList) {
+        async apply (target, thisArg, argumentsList) {
           const result = await Reflect.apply(target, thisArg, argumentsList)
           // safeguards against constant functions and BigNumber returns
           if (typeof result !== 'object' || !result.receipt) return result
@@ -49,12 +59,16 @@ const gasLogWrapper = (contracts) => {
           `)
           totalGas += gasUsed
           return result
-        },
+        }
       })
-    },
+    }
   }
 
-  return contracts.map(c => new Proxy(c, handler))
+  if (silent) {
+    return contracts
+  } else {
+    return contracts.map(c => new Proxy(c, handler))
+  }
 }
 
 /**
