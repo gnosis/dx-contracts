@@ -380,11 +380,11 @@ contract DutchExchange is Proxied {
         // R1
         require(amount > 0);
 
-        // R2
-        require(Token(tokenAddress).transfer(msg.sender, amount));
-
         uint newBal = sub(usersBalance, amount);
         balances[tokenAddress][msg.sender] = newBal;
+
+        // R2
+        require(Token(tokenAddress).transfer(msg.sender, amount));
 
         NewWithdrawal(tokenAddress, amount);
 
