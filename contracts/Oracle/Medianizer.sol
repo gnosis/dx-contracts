@@ -20,7 +20,7 @@ contract Medianizer is DSValue {
         require(pos != 0x0, "pos cannot be 0x0");
         require(wat == 0 || indexes[wat] == 0, "wat is not defined or it has an index");
 
-        indexes[values[pos]] = 0; // Making sure to remove a possible existing address in that position
+        indexes[values[pos]] = bytes12(0); // Making sure to remove a possible existing address in that position
 
         if (wat != 0) {
             indexes[wat] = pos;

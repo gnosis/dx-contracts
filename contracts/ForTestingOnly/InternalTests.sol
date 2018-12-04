@@ -24,7 +24,7 @@ contract InternalTests is DutchExchange {
         PriceOracleInterface _ETHUSDOracle,
         uint _thresholdNewTokenPair,
         uint _thresholdNewAuction
-    )
+    ) public
     {
     setupDutchExchange( 
           _FRT,
