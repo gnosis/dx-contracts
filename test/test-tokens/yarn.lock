@@ -2586,9 +2586,9 @@ slash@^1.0.0:
   resolved "https://registry.yarnpkg.com/slash/-/slash-1.0.0.tgz#c41f2f6c39fc16d1cd17ad4b5d896114ae470d55"
   integrity sha1-xB8vbDn8FtHNF61LXYlhFK5HDVU=
 
-solc@0.4.21:
-  version "0.4.21"
-  resolved "https://registry.yarnpkg.com/solc/-/solc-0.4.21.tgz#6a7ecd505bfa0fc268330d5de6b9ae65c8c68264"
+solc@0.4.25:
+  version "0.4.25"
+  resolved "https://registry.yarnpkg.com/solc/-/solc-0.4.25.tgz#6a7ecd505bfa0fc268330d5de6b9ae65c8c68264"
   integrity sha512-8lJmimVjOG9AJOQRWS2ph4rSctPMsPGZ4H360HLs5iI+euUlt7iAvUxSLeFZZzwk0kas4Qta7HmlMXNU3yYwhw==
   dependencies:
     fs-extra "^0.30.0"
@@ -2832,7 +2832,7 @@ truffle@4.1.5:
   dependencies:
     mocha "^3.4.2"
     original-require "^1.0.1"
-    solc "0.4.21"
+    solc "0.4.25"
 
 tunnel-agent@^0.6.0:
   version "0.6.0"

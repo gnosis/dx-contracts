@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 /// price-feed.sol
 
 // Copyright (C) 2017  DappHub, LLC
@@ -21,13 +21,13 @@ contract PriceFeed is DSThing {
     function peek() public view
         returns (bytes32, bool)
     {
-        return (bytes32(val), now < zzz);
+        return (bytes32(val), block.timestamp < zzz);
     }
 
     function read() public view
         returns (bytes32)
     {
-        assert(now < zzz);
+        assert(block.timestamp < zzz);
         return bytes32(val);
     }
 
