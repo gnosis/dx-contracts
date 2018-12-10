@@ -1332,7 +1332,12 @@ const c2 = () => contract('DX MGN Flow --> ERC20:ERC20 --> 1 S + 1B', (accounts)
     assert.equal(seller1Balance, startingGNO, `Seller1 should have balance of ${startingGNO.toEth()}`)
     assert.equal(seller2Balance, startingGNO, `Seller2 should have balance of ${startingGNO.toEth()}`)
     // Assert GNO2 balance is NOT 0
-    await Promise.all(participants.map(async acc => assert.isAbove(await dx.balances.call(gno2.address, acc), 0, 'Should not have 0 balance')))
+    const gno2AddressBalancesPromises = participants.map(async account => {
+      const balance = await dx.balances.call(gno2.address, account)
+      assert.isAbove( balance.toNumber(), 0, 'Should not have 0 balance')
+    }
+    )
+    await Promise.all(gno2AddressBalancesPromises)
 
     /*
      * SUB TEST 3: assert both eth and gno get approved by DX

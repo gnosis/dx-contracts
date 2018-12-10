@@ -13,15 +13,11 @@
 
 # DutchX - Smart Contracts
 
-The **DutchX** is a fully decentralized trading protocol, which
-allows **anyone** to add any trading token pair.
+The **DutchX** is a fully decentralized trading protocol ("the Protocol"), which allows **anyone** to add any token pair. The only requirement is for tokens to be [ERC20](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md) compliant.
 
-It uses the [Dutch auction] principle, to prevent the problems that
-other exchanges are experiencing (such as front running) getting a
-fairer ecosystem for everyone to use.
+It uses the Dutch auction principle to prevent the problems prevalent at other exchanges (e.g. front running) to facilitate the development of a fairer Web3 ecosystem for everyone.
 
-There is no restriction besides the fact that tokens must be
-[ERC20](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md) compliant.
+Please note that depending on how you use this Program, you may be required to satisfy additional local law requirements, which may include but are not limited to instating KYC/AML procedures and gaining legal authorisations from applicable regulators.
 
 # Documentation
 Checkout the [DutchX Documentation](http://dutchx.readthedocs.io/en/latest).
@@ -135,14 +131,11 @@ Go to Etherscan validation page:
 * Press validate
 
 # License
-This Program (as defined by the [GNU Lesser General Public License](./LICENSE.md)) is made available on
- an as-is basis open source under the GNU General Public License and by doing so
- , no personal data is collected, used, stored, disclosed or secured by the
- creators. Depending on how you use this Program, you may be required to provide
-  and apply an appropriate privacy policy to comply with law.
+This Program (as defined by the [GNU Lesser General Public License](./LICENSE.md)) is made available on an as-is basis open source under the GNU Lesser General Public License and by doing so, no personal data is collected, used, stored, disclosed or secured by the creators. Depending on how you use this Program, you may be required to provide and apply an appropriate privacy policy to comply with law.
 
-An API gathers publicly available data from the Ethereum blockchain on the usage
- of this Program.
+An API gathers publicly available data from the Ethereum blockchain on the usage of this Program.
+
+Please note that where you use the Program to auction off a token and no one participates on the bid side of the  auction within a 24 hour period, the token to be sold will be valued at zero. Therefore, we recommend that you also ensure liquidity for the bid-side. 
 
 # Contributors
 - Dominik ([dteiml](https://github.com/dteiml))
