@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 /*
 This contract is the interface between the MakerDAO priceFeed and our DX platform.
@@ -17,13 +17,13 @@ contract PriceOracleInterface {
 
     // Modifiers
     modifier onlyOwner() {
-        require(msg.sender == owner);
+        require(msg.sender == owner, "Only the owner can do the operation");
         _;
     }
 
     /// @dev constructor of the contract
     /// @param _priceFeedSource address of price Feed Source -> should be maker feeds Medianizer contract
-    function PriceOracleInterface(
+    constructor(
         address _owner,
         address _priceFeedSource
     )
@@ -61,12 +61,9 @@ contract PriceOracleInterface {
         if(emergencyMode){
             return 600;
         }
-
-        bytes32 price;
-        bool valid=true;
-        (price, valid) = Medianizer(priceFeedSource).peek();
+        (bytes32 price, bool valid) = Medianizer(priceFeedSource).peek();
         if (!valid) {
-            NonValidPriceFeed(priceFeedSource);
+            emit NonValidPriceFeed(priceFeedSource);
         }
         // ensuring that there is no underflow or overflow possible,
         // even if the price is compromised
