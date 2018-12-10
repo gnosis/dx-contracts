@@ -1,8 +1,8 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
-import "@gnosis.pm/util-contracts/contracts/StandardToken.sol";
+import "@gnosis.pm/util-contracts/contracts/GnosisStandardToken.sol";
 
-contract TestToken is StandardToken {
+contract TestToken is GnosisStandardToken {
     address public minter;
     string public symbol;
     string public name;
@@ -13,7 +13,7 @@ contract TestToken is StandardToken {
         _;
     }
 
-    function TestToken(string _symbol, string _name, uint8 _decimals, uint amount) public {
+    constructor (string _symbol, string _name, uint8 _decimals, uint amount) public {
       minter = msg.sender;
       symbol = _symbol;
       name = _name;

@@ -1,8 +1,8 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
 
 contract DutchExchangeProxy is Proxy {
-  function DutchExchangeProxy(address _masterCopy) Proxy (_masterCopy) {
-  }
+    constructor(address _masterCopy) Proxy (_masterCopy) public {
+    }
 }

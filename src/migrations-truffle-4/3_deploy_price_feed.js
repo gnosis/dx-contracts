@@ -20,7 +20,8 @@ function migrate ({
     console.log(`Deploying Maker Dao feed contracts, because they weren published in network "${network}" yet`)
     // Deployment of PriceFeedInfrastructure
     return deployer
-      .deploy([ PriceFeed, Medianizer ])
+      .deploy(PriceFeed)
+      .then(() => deployer.deploy(Medianizer))
       .then(() => deployer.deploy(PriceOracleInterface, account, Medianizer.address))
       .then(() => Medianizer.deployed())
       .then(medianizer => medianizer.set(PriceFeed.address, { from: account }))

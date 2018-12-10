@@ -1,10 +1,50 @@
 {
+  "Migrations": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0x3fee2f347628b2aea0588c5c6f34e9e3e9d20604",
+      "transactionHash": "0xcc49cb1456fbc7beaf1278952577ef84ec46c5efd5bf61c410e09444547faa28"
+    }
+  },
+  "TokenDAI": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0x1638578de407719a486db086b36b53750db0199e",
+      "transactionHash": "0xda8f1054ec6829789b2180a77be255b2ad976517b190862120ae28dc7979362e"
+    }
+  },
+  "TokenGEN": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0xA1F34744C80e7a9019a5Cd2Bf697F13DF00F9773",
+      "transactionHash": "0x1619011f643a3a0ecd32d5d9fc348c72060710acbe264c91284d98f296475b58"
+    }
+  },
+  "TokenKNC": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0xe99211284c54643f4363250b76d078ff0128c8de",
+      "transactionHash": "0x3670f355266ffeb226b449ea8c05f5c90646b3f3fc45452a52a9a50a9f9f6fc5"
+    }
+  },
+  "TokenMKR": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0xe315cb6fa401092a7ecc92f05c62d05a974012f4",
+      "transactionHash": "0x6e6ae370a6ffbb18fd62c26ad02a7b32a67f0a3ccf84fb90397d4c218de80839"
+    }
+  },
   "TokenOMG": {
     "4": {
       "events": {},
       "links": {},
-      "address": "0x00df91984582e6e96288307e9c2f20b38c8fece9",
-      "transactionHash": "0x423816d0a4a72568b7371c8232e12f61c894198d419ac2ab28e46b3b723a549d"
+      "address": "0x06713c5fee26237c9de719f42299bccc3d8a2748",
+      "transactionHash": "0xc8e7871e6e7c8dbfc49b3dd8d8a087cb8fc25f46173d6393401616e16c76d27c"
     },
     "42": {
       "events": {},
@@ -17,8 +57,8 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0x3615757011112560521536258c1e7325ae3b48ae",
-      "transactionHash": "0x41eb07f89a71e8a1b3a7237bc3d9a350dcba58f777ed61fdb3da9073454b6796"
+      "address": "0xb44fac8f17436b2364ff4860f33817c68c6ad6c1",
+      "transactionHash": "0x44227c36a607b03a4f56f4951d32eab0e9491253037c8f056628e85c6d7fe3e6"
     },
     "42": {
       "events": {},

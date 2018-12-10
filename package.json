@@ -1,6 +1,6 @@
 {
   "name": "@gnosis.pm/dx-contracts",
-  "version": "1.0.7",
+  "version": "2.0.0-RC3",
   "description": "DutchX - Gnosis Dutch Auction Trading Platform. This npm package provides all smartcontracts used in the project",
   "scripts": {
     "rpc": "ganache-cli -d --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --defaultBalanceEther '500000000000000000000'",
@@ -29,33 +29,32 @@
     "url": "https://github.com/gnosis/dx-contracts.git"
   },
   "author": "Gnosis",
-  "license": "LGPL-3",
+  "license": "LGPL-3.0",
   "dependencies": {
-    "@gnosis.pm/gno-token": "^1.0.1",
-    "@gnosis.pm/owl-token": "^1.1.2",
-    "@gnosis.pm/util-contracts": "^1.0.2"
+    "@gnosis.pm/gno-token": "^1.2.0-RC6",
+    "@gnosis.pm/owl-token": "^1.4.0-RC2",
+    "@gnosis.pm/util-contracts": "^1.2.0-RC5"
   },
   "devDependencies": {
     "@digix/tempo": "^0.2.0",
     "bignumber.js": "^5.0.0",
-    "coveralls": "^3.0.1",
+    "coveralls": "^3.0.2",
     "decimal.js": "^7.2.3",
     "decode-eth": "^0.1.2",
     "diff": "3.4.0",
-    "eslint": "^4.19.1",
-    "eslint-config-standard": "^11.0.0",
-    "eslint-plugin-import": "^2.11.0",
-    "eslint-plugin-node": "^6.0.0",
-    "eslint-plugin-promise": "^3.7.0",
-    "eslint-plugin-standard": "^3.1.0",
+    "dotenv": "^6.1.0",
+    "eslint": "^5.9.0",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-node": "^8.0.0",
+    "eslint-plugin-promise": "^4.0.1",
+    "eslint-plugin-standard": "^4.0.0",
     "minimist": "^1.2.0",
     "solidity-coverage": "^0.5.4",
-    "truffle": "4.1.5",
-    "truffle-contract": "^3.0.5",
+    "truffle": "^4.1.14",
+    "truffle-contract": "^3.0.6",
     "truffle-flattener": "^1.2.5",
-    "truffle-hdwallet-provider": "0.0.5",
-    "truffle-hdwallet-provider-privkey": "^0.3.0",
-    "web3": "^0.20.2",
+    "truffle-hdwallet-provider": "0.0.6",
     "yargs": "^11.0.0"
   }
 }
