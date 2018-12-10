@@ -1,4 +1,3 @@
-//
 // This file tests all the states and their interaction as outlined here:
 // https://drive.google.com/drive/folders/0ByHhiGx-ltJZczhjZHhHeGpHcHM
 // States are generated with the function getIntoState and
@@ -6,10 +5,6 @@
 // https://drive.google.com/drive/folders/10_j3bMx6YngR0xKn5PXXiF1_Bi1eqeMR
 // checkState is only a rough check for right updates of the numbers in the smart contract. It allows a big tolerance (Maxrounding error)
 // since there are unpredicted timejumps with an evm_increase time
-
-
-/* eslint no-console:0, max-len:0, no-plusplus:0, no-mixed-operators:0, no-trailing-spaces:0 */
-
 
 const {
   eventWatcher,
@@ -74,8 +69,8 @@ const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVo
   let difference = Math.abs(getAuctionStart.toNumber() - auctionStart)
   assert.isAtMost(difference, 2, 'time difference bigger than 1 sec')
 
-  assert.equal(getSellVolumesCurrent.toNumber(), sellVolumesCurrent, ' current SellVolume not correct')
-  assert.equal(getSellVolumesNext.toNumber(), sellVolumesNext, 'sellVOlumeNext is incorrect')
+  assert.equal(getSellVolumesCurrent.toNumber(), sellVolumesCurrent, 'current SellVolume not correct')
+  assert.equal(getSellVolumesNext.toNumber(), sellVolumesNext, 'sellVolumeNext is incorrect')
   difference = Math.abs(getBuyVolumes.toNumber() - buyVolumes)
   logger('buyVolumes', buyVolumes)
   logger(getBuyVolumes.toNumber())
@@ -183,7 +178,7 @@ const getIntoState = async (state, accounts, ST, BT) => {
         5.0.toWei(),
         2,
         1,
-        { from: seller1 },
+        { from: seller1 }
       )
 
       assert.equal(0, await getState(eth, gno))
@@ -198,7 +193,7 @@ const getIntoState = async (state, accounts, ST, BT) => {
         0,
         2,
         1,
-        { from: seller1 },
+        { from: seller1 }
       )
 
       assert.equal(1, await getState(eth, gno))
@@ -334,14 +329,14 @@ const setupContracts = async () => {
   ({
     DutchExchange: dx,
     EtherToken: eth,
-    TokenGNO: gno,
+    TokenGNO: gno
   } = contracts)
 }
 const startBal = {
   startingETH: 100.0.toWei(),
   startingGNO: 100.0.toWei(),
   ethUSDPrice: 1000.0.toWei(),
-  sellingAmount: 50.0.toWei(), // Same as web3.toWei(50, 'ether')
+  sellingAmount: 50.0.toWei() // Same as web3.toWei(50, 'ether')
 }
 
 //
@@ -353,7 +348,7 @@ const startBal = {
 //
 //
 
-contract('DutchExchange - stateTransitions', (accounts) => {
+contract('DutchExchange - stateTransitions', accounts => {
   const [master, seller1, seller2, buyer1, buyer2, seller3] = accounts
 
   afterEach(gasLogger)
@@ -703,7 +698,8 @@ contract('DutchExchange - stateTransitions', (accounts) => {
       await checkInvariants(balanceInvariant, accounts, [eth, gno])
     })
 
-    it('postBuyOrder - posting a buyOrder to get into S1', async () => {
+    // TODO review: State 1 should be imposible now as is mandatory to fill both auction sides
+    it.skip('postBuyOrder - posting a buyOrder to get into S1', async () => {
       const auctionIndex = await getAuctionIndex()
       await setAndCheckAuctionStarted(eth, gno)
       await postSellOrder(eth, gno, auctionIndex + 1, 10.0.toWei() * 3, seller1)
@@ -925,16 +921,24 @@ contract('DutchExchange - stateTransitions', (accounts) => {
 //
 //
 
-  describe('DutchExchange - Stage S7 -  both auction are closed theoretical with vol=0 in one auction', () => {
-    beforeEach(async () => {
+  describe.only('DutchExchange - Stage S7 -  both auction are closed theoretical with vol=0 in one auction', () => {
+    before(async () => {
       currentSnapshotId = await makeSnapshot()
 
       // getting into the right state
       await getIntoState(7, accounts, eth, gno)
     })
 
-    afterEach(async () => {
+    after(async () => {
       await revertSnapshot(currentSnapshotId)
+    })
+
+    beforeEach(async () => {
+      localSnapshotId = await makeSnapshot()
+    })
+
+    afterEach(async () => {
+      await revertSnapshot(localSnapshotId)
     })
 
     it('postBuyOrder - posting a buyOrder clearing non-theoretical closed auction getting into S5', async () => {
@@ -967,7 +971,8 @@ contract('DutchExchange - stateTransitions', (accounts) => {
       await checkInvariants(balanceInvariant, accounts, [eth, gno])
     })
 
-    it('postBuyOrder - posting a buyOrder clearing non-theoretical closed auction getting into S1', async () => {
+    // TODO review: State 1 should be imposible now as is mandatory to fill both auction sides
+    it.skip('postBuyOrder - posting a buyOrder clearing non-theoretical closed auction getting into S1', async () => {
       const auctionIndex = await getAuctionIndex()
       await setAndCheckAuctionStarted(eth, gno)
 
@@ -987,11 +992,10 @@ contract('DutchExchange - stateTransitions', (accounts) => {
       await setAndCheckAuctionStarted(eth, gno)
 
       await postSellOrder(gno, eth, 0, 10.0.toWei() * 3, seller2)
-
       await postSellOrder(eth, gno, 0, 10.0.toWei() * 3, seller2)
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.5)
-      // clearing first auction
 
+      // clearing first auction
       const newAuctionStart = timestamp() + 60 * 10
       await postBuyOrder(eth, gno, auctionIndex, 10.0.toWei() * 3, buyer1)
       // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
@@ -1126,6 +1130,14 @@ contract('DutchExchange - stateTransitions', (accounts) => {
       await revertSnapshot(currentSnapshotId)
     })
 
+    beforeEach(async () => {
+      localSnapshotId = await makeSnapshot()
+    })
+
+    afterEach(async () => {
+      await revertSnapshot(localSnapshotId)
+    })
+
     it('postBuyOrder - posting a buyOrder should fail', async () => {
       const auctionIndex = await getAuctionIndex()
       // clearing first auction
@@ -1145,37 +1157,25 @@ contract('DutchExchange - stateTransitions', (accounts) => {
       assert.equal(5, await getState(eth, gno))
       await checkInvariants(balanceInvariant, accounts, [eth, gno])
     })
-  })
 
-  describe('DutchExchange - Stage S5 -  waiting to reach the threshold', () => {
-    beforeEach(async () => {
-      currentSnapshotId = await makeSnapshot()
-
-      // getting into the right state
-      await getIntoState(5, accounts, eth, gno)
-    })
-
-    afterEach(async () => {
-      await revertSnapshot(currentSnapshotId)
-    })
-
-    it('postSellOrder - posting a SellOrders and switch to S0', async () => {
+    it('postSellOrder - posting SellOrders for both sides and switch to S0', async () => {
       const auctionIndex = await getAuctionIndex()
 
-      await setAndCheckAuctionStarted(eth, gno)
-      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+      // await setAndCheckAuctionStarted(eth, gno)
+      // await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
       // clearing first auction
-      await postSellOrder(gno, eth, auctionIndex, ether / 10, seller1)
+      await postSellOrder(eth, gno, auctionIndex, 10.0.toWei(), seller1)
+      await postSellOrder(gno, eth, auctionIndex, 10.0.toWei() * 10, seller2)
       const newAuctionStart = timestamp() + 60 * 10
-      await postSellOrder(eth, gno, 0, 10.0.toWei() * 30, seller2)
       // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-      await checkState(2, newAuctionStart, valMinusFee(ether / 10), 0, 0, 0, 0, gno, eth, 1)
+      await checkState(2, newAuctionStart, valMinusFee(10.0.toWei()), 0, 0, 0, 0, eth, gno, 1)
       assert.equal(0, await getState(eth, gno))
       await checkInvariants(balanceInvariant, accounts, [eth, gno])
     })
 
-    it('postBuyOrder - posting a SellOrders and switch to S1', async () => {
-      await setAndCheckAuctionStarted(eth, gno)
+    // TODO review: State 1 should be imposible now as is mandatory to fill both auction sides
+    it.skip('postBuyOrder - posting a SellOrder and switch to S1', async () => {
+      // await setAndCheckAuctionStarted(eth, gno)
 
       const newAuctionStart = timestamp() + 60 * 10
       await postSellOrder(eth, gno, 0, 10.0.toWei(), seller3)
@@ -1187,5 +1187,4 @@ contract('DutchExchange - stateTransitions', (accounts) => {
       await checkInvariants(balanceInvariant, accounts, [eth, gno])
     })
   })
-
 })
