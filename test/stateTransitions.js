@@ -139,7 +139,11 @@ const getState = async (ST, BT) => {
     return 1
   }
 
-  if (isOppAuctionTheoreticalClosed && isAuctionTheoreticalClosed && !isOppAuctionClosed && !isAuctionClosed) { return 4 }
+  if (isOppAuctionTheoreticalClosed && isAuctionTheoreticalClosed &&
+    !isOppAuctionClosed && !isAuctionClosed) {
+    return 4
+  }
+
   // check for state 2 and 6
   if (isOppAuctionClosed || isAuctionClosed) {
     if (isAuctionClosed && !isOppAuctionTheoreticalClosed) {
@@ -373,7 +377,6 @@ contract('DutchExchange - stateTransitions', accounts => {
       currentSnapshotId = await makeSnapshot()
 
       await getIntoState(0, accounts, eth, gno)
-      assert.equal(0, await getState(eth, gno))
     })
 
     after(async () => {
@@ -426,21 +429,6 @@ contract('DutchExchange - stateTransitions', accounts => {
       ])
       assert.equal(0, state)
     })
-  })
-
-  // FIXME this tests are not stateless
-  // The second fails if state is reset after first ends
-  describe('DutchExchange - Stage S0 - Auction is running with v>0 in both auctions', () => {
-    before(async () => {
-      currentSnapshotId = await makeSnapshot()
-
-      await getIntoState(0, accounts, eth, gno)
-      assert.equal(0, await getState(eth, gno))
-    })
-
-    after(async () => {
-      await revertSnapshot(currentSnapshotId)
-    })
 
     it('postBuyOrder - posting a buyOrder and stay in S0', async () => {
       const auctionIndex = await getAuctionIndex()
@@ -464,8 +452,8 @@ contract('DutchExchange - stateTransitions', accounts => {
 
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
 
-      // post buyOrder to clear auction with small overbuy
-      await postBuyOrder(eth, gno, auctionIndex, (10.0.toWei()), buyer1)
+      // post buyOrder to clear auction with overbuy
+      await postBuyOrder(eth, gno, auctionIndex, (20.0.toWei()), buyer1)
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.9)
 
       assert.equal(3, await getState(eth, gno))
@@ -487,7 +475,6 @@ contract('DutchExchange - stateTransitions', accounts => {
       currentSnapshotId = await makeSnapshot()
 
       await getIntoState(1, accounts, eth, gno)
-      assert.equal(1, await getState(eth, gno))
     })
 
     after(async () => {
@@ -559,21 +546,6 @@ contract('DutchExchange - stateTransitions', accounts => {
       ])
       assert.equal(1, state)
     })
-  })
-
-  // FIXME this tests are not stateless
-  // The second fails if state is reset after first ends
-  describe('DutchExchange - Stage S1 - Auction is running with v == 0 in one auctions', () => {
-    before(async () => {
-      currentSnapshotId = await makeSnapshot()
-
-      // getting into the right state
-      await getIntoState(1, accounts, eth, gno)
-    })
-
-    after(async () => {
-      await revertSnapshot(currentSnapshotId)
-    })
 
     it('postBuyOrder - posting a buyOrder and stay in S1', async () => {
       const auctionIndex = await getAuctionIndex()
@@ -601,7 +573,7 @@ contract('DutchExchange - stateTransitions', accounts => {
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
 
       // post buyOrder to clear auction with small overbuy
-      await postBuyOrder(eth, gno, auctionIndex, (10.0.toWei()), buyer1)
+      await postBuyOrder(eth, gno, auctionIndex, (20.0.toWei()), buyer1)
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.9)
 
       assert.equal(7, await getState(eth, gno))
