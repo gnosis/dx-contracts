@@ -1,7 +1,3 @@
-
-/* eslint no-console:0, max-len:0, no-plusplus:0, no-mixed-operators:0, no-trailing-spaces:0 */
-
-
 /*
 MGN token issuing will not be covered in these tests, as they are covered in the magnolia testing scripts
 */
@@ -23,7 +19,7 @@ const {
   waitUntilPriceIsXPercentOfPreviousPrice,
   setAndCheckAuctionStarted,
   postBuyOrder,
-  postSellOrder,
+  postSellOrder
 } = require('./testFunctions')
 
 // Test VARS
@@ -35,24 +31,23 @@ let contracts
 
 const valMinusFee = amount => amount - (amount / 200)
 
-
 const setupContracts = async () => {
   contracts = await getContracts();
   // destructure contracts into upper state
   ({
     DutchExchange: dx,
     EtherToken: eth,
-    TokenGNO: gno,
+    TokenGNO: gno
   } = contracts)
 }
 const startBal = {
   startingETH: 90.0.toWei(),
   startingGNO: 90.0.toWei(),
   ethUSDPrice: 1008.0.toWei(),
-  sellingAmount: 50.0.toWei(), // Same as web3.toWei(50, 'ether')
+  sellingAmount: 50.0.toWei() // Same as web3.toWei(50, 'ether')
 }
 
-contract('DutchExchange - claimBuyerFunds', (accounts) => {
+contract('DutchExchange - claimBuyerFunds', accounts => {
   const [, seller1, seller2, buyer1, buyer2] = accounts
   const totalSellAmount2ndAuction = 10e18
 
@@ -84,7 +79,7 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
         0,
         2,
         1,
-        { from: seller1 },
+        { from: seller1 }
       )
     })
 
@@ -181,13 +176,13 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
         0,
         2,
         1,
-        { from: seller1 },
+        { from: seller1 }
       )
     })
 
-    afterEach(async () => {
-      await revertSnapshot(currentSnapshotId)
-    })
+    // afterEach(async () => {
+    //   await revertSnapshot(currentSnapshotId)
+    // })
 
     it('5. check right amount of coins is returned by claimBuyerFunds if auction is  not closed, but closed theoretical ', async () => {
       // prepare test by starting and clearning new auction
@@ -255,10 +250,10 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
       const [num, den] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex))
       await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)
       assert.equal(((bn(valMinusFee(10e18)).div(num).mul(den)).add(extraTokensAvailable.div(2)))
-      .toNumber(), claimedAmount)
+        .toNumber(), claimedAmount)
     })
 
-    it('8. check that the acutal accounting of balances is done correctly', async () => {
+    it('8. check that the actual accounting of balances is done correctly', async () => {
       // prepare test by starting and clearning new auction
       let auctionIndex = await getAuctionIndex()
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
@@ -278,11 +273,76 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
       const [num, den] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex))
       await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)
       assert.equal(((bn(valMinusFee(10e18)).div(num).mul(den)).add(extraTokensAvailable.div(2)))
-      .toNumber(), claimedAmount)
+        .toNumber(), claimedAmount)
 
       // check that the token balances have been manipulated correctly
       await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)
       assert.equal((balanceOfBuyer1.add(claimedAmount)).toNumber(), (await dx.balances.call(eth.address, buyer1)).toNumber())
+    })
+
+    it('9. should claim from several auctions as a buyer', async () => {
+      // prepare test by starting and clearning new auction
+      let auctionIndex = await getAuctionIndex()
+      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
+      await postBuyOrder(eth, gno, auctionIndex, 2 * 10e18, buyer1)
+      await postSellOrder(eth, gno, 0, 10e18, seller1)
+
+      auctionIndex = await getAuctionIndex()
+      assert.equal(auctionIndex, 2)
+      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.6)
+      await postBuyOrder(eth, gno, auctionIndex, 10e18, buyer1)
+      await postBuyOrder(eth, gno, auctionIndex, 10e18, buyer2)
+      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.6)
+      await postBuyOrder(eth, gno, auctionIndex, 10e18, buyer2)
+      const balanceOfBuyer1 = await dx.balances.call(eth.address, buyer1)
+      // We have to repeat addresses because we can't pass multilevel array for indices
+      const [claimableAmounts] = (await dx.claimTokensFromSeveralAuctionsAsBuyer.call(
+        [eth.address, eth.address], [gno.address, gno.address], [1, 2], buyer1)).map(
+        result => {
+          return result.map(value => value.toNumber())
+        }
+      )
+      const claimedAmounts = claimableAmounts.reduce((acc, amount) => {
+        return acc + amount
+      }, 0)
+      // check that the token balances have been manipulated correctly
+      await dx.claimTokensFromSeveralAuctionsAsBuyer(
+        [eth.address, eth.address], [gno.address, gno.address], [1, 2], buyer1)
+      assert.equal(balanceOfBuyer1.add(claimedAmounts).toNumber(), (await dx.balances.call(eth.address, buyer1)).toNumber())
+    })
+
+    it('10. should claim and withdraw from several auctions as a buyer', async () => {
+      // prepare test by starting and clearning new auction
+      let auctionIndex = await getAuctionIndex()
+      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
+      await postBuyOrder(eth, gno, auctionIndex, 2 * 10e18, buyer1)
+      await postSellOrder(eth, gno, 0, 10e18, seller1)
+
+      auctionIndex = await getAuctionIndex()
+      assert.equal(auctionIndex, 2)
+      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.6)
+      await postBuyOrder(eth, gno, auctionIndex, 10e18, buyer1)
+      await postBuyOrder(eth, gno, auctionIndex, 10e18, buyer2)
+      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.6)
+      await postBuyOrder(eth, gno, auctionIndex, 10e18, buyer2)
+      const balanceOfBuyer1 = await dx.balances.call(eth.address, buyer1)
+      const notDepositedBalanceOfBuyer1 = await eth.balanceOf.call(buyer1)
+      // We have to repeat addresses because we can't pass multilevel array for indices
+      const [claimableAmounts] = (await dx.claimTokensFromSeveralAuctionsAsBuyer.call(
+        [eth.address, eth.address], [gno.address, gno.address], [1, 2], buyer1)).map(
+        result => {
+          return result.map(value => value.toNumber())
+        }
+      )
+      const claimedAmounts = claimableAmounts.reduce((acc, amount) => {
+        return acc + amount
+      }, 0)
+      // check that the token balances have been manipulated correctly
+      assert.isAbove(claimedAmounts, 0)
+      await dx.claimAndWithdrawTokensFromSeveralAuctionsAsBuyer(
+        [eth.address, eth.address], [gno.address, gno.address], [1, 2], buyer1, { from: buyer1 })
+      assert.equal(balanceOfBuyer1.toNumber(), (await dx.balances.call(eth.address, buyer1)).toNumber())
+      assert.equal(notDepositedBalanceOfBuyer1.add(claimedAmounts).toNumber(), await eth.balanceOf.call(buyer1))
     })
   })
 })
