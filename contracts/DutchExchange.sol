@@ -324,9 +324,6 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
         require(latestAuctionIndex > 0);
 
-        // close previous auction if theoretically closed
-        closeTheoreticalClosedAuction(sellToken, buyToken, latestAuctionIndex);
-
         // R3
         uint auctionStart = getAuctionStart(sellToken, buyToken);
         if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING || auctionStart > now) {
@@ -344,6 +341,9 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             // R1.2
             require(add(sellVolumesCurrent[sellToken][buyToken], amount) < 10 ** 30);
         } else {
+            // close previous auction if theoretically closed
+            closeTheoreticalClosedAuction(sellToken, buyToken, latestAuctionIndex);
+
             // C2
             // R2.1: Sell orders must go to next auction
             if (auctionIndex == 0) {
