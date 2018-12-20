@@ -33,7 +33,8 @@
   "dependencies": {
     "@gnosis.pm/gno-token": "^1.2.0-RC6",
     "@gnosis.pm/owl-token": "^1.4.0-RC2",
-    "@gnosis.pm/util-contracts": "^1.2.0-RC5"
+    "@gnosis.pm/util-contracts": "^1.2.0-RC5",
+    "sha3": "^2.0.0"
   },
   "devDependencies": {
     "@digix/tempo": "^0.2.0",

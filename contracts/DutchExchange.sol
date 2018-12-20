@@ -21,8 +21,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     }
 
     uint constant WAITING_PERIOD_NEW_TOKEN_PAIR = 6 hours;
-    uint constant WAITING_PERIOD_NEW_AUCTION = 10 minutes;    
-    uint constant AUCTION_START_WAITING_FOR_FUNDING = 1;
+    uint constant WAITING_PERIOD_NEW_AUCTION = 10 minutes;
 
     
     // > Storage
@@ -43,9 +42,11 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     // These variables should never be called directly! They have getters below
     // Token => Token => index
     mapping (address => mapping (address => uint)) public latestAuctionIndices;
-    // Token => Token => time
-    mapping (address => mapping (address => uint)) public auctionStarts;
+    // Token => Token => waiting
+    mapping (address => mapping (address => bool)) public isWaiting;
 
+    // Token => Token => auctionIndex => time
+    mapping (address => mapping (address => mapping (uint => uint))) public auctionStarts;
     // Token => Token => auctionIndex => price
     mapping (address => mapping (address => mapping (uint => fraction))) public closingPrices;
 
@@ -156,6 +157,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         require(initialClosingPriceDen < 10 ** 18, "You must set a smaller denominator for the initial price");
 
         setAuctionIndex(token1, token2);
+        setAuctionStart(token1, token2, value);
 
         token1Funding = min(token1Funding, balances[token1][msg.sender]);
         token2Funding = min(token2Funding, balances[token2][msg.sender]);
@@ -257,7 +259,6 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         sellerBalances[token1][token2][1][msg.sender] = token1FundingAfterFee;
         sellerBalances[token2][token1][1][msg.sender] = token2FundingAfterFee;
         
-        setAuctionStart(token1, token2, WAITING_PERIOD_NEW_TOKEN_PAIR);
         emit NewTokenPair(token1, token2);
     }
 
@@ -326,7 +327,9 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
       
         // R3
         uint auctionStart = getAuctionStart(sellToken, buyToken);
-        if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING || auctionStart > now) {
+        bool auctionPairIsWaiting = getIsWaiting(sellToken, buyToken);
+
+        if (auctionPairIsWaiting || auctionStart > now) {
             // C1: We are in the 10 minute buffer period
             // OR waiting for an auction to receive sufficient sellVolume
             // Auction has already cleared, and index has been incremented
@@ -361,7 +364,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint newSellerBal = add(sellerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
         sellerBalances[sellToken][buyToken][auctionIndex][msg.sender] = newSellerBal;
 
-        if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING || auctionStart > now) {
+        if (auctionPairIsWaiting || auctionStart > now) {
             // C1
             uint sellVolumeCurrent = sellVolumesCurrent[sellToken][buyToken];
             sellVolumesCurrent[sellToken][buyToken] = add(sellVolumeCurrent, amountAfterFee);
@@ -371,7 +374,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             sellVolumesNext[sellToken][buyToken] = add(sellVolumeNext, amountAfterFee);
         }
 
-        if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING) {
+        if (auctionPairIsWaiting) {
             scheduleNextAuction(sellToken, buyToken);
         }
 
@@ -401,7 +404,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         require(auctionIndex == getAuctionIndex(sellToken, buyToken));
         
         // R5: auction must not be in waiting period
-        require(auctionStart > AUCTION_START_WAITING_FOR_FUNDING);
+        require(!getIsWaiting(sellToken, buyToken));
         
         // R6: auction must be funded
         require(sellVolumesCurrent[sellToken][buyToken] > 0);
@@ -822,8 +825,9 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         if (sellVolume >= thresholdNewAuction || sellVolumeOpp >= thresholdNewAuction) {
             // Schedule next auction
             setAuctionStart(sellToken, buyToken, WAITING_PERIOD_NEW_AUCTION);
+            setIsWaiting(sellToken, buyToken, false);
         } else {
-            resetAuctionStart(sellToken, buyToken);
+            setIsWaiting(sellToken, buyToken, true);
         }
     }
 
@@ -1003,16 +1007,29 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         emit AuctionStartScheduled(token1, token2, auctionIndex, auctionStart);
     }
 
-    function resetAuctionStart(
+    function setIsWaiting(
         address token1,
-        address token2
+        address token2,
+        bool newIsWaiting
     )
         internal
     {
         (token1, token2) = getTokenOrder(token1, token2);
-        if (auctionStarts[token1][token2] != AUCTION_START_WAITING_FOR_FUNDING) {
-            auctionStarts[token1][token2] = AUCTION_START_WAITING_FOR_FUNDING;
+        if (isWaiting[token1][token2] != newIsWaiting) {
+            isWaiting[token1][token2] = newIsWaiting;
         }
+    }
+
+    function getIsWaiting(
+        address token1,
+        address token2
+    )
+        public
+        view
+        returns (bool auctionPairIsWaiting)
+    {
+        (token1, token2) = getTokenOrder(token1, token2);
+        auctionPairIsWaiting = isWaiting[token1][token2];
     }
 
     function getAuctionStart(
