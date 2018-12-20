@@ -340,7 +340,7 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
       // check that the token balances have been manipulated correctly
       assert.isAbove(claimedAmounts, 0)
       await dx.claimAndWithdrawTokensFromSeveralAuctionsAsBuyer(
-        [eth.address, eth.address], [gno.address, gno.address], [1, 2], buyer1, { from: buyer1 })
+        [eth.address, eth.address], [gno.address, gno.address], [1, 2], { from: buyer1 })
       assert.equal(balanceOfBuyer1.toNumber(), (await dx.balances.call(eth.address, buyer1)).toNumber())
       assert.equal(notDepositedBalanceOfBuyer1.add(claimedAmounts).toNumber(), await eth.balanceOf.call(buyer1))
     })

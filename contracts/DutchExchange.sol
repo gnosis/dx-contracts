@@ -1229,6 +1229,24 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         return buyersBalances;
     }
 
+    function checkLengthsForSeveralAuctionClaiming(
+        address[] auctionSellTokens,
+        address[] auctionBuyTokens,
+        uint[] auctionIndices
+    )
+        internal
+        returns (uint length)
+    {
+        length = auctionSellTokens.length;
+        uint length2 = auctionBuyTokens.length;
+        require(length == length2,
+            "SellTokens and BuyTokens should have the same length");
+
+        uint length3 = auctionIndices.length;
+        require(length2 == length3,
+            "One auction index should be provided for each SellToken-BuyToken.");
+    }
+
     //@dev for multiple claims
     //@param auctionSellTokens are the sellTokens defining an auctionPair
     //@param auctionBuyTokens are the buyTokens defining an auctionPair
@@ -1240,17 +1258,14 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint[] auctionIndices,
         address user
     )
-        public
+        external
         returns (uint[], uint[])
     {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2,
-            "SellTokens and BuyTokens should have the same length");
-
-        uint length3 = auctionIndices.length;
-        require(length2 == length3,
-            "One auction index should be provided for each SellToken-BuyToken.");
+        uint length = checkLengthsForSeveralAuctionClaiming(
+            auctionSellTokens,
+            auctionBuyTokens,
+            auctionIndices
+        );
 
         uint[] memory claimAmounts = new uint[](length);
         uint[] memory frtsIssuedList = new uint[](length);
@@ -1274,17 +1289,14 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint[] auctionIndices,
         address user
     )
-        public
+        external
         returns (uint[], uint[])
     {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2,
-            "SellTokens and BuyTokens should have the same length");
-
-        uint length3 = auctionIndices.length;
-        require(length2 == length3,
-            "One auction index should be provided for each SellToken-BuyToken");
+        uint length = checkLengthsForSeveralAuctionClaiming(
+            auctionSellTokens,
+            auctionBuyTokens,
+            auctionIndices
+        );
 
         uint[] memory claimAmounts = new uint[](length);
         uint[] memory frtsIssuedList = new uint[](length);
@@ -1301,73 +1313,67 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     //@param auctionSellTokens are the sellTokens defining an auctionPair
     //@param auctionBuyTokens are the buyTokens defining an auctionPair
     //@param auctionIndices are the auction indices on which an token should be claimedAmounts
-    //@param user is the user who wants to his tokens
-    /* function claimAndWithdrawTokensFromSeveralAuctionsAsSeller(
-      address[] auctionSellTokens,
-      address[] auctionBuyTokens,
-      uint[][] auctionIndices,
-        address user
+    function claimAndWithdrawTokensFromSeveralAuctionsAsSeller(
+        address[] auctionSellTokens,
+        address[] auctionBuyTokens,
+        uint[] auctionIndices
     )
         external
-        returns (uint[] claimableAmounts, uint[] frtsIssued, uint[] newBal)
+        returns (uint[], uint frtsIssued)
     {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2);
-
-        uint length3 = auctionIndices.length;
-        require(length2 == length3);
-
-
-        (claimableAmounts, frtsIssued) = claimTokensFromSeveralAuctionsAsSeller(
-          markets,
-          user
+        uint length = checkLengthsForSeveralAuctionClaiming(
+            auctionSellTokens,
+            auctionBuyTokens,
+            auctionIndices
         );
 
+        uint[] memory claimAmounts = new uint[](length);
+        uint claimFrts = 0;
+
         for (uint i = 0; i < length; i++) {
-          newBal[i] = withdraw(auctionBuyTokens[i], claimableAmounts[i]);
+            (claimAmounts[i], claimFrts) = claimSellerFunds(
+            auctionSellTokens[i], auctionBuyTokens[i], msg.sender, auctionIndices[i]);
+
+            frtsIssued += claimFrts;
+
+            withdraw(auctionBuyTokens[i], claimAmounts[i]);
         }
-    } */
+
+        return (claimAmounts, frtsIssued);
+    }
 
     //@dev for multiple withdraws
     //@param auctionSellTokens are the sellTokens defining an auctionPair
     //@param auctionBuyTokens are the buyTokens defining an auctionPair
     //@param auctionIndices are the auction indices on which an token should be claimedAmounts
-    //@param user is the user who wants to his tokens
-    function claimAndWithdrawTokensFromSeveralAuctionsAsBuyer(
+    /* function claimAndWithdrawTokensFromSeveralAuctionsAsBuyer(
         address[] auctionSellTokens,
         address[] auctionBuyTokens,
-        uint[] auctionIndices,
-        address user
+        uint[] auctionIndices
     )
         external
-        returns (uint[], uint[])
+        returns (uint[], uint frtsIssued)
     {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2,
-            "SellTokens and BuyTokens should have the same length");
-
-        uint length3 = auctionIndices.length;
-        require(length2 == length3,
-            "One auction index must be provided for each SellToken-BuyToken");
-
-        uint[] memory claimAmounts = new uint[](length);
-        uint[] memory frtsIssuedList = new uint[](length);
-
-        (claimAmounts, frtsIssuedList) = claimTokensFromSeveralAuctionsAsBuyer(
+        uint length = checkLengthsForSeveralAuctionClaiming(
             auctionSellTokens,
             auctionBuyTokens,
-            auctionIndices,
-            user
+            auctionIndices
         );
 
+        uint[] memory claimAmounts = new uint[](length);
+        uint claimFrts = 0;
+
         for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], claimFrts) = claimBuyerFunds(
+            auctionSellTokens[i], auctionBuyTokens[i], msg.sender, auctionIndices[i]);
+
+            frtsIssued += claimFrts;
+
             withdraw(auctionSellTokens[i], claimAmounts[i]);
         }
 
-        return (claimAmounts, frtsIssuedList);
-    }
+        return (claimAmounts, frtsIssued);
+    } */
 
     function getMasterCopy()
         external
