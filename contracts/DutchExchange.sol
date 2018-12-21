@@ -37,7 +37,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     // Token for paying fees
     TokenOWL public owlToken;
 
-    // For the following two mappings, there is one mapping for each token pair
+    // For the following four mappings, there is one mapping for each token pair
     // The order which the tokens should be called is smaller, larger
     // These variables should never be called directly! They have getters below
     // Token => Token => index
@@ -157,7 +157,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         require(initialClosingPriceDen < 10 ** 18, "You must set a smaller denominator for the initial price");
 
         setAuctionIndex(token1, token2);
-        setAuctionStart(token1, token2, value);
+        setAuctionStart(token1, token2, WAITING_PERIOD_NEW_TOKEN_PAIR);
 
         token1Funding = min(token1Funding, balances[token1][msg.sender]);
         token2Funding = min(token2Funding, balances[token2][msg.sender]);
@@ -326,7 +326,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         require(latestAuctionIndex > 0);
       
         // R3
-        uint auctionStart = getAuctionStart(sellToken, buyToken);
+        uint auctionStart = getAuctionStart(sellToken, buyToken, latestAuctionIndex);
         bool auctionPairIsWaiting = getIsWaiting(sellToken, buyToken);
 
         if (auctionPairIsWaiting || auctionStart > now) {
@@ -356,12 +356,29 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             require(add(sellVolumesNext[sellToken][buyToken], amount) < 10 ** 30);
         }
 
+        // Split into two fns because of 16 local-var cap
+        uint newSellerBal = postSellOrderSecondPart(sellToken, buyToken, auctionIndex, amount, auctionPairIsWaiting, auctionStart);
+
+        return (auctionIndex, newSellerBal);
+    }
+
+    function postSellOrderSecondPart(
+        address sellToken,
+        address buyToken,
+        uint auctionIndex,
+        uint amount,
+        bool auctionPairIsWaiting,
+        uint auctionStart
+    )
+        internal
+        returns (uint newSellerBal)
+    {
         // Fee mechanism, fees are added to extraTokens
         uint amountAfterFee = settleFee(sellToken, buyToken, auctionIndex, amount);
 
         // Update variables
         balances[sellToken][msg.sender] = sub(balances[sellToken][msg.sender], amount);
-        uint newSellerBal = add(sellerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
+        newSellerBal = add(sellerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
         sellerBalances[sellToken][buyToken][auctionIndex][msg.sender] = newSellerBal;
 
         if (auctionPairIsWaiting || auctionStart > now) {
@@ -380,7 +397,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
 
         emit NewSellOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
 
-        return (auctionIndex, newSellerBal);
+        return newSellerBal;
     }
 
     function postBuyOrder(
@@ -395,13 +412,13 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         // R1: auction must not have cleared
         require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
 
-        uint auctionStart = getAuctionStart(sellToken, buyToken);
-
         // R2
-        require(auctionStart <= now);
+        require(getAuctionStart(sellToken, buyToken, latestAuctionIndex) <= now);
+
+        uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
 
         // R4
-        require(auctionIndex == getAuctionIndex(sellToken, buyToken));
+        require(auctionIndex == latestAuctionIndex);
         
         // R5: auction must not be in waiting period
         require(!getIsWaiting(sellToken, buyToken));
@@ -751,7 +768,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint buyVolume = buyVolumes[sellToken][buyToken];
         uint sellVolumeOpp = sellVolumesCurrent[buyToken][sellToken];
         uint closingPriceOppDen = closingPrices[buyToken][sellToken][auctionIndex].den;
-        uint auctionStart = getAuctionStart(sellToken, buyToken);
+        uint auctionStart = getAuctionStart(sellToken, buyToken, auctionIndex);
 
         // Update closing price
         if (sellVolume > 0) {
@@ -931,10 +948,11 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             uint pastNum;
             uint pastDen;
             (pastNum, pastDen) = getPriceInPastAuction(sellToken, buyToken, auctionIndex - 1);
+            uint auctionStart = getAuctionStart(sellToken, buyToken, auctionIndex);
 
             // If we're calling the function into an unstarted auction,
             // it will return the starting price of that auction
-            uint timeElapsed = atleastZero(int(now - getAuctionStart(sellToken, buyToken)));
+            uint timeElapsed = atleastZero(int(now - auctionStart));
 
             // The numbers below are chosen such that
             // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
@@ -1002,9 +1020,22 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     {
         (token1, token2) = getTokenOrder(token1, token2);        
         uint auctionStart = now + value;
-        uint auctionIndex = latestAuctionIndices[token1][token2];
-        auctionStarts[token1][token2] = auctionStart;
-        emit AuctionStartScheduled(token1, token2, auctionIndex, auctionStart);
+        uint latestAuctionIndex = latestAuctionIndices[token1][token2];
+        auctionStarts[token1][token2][latestAuctionIndex] = auctionStart;
+        emit AuctionStartScheduled(token1, token2, latestAuctionIndex, auctionStart);
+    }
+
+    function getAuctionStart(
+        address token1,
+        address token2,
+        uint auctionIndex
+    )
+        public
+        view
+        returns (uint auctionStart)
+    {
+        (token1, token2) = getTokenOrder(token1, token2);
+        auctionStart = auctionStarts[token1][token2][auctionIndex];
     }
 
     function setIsWaiting(
@@ -1030,18 +1061,6 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     {
         (token1, token2) = getTokenOrder(token1, token2);
         auctionPairIsWaiting = isWaiting[token1][token2];
-    }
-
-    function getAuctionStart(
-        address token1,
-        address token2
-    )
-        public
-        view
-        returns (uint auctionStart)
-    {
-        (token1, token2) = getTokenOrder(token1, token2);
-        auctionStart = auctionStarts[token1][token2];
     }
 
     function setAuctionIndex(
