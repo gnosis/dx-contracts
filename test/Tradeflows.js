@@ -794,19 +794,15 @@ contract('DutchExchange - TradeFlows', (accounts) => {
       await checkState(1, auctionStart, valMinusFee(10 * ether), 0, valMinusFee(5 * ether), 0, 0, gno, gno2, 10)
     })
 
-    it('step 2 - ensuring immediate restart of next auctions', async () => {
-      const auctionIndex = await getAuctionIndex()
+    it('step 3 - clearing second auction', async () => {
+      const auctionIndex = await getAuctionIndex(gno, gno2)
+      // clearing second auction
       await dx.postSellOrder(gno.address, gno2.address, auctionIndex + 1, 10 * ether, { from: seller2 })
       await dx.postSellOrder(gno.address, gno2.address, 0, 10 * ether, { from: seller2 })
       await dx.postSellOrder(gno2.address, gno.address, 0, 10 * ether, { from: master })
-    })
 
-    it('step 3 - clearing second auction', async () => {
-      const auctionIndex = await getAuctionIndex()
-      // clearing second auction
       const timeOfNextAuctionStart = timestamp() + 60 * 10
-      logger('current sell volume', (await dx.sellVolumesCurrent.call(gno.address, eth.address)).toNumber())
-      await postBuyOrder(gno, gno2, auctionIndex, 1, buyer2)
+      // logger('current sell volume', (await dx.sellVolumesCurrent.call(gno.address, gno2.address)).toNumber())
       // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
       await Promise.all([
         checkState(2, timeOfNextAuctionStart, valMinusFee(10 * ether * 2), 0, 0, 0, 0, gno, gno2, 100000),
