@@ -167,7 +167,7 @@ contract('DutchExchange - claimSellerFunds', accounts => {
       assert.equal(seller2ETHBalAfter, seller2ETHBal + claimableAmtS2)
     })
 
-    it.only('5.1. It should claim seller funds in an auction with 2 sellers', async () => {
+    it('5.1. It should claim seller funds in an auction with 2 sellers', async () => {
       const auctionIndex = await getAuctionIndex()
 
       await postSellOrder(gno, eth, 0, totalSellAmount2ndAuction / 5, seller2)
@@ -210,7 +210,7 @@ contract('DutchExchange - claimSellerFunds', accounts => {
       assert.equal((await dx.sellerBalances.call(gno.address, eth.address, auctionIndex, seller1)).toNumber(), 0)
     })
 
-    it.only('5.2. It should claim and withdraw seller funds in an auction with 2 sellers', async () => {
+    it('5.2. It should claim and withdraw seller funds in an auction with 2 sellers', async () => {
       const auctionIndex = await getAuctionIndex()
       // starting new auction with two sellers
       await postSellOrder(gno, eth, 0, totalSellAmount2ndAuction / 5, seller2)

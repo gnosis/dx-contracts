@@ -20,12 +20,6 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint den;
     }
 
-    struct marketsWithIndices {
-      address buyToken;
-      address sellToken;
-      uint[] auctionIndices;
-    }
-
     uint constant WAITING_PERIOD_NEW_TOKEN_PAIR = 6 hours;
     uint constant WAITING_PERIOD_NEW_AUCTION = 10 minutes;
     uint constant AUCTION_START_WAITING_FOR_FUNDING = 1;
@@ -1346,7 +1340,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     //@param auctionSellTokens are the sellTokens defining an auctionPair
     //@param auctionBuyTokens are the buyTokens defining an auctionPair
     //@param auctionIndices are the auction indices on which an token should be claimedAmounts
-    /* function claimAndWithdrawTokensFromSeveralAuctionsAsBuyer(
+    function claimAndWithdrawTokensFromSeveralAuctionsAsBuyer(
         address[] auctionSellTokens,
         address[] auctionBuyTokens,
         uint[] auctionIndices
@@ -1373,7 +1367,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         }
 
         return (claimAmounts, frtsIssued);
-    } */
+    }
 
     function getMasterCopy()
         external
