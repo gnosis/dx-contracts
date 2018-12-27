@@ -588,17 +588,20 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     )
         public
     {
-        if(auctionIndex == getAuctionIndex(buyToken, sellToken) && closingPrices[sellToken][buyToken][auctionIndex].num == 0) {
+        if(auctionIndex == getAuctionIndex(buyToken, sellToken) &&
+            closingPrices[sellToken][buyToken][auctionIndex].num == 0) {
             uint buyVolume = buyVolumes[sellToken][buyToken];
             uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
             uint num;
             uint den;
             (num, den) = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
             // 10^30 * 10^37 = 10^67
-            uint outstandingVolume = atleastZero(int(mul(sellVolume, num) / den - buyVolume));
+            if (sellVolume > 0) {
+              uint outstandingVolume = atleastZero(int(mul(sellVolume, num) / den - buyVolume));
 
-            if(outstandingVolume == 0) {
+              if(outstandingVolume == 0) {
                 postBuyOrder(sellToken, buyToken, auctionIndex, 0);
+              }
             }
         }
     }

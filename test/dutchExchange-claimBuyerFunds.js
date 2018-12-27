@@ -52,7 +52,7 @@ const startBal = {
   sellingAmount: 50.0.toWei(), // Same as web3.toWei(50, 'ether')
 }
 
-contract('DutchExchange - claimBuyerFunds', (accounts) => {
+contract('DutchExchange - claimBuyerFunds', accounts => {
   const [, seller1, seller2, buyer1, buyer2] = accounts
   const totalSellAmount2ndAuction = 10e18
 
