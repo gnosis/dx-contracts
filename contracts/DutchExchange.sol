@@ -831,7 +831,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         // < 10^30 * 10^31 * 10^6 = 10^67
         uint sellVolume = mul(mul(sellVolumesCurrent[sellToken][buyToken], sellNum), ethUSDPrice) / sellDen;
         uint sellVolumeOpp = mul(mul(sellVolumesCurrent[buyToken][sellToken], buyNum), ethUSDPrice) / buyDen;
-        if (sellVolume >= thresholdNewAuction || sellVolumeOpp >= thresholdNewAuction) {
+        if (sellVolume >= thresholdNewAuction && sellVolumeOpp >= thresholdNewAuction) {
             // Schedule next auction
             setAuctionStart(sellToken, buyToken, WAITING_PERIOD_NEW_AUCTION);
         } else {

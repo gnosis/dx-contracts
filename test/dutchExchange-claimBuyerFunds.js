@@ -1,7 +1,3 @@
-
-/* eslint no-console:0, max-len:0, no-plusplus:0, no-mixed-operators:0, no-trailing-spaces:0 */
-
-
 /*
 MGN token issuing will not be covered in these tests, as they are covered in the magnolia testing scripts
 */
@@ -23,7 +19,7 @@ const {
   waitUntilPriceIsXPercentOfPreviousPrice,
   setAndCheckAuctionStarted,
   postBuyOrder,
-  postSellOrder,
+  postSellOrder
 } = require('./testFunctions')
 
 // Test VARS
@@ -35,24 +31,23 @@ let contracts
 
 const valMinusFee = amount => amount - (amount / 200)
 
-
 const setupContracts = async () => {
   contracts = await getContracts();
   // destructure contracts into upper state
   ({
     DutchExchange: dx,
     EtherToken: eth,
-    TokenGNO: gno,
+    TokenGNO: gno
   } = contracts)
 }
 const startBal = {
   startingETH: 90.0.toWei(),
   startingGNO: 90.0.toWei(),
   ethUSDPrice: 1008.0.toWei(),
-  sellingAmount: 50.0.toWei(), // Same as web3.toWei(50, 'ether')
+  sellingAmount: 50.0.toWei() // Same as web3.toWei(50, 'ether')
 }
 
-contract('DutchExchange - claimBuyerFunds', (accounts) => {
+contract('DutchExchange - claimBuyerFunds', accounts => {
   const [, seller1, seller2, buyer1, buyer2] = accounts
   const totalSellAmount2ndAuction = 10e18
 
@@ -84,7 +79,7 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
         0,
         2,
         1,
-        { from: seller1 },
+        { from: seller1 }
       )
     })
 
@@ -104,7 +99,10 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
     it(' 2. checks that the return value == 0, if price.num == 0 ', async () => {
       // prepare test by starting and clearing new auction
       let auctionIndex = await getAuctionIndex()
-      await postSellOrder(gno, eth, 0, totalSellAmount2ndAuction, seller2)
+      await Promise.all([
+        postSellOrder(gno, eth, 0, totalSellAmount2ndAuction, seller2),
+        postSellOrder(eth, gno, 0, totalSellAmount2ndAuction, seller2)
+      ])
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
       await postBuyOrder(eth, gno, auctionIndex, 2 * 10e18, buyer1)
       auctionIndex = await getAuctionIndex()
@@ -181,7 +179,7 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
         0,
         2,
         1,
-        { from: seller1 },
+        { from: seller1 }
       )
     })
 
@@ -191,11 +189,9 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
 
     it('5. check right amount of coins is returned by claimBuyerFunds if auction is  not closed, but closed theoretical ', async () => {
       // prepare test by starting and clearning new auction
-
       const auctionIndex = await getAuctionIndex()
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
       await postBuyOrder(eth, gno, auctionIndex, 10e18, buyer1)
-
 
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.4)
 
@@ -210,7 +206,6 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
 
     it('6. check that already claimedBuyerfunds are substracted properly', async () => {
       // prepare test by starting and clearning new auction
-
       const auctionIndex = await getAuctionIndex()
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
       await postBuyOrder(eth, gno, auctionIndex, 10e18, buyer1)
@@ -238,8 +233,11 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
       // prepare test by starting and clearning new auction
       let auctionIndex = await getAuctionIndex()
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
-      await postBuyOrder(eth, gno, auctionIndex, 2 * 10e18, buyer1)
-      await postSellOrder(eth, gno, 0, 10e18, seller1)
+      await Promise.all([
+        postBuyOrder(eth, gno, auctionIndex, 2 * 10e18, buyer1),
+        postSellOrder(eth, gno, 0, 10e18, seller1),
+        postSellOrder(gno, eth, 0, 10e18, seller1)
+      ])
 
       auctionIndex = await getAuctionIndex()
       assert.equal(auctionIndex, 2)
@@ -262,8 +260,11 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
       // prepare test by starting and clearning new auction
       let auctionIndex = await getAuctionIndex()
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
-      await postBuyOrder(eth, gno, auctionIndex, 2 * 10e18, buyer1)
-      await postSellOrder(eth, gno, 0, 10e18, seller1)
+      await Promise.all([
+        postBuyOrder(eth, gno, auctionIndex, 2 * 10e18, buyer1),
+        postSellOrder(eth, gno, 0, 10e18, seller1),
+        postSellOrder(gno, eth, 0, 10e18, seller1)
+      ])
 
       auctionIndex = await getAuctionIndex()
       assert.equal(auctionIndex, 2)
@@ -278,11 +279,14 @@ contract('DutchExchange - claimBuyerFunds', (accounts) => {
       const [num, den] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex))
       await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)
       assert.equal(((bn(valMinusFee(10e18)).div(num).mul(den)).add(extraTokensAvailable.div(2)))
-      .toNumber(), claimedAmount)
+        .toNumber(), claimedAmount)
 
       // check that the token balances have been manipulated correctly
       await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)
-      assert.equal((balanceOfBuyer1.add(claimedAmount)).toNumber(), (await dx.balances.call(eth.address, buyer1)).toNumber())
+      assert.equal(
+        (balanceOfBuyer1.add(claimedAmount)).toNumber(),
+        (await dx.balances.call(eth.address, buyer1)).toNumber()
+      )
     })
   })
 })

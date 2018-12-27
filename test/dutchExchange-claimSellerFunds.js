@@ -78,19 +78,20 @@ contract('DutchExchange - claimSellerFunds', accounts => {
     await assertRejects(dx.claimSellerFunds(eth.address, gno.address, seller1, auctionIndex + 1))
   })
 
-  it(' 2. check for a throw, if seller contribution ==0', async () => {
-    // prepare by clearning auction
+  it(' 2. check for a throw, if seller contribution == 0', async () => {
+    // prepare by clearing auction
     let auctionIndex = await getAuctionIndex()
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     await postBuyOrder(eth, gno, auctionIndex, totalBuyAmount, buyer1)
     auctionIndex = await getAuctionIndex()
-    await setAndCheckAuctionStarted(eth, gno)
+    // await setAndCheckAuctionStarted(eth, gno)
     assert.equal(2, auctionIndex)
     // check condition
     assert.equal((await dx.sellerBalances.call(eth.address, gno.address, 1, seller2)).toNumber(), 0)
     // now claiming should not be possible and return == 0
     await assertRejects(dx.claimSellerFunds(eth.address, gno.address, seller2, 1))
   })
+
   it(' 3. check for the correct return value', async () => {
     const auctionIndex = await getAuctionIndex()
     const [claimedAmount] = (await dx.claimSellerFunds.call(eth.address, gno.address, seller1, auctionIndex - 1)).map(i => i.toNumber())
@@ -114,6 +115,7 @@ contract('DutchExchange - claimSellerFunds', accounts => {
       await postSellOrder(gno, eth, 0, totalSellAmount2ndAuction / 5, seller2)
       await postSellOrder(gno, eth, 0, totalSellAmount2ndAuction / 5, seller2)
       await postSellOrder(gno, eth, 0, totalSellAmount2ndAuction * 3 / 5, seller1)
+      await postSellOrder(eth, gno, 0, totalSellAmount2ndAuction / 10, buyer2)
 
       // closing new auction
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
@@ -141,6 +143,7 @@ contract('DutchExchange - claimSellerFunds', accounts => {
       await postSellOrder(gno, eth, 0, totalSellAmount2ndAuction / 5, seller2)
       await postSellOrder(gno, eth, 0, totalSellAmount2ndAuction / 5, seller2)
       await postSellOrder(gno, eth, 0, totalSellAmount2ndAuction * 3 / 5, seller1)
+      await postSellOrder(eth, gno, 0, totalSellAmount2ndAuction / 10, buyer2)
 
       // closing new auction
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
