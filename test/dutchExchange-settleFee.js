@@ -69,7 +69,7 @@ const getHelperFunctions = (master) => {
     return lockedMgn
   }
 
-  const unlockMGN = (account, amount) => mgn.unlockTokens(amount, { from: account })
+  const unlockMGN = (account, amount) => mgn.unlockTokens({ from: account })
 
   const mintTokens = (account, amount) => mgn.mintTokens(account, amount, { from: master })
 

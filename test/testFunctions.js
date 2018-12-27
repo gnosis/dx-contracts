@@ -601,8 +601,8 @@ const unlockMGNTokens = async (user, ST, BT) => {
   /*
    * SUB TEST 3: UN-LOCK TOKENS
    */
-  await tokenMGN.unlockTokens(lockedUserMGNs, { from: user });
-  ([unlockedFunds, withdrawTime] = (await tokenMGN.unlockTokens.call(lockedUserMGNs, { from: user })).map(t => t.toNumber()))
+  await tokenMGN.unlockTokens({ from: user });
+  ([unlockedFunds, withdrawTime] = (await tokenMGN.unlockTokens.call({ from: user })).map(t => t.toNumber()))
   log(`
   AMT OF UNLOCKED FUNDS  = ${unlockedFunds.toEth()}
   TIME OF WITHDRAWAL     = ${withdrawTime} --> ${new Date(withdrawTime * 1000)}
