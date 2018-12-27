@@ -995,7 +995,7 @@ contract('DutchExchange - stateTransitions', accounts => {
 
       // await postBuyOrder(eth, gno, auctionIndex, 10.0.toWei() * 3, buyer1)
       // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-      await checkState(2, newAuctionStart, valMinusFee(10.0.toWei() * 3), 0, 0, 0, 0, gno, eth, 1)
+      await checkState(2, newAuctionStart, valMinusFee(10.0.toWei() * 3), 0, 0, 0, 0, gno, eth, 3)
       assert.equal(0, await getState(eth, gno))
       await checkInvariants(balanceInvariant, accounts, [eth, gno])
     })
