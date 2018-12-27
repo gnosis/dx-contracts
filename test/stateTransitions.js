@@ -1010,7 +1010,7 @@ contract('DutchExchange - stateTransitions', accounts => {
 //
 //
 
-  describe.only('DutchExchange - Stage S6 -  one auction closed, other one just closed theoretical', () => {
+  describe('DutchExchange - Stage S6 -  one auction closed, other one just closed theoretical', () => {
     before(async () => {
       currentSnapshotId = await makeSnapshot()
 
