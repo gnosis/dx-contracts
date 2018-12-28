@@ -942,7 +942,7 @@ contract('DutchExchange - stateTransitions', accounts => {
     })
 
     // TODO review: State 1 should be imposible now as is mandatory to fill both auction sides
-    it('postBuyOrder - posting a sellOrder clearing non-theoretical closed auction getting into S1', async () => {
+    it.skip('postBuyOrder - posting a sellOrder clearing non-theoretical closed auction getting into S1', async () => {
       const auctionIndex = await getAuctionIndex()
       await setAndCheckAuctionStarted(eth, gno)
 
@@ -1039,9 +1039,9 @@ contract('DutchExchange - stateTransitions', accounts => {
 
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
       // clearing first auction
-      const newAuctionStart = timestamp() + 60 * 10
       await postSellOrder(gno, eth, auctionIndex + 1, 10.0.toWei() * 3, seller1)
       await postSellOrder(eth, gno, 0, 10.0.toWei() * 3, seller2)
+      const newAuctionStart = timestamp() + 60 * 10
       await assertRejects(postSellOrder(gno, eth, auctionIndex, 10.0.toWei() * 3, seller1))
       await assertRejects(postSellOrder(gno, eth, auctionIndex + 2, 10.0.toWei() * 3, seller1))
       // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
@@ -1056,9 +1056,9 @@ contract('DutchExchange - stateTransitions', accounts => {
       await setAndCheckAuctionStarted(eth, gno)
 
       // clearing first auction
-      const newAuctionStart = timestamp() + 60 * 10
       await postSellOrder(gno, eth, auctionIndex + 1, 10.0.toWei() * 3, seller1)
       await postSellOrder(eth, gno, 0, 10.0.toWei() * 3, seller2)
+      const newAuctionStart = timestamp() + 60 * 10
 
       // await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.5)
       // await postBuyOrder(gno, eth, auctionIndex, 10.0.toWei() * 3, buyer1)
