@@ -318,7 +318,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         amount = min(amount, balances[sellToken][msg.sender]);
 
         // R1
-        require(amount > 0);
+        require(amount > 0, "Sell amount should be greater than 0");
 
         // R2
         uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
@@ -335,7 +335,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             if (auctionIndex == 0) {
                 auctionIndex = latestAuctionIndex;
             } else {
-                require(auctionIndex == latestAuctionIndex);
+                require(auctionIndex == latestAuctionIndex,
+                    "Auction index should be equal to latest auction index");
             }
 
             // R1.2
@@ -510,7 +511,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
 
         if (closingPrices[sellToken][buyToken][auctionIndex].den == 0) {
             // Auction is running
-            claimedAmounts[sellToken][buyToken][auctionIndex][user] = add(claimedAmounts[sellToken][buyToken][auctionIndex][user], returned);
+            claimedAmounts[sellToken][buyToken][auctionIndex][user] =
+            add(claimedAmounts[sellToken][buyToken][auctionIndex][user], returned);
         } else {
             // Auction has closed
             // We DON'T want to check for returned > 0, because that would fail if a user claims
@@ -1239,7 +1241,24 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         return buyersBalances;
     }
 
-    //@dev for multiple withdraws
+    function checkLengthsForSeveralAuctionClaiming(
+        address[] auctionSellTokens,
+        address[] auctionBuyTokens,
+        uint[] auctionIndices
+    )
+        internal
+        pure
+        returns (uint length)
+    {
+        length = auctionSellTokens.length;
+        uint length2 = auctionBuyTokens.length;
+        require(length == length2);
+
+        uint length3 = auctionIndices.length;
+        require(length2 == length3);
+    }
+
+    //@dev for multiple claims
     //@param auctionSellTokens are the sellTokens defining an auctionPair
     //@param auctionBuyTokens are the buyTokens defining an auctionPair
     //@param auctionIndices are the auction indices on which an token should be claimedAmounts
@@ -1251,18 +1270,26 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         address user
     )
         external
+        returns (uint[], uint[])
     {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2);
+        uint length = checkLengthsForSeveralAuctionClaiming(
+            auctionSellTokens,
+            auctionBuyTokens,
+            auctionIndices
+        );
 
-        uint length3 = auctionIndices.length;
-        require(length2 == length3);
+        uint[] memory claimAmounts = new uint[](length);
+        uint[] memory frtsIssuedList = new uint[](length);
 
-        for (uint i = 0; i < length; i++)
-            claimSellerFunds(auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], frtsIssuedList[i]) = claimSellerFunds(
+            auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
+        }
+
+        return (claimAmounts, frtsIssuedList);
     }
-    //@dev for multiple withdraws
+
+    //@dev for multiple claims
     //@param auctionSellTokens are the sellTokens defining an auctionPair
     //@param auctionBuyTokens are the buyTokens defining an auctionPair
     //@param auctionIndices are the auction indices on which an token should be claimedAmounts
@@ -1274,16 +1301,89 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         address user
     )
         external
+        returns (uint[], uint[])
     {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2);
+        uint length = checkLengthsForSeveralAuctionClaiming(
+            auctionSellTokens,
+            auctionBuyTokens,
+            auctionIndices
+        );
 
-        uint length3 = auctionIndices.length;
-        require(length2 == length3);
+        uint[] memory claimAmounts = new uint[](length);
+        uint[] memory frtsIssuedList = new uint[](length);
 
-        for (uint i = 0; i < length; i++)
-            claimBuyerFunds(auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], frtsIssuedList[i]) = claimBuyerFunds(
+            auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
+        }
+
+        return (claimAmounts, frtsIssuedList);
+    }
+
+    //@dev for multiple withdraws
+    //@param auctionSellTokens are the sellTokens defining an auctionPair
+    //@param auctionBuyTokens are the buyTokens defining an auctionPair
+    //@param auctionIndices are the auction indices on which an token should be claimedAmounts
+    function claimAndWithdrawTokensFromSeveralAuctionsAsSeller(
+        address[] auctionSellTokens,
+        address[] auctionBuyTokens,
+        uint[] auctionIndices
+    )
+        external
+        returns (uint[], uint frtsIssued)
+    {
+        uint length = checkLengthsForSeveralAuctionClaiming(
+            auctionSellTokens,
+            auctionBuyTokens,
+            auctionIndices
+        );
+
+        uint[] memory claimAmounts = new uint[](length);
+        uint claimFrts = 0;
+
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], claimFrts) = claimSellerFunds(
+            auctionSellTokens[i], auctionBuyTokens[i], msg.sender, auctionIndices[i]);
+
+            frtsIssued += claimFrts;
+
+            withdraw(auctionBuyTokens[i], claimAmounts[i]);
+        }
+
+        return (claimAmounts, frtsIssued);
+    }
+
+    //@dev for multiple withdraws
+    //@param auctionSellTokens are the sellTokens defining an auctionPair
+    //@param auctionBuyTokens are the buyTokens defining an auctionPair
+    //@param auctionIndices are the auction indices on which an token should be claimedAmounts
+    function claimAndWithdrawTokensFromSeveralAuctionsAsBuyer(
+        address[] auctionSellTokens,
+        address[] auctionBuyTokens,
+        uint[] auctionIndices
+    )
+        external
+        returns (uint[], uint frtsIssued)
+    {
+        uint length = checkLengthsForSeveralAuctionClaiming(
+            auctionSellTokens,
+            auctionBuyTokens,
+            auctionIndices
+        );
+
+        uint[] memory claimAmounts = new uint[](length);
+        uint claimFrts = 0;
+
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], claimFrts) = claimBuyerFunds(
+            auctionSellTokens[i], auctionBuyTokens[i], msg.sender, auctionIndices[i]);
+
+            frtsIssued += claimFrts;
+
+            withdraw(auctionSellTokens[i], claimAmounts[i]);
+        }
+
+        return (claimAmounts, frtsIssued);
     }
 
     function getMasterCopy()
@@ -1296,8 +1396,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
 
     // > Events
     event NewDeposit(
-         address indexed token,
-         uint amount
+        address indexed token,
+        uint amount
     );
 
     event NewWithdrawal(
