@@ -1229,16 +1229,15 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint[] auctionIndices
     )
         internal
+        pure
         returns (uint length)
     {
         length = auctionSellTokens.length;
         uint length2 = auctionBuyTokens.length;
-        require(length == length2,
-            "SellTokens and BuyTokens should have the same length");
+        require(length == length2);
 
         uint length3 = auctionIndices.length;
-        require(length2 == length3,
-            "One auction index should be provided for each SellToken-BuyToken.");
+        require(length2 == length3);
     }
 
     //@dev for multiple claims
