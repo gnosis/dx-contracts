@@ -183,9 +183,9 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
       )
     })
 
-    // afterEach(async () => {
-    //   await revertSnapshot(currentSnapshotId)
-    // })
+    afterEach(async () => {
+      await revertSnapshot(currentSnapshotId)
+    })
 
     it('5. check right amount of coins is returned by claimBuyerFunds if auction is  not closed, but closed theoretical ', async () => {
       // prepare test by starting and clearning new auction
