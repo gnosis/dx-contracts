@@ -295,6 +295,7 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
       await postBuyOrder(eth, gno, auctionIndex, 2 * 10e18, buyer1)
       await postSellOrder(eth, gno, 0, 10e18, seller1)
+      await postSellOrder(gno, eth, 0, 10e18, seller1)
 
       auctionIndex = await getAuctionIndex()
       assert.equal(auctionIndex, 2)
@@ -326,6 +327,7 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
       await postBuyOrder(eth, gno, auctionIndex, 2 * 10e18, buyer1)
       await postSellOrder(eth, gno, 0, 10e18, seller1)
+      await postSellOrder(gno, eth, 0, 10e18, seller1)
 
       auctionIndex = await getAuctionIndex()
       assert.equal(auctionIndex, 2)

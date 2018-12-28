@@ -176,17 +176,18 @@ contract('DutchExchange - claimSellerFunds', accounts => {
       await postSellOrder(gno, eth, 0, totalSellAmount2ndAuction / 5, seller2)
       await postSellOrder(gno, eth, 0, totalSellAmount2ndAuction / 5, seller2)
       await postSellOrder(gno, eth, 0, totalSellAmount2ndAuction * 3 / 5, seller1)
+      await postSellOrder(eth, gno, 0, 10e18, seller1)
 
       // closing new auction
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
       await postBuyOrder(gno, eth, auctionIndex, totalBuyAmount, buyer2)
       await postBuyOrder(eth, gno, auctionIndex, totalBuyAmount, buyer2)
 
-
       await postSellOrder(gno, eth, 0, 5e18, seller1)
       await postSellOrder(gno, eth, 0, 5e18, seller2)
+      await postSellOrder(eth, gno, 0, 10e18, seller1)
       const auctionIndex2 = await getAuctionIndex()
-      assert.equal(auctionIndex2, 2)
+      assert.equal(auctionIndex2, 3)
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
       await postBuyOrder(gno, eth, auctionIndex + 1, totalBuyAmount, buyer1)
 
@@ -219,6 +220,7 @@ contract('DutchExchange - claimSellerFunds', accounts => {
       await postSellOrder(gno, eth, 0, totalSellAmount2ndAuction / 5, seller2)
       await postSellOrder(gno, eth, 0, totalSellAmount2ndAuction / 5, seller2)
       await postSellOrder(gno, eth, 0, totalSellAmount2ndAuction * 3 / 5, seller1)
+      await postSellOrder(eth, gno, 0, 10e18, seller1)
 
       // closing new auction
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
@@ -227,8 +229,9 @@ contract('DutchExchange - claimSellerFunds', accounts => {
 
       await postSellOrder(gno, eth, 0, 5e18, seller1)
       await postSellOrder(gno, eth, 0, 5e18, seller2)
+      await postSellOrder(eth, gno, 0, 10e18, seller1)
       const auctionIndex2 = await getAuctionIndex()
-      assert.equal(auctionIndex2, 2)
+      assert.equal(auctionIndex2, 3)
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
       await postBuyOrder(gno, eth, auctionIndex + 1, totalBuyAmount, buyer1)
 
