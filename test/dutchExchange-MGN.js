@@ -8,6 +8,7 @@
   no-floating-decimal: 0,
   no-trailing-spaces: 0,
   no-multi-spaces: 0,
+  comma-dangle: 0,
 */
 
 const TokenGNO2 = artifacts.require('TokenGNO')
@@ -35,7 +36,7 @@ const {
   setAndCheckAuctionStarted,
   unlockMGNTokens,
   wait,
-  waitUntilPriceIsXPercentOfPreviousPrice,
+  waitUntilPriceIsXPercentOfPreviousPrice
 } = require('./testFunctions')
 
 // Test VARS
@@ -54,11 +55,11 @@ const setupContracts = async () => {
     EtherToken: eth,
     TokenGNO: gno,
     TokenFRT: tokenMGN,
-    PriceOracleInterface: pp,
+    PriceOracleInterface: pp
   } = contracts)
 }
 
-const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
+const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
   const [master, seller1, seller2, buyer1, buyer2, seller3] = accounts
   const sellers = [seller1, seller2]
 
@@ -66,15 +67,15 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
   let seller3SellAmount
 
   const startBal = {
-    startingETH: 1000..toWei(),
-    startingGNO: 1000..toWei(),
-    ethUSDPrice: 6000..toWei(),   // 400 ETH @ $6000/ETH = $2,400,000 USD
-    sellingAmount: 100..toWei(), // Same as web3.toWei(50, 'ether') - $60,000USD
+    startingETH: 1000.0.toWei(),
+    startingGNO: 1000.0.toWei(),
+    ethUSDPrice: 6000.0.toWei(), // 400 ETH @ $6000/ETH = $2,400,000 USD
+    sellingAmount: 100.0.toWei() // Same as web3.toWei(50, 'ether') - $60,000USD
   }
   const {
     startingETH,
     sellingAmount,
-    startingGNO,
+    startingGNO
     // ethUSDPrice,
   } = startBal
 
@@ -90,18 +91,18 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
     /*
      * SUB TEST 1: Check passed in ACCT has NO balances in DX for token passed in
      */
-     ([seller1Balance, seller2Balance] = await Promise.all(sellers.map(s => getBalance(s, eth))))
-     assert.equal(seller1Balance, 0, 'Seller1 should have 0 balance')
-     assert.equal(seller2Balance, 0, 'Seller2 should have 0 balance')
+    ([seller1Balance, seller2Balance] = await Promise.all(sellers.map(s => getBalance(s, eth))))
+    assert.equal(seller1Balance, 0, 'Seller1 should have 0 balance')
+    assert.equal(seller2Balance, 0, 'Seller2 should have 0 balance')
 
     // set up accounts and tokens[contracts]
     await setupTest(accounts, contracts, startBal);
     /*
      * SUB TEST 2: Check passed in ACCT has NO balances in DX for token passed in
      */
-     ([seller1Balance, seller2Balance] = await Promise.all(sellers.map(s => getBalance(s, eth))))
-     assert.equal(seller1Balance, startingETH, `Seller1 should have balance of ${startingETH.toEth()}`)
-     assert.equal(seller2Balance, startingETH, `Seller2 should have balance of ${startingETH.toEth()}`)
+    ([seller1Balance, seller2Balance] = await Promise.all(sellers.map(s => getBalance(s, eth))))
+    assert.equal(seller1Balance, startingETH, `Seller1 should have balance of ${startingETH.toEth()}`)
+    assert.equal(seller2Balance, startingETH, `Seller2 should have balance of ${startingETH.toEth()}`)
 
     /*
      * SUB TEST 3: assert both eth and gno get approved by DX
@@ -130,16 +131,15 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
       await dx.addTokenPair(
         eth.address,
         gno.address,
-        sellingAmount,  // 100 ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
-        0,              // buyVolume for GNO
-        2,              // lastClosingPrice NUM
-        1,              // lastClosingPrice DEN
-        { from: seller1 },
+        sellingAmount, // 100 ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
+        0, // buyVolume for GNO
+        2, // lastClosingPrice NUM
+        1, // lastClosingPrice DEN
+        { from: seller1 }
       )
       seller1Balance = await getBalance(seller1, eth) // dx.balances(token) - sellingAmt
       log(`\nSeller Balance ====> ${seller1Balance.toEth()}\n`)
       assert.equal(seller1Balance, startingETH - sellingAmount, `Seller1 should have ${startingETH.toEth()} balance after new Token Pair add`)
-
     })
 
     after(async () => {
@@ -217,7 +217,7 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
 
     it(
       'BUYER1: Tries to lock and unlock MGNs --> Auction NOT cleared --> asserts 0 MGNs minted and in mapping',
-      () => unlockMGNTokens(buyer1, eth, gno),
+      () => unlockMGNTokens(buyer1, eth, gno)
     )
 
     it('BUYER1: Auction clearing PostBuyOrder + Claim => MGNs = sellVolume', async () => {
@@ -337,11 +337,11 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
       await dx.addTokenPair(
         eth.address,
         gno.address,
-        sellingAmount,  // 100 ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
-        0,              // buyVolume for GNO
-        2,              // lastClosingPrice NUM
-        1,              // lastClosingPrice DEN
-        { from: seller1 },
+        sellingAmount, // 100 ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
+        0, // buyVolume for GNO
+        2, // lastClosingPrice NUM
+        1, // lastClosingPrice DEN
+        { from: seller1 }
       )
       seller1Balance = await getBalance(seller1, eth) // dx.balances(token) - sellingAmt
       log(`\nSeller Balance ====> ${seller1Balance.toEth()}\n`)
@@ -376,7 +376,6 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
        */
       await setAndCheckAuctionStarted(eth, gno)
     })
-
 
     it('BUYER1: [[Non Auction clearing PostBuyOrder + Claim]] => [[MGNs = 0]]', async () => {
       eventWatcher(dx, 'ClaimBuyerFunds')
@@ -648,16 +647,15 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
       await dx.addTokenPair(
         eth.address,
         gno.address,
-        sellingAmount,  // 100 ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
-        0,              // buyVolume for GNO
-        2,              // lastClosingPrice NUM
-        1,              // lastClosingPrice DEN
-        { from: seller1 },
+        sellingAmount, // 100 ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
+        0, // buyVolume for GNO
+        2, // lastClosingPrice NUM
+        1, // lastClosingPrice DEN
+        { from: seller1 }
       )
       seller1Balance = await getBalance(seller1, eth) // dx.balances(token) - sellingAmt
       log(`\nSeller Balance ====> ${seller1Balance.toEth()}\n`)
       assert.equal(seller1Balance, startingETH - sellingAmount, `Seller1 should have ${startingETH.toEth()} balance after new Token Pair add`)
-
     })
 
     after(async () => {
@@ -735,7 +733,7 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
 
     it(
       'BUYER1: Tries to lock and unlock MGNs --> Auction NOT cleared --> asserts 0 MGNs minted and in mapping',
-      () => unlockMGNTokens(buyer1),
+      () => unlockMGNTokens(buyer1)
     )
 
     it('BUYER1: Auction clearing PostBuyOrder + Claim => MGNs = sellVolume', async () => {
@@ -920,11 +918,11 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
       await dx.addTokenPair(
         eth.address,
         gno.address,
-        sellingAmount,  // 100 ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
-        0,              // buyVolume for GNO
-        2,              // lastClosingPrice NUM
-        1,              // lastClosingPrice DEN
-        { from: seller1 },
+        sellingAmount, // 100 ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
+        0, // buyVolume for GNO
+        2, // lastClosingPrice NUM
+        1, // lastClosingPrice DEN
+        { from: seller1 }
       )
       seller1Balance = await getBalance(seller1, eth) // dx.balances(token) - sellingAmt
       log(`\nSeller Balance ====> ${seller1Balance.toEth()}\n`)
@@ -964,11 +962,11 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
       await dx.addTokenPair(
         eth.address,
         gno.address,
-        sellingAmount,  // 100 ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
-        0,              // buyVolume for GNO
-        2,              // lastClosingPrice NUM
-        1,              // lastClosingPrice DEN
-        { from: seller1 },
+        sellingAmount, // 100 ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
+        0, // buyVolume for GNO
+        2, // lastClosingPrice NUM
+        1, // lastClosingPrice DEN
+        { from: seller1 }
       );
 
       ([seller1Balance, seller2Balance] = await Promise.all(sellers.map(s => getBalance(s, eth))))
@@ -995,21 +993,21 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
     })
 
     it('Seller 3 posts a different amount', async () => {
-      seller3SellAmount = 50..toWei()
+      seller3SellAmount = 50.0.toWei()
       await dx.postSellOrder(eth.address, gno.address, 1, seller3SellAmount, { from: seller3 })
     })
 
     it('Move forward in time to end auction', async () => {
       // price is ~~ 2:1
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
-      await postBuyOrder(eth, gno, 1, 600..toWei(), buyer1)
+      await postBuyOrder(eth, gno, 1, 600.0.toWei(), buyer1)
 
       const aucIdx = await getAuctionIndex()
       assert(aucIdx === 2, 'Auc ended and moved +1 idx')
     })
 
     it('Sellers 1 and 2 can take out their equal share of MGNs', () =>
-      Promise.all(sellers.map(async (seller) => {
+      Promise.all(sellers.map(async seller => {
         await claimSellerFunds(eth, gno, seller, 1)
         let tulBal = (await tokenMGN.lockedTokenBalances.call(seller)).toNumber()
         log(tulBal)
@@ -1041,11 +1039,11 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
       await dx.addTokenPair(
         eth.address,
         gno.address,
-        0,                 // 100 ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
-        0,                // buyVolume for GNO
-        2,               // lastClosingPrice NUM
-        1,              // lastClosingPrice DEN
-        { from: seller1 },
+        0, // 100 ether - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
+        0, // buyVolume for GNO
+        2, // lastClosingPrice NUM
+        1, // lastClosingPrice DEN
+        { from: seller1 }
       )
       seller1Balance = await getBalance(seller1, eth) // dx.balances(token) - sellingAmt
       log(`\nSeller Balance ====> ${seller1Balance.toEth()}\n`)
@@ -1056,19 +1054,19 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
       await revertSnapshot(currentSnapshotId)
     })
 
-    it('1st --> POST SELL ORDER', async () => postSellOrder(eth, gno, 0, 5..toWei(), seller1))
+    it('1st --> POST SELL ORDER', async () => postSellOrder(eth, gno, 0, 5.0.toWei(), seller1))
 
-    it('2nd --> POST SELL ORDER', async () => postSellOrder(eth, gno, 0, 5..toWei(), seller1))
+    it('2nd --> POST SELL ORDER', async () => postSellOrder(eth, gno, 0, 5.0.toWei(), seller1))
 
     it('START AUCTION', async () => setAndCheckAuctionStarted(eth, gno))
 
-    it('1st --> POST BUY ORDER', async () => postBuyOrder(eth, gno, 1, 1..toWei(), buyer1))
+    it('1st --> POST BUY ORDER', async () => postBuyOrder(eth, gno, 1, 1.0.toWei(), buyer1))
 
-    it('2nd --> POST BUY ORDER', async () => postBuyOrder(eth, gno, 1, 1..toWei(), buyer1))
+    it('2nd --> POST BUY ORDER', async () => postBuyOrder(eth, gno, 1, 1.0.toWei(), buyer1))
 
     it('WAIT UNTIL PRICE IS 2:1 <was 4:1>', async () => waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1))
 
-    it('CLEAR AUCTION W/BUY ORDER', async () => postBuyOrder(eth, gno, 1, 400..toWei(), buyer1))
+    it('CLEAR AUCTION W/BUY ORDER', async () => postBuyOrder(eth, gno, 1, 400.0.toWei(), buyer1))
 
     it('ASSERTS AUCTION IDX === 2', async () => assert.equal(await getAuctionIndex(), 2, 'AucIdx should = 2'))
   })
@@ -1085,11 +1083,11 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
       await dx.addTokenPair(
         eth.address,
         gno.address,
-        sellingAmount,  // 100 amt - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
-        sellingAmount / 4,              // buyVolume for GNO
-        2,              // lastClosingPrice NUM
-        1,              // lastClosingPrice DEN
-        { from: seller1 },
+        sellingAmount, // 100 amt - sellVolume for ETH - takes Math.min of amt passed in OR seller balance
+        sellingAmount / 4, // buyVolume for GNO
+        2, // lastClosingPrice NUM
+        1, // lastClosingPrice DEN
+        { from: seller1 }
       )
     })
 
@@ -1166,7 +1164,7 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
 
     it(
       'BUYER1: Tries to lock and unlock MGNs --> Auction NOT cleared --> asserts 0 MGNs minted and in mapping',
-      () => unlockMGNTokens(buyer1, gno, eth),
+      () => unlockMGNTokens(buyer1, gno, eth)
     )
 
     it('BUYER1: Auction clearing PostBuyOrder + Claim => MGNs = sellVolume', async () => {
@@ -1202,7 +1200,7 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
        * @{return} ... 20GNO * 1/4 => 5 ETHER
        */
       // post buy order that CLEARS auction - 400 / 4 = 100 + 5 from before clears
-      await postBuyOrder(gno, eth, false, 5..toWei(), buyer1)
+      await postBuyOrder(gno, eth, false, 5.0.toWei(), buyer1)
       log(`
       Buy Volume AFTER = ${((await dx.buyVolumes.call(gno.address, eth.address)).toNumber()).toEth()}
       Left to clear auction = ${((await dx.sellVolumesCurrent.call(gno.address, eth.address)).toNumber() - ((await dx.buyVolumes.call(gno.address, eth.address)).toNumber()) * (den / num)).toEth()}
@@ -1211,7 +1209,7 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
       let idx = await getAuctionIndex() - 1
 
       // clear RECIP auction via buyer2
-      await postBuyOrder(eth, gno, 1, 800..toWei(), buyer2)
+      await postBuyOrder(eth, gno, 1, 800.0.toWei(), buyer2)
 
       const [returned, mgnsIssued] = (await dx.claimBuyerFunds.call(gno.address, eth.address, buyer1, idx)).map(i => i.toNumber())
       await assertClaimingFundsCreatesMGNs(gno, eth, buyer1, 'buyer')
@@ -1273,10 +1271,9 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', (accounts) => {
       await unlockMGNTokens(seller1)
     })
   })
-
 })
 
-const c2 = () => contract('DX MGN Flow --> ERC20:ERC20 --> 1 S + 1B', (accounts) => {
+const c2 = () => contract('DX MGN Flow --> ERC20:ERC20 --> 1 S + 1B', accounts => {
   const [master, seller1, seller2, buyer1] = accounts
   const participants = accounts.slice(1)
   const sellers = [seller1, seller2]
@@ -1284,18 +1281,18 @@ const c2 = () => contract('DX MGN Flow --> ERC20:ERC20 --> 1 S + 1B', (accounts)
   let gno2
 
   const startBal = {
-    startingETH: 1000..toWei(),
-    startingGNO: 1000..toWei(),
-    startingGNO2: 1000..toWei(),
-    ethUSDPrice: 6000..toWei(),   // 400 ETH @ $6000/ETH = $2,400,000 USD
-    sellingAmount: 10..toWei(), // Same as web3.toWei(50, 'gno')
-    buyingAmount: 5..toWei(),
+    startingETH: 1000.0.toWei(),
+    startingGNO: 1000.0.toWei(),
+    startingGNO2: 1000.0.toWei(),
+    ethUSDPrice: 6000.0.toWei(), // 400 ETH @ $6000/ETH = $2,400,000 USD
+    sellingAmount: 10.0.toWei(), // Same as web3.toWei(50, 'gno')
+    buyingAmount: 5.0.toWei()
   }
   const {
     startingETH,
     sellingAmount,
     startingGNO,
-    startingGNO2,
+    startingGNO2
     // ethUSDPrice,
   } = startBal
 
@@ -1314,11 +1311,11 @@ const c2 = () => contract('DX MGN Flow --> ERC20:ERC20 --> 1 S + 1B', (accounts)
 
     // create new ERC20 token &&
     // assign said token to gasLogger contracts obj
-    contracts.gno2 = await TokenGNO2.new(10000..toWei(), { from: master });
+    contracts.gno2 = await TokenGNO2.new(10000.0.toWei(), { from: master });
     ({ gno2 } = contracts)
 
     // fund gno2 - deposit in DX
-    await Promise.all(participants.map((acc) => {
+    await Promise.all(participants.map(acc => {
       /* eslint array-callback-return:0 */
       gno2.transfer(acc, startingGNO2, { from: master })
       gno2.approve(dx.address, startingGNO2, { from: acc })
@@ -1334,7 +1331,7 @@ const c2 = () => contract('DX MGN Flow --> ERC20:ERC20 --> 1 S + 1B', (accounts)
     // Assert GNO2 balance is NOT 0
     const gno2AddressBalancesPromises = participants.map(async account => {
       const balance = await dx.balances.call(gno2.address, account)
-      assert.isAbove( balance.toNumber(), 0, 'Should not have 0 balance')
+      assert.isAbove(balance.toNumber(), 0, 'Should not have 0 balance')
     }
     )
     await Promise.all(gno2AddressBalancesPromises)
@@ -1358,11 +1355,11 @@ const c2 = () => contract('DX MGN Flow --> ERC20:ERC20 --> 1 S + 1B', (accounts)
     await dx.addTokenPair(
       eth.address,
       gno.address,
-      10.0.toWei(),      // 10 - sellVolume for token1 - takes Math.min of amt passed in OR seller balance
-      5.0.toWei(),      // starting buyVolume for token2
-      2,               // lastClosingPrice NUM
-      1,              // lastClosingPrice DEN
-      { from: seller1 },
+      10.0.toWei(), // 10 - sellVolume for token1 - takes Math.min of amt passed in OR seller balance
+      5.0.toWei(), // starting buyVolume for token2
+      2, // lastClosingPrice NUM
+      1, // lastClosingPrice DEN
+      { from: seller1 }
     )
     seller1Balance = await getBalance(seller1, eth)
     assert.equal(seller1Balance, startingETH - sellingAmount, `ETH///GNO: Seller1 should have ${startingETH.toEth()} balance after new Token Pair add`)
@@ -1371,11 +1368,11 @@ const c2 = () => contract('DX MGN Flow --> ERC20:ERC20 --> 1 S + 1B', (accounts)
     await dx.addTokenPair(
       eth.address,
       gno2.address,
-      10.0.toWei(),      // 10 - sellVolume for token1 - takes Math.min of amt passed in OR seller balance
-      5.0.toWei(),      // starting buyVolume for token2
-      1,               // lastClosingPrice NUM
-      1,              // lastClosingPrice DEN
-      { from: seller1 },
+      10.0.toWei(), // 10 - sellVolume for token1 - takes Math.min of amt passed in OR seller balance
+      5.0.toWei(), // starting buyVolume for token2
+      1, // lastClosingPrice NUM
+      1, // lastClosingPrice DEN
+      { from: seller1 }
     )
     seller1Balance = await getBalance(seller1, eth)
     assert.equal(seller1Balance, startingETH - (sellingAmount * 2), `ETH//GNO2: Seller1 should have ${startingGNO.toEth()} balance after new Token Pair add`)
@@ -1384,11 +1381,11 @@ const c2 = () => contract('DX MGN Flow --> ERC20:ERC20 --> 1 S + 1B', (accounts)
     await dx.addTokenPair(
       gno.address,
       gno2.address,
-      10.0.toWei(),      // 10 - sellVolume for token1 - takes Math.min of amt passed in OR seller balance
-      1.0.toWei(),      // starting buyVolume for token2
-      1,               // lastClosingPrice NUM
-      2,              // lastClosingPrice DEN
-      { from: seller1 },
+      10.0.toWei(), // 10 - sellVolume for token1 - takes Math.min of amt passed in OR seller balance
+      1.0.toWei(), // starting buyVolume for token2
+      1, // lastClosingPrice NUM
+      2, // lastClosingPrice DEN
+      { from: seller1 }
     )
     seller1Balance = await getBalance(seller1, gno)
     assert.isAtLeast(seller1Balance.toEth(), (startingGNO - (sellingAmount + 5.0.toWei())).toEth(), `GNO//GNO2: Seller1 should have ${startingGNO.toEth()} balance after new Token Pair add`)

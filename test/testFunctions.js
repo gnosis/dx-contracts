@@ -39,6 +39,7 @@ const contractNames = [
   'TokenGNO',
   'TokenOWLProxy',
   'TokenFRT',
+  'TokenFRTProxy',
   'PriceOracleInterface',
   'PriceFeed',
   'Medianizer',
@@ -61,9 +62,10 @@ const getContracts = async () => {
     return acc
   }, {});
 
-  [deployedContracts.DutchExchange, deployedContracts.TokenOWL] = gasLogWrapper([
+  [deployedContracts.DutchExchange, deployedContracts.TokenOWL, deployedContracts.TokenFRT] = gasLogWrapper([
     artifacts.require('DutchExchange').at(deployedContracts.DutchExchangeProxy.address),
     artifacts.require('TokenOWL').at(deployedContracts.TokenOWLProxy.address),
+    artifacts.require('TokenFRT').at(deployedContracts.TokenFRTProxy.address)
   ])
   return deployedContracts
 }
