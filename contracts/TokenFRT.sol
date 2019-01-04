@@ -5,6 +5,8 @@ import "@gnosis.pm/util-contracts/contracts/GnosisStandardToken.sol";
 
 /// @title Standard token contract with overflow protection
 contract TokenFRT is Proxied, GnosisStandardToken {
+    address public owner;
+    
     string public constant symbol = "MGN";
     string public constant name = "Magnolia Token";
     uint8 public constant decimals = 18;
@@ -17,7 +19,6 @@ contract TokenFRT is Proxied, GnosisStandardToken {
     /*
      *  Storage
      */
-    address public owner;
     address public minter;
 
     // user => unlockedToken
