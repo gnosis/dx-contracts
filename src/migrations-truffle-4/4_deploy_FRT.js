@@ -5,15 +5,18 @@ function migrate ({
   accounts
 }) {
   const TokenFRT = artifacts.require('TokenFRT')
+  const TokenFRTProxy = artifacts.require('TokenFRTProxy')
+
   const { Math } = _getDependencies(artifacts, network, deployer)
 
   return deployer
     .then(() => Math.deployed())
-    .then(math => deployer.link(Math, TokenFRT))
+    .then(() => deployer.link(Math, [TokenFRT, TokenFRTProxy]))
+    .then(() => deployer.deploy(TokenFRT))
+    // proxiedAddr, ownerAddr
     .then(() => {
-      const account = accounts[0]
-      console.log('Deploying TokenFRT with owner: %s', account)
-      return deployer.deploy(TokenFRT, account)
+      console.log('Deploying TokenFRTProxy with ACCOUNT ==> ', accounts[0])
+      return deployer.deploy(TokenFRTProxy, TokenFRT.address, accounts[0])
     })
 }
 

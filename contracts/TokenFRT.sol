@@ -1,8 +1,12 @@
 pragma solidity ^0.4.24;
+
+import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
 import "@gnosis.pm/util-contracts/contracts/GnosisStandardToken.sol";
 
 /// @title Standard token contract with overflow protection
-contract TokenFRT is GnosisStandardToken {
+contract TokenFRT is Proxied, GnosisStandardToken {
+    address public owner;
+    
     string public constant symbol = "MGN";
     string public constant name = "Magnolia Token";
     uint8 public constant decimals = 18;
@@ -15,7 +19,6 @@ contract TokenFRT is GnosisStandardToken {
     /*
      *  Storage
      */
-    address public owner;
     address public minter;
 
     // user => unlockedToken
@@ -27,16 +30,7 @@ contract TokenFRT is GnosisStandardToken {
     /*
      *  Public functions
      */
-
-    constructor(
-        address _owner
-    )
-        public
-    {
-        require(_owner != address(0));
-        owner = _owner;
-    }
-
+    
     // @dev allows to set the minter of Magnolia tokens once.
     // @param   _minter the minter of the Magnolia tokens, should be the DX-proxy
     function updateMinter(
