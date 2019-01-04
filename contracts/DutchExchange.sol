@@ -39,13 +39,15 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
     // Token for paying fees
     TokenOWL public owlToken;
 
-    // For the following two mappings, there is one mapping for each token pair
+    // For the following three mappings, there is one mapping for each token pair
     // The order which the tokens should be called is smaller, larger
     // These variables should never be called directly! They have getters below
     // Token => Token => index
     mapping (address => mapping (address => uint)) public latestAuctionIndices;
     // Token => Token => time
     mapping (address => mapping (address => uint)) public auctionStarts;
+    // Token => Token => auctionIndex => time
+    mapping (address => mapping (address => mapping (uint => uint))) public clearingTimes;
 
     // Token => Token => auctionIndex => price
     mapping (address => mapping (address => mapping (uint => fraction))) public closingPrices;
@@ -806,6 +808,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
                 buyVolumes[buyToken][sellToken] = 0;
             }
 
+            // Save clearing time
+            setClearingTime(sellToken, buyToken, auctionIndex, auctionStart, sellVolume, buyVolume);
             // Increment auction index
             setAuctionIndex(sellToken, buyToken);
             // Check if next auction can be scheduled
@@ -1069,6 +1073,38 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
     {
         (token1, token2) = getTokenOrder(token1, token2);
         auctionIndex = latestAuctionIndices[token1][token2];
+    }
+
+    function setClearingTime(
+        address token1,
+        address token2,
+        uint auctionIndex,
+        uint auctionStart,
+        uint sellVolume,
+        uint buyVolume
+    )
+        internal
+    {
+        (uint pastNum, uint pastDen) = getPriceInPastAuction(sellToken, buyToken, auctionIndex - 1);
+        // timeElapsed = 43200(2 * pastNum * sellVolume - buyVolume * pastDen)/(sellVolume * pastNum + buyVolume * pastDen)
+        uint numerator = sub(mul(mul(pastNum, sellVolume), 86400), mul(mul(buyVolume, pastDen), 43200));
+        uint timeElapsed = numerator / (add(mul(selVolume, pastNum), mul(buyVolume, pastDen)));
+        uint clearingTime = auctionStart + timeElapsed;
+        (token1, token2) = getTokenOrder(token1, token2);
+        clearingTimes[token1][token2][auctionIndex] = clearingTime;
+    }
+
+    function getClearingTime(
+        address token1,
+        address token2,
+        uint auctionIndex
+    )
+        public
+        view
+        returns (uint time)
+    {
+        (token1, token2) = getTokenOrder(token1, token2);
+        time = clearingTimes[token1][token2][auctionIndex];
     }
 
     function getRunningTokenPairs(
