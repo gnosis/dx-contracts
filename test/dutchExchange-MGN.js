@@ -9,6 +9,7 @@
   no-trailing-spaces: 0,
   no-multi-spaces: 0,
   comma-dangle: 0,
+  no-undef: 0,
 */
 
 const TokenGNO2 = artifacts.require('TokenGNO')
