@@ -115,6 +115,7 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
 
     assert.equal(await dx.approvedTokens.call(eth.address), true, 'ETH is approved by DX')
     assert.equal(await dx.approvedTokens.call(gno.address), true, 'GNO is approved by DX')
+    assert.equal(await tokenMGN.minter.call(), dx.address, 'DutchExchange = TokenFRT/TokenMGN minter')
   })
 
   let currentSnapshotId
@@ -260,8 +261,16 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       `)
       // drop it down 1 as Auction has cleared
       let idx = await getAuctionIndex() - 1
+
       const [claimedFunds, mgnsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
+      
+      log(`
+      claimedFunds: ${claimedFunds},
+      mgnsIssued: ${mgnsIssued}
+      `)
+
       await assertClaimingFundsCreatesMGNs(eth, gno, buyer1, 'buyer')
+      
       log(`
       RETURNED//CLAIMED FUNDS => ${claimedFunds.toEth()}
       MGN ISSUED           => ${mgnsIssued.toEth()}
