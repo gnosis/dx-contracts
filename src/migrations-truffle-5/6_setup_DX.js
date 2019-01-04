@@ -12,6 +12,7 @@ async function migrate ({
 }) {  
   const owner = accounts[0]
   const TokenFRT = artifacts.require('TokenFRT')
+  const TokenFRTProxy = artifacts.require('TokenFRTProxy')
   const DutchExchange = artifacts.require('DutchExchange')
   const DutchExchangeProxy = artifacts.require('DutchExchangeProxy')
   const PriceOracleInterface = artifacts.require('PriceOracleInterface')
@@ -28,7 +29,8 @@ async function migrate ({
   await TokenGNO.deployed()
   const tokenOWLProxy = await TokenOWLProxy.deployed()
   const etherToken = await EtherToken.deployed()
-  const tokenFRT = await TokenFRT.deployed()
+  
+  const tokenFRT = await TokenFRT.at(TokenFRTProxy.address)
 
   const priceOracleInterface = await PriceOracleInterface.deployed()
   const dxProxy = await DutchExchangeProxy.deployed()

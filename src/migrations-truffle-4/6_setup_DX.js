@@ -10,6 +10,7 @@ function migrate ({
   thresholdAuctionStartUsd = DEFAULT_THRESHOLD_AUCTION_START_USD
 }) {
   const TokenFRT = artifacts.require('TokenFRT')
+  const TokenFRTProxy = artifacts.require('TokenFRTProxy')
   const DutchExchange = artifacts.require('DutchExchange')
   const DutchExchangeProxy = artifacts.require('DutchExchangeProxy')
   const PriceOracleInterface = artifacts.require('PriceOracleInterface')
@@ -36,7 +37,8 @@ function migrate ({
     .then(() => {
       const dx = DutchExchange.at(DutchExchangeProxy.address)
       const owner = accounts[0]
-      const frtAddress = TokenFRT.address
+      const frt = TokenFRT.at(TokenFRTProxy.address)
+      const frtAddress = frt.address
       const owlAddress = TokenOWLProxy.address
       const wethAddress = EtherToken.address
       const oracleAddress = PriceOracleInterface.address
