@@ -18,6 +18,7 @@ import "@gnosis.pm/owl-token/contracts/OWLAirdrop.sol";
 // DX contracts
 import "./Oracle/Medianizer.sol";
 import "./TokenFRT.sol";
+import "./TokenFRTProxy.sol";
 import "./DutchExchange.sol";
 import "./DutchExchangeProxy.sol";
 
