@@ -1,6 +1,6 @@
 {
   "name": "@gnosis.pm/dx-contracts",
-  "version": "2.0.0-RC6",
+  "version": "2.0.0-RC7",
   "description": "DutchX - Gnosis Dutch Auction Trading Platform. This npm package provides all smartcontracts used in the project",
   "scripts": {
     "rpc": "ganache-cli -d --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --defaultBalanceEther '500000000000000000000'",
