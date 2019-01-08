@@ -1085,10 +1085,11 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
     )
         internal
     {
-        (uint pastNum, uint pastDen) = getPriceInPastAuction(sellToken, buyToken, auctionIndex - 1);
+        (uint pastNum, uint pastDen) = getPriceInPastAuction(token1, token2, auctionIndex - 1);
+        // 43200 = 12 hrs, 86400 = 24 hrs
         // timeElapsed = 43200(2 * pastNum * sellVolume - buyVolume * pastDen)/(sellVolume * pastNum + buyVolume * pastDen)
         uint numerator = sub(mul(mul(pastNum, sellVolume), 86400), mul(mul(buyVolume, pastDen), 43200));
-        uint timeElapsed = numerator / (add(mul(selVolume, pastNum), mul(buyVolume, pastDen)));
+        uint timeElapsed = numerator / (add(mul(sellVolume, pastNum), mul(buyVolume, pastDen)));
         uint clearingTime = auctionStart + timeElapsed;
         (token1, token2) = getTokenOrder(token1, token2);
         clearingTimes[token1][token2][auctionIndex] = clearingTime;
