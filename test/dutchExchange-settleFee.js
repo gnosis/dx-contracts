@@ -111,7 +111,7 @@ const getHelperFunctions = (master) => {
   }
 }
 
-const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
+const c1 = () => contract.skip('DutchExchange - calculateFeeRatio', (accounts) => {
   const [master, seller1] = accounts
   const testingAccs = accounts.slice(1, 5)
 
@@ -272,7 +272,7 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', (accounts) => {
   // })
 })
 
-const c2 = () => contract('DutchExchange - settleFee', (accounts) => {
+const c2 = () => contract.skip('DutchExchange - settleFee', (accounts) => {
   const [master, seller1] = accounts
 
   const startBal = {

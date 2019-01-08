@@ -17,7 +17,7 @@ let contracts
 const separateLogs = () => utilsLog('\n    ----------------------------------')
 const log = (...args) => utilsLog('\t', ...args)
 
-contract('DutchExchange - Proxy', (accounts) => {
+contract.skip('DutchExchange - Proxy', (accounts) => {
   const [master, seller1] = accounts
 
   beforeEach(separateLogs)
