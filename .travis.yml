@@ -6,7 +6,7 @@ node_js:
   - '8'
 before_install:
   - rm -rf node_modules
-  - npm install -g ganache-cli@6.1.8
+  - npm install -g ganache-cli@6.2.5
 install:
   - npm install
 before_script:
