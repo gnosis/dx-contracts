@@ -10,7 +10,7 @@ before_install:
 install:
   - npm install
 before_script:
-  - ganache-cli --defaultBalanceEther 500000000 > /dev/null &
+  - ganache-cli --defaultBalanceEther 500000000 --gasLimit=7e6 > /dev/null &
   - sleep 5
 script:
   - cd $TRAVIS_BUILD_DIR/travscripts

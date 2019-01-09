@@ -23,7 +23,6 @@ let dxOld
 let owlA
 let contracts
 
-
 const getExchangeParams = async (dxContr = dx) => {
   const [frtToken,
     owlToken,
@@ -38,7 +37,7 @@ const getExchangeParams = async (dxContr = dx) => {
     dxContr.ethToken.call(),
     dxContr.ethUSDOracle.call(),
     dxContr.thresholdNewTokenPair.call(),
-    dxContr.thresholdNewAuction.call(),
+    dxContr.thresholdNewAuction.call()
   ])
 
   return [
@@ -48,13 +47,13 @@ const getExchangeParams = async (dxContr = dx) => {
     eth,
     ethUSDOracle,
     thresholdNewTokenPair.toNumber(),
-    thresholdNewAuction.toNumber(),
+    thresholdNewAuction.toNumber()
   ]
 }
 
 const separateLogs = () => log('\n    ----------------------------------')
 
-const getHelperFunctions = (master) => {
+const getHelperFunctions = master => {
   const getTotalMGN = async (print = true) => {
     const totalMgn = (await mgn.totalSupply.call()).toNumber()
     if (print) log(`\taccount's total MGN == ${totalMgn}`)
@@ -107,11 +106,11 @@ const getHelperFunctions = (master) => {
     mintTokens,
     calculateFeeRatio,
     getHowManyToAdd,
-    mintPercent,
+    mintPercent
   }
 }
 
-const c1 = () => contract.skip('DutchExchange - calculateFeeRatio', (accounts) => {
+const c1 = () => contract('DutchExchange - calculateFeeRatio', accounts => {
   const [master, seller1] = accounts
   const testingAccs = accounts.slice(1, 5)
 
@@ -272,7 +271,7 @@ const c1 = () => contract.skip('DutchExchange - calculateFeeRatio', (accounts) =
   // })
 })
 
-const c2 = () => contract.skip('DutchExchange - settleFee', (accounts) => {
+const c2 = () => contract('DutchExchange - settleFee', accounts => {
   const [master, seller1] = accounts
 
   const startBal = {

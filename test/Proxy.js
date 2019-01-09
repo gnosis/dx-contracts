@@ -1,7 +1,7 @@
 const {
   log: utilsLog,
   assertRejects,
-  gasLogger,
+  gasLogger
 } = require('./utils')
 
 const { getContracts, wait } = require('./testFunctions')
@@ -17,7 +17,7 @@ let contracts
 const separateLogs = () => utilsLog('\n    ----------------------------------')
 const log = (...args) => utilsLog('\t', ...args)
 
-contract.skip('DutchExchange - Proxy', (accounts) => {
+contract('DutchExchange - Proxy', accounts => {
   const [master, seller1] = accounts
 
   beforeEach(separateLogs)
@@ -31,7 +31,7 @@ contract.skip('DutchExchange - Proxy', (accounts) => {
       DutchExchange: dx,
       EtherToken: ethToken,
       // dxNew has new code as it is an InternalTests contract
-      DutchExchangeProxy: pr,
+      DutchExchangeProxy: pr
     } = contracts)
     const initParams = await getExchangeParams(dx)
     dxNew = await InternalTests.new(...initParams)
@@ -51,7 +51,7 @@ contract.skip('DutchExchange - Proxy', (accounts) => {
       dxContr.ethToken.call(),
       dxContr.ethUSDOracle.call(),
       dxContr.thresholdNewTokenPair.call(),
-      dxContr.thresholdNewAuction.call(),
+      dxContr.thresholdNewAuction.call()
     ])
 
     return [
@@ -61,16 +61,16 @@ contract.skip('DutchExchange - Proxy', (accounts) => {
       eth,
       ethUSDOracle,
       thresholdNewTokenPair.toNumber(),
-      thresholdNewAuction.toNumber(),
+      thresholdNewAuction.toNumber()
     ]
   }
 
-  const assertIsAuctioneer = async (acc) => {
+  const assertIsAuctioneer = async acc => {
     const auctioneer = await dx.auctioneer.call()
     assert.strictEqual(auctioneer, acc, 'account should be DutchExchange contract auctioneer')
   }
 
-  const assertIsNotAuctioneer = async (acc) => {
+  const assertIsNotAuctioneer = async acc => {
     const auctioneer = await dx.auctioneer.call()
     assert.notStrictEqual(auctioneer, acc, 'account should not be DutchExchange contract auctioneer')
   }
