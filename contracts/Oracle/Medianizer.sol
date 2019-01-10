@@ -1,10 +1,10 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import "../Oracle/DSValue.sol";
 
 contract Medianizer is DSValue {
-    mapping (bytes12 => address) public values;
-    mapping (address => bytes12) public indexes;
+    mapping(bytes12 => address) public values;
+    mapping(address => bytes12) public indexes;
     bytes12 public next = 0x1;
 
     uint96 public min = 0x1;

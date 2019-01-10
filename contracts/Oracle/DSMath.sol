@@ -1,8 +1,6 @@
-pragma solidity ^0.4.24;
-
+pragma solidity ^0.5.0;
 
 contract DSMath {
-    
     /*
     standard uint256 functions
      */
@@ -34,7 +32,6 @@ contract DSMath {
     uint128 functions (h is for half)
      */
 
-
     function hadd(uint128 x, uint128 y) internal pure returns (uint128 z) {
         assert((z = x + y) >= x);
     }
@@ -57,7 +54,6 @@ contract DSMath {
     function hmax(uint128 x, uint128 y) internal pure returns (uint128 z) {
         return x >= y ? x : y;
     }
-
 
     /*
     int256 functions

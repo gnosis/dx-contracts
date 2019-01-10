@@ -1,9 +1,9 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import "../Oracle/DSThing.sol";
 
 contract DSValue is DSThing {
-    bool    has;
+    bool has;
     bytes32 val;
     function peek() public view returns (bytes32, bool) {
         return (val, has);
@@ -17,7 +17,8 @@ contract DSValue is DSThing {
         val = wut;
         has = true;
     }
-    function void() public note auth { // unset the value
+    function void() public note auth {
+        // unset the value
         has = false;
     }
 }

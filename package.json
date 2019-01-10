@@ -23,7 +23,8 @@
     "claim-unlocked-mgn": "npx truffle exec src/truffle/claim-unlocked-mgn.js",
     "set-auctioneer": "npx truffle exec src/truffle/set-auctioneer.js",
     "get-abi-encoded-params": "npx truffle exec src/truffle/get-abi-encoded-params.js",
-    "decode": "node ./node_modules/decode-eth/main.js"
+    "decode": "node ./node_modules/decode-eth/main.js",
+    "prettier": "prettier --write --tab-width 4 --print-width 120 '**/*.sol'"
   },
   "repository": {
     "type": "git",
@@ -49,6 +50,8 @@
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-standard": "^4.0.0",
     "minimist": "^1.2.0",
+    "prettier": "^1.15.3",
+    "prettier-plugin-solidity-refactor": "^1.0.0-alpha.12",
     "solidity-coverage": "^0.5.11",
     "truffle": "^4.1.14",
     "truffle-contract": "^3.0.6",

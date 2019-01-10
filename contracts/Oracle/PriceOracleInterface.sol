@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 /*
 This contract is the interface between the MakerDAO priceFeed and our DX platform.
@@ -8,7 +8,6 @@ import "../Oracle/PriceFeed.sol";
 import "../Oracle/Medianizer.sol";
 
 contract PriceOracleInterface {
-
     address public priceFeedSource;
     address public owner;
     bool public emergencyMode;
@@ -21,32 +20,19 @@ contract PriceOracleInterface {
 
     /// @dev constructor of the contract
     /// @param _priceFeedSource address of price Feed Source -> should be maker feeds Medianizer contract
-    constructor(
-        address _owner,
-        address _priceFeedSource
-    )
-        public
-    {
+    constructor(address _owner, address _priceFeedSource) public {
         owner = _owner;
         priceFeedSource = _priceFeedSource;
     }
-    /// @dev gives the owner the possibility to put the Interface into an emergencyMode, which will 
+    /// @dev gives the owner the possibility to put the Interface into an emergencyMode, which will
     /// output always a price of 600 USD. This gives everyone time to set up a new pricefeed.
-    function raiseEmergency(bool _emergencyMode)
-        public
-        onlyOwner()
-    {
+    function raiseEmergency(bool _emergencyMode) public onlyOwner {
         emergencyMode = _emergencyMode;
     }
 
     /// @dev updates the priceFeedSource
     /// @param _owner address of owner
-    function updateCurator(
-        address _owner
-    )
-        public
-        onlyOwner()
-    {
+    function updateCurator(address _owner) public onlyOwner {
         owner = _owner;
     }
 
@@ -73,5 +59,5 @@ contract PriceOracleInterface {
             return 1000000; 
         }
         return priceUint;
-    }  
+    }
 }
