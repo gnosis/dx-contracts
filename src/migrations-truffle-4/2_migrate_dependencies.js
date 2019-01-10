@@ -1,6 +1,6 @@
-const deployUtils = require('@gnosis.pm/util-contracts/src/migrations-truffle-4')
-const deployGno = require('@gnosis.pm/gno-token/src/migrations-truffle-4')
-const deployOwl = require('@gnosis.pm/owl-token/src/migrations-truffle-4')
+const deployUtils = require('@gnosis.pm/util-contracts/src/migrations-truffle-5')
+const deployGno = require('@gnosis.pm/gno-token/src/migrations-truffle-5')
+const deployOwl = require('@gnosis.pm/owl-token/src/migrations-truffle-5')
 
 function migrate ({
   artifacts,
@@ -8,7 +8,8 @@ function migrate ({
   network,
   accounts,
   initialTokenAmount,
-  gnoLockPeriodInHours
+  gnoLockPeriodInHours,
+  web3
 }) {
   if (network === 'development') {
     const deployParams = {
@@ -17,7 +18,8 @@ function migrate ({
       network,
       accounts,
       initialTokenAmount,
-      gnoLockPeriodInHours
+      gnoLockPeriodInHours,
+      web3
     }
     deployer
       .then(() => deployUtils(deployParams))
