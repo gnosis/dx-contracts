@@ -31,7 +31,6 @@ contract DxUpgrade is Proxied, AuctioneerManaged, DxMath {
 
     function updateMasterCopy()
         public
-        onlyAuctioneer
     {
         require(newMasterCopy != address(0), "The new master copy must be a valid address");
         require(block.timestamp >= masterCopyCountdown, "The master contract cannot be updated in a waiting period");
