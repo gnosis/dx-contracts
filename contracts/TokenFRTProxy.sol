@@ -4,7 +4,7 @@ import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
 import "@gnosis.pm/util-contracts/contracts/GnosisStandardToken.sol";
 
 contract TokenFRTProxy is Proxy, GnosisStandardToken {
-    ///@dev State variables remain for B
+    /// @dev State variables remain for Blockchain exploring Proxied Token contracts
     address public owner;
     
     string public constant symbol = "MGN";

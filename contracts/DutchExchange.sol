@@ -579,10 +579,10 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         }
     }
 
-    //@dev allows to close possible theoretical closed markets
-    //@param sellToken sellToken of an auction
-    //@param buyToken buyToken of an auction
-    //@param index is the auctionIndex of the auction
+    /// @dev allows to close possible theoretical closed markets
+    /// @param sellToken sellToken of an auction
+    /// @param buyToken buyToken of an auction
+    /// @param index is the auctionIndex of the auction
     function closeTheoreticalClosedAuction(
         address sellToken,
         address buyToken,
@@ -1103,11 +1103,11 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         }
     }
 
-    //@dev for quick overview of possible sellerBalances to calculate the possible withdraw tokens
-    //@param auctionSellToken is the sellToken defining an auctionPair
-    //@param auctionBuyToken is the buyToken defining an auctionPair
-    //@param user is the user who wants to his tokens
-    //@param lastNAuctions how many auctions will be checked. 0 means all
+    /// @dev for quick overview of possible sellerBalances to calculate the possible withdraw tokens
+    /// @param auctionSellToken is the sellToken defining an auctionPair
+    /// @param auctionBuyToken is the buyToken defining an auctionPair
+    /// @param user is the user who wants to his tokens
+    /// @param lastNAuctions how many auctions will be checked. 0 means all
     //@returns returns sellbal for all indices for all tokenpairs
     function getIndicesWithClaimableTokensForSellers(
         address auctionSellToken,
@@ -1145,10 +1145,10 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         }
     }
 
-    //@dev for quick overview of current sellerBalances for a user
-    //@param auctionSellTokens are the sellTokens defining an auctionPair
-    //@param auctionBuyTokens are the buyTokens defining an auctionPair
-    //@param user is the user who wants to his tokens
+    /// @dev for quick overview of current sellerBalances for a user
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param user is the user who wants to his tokens
     function getSellerBalancesOfCurrentAuctions(
         address[] auctionSellTokens,
         address[] auctionBuyTokens,
@@ -1172,11 +1172,11 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         return sellersBalances;
     }
 
-    //@dev for quick overview of possible buyerBalances to calculate the possible withdraw tokens
-    //@param auctionSellToken is the sellToken defining an auctionPair
-    //@param auctionBuyToken is the buyToken defining an auctionPair
-    //@param user is the user who wants to his tokens
-    //@param lastNAuctions how many auctions will be checked. 0 means all
+    /// @dev for quick overview of possible buyerBalances to calculate the possible withdraw tokens
+    /// @param auctionSellToken is the sellToken defining an auctionPair
+    /// @param auctionBuyToken is the buyToken defining an auctionPair
+    /// @param user is the user who wants to his tokens
+    /// @param lastNAuctions how many auctions will be checked. 0 means all
     //@returns returns sellbal for all indices for all tokenpairs
     function getIndicesWithClaimableTokensForBuyers(
         address auctionSellToken,
@@ -1214,10 +1214,10 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         }
     }
 
-    //@dev for quick overview of current sellerBalances for a user
-    //@param auctionSellTokens are the sellTokens defining an auctionPair
-    //@param auctionBuyTokens are the buyTokens defining an auctionPair
-    //@param user is the user who wants to his tokens
+    /// @dev for quick overview of current sellerBalances for a user
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param user is the user who wants to his tokens
     function getBuyerBalancesOfCurrentAuctions(
         address[] auctionSellTokens,
         address[] auctionBuyTokens,
@@ -1258,11 +1258,11 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         require(length2 == length3);
     }
 
-    //@dev for multiple claims
-    //@param auctionSellTokens are the sellTokens defining an auctionPair
-    //@param auctionBuyTokens are the buyTokens defining an auctionPair
-    //@param auctionIndices are the auction indices on which an token should be claimedAmounts
-    //@param user is the user who wants to his tokens
+    /// @dev for multiple claims
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    /// @param user is the user who wants to his tokens
     function claimTokensFromSeveralAuctionsAsSeller(
         address[] auctionSellTokens,
         address[] auctionBuyTokens,
@@ -1289,11 +1289,11 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         return (claimAmounts, frtsIssuedList);
     }
 
-    //@dev for multiple claims
-    //@param auctionSellTokens are the sellTokens defining an auctionPair
-    //@param auctionBuyTokens are the buyTokens defining an auctionPair
-    //@param auctionIndices are the auction indices on which an token should be claimedAmounts
-    //@param user is the user who wants to his tokens
+    /// @dev for multiple claims
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    /// @param user is the user who wants to his tokens
     function claimTokensFromSeveralAuctionsAsBuyer(
         address[] auctionSellTokens,
         address[] auctionBuyTokens,
@@ -1320,10 +1320,10 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         return (claimAmounts, frtsIssuedList);
     }
 
-    //@dev for multiple withdraws
-    //@param auctionSellTokens are the sellTokens defining an auctionPair
-    //@param auctionBuyTokens are the buyTokens defining an auctionPair
-    //@param auctionIndices are the auction indices on which an token should be claimedAmounts
+    /// @dev for multiple withdraws
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
     function claimAndWithdrawTokensFromSeveralAuctionsAsSeller(
         address[] auctionSellTokens,
         address[] auctionBuyTokens,
@@ -1353,10 +1353,10 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         return (claimAmounts, frtsIssued);
     }
 
-    //@dev for multiple withdraws
-    //@param auctionSellTokens are the sellTokens defining an auctionPair
-    //@param auctionBuyTokens are the buyTokens defining an auctionPair
-    //@param auctionIndices are the auction indices on which an token should be claimedAmounts
+    /// @dev for multiple withdraws
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
     function claimAndWithdrawTokensFromSeveralAuctionsAsBuyer(
         address[] auctionSellTokens,
         address[] auctionBuyTokens,
