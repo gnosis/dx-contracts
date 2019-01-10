@@ -8,7 +8,7 @@ module.exports = {
     // Check price for WETH-RDN in the DX (i.e. 450 RDN/ETH)
     //   i.e cli closing-price-official WETH-RDN 1
     //   0.0137 ETH = 0.0137 * 450 = 6.165 RDN
-    funding: 6.165
+    funding: 12000
   },
   // OMG
   tokenB: {
