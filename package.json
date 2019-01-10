@@ -33,9 +33,9 @@
   "author": "Gnosis",
   "license": "LGPL-3.0",
   "dependencies": {
-    "@gnosis.pm/gno-token": "^1.2.0-RC6",
-    "@gnosis.pm/owl-token": "^1.4.0-RC2",
-    "@gnosis.pm/util-contracts": "^1.2.0-RC5"
+    "@gnosis.pm/gno-token": "^2.0.0-RC2",
+    "@gnosis.pm/owl-token": "^2.0.0-RC1",
+    "@gnosis.pm/util-contracts": "^2.0.0-RC1"
   },
   "devDependencies": {
     "@digix/tempo": "^0.2.0",
@@ -52,6 +52,7 @@
     "minimist": "^1.2.0",
     "prettier": "^1.15.3",
     "prettier-plugin-solidity-refactor": "^1.0.0-alpha.12",
+    "solc": "0.5.2",
     "solidity-coverage": "^0.5.11",
     "truffle": "^4.1.14",
     "truffle-contract": "^3.0.6",

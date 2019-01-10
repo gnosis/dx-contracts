@@ -23,42 +23,25 @@
   resolved "https://registry.yarnpkg.com/@digix/tempo/-/tempo-0.2.0.tgz#5daf91ad788d6b596a19aad22e2e667e4ec808a8"
   integrity sha1-Xa+RrXiNa1lqGarSLi5mfk7ICKg=
 
-"@gnosis.pm/gno-token@^1.2.0-RC4":
-  version "1.2.0-RC4"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/gno-token/-/gno-token-1.2.0-RC4.tgz#aece8b7f7f3efc5b20b659f194589652ad06d184"
-  integrity sha512-xMmMV/g1FuQxJTC/yYRlYH76n453ngTKK59N/FYraAS6y5gS+Ti/fVlWK8YvZHAtg9U5QMk4dQ54bkeZ+3hS/Q==
+"@gnosis.pm/gno-token@^2.0.0-RC1", "@gnosis.pm/gno-token@^2.0.0-RC2":
+  version "2.0.0-RC2"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/gno-token/-/gno-token-2.0.0-RC2.tgz#b248e0bfbc689b6da1cc372ec619436c2b5a42c3"
+  integrity sha512-8TvfCj1JYo6UX3a0KPYbxX2hOpUwSBvXT2/jceR40Y8I5L0vkjZv3zghcuGDWRUynpyscwFc0vjAy7k8KqhGmg==
   dependencies:
-    "@gnosis.pm/util-contracts" "1.2.0-RC4"
+    "@gnosis.pm/util-contracts" "2.0.0-RC1"
 
-"@gnosis.pm/gno-token@^1.2.0-RC6":
-  version "1.2.0-RC6"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/gno-token/-/gno-token-1.2.0-RC6.tgz#ca3120ba6465fcc2950a05f175b7aaa2e2b284c3"
-  integrity sha512-eaOPWjYLRegL5evuD7o7A49ISdRsxQfFDJwlB8nYR0GuzZj2Ui+Wjofyw1jCFnaeWQYg01D73pXspHkbs2aHvQ==
+"@gnosis.pm/owl-token@^2.0.0-RC1":
+  version "2.0.0-RC1"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/owl-token/-/owl-token-2.0.0-RC1.tgz#1cae33e2cc2ca3777df93037a9f62cc9d235fea4"
+  integrity sha512-Oc/eETDak/8tAHLdOQKbDIlWgMOPl1trYqpKSxx6tvrIQ7Tic1TD7d/+Z/swsBpCvOmI2Voay9yyBnNAZ+DkGA==
   dependencies:
-    "@gnosis.pm/util-contracts" "1.2.0-RC6"
+    "@gnosis.pm/gno-token" "^2.0.0-RC1"
+    "@gnosis.pm/util-contracts" "^2.0.0-RC1"
 
-"@gnosis.pm/owl-token@^1.4.0-RC2":
-  version "1.4.0-RC2"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/owl-token/-/owl-token-1.4.0-RC2.tgz#3c422f82052371365b013bddf14c34ccea429fc0"
-  integrity sha512-3kpfyUOknErGsvjBNK5beUiUGTuGTktKkf3t1ZDz01+0DukqSR/nsL3mRzl6rwIt9xXyu4ioPDRDPSEQA6ZhTg==
-  dependencies:
-    "@gnosis.pm/gno-token" "^1.2.0-RC4"
-    "@gnosis.pm/util-contracts" "^1.2.0-RC5"
-
-"@gnosis.pm/util-contracts@1.2.0-RC4":
-  version "1.2.0-RC4"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/util-contracts/-/util-contracts-1.2.0-RC4.tgz#3eb66a3efccd8257e4e2e07f949b00f273d59bd7"
-  integrity sha512-lrl8wL/E9kPb8S1hjFEIBJ2VVPPILUC7zu9MNiGMRcXkPEzQfEvG6jyFVtJg9RkZrG+S/gOwWLgUcY9ecl4syg==
-
-"@gnosis.pm/util-contracts@1.2.0-RC6":
-  version "1.2.0-RC6"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/util-contracts/-/util-contracts-1.2.0-RC6.tgz#18a9db8ecce4f5cfea5757c043a059767be014bd"
-  integrity sha512-M1jsr1Z8t/WBcNR7qLp/u7mtdlk8Qfv/ClAp/vv7QfIFxmygTtE+YyWPm91N5sJ0yR3CjkW5YSIiQNECUk6ROQ==
-
-"@gnosis.pm/util-contracts@^1.2.0-RC5":
-  version "1.2.0-RC5"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/util-contracts/-/util-contracts-1.2.0-RC5.tgz#5facfe3515369f8b7487bf12014716bec51d8fb4"
-  integrity sha512-NCiLKPBFe1KY8o9vheOtdLePHOfipNS+v9sCPRLWGxDc7mpTrqiaFeYntyBJqXtEsi+x/x/VUqCUA1cljlrRiw==
+"@gnosis.pm/util-contracts@2.0.0-RC1", "@gnosis.pm/util-contracts@^2.0.0-RC1":
+  version "2.0.0-RC1"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/util-contracts/-/util-contracts-2.0.0-RC1.tgz#871a5e049f6fbe29522480a0f5d70f999ffdf148"
+  integrity sha512-yUsAo+W1jki9e8wP5r//BJ9t9I9QiDNcxd+wGFJ8jSdzDWqkR6r3ur0ER4MzO51eL9uU0wEdpePkJK2jViVsag==
 
 abbrev@1:
   version "1.1.1"
@@ -1341,6 +1324,11 @@ combined-stream@^1.0.6, combined-stream@~1.0.6:
   integrity sha512-brWl9y6vOB1xYPZcpZde3N9zDByXTosAeMDo4p1wzo6UMOX4vumB+TP1RZ76sfE6Md68Q0NJSrE/gbezd4Ul+w==
   dependencies:
     delayed-stream "~1.0.0"
+
+command-exists@^1.2.8:
+  version "1.2.8"
+  resolved "https://registry.yarnpkg.com/command-exists/-/command-exists-1.2.8.tgz#715acefdd1223b9c9b37110a149c6392c2852291"
+  integrity sha512-PM54PkseWbiiD/mMsbvW351/u+dafwTJ0ye2qB60G1aGQP9j3xK2gmMDc+R34L3nDtx4qMCitXT75mkbkGJDLw==
 
 commander@0.6.1:
   version "0.6.1"
@@ -5153,6 +5141,20 @@ solc@0.4.24:
     semver "^5.3.0"
     yargs "^4.7.1"
 
+solc@0.5.2:
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/solc/-/solc-0.5.2.tgz#45d5d11569e41c2b2535f3a50fe0616ca771a347"
+  integrity sha512-gZSRM+2HKe8TXeXE+RJtdPq9+8IxpukMnUXXfphJ4d5duHfKfi7lu0eBFh6WSWvnYQ8xis+sfidiurOop2q1KQ==
+  dependencies:
+    command-exists "^1.2.8"
+    fs-extra "^0.30.0"
+    keccak "^1.0.2"
+    memorystream "^0.3.1"
+    require-from-string "^2.0.0"
+    semver "^5.5.0"
+    tmp "0.0.33"
+    yargs "^11.0.0"
+
 solidity-coverage@^0.5.11:
   version "0.5.11"
   resolved "https://registry.yarnpkg.com/solidity-coverage/-/solidity-coverage-0.5.11.tgz#1ee45f6d98b75a615aadb8f9aa7db4a2b32258e7"
@@ -5585,7 +5587,7 @@ timers-browserify@^2.0.4:
   dependencies:
     setimmediate "^1.0.4"
 
-tmp@^0.0.33:
+tmp@0.0.33, tmp@^0.0.33:
   version "0.0.33"
   resolved "https://registry.yarnpkg.com/tmp/-/tmp-0.0.33.tgz#6d34335889768d21b2bcda0aa277ced3b1bfadf9"
   integrity sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==

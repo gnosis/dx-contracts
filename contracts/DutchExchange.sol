@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.2;
 
 import "./TokenFRT.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
@@ -87,8 +87,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         // Validates inputs
         require(address(_owlToken) != address(0), "The OWL address must be valid");
         require(address(_frtToken) != address(0), "The FRT address must be valid");
-        require(_auctioneer != 0, "The auctioneer address must be valid");
-        require(_ethToken != 0, "The WETH address must be valid");
+        require(_auctioneer != address(0), "The auctioneer address must be valid");
+        require(_ethToken != address(0), "The WETH address must be valid");
         require(address(_ethUSDOracle) != address(0), "The oracle address must be valid");
 
         frtToken = _frtToken;
@@ -122,10 +122,10 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         require(token1 != token2, "You cannot add a token pair using the same token");
 
         // R2
-        require(initialClosingPriceNum != 0, "You must set the numerator for the initial price");
+        require(initialClosingPriceNum != address(0), "You must set the numerator for the initial price");
 
         // R3
-        require(initialClosingPriceDen != 0, "You must set the denominator for the initial price");
+        require(initialClosingPriceDen != address(0), "You must set the denominator for the initial price");
 
         // R4
         require(getAuctionIndex(token1, token2) == 0, "The token pair was already added");
@@ -341,7 +341,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         return (auctionIndex, newSellerBal);
     }
 
-    function postBuyOrder(address sellToken, address buyToken, uint auctionIndex, uint amount) public returns (uint) {
+    function postBuyOrder(address sellToken, address buyToken, uint auctionIndex, uint amount) public returns (uint newBuyerBal) {
         // R1: auction must not have cleared
         require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
 
@@ -846,7 +846,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     {
         fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
 
-        if (closingPrice.den != 0) {
+        if (closingPrice.den != address(0)) {
             // Auction has closed
             (num, den) = (closingPrice.num, closingPrice.den);
         } else if (auctionIndex > getAuctionIndex(sellToken, buyToken)) {

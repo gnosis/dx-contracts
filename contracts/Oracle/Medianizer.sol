@@ -1,13 +1,10 @@
-pragma solidity ^0.5.0;
-
-import "../Oracle/DSValue.sol";
+pragma solidity ^0.5.2;
 
 contract Medianizer is DSValue {
     mapping(bytes12 => address) public values;
     mapping(address => bytes12) public indexes;
-    bytes12 public next = 0x1;
-
-    uint96 public min = 0x1;
+    bytes12 public next = toBytes12(0x1);
+    uint96 public minimun = 0x1;
 
     function set(address wat) public auth {
         bytes12 nextId = bytes12(uint96(next) + 1);
@@ -18,11 +15,11 @@ contract Medianizer is DSValue {
 
     function set(bytes12 pos, address wat) public note auth {
         require(pos != 0x0, "pos cannot be 0x0");
-        require(wat == 0 || indexes[wat] == 0, "wat is not defined or it has an index");
+        require(wat == address(0) || indexes[wat] == 0, "wat is not defined or it has an index");
 
         indexes[values[pos]] = bytes12(0); // Making sure to remove a possible existing address in that position
 
-        if (wat != 0) {
+        if (wat != address(0)) {
             indexes[wat] = pos;
         }
 
@@ -31,7 +28,7 @@ contract Medianizer is DSValue {
 
     function setMin(uint96 min_) public note auth {
         require(min_ != 0x0, "min cannot be 0x0");
-        min = min_;
+        minimun = min_;
     }
 
     function setNext(bytes12 next_) public note auth {
@@ -40,11 +37,11 @@ contract Medianizer is DSValue {
     }
 
     function unset(bytes12 pos) public {
-        set(pos, 0);
+        set(pos, address(0));
     }
 
     function unset(address wat) public {
-        set(indexes[wat], 0);
+        set(indexes[wat], address(0));
     }
 
     function poke() public {
@@ -59,7 +56,7 @@ contract Medianizer is DSValue {
         bytes32[] memory wuts = new bytes32[](uint96(next) - 1);
         uint96 ctr = 0;
         for (uint96 i = 1; i < uint96(next); i++) {
-            if (values[bytes12(i)] != 0) {
+            if (values[bytes12(i)] != address(0)) {
                 (bytes32 wut, bool wuz) = DSValue(values[bytes12(i)]).peek();
                 if (wuz) {
                     if (ctr == 0 || wut >= wuts[ctr - 1]) {
@@ -79,7 +76,7 @@ contract Medianizer is DSValue {
             }
         }
 
-        if (ctr < min) return (val, false);
+        if (ctr < minimun) return (val, false);
 
         bytes32 value;
         if (ctr % 2 == 0) {
@@ -92,4 +89,19 @@ contract Medianizer is DSValue {
 
         return (value, true);
     }
+
+    function toBytes12(uint256 x) public pure returns (bytes12 b) {
+        b = new bytes(12);
+        assembly {
+            mstore(add(b, 12), x)
+        }
+    }
+
+    // function bytesToUint(bytes b) public pure returns (uint256){
+    //     uint256 number;
+    //     for(uint i=0;i<b.length;i++){
+    //         number = number + uint(b[i])*(2**(8*(b.length-(i+1))));
+    //     }
+    //     return number;
+    // }
 }

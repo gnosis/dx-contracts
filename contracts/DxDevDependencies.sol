@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.2;
 
 // NOTE:
 //  This file porpouse is just to make sure truffle compiles all of depending
