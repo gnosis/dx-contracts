@@ -265,14 +265,14 @@ async function getPriceInPastAuction (tokenA, tokenB, dx) {
 }
 
 async function loadContractsInfo () {
-  const Proxy = artifacts.require('DutchExchangeProxy')
+  const DXProxy = artifacts.require('DutchExchangeProxy')
   const DutchExchange = artifacts.require('DutchExchange')
   const GnosisStandardToken = artifacts.require('GnosisStandardToken')
   const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 
   // Get contract examples
-  const proxy = await Proxy.deployed()
-  const dx = DutchExchange.at(proxy.address)
+  const dxProxy = await DXProxy.deployed()
+  const dx = DutchExchange.at(dxProxy.address)
 
   // Get some data from dx
   const [
