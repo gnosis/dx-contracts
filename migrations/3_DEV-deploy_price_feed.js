@@ -1,6 +1,6 @@
 /* global artifacts, web3 */
 /* eslint no-undef: "error" */
-const deployPriceFeed = require('../src/migrations-truffle-4/3_deploy_price_feed')
+const deployPriceFeed = require('../src/migrations-truffle-5/3_deploy_price_feed')
 
 module.exports = function (deployer, network, accounts) {
   return deployPriceFeed({
