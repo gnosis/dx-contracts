@@ -2,7 +2,7 @@ module.exports = {
   // WETH
   tokenA: {
     symbol: 'WETH',
-    address: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    address: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
     // Check ETH oracle:
     //   https://makerdao.com/feeds/#0x729d19f657bd0614b4985cf1d82531c67569197b
     //   Price: 197.5
@@ -12,7 +12,7 @@ module.exports = {
   // OMG
   tokenB: {
     symbol: 'OMG',
-    address: "0xd26114cd6EE289AccF82350c8d8487fedB8A0C07",
+    address: '0xd26114cd6EE289AccF82350c8d8487fedB8A0C07',
     funding: 0
   },
   // Price:

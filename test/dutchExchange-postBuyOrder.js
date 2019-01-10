@@ -3,7 +3,7 @@ const {
   log: utilsLog,
   assertRejects,
   gasLogger,
-  varLogger,
+  varLogger
 } = require('./utils')
 
 const bn = require('bignumber.js')
@@ -13,9 +13,8 @@ const {
   postBuyOrder,
   postSellOrder,
   getAuctionIndex,
-  waitUntilPriceIsXPercentOfPreviousPrice,
+  waitUntilPriceIsXPercentOfPreviousPrice
 } = require('./testFunctions')
-
 
 // Test VARS
 let eth
@@ -33,21 +32,21 @@ const setupContracts = async () => {
     DutchExchange: dx,
     EtherToken: eth,
     TokenGNO: gno,
-    TokenFRT: mgn,
+    TokenFRT: mgn
   } = contracts)
 }
 
 const separateLogs = () => utilsLog('\n    ----------------------------------')
 const log = (...args) => utilsLog('\t', ...args)
 
-contract('DutchExchange - postSellOrder', (accounts) => {
+contract('DutchExchange - postBuyOrder', accounts => {
   const [, buyer1, seller1] = accounts
 
   const startBal = {
     startingETH: 100.0.toWei(),
     startingGNO: 90.0.toWei(),
     ethUSDPrice: 1008.0.toWei(),
-    sellingAmount: 50.0.toWei(),
+    sellingAmount: 50.0.toWei()
   }
 
   beforeEach(separateLogs)
@@ -74,7 +73,6 @@ contract('DutchExchange - postSellOrder', (accounts) => {
 
   const getTokenBalance = async (account, token) => dx.balances.call(token.address || token, account)
 
-
   const getBuyerBalance = async (account, sellToken, buyToken, auctionIndex) =>
     dx.buyerBalances.call(sellToken.address || sellToken, buyToken.address || buyToken, auctionIndex, account)
 
@@ -85,12 +83,12 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     const [balance, buyerBalance, buyVolume] = await Promise.all([
       getTokenBalance(account, buyToken),
       getBuyerBalance(account, sellToken, buyToken, auctionIndex),
-      getBuyVolume(sellToken, buyToken),
+      getBuyVolume(sellToken, buyToken)
     ])
 
     log(`
       balance\t\t==\t${balance}
-      sellerBalance\t==\t${buyerBalance}      
+      sellerBalance\t==\t${buyerBalance}
       for auctionIndex ${auctionIndex}
       buyVolume\t==\t${buyVolume}
     `)
@@ -98,15 +96,15 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     return {
       balance,
       buyerBalance,
-      buyVolume,
+      buyVolume
     }
   }
 
   const assertChangedAmounts = (
     oldAmounts, newAmounts, amount, amountAfterFee,
-    buyOrderClosesAuction, outstandingVolumeBought,
+    buyOrderClosesAuction, outstandingVolumeBought
   ) =>
-    Object.keys(newAmounts).forEach((key) => {
+    Object.keys(newAmounts).forEach(key => {
       const oldVal = oldAmounts[key]
       const newVal = newAmounts[key]
 
@@ -134,7 +132,6 @@ contract('DutchExchange - postSellOrder', (accounts) => {
 
   const getAmountAfterFee = amount => Math.floor(bn(amount).sub(bn(amount).mul(feeRatio)))
 
-
   it('rejects when auction is still in 10 min waiting period', async () => {
     // add tokenPair ETH GNO
     await dx.addTokenPair(
@@ -144,11 +141,12 @@ contract('DutchExchange - postSellOrder', (accounts) => {
       0,
       2,
       1,
-      { from: seller1 },
+      { from: seller1 }
     )
     const auctionIndex = getAuctionIndex(eth, gno)
     await assertRejects(postBuyOrder(eth, gno, auctionIndex, 100, buyer1))
   })
+
   it('balances are correctly changed when auction is running and order is not clearing order', async () => {
     const auctionIndex = await getAuctionIndex()
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
@@ -163,6 +161,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     // assert right changes
     assertChangedAmounts(oldAmounts, newAmounts, amount, getAmountAfterFee(amount), auctionWasClosed, 0)
   })
+
   it('balances are correctly changed when auction is running and order IS clearing order && closingPrice is set correctly', async () => {
     const auctionIndex = await getAuctionIndex()
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.9)
@@ -186,6 +185,7 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     const [num2] = await dx.closingPrices.call(eth.address, gno.address, 1)
     assert.equal(buyVolume.add(outstandingVolume).minus(num2).toNumber(), 0)
   })
+
   it('rejects when auction is not funded', async () => {
     await postSellOrder(eth, gno, 0, 1e16, seller1)
     // checking condition:
@@ -194,8 +194,12 @@ contract('DutchExchange - postSellOrder', (accounts) => {
     // checking rejection
     await assertRejects(postBuyOrder(eth, gno, 1, 10, buyer1))
   })
+
   it('rejects when auction is already closed: den != 0', async () => {
-    await postSellOrder(eth, gno, 0, 1e18, seller1)
+    await Promise.all([
+      postSellOrder(eth, gno, 0, 1e18, seller1),
+      postSellOrder(gno, eth, 0, 10e18, seller1)
+    ])
     // checking condition:
     const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
     assert.equal(auctionStart > 1, true)

@@ -1,11 +1,8 @@
-/* eslint no-console:0, max-len:0, no-plusplus:0, no-mixed-operators:0, no-trailing-spaces:0 */
-
-
-const { 
+const {
   eventWatcher,
   assertRejects,
   enableContractFlag,
-  gasLogger,
+  gasLogger
 } = require('./utils')
 
 const {
@@ -15,7 +12,7 @@ const {
   waitUntilPriceIsXPercentOfPreviousPrice,
   setAndCheckAuctionStarted,
   postBuyOrder,
-  postSellOrder,
+  postSellOrder
 } = require('./testFunctions')
 
 // Test VARS
@@ -31,20 +28,18 @@ const setupContracts = async () => {
   ({
     DutchExchange: dx,
     EtherToken: eth,
-    TokenGNO: gno,
+    TokenGNO: gno
   } = contracts)
 }
 const startBal = {
   startingETH: 90.0.toWei(),
   startingGNO: 90.0.toWei(),
   ethUSDPrice: 1008.0.toWei(),
-  sellingAmount: 50.0.toWei(), // Same as web3.toWei(50, 'ether')
+  sellingAmount: 50.0.toWei() // Same as web3.toWei(50, 'ether')
 }
 
-
-const c1 = () => contract('DutchExchange - getPriceInPastAuction', (accounts) => {
+contract('DutchExchange - getPriceInPastAuction', accounts => {
   const [, seller1, seller2, buyer1] = accounts
-
 
   before(async () => {
     // get contracts
@@ -61,7 +56,7 @@ const c1 = () => contract('DutchExchange - getPriceInPastAuction', (accounts) =>
       0,
       2,
       1,
-      { from: seller1 },
+      { from: seller1 }
     )
 
     eventWatcher(dx, 'Log', {})
@@ -84,11 +79,9 @@ const c1 = () => contract('DutchExchange - getPriceInPastAuction', (accounts) =>
     assert.equal(den, 1)
   })
 
-  it(' 2. check that price is correct for closingPriceToken.num == 0', async () => {
+  it('2. check that price is correct for closingPriceToken.num == 0', async () => {
     let auctionIndex = await getAuctionIndex()
 
-    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
-    
     // closing auction
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     await postBuyOrder(eth, gno, auctionIndex, 2 * 10e18, buyer1)
@@ -109,15 +102,15 @@ const c1 = () => contract('DutchExchange - getPriceInPastAuction', (accounts) =>
     assert.equal(closingPriceDen, den)
   })
 
-
-  it('3. check that price is correct for closingPriceETH.num == 0', async () => {
+  // TODO review: this state is not possible any more since both auction sides should be funded
+  it.skip('3. check that price is correct for closingPriceETH.num == 0', async () => {
     let auctionIndex = await getAuctionIndex()
 
-    // prepare test by starting and clearning new auction
+    // prepare test by starting and clearing new auction
     await postSellOrder(gno, eth, 0, 10e18, seller2)
-    await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
+    await waitUntilPriceIsXPercentOfPreviousPrice(gno, eth, 1)
     await postBuyOrder(gno, eth, auctionIndex, 2 * 10e18, buyer1)
-    
+
     // check that auction acutally closed
     auctionIndex = await getAuctionIndex()
     assert.equal(3, auctionIndex)
@@ -125,7 +118,7 @@ const c1 = () => contract('DutchExchange - getPriceInPastAuction', (accounts) =>
     // checking that closingPriceETH.num == 0
     const [closingPriceNumToken] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex - 1)).map(i => i.toNumber())
     assert.equal(closingPriceNumToken, 0)
-    
+
     // actual testing
     const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(gno.address, eth.address, auctionIndex - 1)).map(i => i.toNumber())
     const [num, den] = (await dx.getPriceInPastAuction.call(eth.address, gno.address, auctionIndex - 1)).map(i => i.toNumber())
@@ -133,20 +126,20 @@ const c1 = () => contract('DutchExchange - getPriceInPastAuction', (accounts) =>
     assert.equal(closingPriceNum, den)
   })
 
-  it('4. check that price returns the averaged price by volume, if both previous volumes >0 ', async () => {
+  it('4. check that price returns the averaged price by volume, if both previous volumes > 0 ', async () => {
     let auctionIndex = await getAuctionIndex()
     // start new auctions
-    await postSellOrder(gno, eth, 0, 10e17, seller2)
+    await postSellOrder(gno, eth, 0, 10e18, seller2)
     await postSellOrder(eth, gno, 0, 10e18, seller2)
-    
+
     // clear new auctions
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     await postBuyOrder(gno, eth, auctionIndex, 2 * 10e18, buyer1)
     await postBuyOrder(eth, gno, auctionIndex, 2 * 10e18, buyer1)
 
-    // check that auction acutally closed
+    // check that auction actually closed
     auctionIndex = await getAuctionIndex()
-    assert.equal(4, auctionIndex)
+    assert.equal(3, auctionIndex)
 
     const [closingPriceNum, closingPriceDen] = await dx.closingPrices.call(eth.address, gno.address, auctionIndex - 1)
     const [closingPriceNumOpp, closingPriceDenOpp] = await dx.closingPrices.call(gno.address, eth.address, auctionIndex - 1)
@@ -156,9 +149,8 @@ const c1 = () => contract('DutchExchange - getPriceInPastAuction', (accounts) =>
     assert.equal(closingPriceNum.toNumber() > 0, true)
     assert.equal(closingPriceNumOpp.toNumber() > 0, true)
 
-    // checks for the acutal test
+    // checks for the actual test
     assert.equal((closingPriceNum).add(closingPriceDenOpp).toNumber(), num)
     assert.equal((closingPriceDen).add(closingPriceNumOpp).toNumber(), den)
   })
 })
-enableContractFlag(c1)

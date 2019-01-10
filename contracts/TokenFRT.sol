@@ -1,8 +1,12 @@
 pragma solidity ^0.4.24;
+
+import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
 import "@gnosis.pm/util-contracts/contracts/GnosisStandardToken.sol";
 
 /// @title Standard token contract with overflow protection
-contract TokenFRT is GnosisStandardToken {
+contract TokenFRT is Proxied, GnosisStandardToken {
+    address public owner;
+    
     string public constant symbol = "MGN";
     string public constant name = "Magnolia Token";
     uint8 public constant decimals = 18;
@@ -15,7 +19,6 @@ contract TokenFRT is GnosisStandardToken {
     /*
      *  Storage
      */
-    address public owner;
     address public minter;
 
     // user => unlockedToken
@@ -27,16 +30,7 @@ contract TokenFRT is GnosisStandardToken {
     /*
      *  Public functions
      */
-
-    constructor(
-        address _owner
-    )
-        public
-    {
-        require(_owner != address(0));
-        owner = _owner;
-    }
-
+    
     // @dev allows to set the minter of Magnolia tokens once.
     // @param   _minter the minter of the Magnolia tokens, should be the DX-proxy
     function updateMinter(
@@ -52,7 +46,7 @@ contract TokenFRT is GnosisStandardToken {
 
     // @dev the intention is to set the owner as the DX-proxy, once it is deployed
     // Then only an update of the DX-proxy contract after a 30 days delay could change the minter again.
-    function updateOwner(   
+    function updateOwner(
         address _owner
     )
         public
@@ -83,7 +77,7 @@ contract TokenFRT is GnosisStandardToken {
     {
         // Adjust amount by balance
         uint actualAmount = min(amount, balances[msg.sender]);
-        
+
         // Update state variables
         balances[msg.sender] = sub(balances[msg.sender], actualAmount);
         lockedTokenBalances[msg.sender] = add(lockedTokenBalances[msg.sender], actualAmount);
@@ -92,23 +86,21 @@ contract TokenFRT is GnosisStandardToken {
         totalAmountLocked = lockedTokenBalances[msg.sender];
     }
 
-    function unlockTokens(
-        uint amount
-    )
+    function unlockTokens()
         public
         returns (uint totalAmountUnlocked, uint withdrawalTime)
     {
         // Adjust amount by locked balances
-        uint actualAmount = min(amount, lockedTokenBalances[msg.sender]);
+        uint amount = lockedTokenBalances[msg.sender];
 
-        if (actualAmount > 0) {
+        if (amount > 0) {
             // Update state variables
-            lockedTokenBalances[msg.sender] = sub(lockedTokenBalances[msg.sender], actualAmount);
+            lockedTokenBalances[msg.sender] = sub(lockedTokenBalances[msg.sender], amount);
             unlockedTokens[msg.sender].amountUnlocked = add(
-                unlockedTokens[msg.sender].amountUnlocked,
-                actualAmount
+              unlockedTokens[msg.sender].amountUnlocked,
+              amount
             );
-            unlockedTokens[msg.sender].withdrawalTime = block.timestamp + 24 hours;
+            unlockedTokens[msg.sender].withdrawalTime = now + 24 hours;
         }
 
         // Get return variables
@@ -124,7 +116,7 @@ contract TokenFRT is GnosisStandardToken {
         unlockedTokens[msg.sender].amountUnlocked = 0;
     }
 
-    function min(uint a, uint b) 
+    function min(uint a, uint b)
         public
         pure
         returns (uint)

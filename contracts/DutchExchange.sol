@@ -21,14 +21,14 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     }
 
     uint constant WAITING_PERIOD_NEW_TOKEN_PAIR = 6 hours;
-    uint constant WAITING_PERIOD_NEW_AUCTION = 10 minutes;    
+    uint constant WAITING_PERIOD_NEW_AUCTION = 10 minutes;
     uint constant AUCTION_START_WAITING_FOR_FUNDING = 1;
 
-    
+
     // > Storage
     // Ether ERC-20 token
     address public ethToken;
-    
+
     // Minimum required sell funding for adding a new token pair, in USD
     uint public thresholdNewTokenPair;
     // Minimum required sell funding for starting antoher auction, in USD
@@ -78,7 +78,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     function setupDutchExchange(
         TokenFRT _frtToken,
         TokenOWL _owlToken,
-        address _auctioneer, 
+        address _auctioneer,
         address _ethToken,
         PriceOracleInterface _ethUSDOracle,
         uint _thresholdNewTokenPair,
@@ -123,7 +123,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         thresholdNewAuction = _thresholdNewAuction;
     }
 
-    
+
 
     /// @param initialClosingPriceNum initial price will be 2 * initialClosingPrice. This is its numerator
     /// @param initialClosingPriceDen initial price will be 2 * initialClosingPrice. This is its denominator
@@ -133,7 +133,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint token1Funding,
         uint token2Funding,
         uint initialClosingPriceNum,
-        uint initialClosingPriceDen 
+        uint initialClosingPriceDen
     )
         public
     {
@@ -256,7 +256,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         sellVolumesCurrent[token2][token1] = token2FundingAfterFee;
         sellerBalances[token1][token2][1][msg.sender] = token1FundingAfterFee;
         sellerBalances[token2][token1][1][msg.sender] = token2FundingAfterFee;
-        
+
         setAuctionStart(token1, token2, WAITING_PERIOD_NEW_TOKEN_PAIR);
         emit NewTokenPair(token1, token2);
     }
@@ -293,12 +293,11 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         // R1
         require(amount > 0, "The amount must be greater than 0");
 
-        // R2
-        require(Token(tokenAddress).transfer(msg.sender, amount));
-
         uint newBal = sub(usersBalance, amount);
         balances[tokenAddress][msg.sender] = newBal;
 
+        // R2
+        require(Token(tokenAddress).transfer(msg.sender, amount), "The withdraw transfer must succeed");
         emit NewWithdrawal(tokenAddress, amount);
 
         return newBal;
@@ -319,12 +318,12 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         amount = min(amount, balances[sellToken][msg.sender]);
 
         // R1
-        require(amount > 0);
-        
+        require(amount > 0, "Sell amount should be greater than 0");
+
         // R2
         uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
         require(latestAuctionIndex > 0);
-      
+
         // R3
         uint auctionStart = getAuctionStart(sellToken, buyToken);
         if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING || auctionStart > now) {
@@ -336,7 +335,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             if (auctionIndex == 0) {
                 auctionIndex = latestAuctionIndex;
             } else {
-                require(auctionIndex == latestAuctionIndex);
+                require(auctionIndex == latestAuctionIndex,
+                    "Auction index should be equal to latest auction index");
             }
 
             // R1.2
@@ -370,6 +370,9 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             // C2
             uint sellVolumeNext = sellVolumesNext[sellToken][buyToken];
             sellVolumesNext[sellToken][buyToken] = add(sellVolumeNext, amountAfterFee);
+
+            // close previous auction if theoretically closed
+            closeTheoreticalClosedAuction(sellToken, buyToken, latestAuctionIndex);
         }
 
         if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING) {
@@ -400,19 +403,19 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
 
         // R4
         require(auctionIndex == getAuctionIndex(sellToken, buyToken));
-        
+
         // R5: auction must not be in waiting period
         require(auctionStart > AUCTION_START_WAITING_FOR_FUNDING);
-        
+
         // R6: auction must be funded
         require(sellVolumesCurrent[sellToken][buyToken] > 0);
-        
+
         uint buyVolume = buyVolumes[sellToken][buyToken];
         amount = min(amount, balances[buyToken][msg.sender]);
 
         // R7
         require(add(buyVolume, amount) < 10 ** 30);
-        
+
         // Overbuy is when a part of a buy order clears an auction
         // In that case we only process the part before the overbuy
         // To calculate overbuy, we first get current price
@@ -452,7 +455,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
 
         return (newBuyerBal);
     }
-    
+
     function claimSellerFunds(
         address sellToken,
         address buyToken,
@@ -501,14 +504,15 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         returns (uint returned, uint frtsIssued)
     {
         closeTheoreticalClosedAuction(sellToken, buyToken, auctionIndex);
-        
+
         uint num;
         uint den;
         (returned, num, den) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
 
         if (closingPrices[sellToken][buyToken][auctionIndex].den == 0) {
             // Auction is running
-            claimedAmounts[sellToken][buyToken][auctionIndex][user] = add(claimedAmounts[sellToken][buyToken][auctionIndex][user], returned);
+            claimedAmounts[sellToken][buyToken][auctionIndex][user] =
+            add(claimedAmounts[sellToken][buyToken][auctionIndex][user], returned);
         } else {
             // Auction has closed
             // We DON'T want to check for returned > 0, because that would fail if a user claims
@@ -529,14 +533,14 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             // Auction has closed
             // Reset buyerBalances and claimedAmounts
             buyerBalances[sellToken][buyToken][auctionIndex][user] = 0;
-            claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0; 
+            claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0;
         }
 
         // Claim tokens
         if (returned > 0) {
             balances[sellToken][user] = add(balances[sellToken][user], returned);
         }
-        
+
         emit NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
     }
 
@@ -575,10 +579,10 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         }
     }
 
-    //@dev allows to close possible theoretical closed markets
-    //@param sellToken sellToken of an auction
-    //@param buyToken buyToken of an auction 
-    //@param index is the auctionIndex of the auction
+    /// @dev allows to close possible theoretical closed markets
+    /// @param sellToken sellToken of an auction
+    /// @param buyToken buyToken of an auction
+    /// @param auctionIndex is the auctionIndex of the auction
     function closeTheoreticalClosedAuction(
         address sellToken,
         address buyToken,
@@ -586,17 +590,20 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     )
         public
     {
-        if(auctionIndex == getAuctionIndex(buyToken, sellToken) && closingPrices[sellToken][buyToken][auctionIndex].num == 0) {
+        if (auctionIndex == getAuctionIndex(buyToken, sellToken) &&
+            closingPrices[sellToken][buyToken][auctionIndex].num == 0) {
             uint buyVolume = buyVolumes[sellToken][buyToken];
             uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
             uint num;
             uint den;
             (num, den) = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
             // 10^30 * 10^37 = 10^67
-            uint outstandingVolume = atleastZero(int(mul(sellVolume, num) / den - buyVolume));
-            
-            if(outstandingVolume == 0) {
-                postBuyOrder(sellToken, buyToken, auctionIndex, 0);
+            if (sellVolume > 0) {
+                uint outstandingVolume = atleastZero(int(mul(sellVolume, num) / den - buyVolume));
+
+                if (outstandingVolume == 0) {
+                    postBuyOrder(sellToken, buyToken, auctionIndex, 0);
+                }
             }
         }
     }
@@ -626,7 +633,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
             // < 10^30 * 10^37 = 10^67
             unclaimedBuyerFunds = atleastZero(int(
-                mul(buyerBalance, den) / num - 
+                mul(buyerBalance, den) / num -
                 claimedAmounts[sellToken][buyToken][auctionIndex][user]
             ));
         }
@@ -650,13 +657,13 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
 
         if (fee > 0) {
             fee = settleFeeSecondPart(primaryToken, fee);
-            
+
             uint usersExtraTokens = extraTokens[primaryToken][secondaryToken][auctionIndex + 1];
             extraTokens[primaryToken][secondaryToken][auctionIndex + 1] = add(usersExtraTokens, fee);
 
             emit Fee(primaryToken, secondaryToken, msg.sender, auctionIndex, fee);
         }
-        
+
         amountAfterFee = sub(amount, fee);
     }
 
@@ -678,7 +685,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
 
         uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
         // 10^29 * 10^6 = 10^35
-        // Uses 18 decimal places <> exactly as owlToken tokens: 10**18 owlToken == 1 USD 
+        // Uses 18 decimal places <> exactly as owlToken tokens: 10**18 owlToken == 1 USD
         uint feeInUSD = mul(feeInETH, ethUSDPrice);
         uint amountOfowlTokenBurned = min(owlToken.allowance(msg.sender, this), feeInUSD / 2);
         amountOfowlTokenBurned = min(owlToken.balanceOf(msg.sender), amountOfowlTokenBurned);
@@ -694,7 +701,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             newFee = fee;
         }
     }
-    
+
     function getFeeRatio(
         address user
     )
@@ -703,33 +710,45 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         // feeRatio < 10^4
         returns (uint num, uint den)
     {
-        uint t = frtToken.totalSupply();
-        uint b = frtToken.lockedTokenBalances(user);
+        uint totalSupply = frtToken.totalSupply();
+        uint lockedFrt = frtToken.lockedTokenBalances(user);
 
-        if (b * 100000 < t || t == 0) {
-            // 0.5%
+        /*
+          Fee Model:
+            locked FRT range     Fee
+            -----------------   ------
+            [0, 0.01%)           0.5%
+            [0.01%, 0.1%)        0.4%
+            [0.1%, 1%)           0.3%
+            [1%, 10%)            0.2%
+            [10%, 100%)          0.1%
+        */
+
+        if (lockedFrt * 10000 < totalSupply || totalSupply == 0) {
+            // Maximum fee, if user has locked less than 0.01% of the total FRT
+            // Fee: 0.5%
             num = 1;
             den = 200;
-        } else if (b * 10000 < t) {
-            // 0.4%
+        } else if (lockedFrt * 1000 < totalSupply) {
+            // If user has locked more than 0.01% and less than 0.1% of the total FRT
+            // Fee: 0.4%
             num = 1;
             den = 250;
-        } else if (b * 1000 < t) {
-            // 0.3%
+        } else if (lockedFrt * 100 < totalSupply) {
+            // If user has locked more than 0.1% and less than 1% of the total FRT
+            // Fee: 0.3%
             num = 3;
             den = 1000;
-        } else if (b * 100 < t) {
-            // 0.2%
+        } else if (lockedFrt * 10 < totalSupply) {
+            // If user has locked more than 1% and less than 10% of the total FRT
+            // Fee: 0.2%
             num = 1;
             den = 500;
-        } else if (b * 10 < t) {
-            // 0.1%
+        } else {
+            // If user has locked more than 10% of the total FRT
+            // Fee: 0.1%
             num = 1;
             den = 1000;
-        } else {
-            // 0% 
-            num = 0; 
-            den = 1;
         }
     }
 
@@ -820,7 +839,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         // < 10^30 * 10^31 * 10^6 = 10^67
         uint sellVolume = mul(mul(sellVolumesCurrent[sellToken][buyToken], sellNum), ethUSDPrice) / sellDen;
         uint sellVolumeOpp = mul(mul(sellVolumesCurrent[buyToken][sellToken], buyNum), ethUSDPrice) / buyDen;
-        if (sellVolume >= thresholdNewAuction || sellVolumeOpp >= thresholdNewAuction) {
+        if (sellVolume >= thresholdNewAuction && sellVolumeOpp >= thresholdNewAuction) {
             // Schedule next auction
             setAuctionStart(sellToken, buyToken, WAITING_PERIOD_NEW_AUCTION);
         } else {
@@ -865,8 +884,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             while (!correctPair) {
                 closingPriceToken2 = closingPrices[token2][token1][auctionIndex - i];
                 closingPriceToken1 = closingPrices[token1][token2][auctionIndex - i];
-                
-                if (closingPriceToken1.num > 0 && closingPriceToken1.den > 0 || 
+
+                if (closingPriceToken1.num > 0 && closingPriceToken1.den > 0 ||
                     closingPriceToken2.num > 0 && closingPriceToken2.den > 0)
                 {
                     correctPair = true;
@@ -887,12 +906,12 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
                 num = closingPriceToken2.den + closingPriceToken1.num;
                 den = closingPriceToken2.num + closingPriceToken1.den;
             }
-        } 
+        }
     }
 
     /// @dev Gives best estimate for market price of a token in ETH of any price oracle on the Ethereum network
     /// @param token address of ERC-20 token
-    /// @return Weighted average of closing prices of opposite Token-ethToken auctions, based on their sellVolume  
+    /// @return Weighted average of closing prices of opposite Token-ethToken auctions, based on their sellVolume
     function getPriceOfTokenInLastAuction(
         address token
     )
@@ -997,7 +1016,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     )
         internal
     {
-        (token1, token2) = getTokenOrder(token1, token2);        
+        (token1, token2) = getTokenOrder(token1, token2);
         uint auctionStart = now + value;
         uint auctionIndex = latestAuctionIndices[token1][token2];
         auctionStarts[token1][token2] = auctionStart;
@@ -1045,7 +1064,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     )
         public
         view
-        returns (uint auctionIndex) 
+        returns (uint auctionIndex)
     {
         (token1, token2) = getTokenOrder(token1, token2);
         auctionIndex = latestAuctionIndices[token1][token2];
@@ -1083,13 +1102,13 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             }
         }
     }
-    
-    //@dev for quick overview of possible sellerBalances to calculate the possible withdraw tokens
-    //@param auctionSellToken is the sellToken defining an auctionPair
-    //@param auctionBuyToken is the buyToken defining an auctionPair
-    //@param user is the user who wants to his tokens
-    //@param lastNAuctions how many auctions will be checked. 0 means all
-    //@returns returns sellbal for all indices for all tokenpairs 
+
+    /// @dev for quick overview of possible sellerBalances to calculate the possible withdraw tokens
+    /// @param auctionSellToken is the sellToken defining an auctionPair
+    /// @param auctionBuyToken is the buyToken defining an auctionPair
+    /// @param user is the user who wants to his tokens
+    /// @param lastNAuctions how many auctions will be checked. 0 means all
+    //@returns returns sellbal for all indices for all tokenpairs
     function getIndicesWithClaimableTokensForSellers(
         address auctionSellToken,
         address auctionBuyToken,
@@ -1103,7 +1122,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
 
         uint arrayLength;
-        
+
         uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
 
         for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
@@ -1124,12 +1143,12 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
                 k++;
             }
         }
-    }    
+    }
 
-    //@dev for quick overview of current sellerBalances for a user
-    //@param auctionSellTokens are the sellTokens defining an auctionPair
-    //@param auctionBuyTokens are the buyTokens defining an auctionPair
-    //@param user is the user who wants to his tokens
+    /// @dev for quick overview of current sellerBalances for a user
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param user is the user who wants to his tokens
     function getSellerBalancesOfCurrentAuctions(
         address[] auctionSellTokens,
         address[] auctionBuyTokens,
@@ -1153,12 +1172,12 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         return sellersBalances;
     }
 
-    //@dev for quick overview of possible buyerBalances to calculate the possible withdraw tokens
-    //@param auctionSellToken is the sellToken defining an auctionPair
-    //@param auctionBuyToken is the buyToken defining an auctionPair
-    //@param user is the user who wants to his tokens
-    //@param lastNAuctions how many auctions will be checked. 0 means all
-    //@returns returns sellbal for all indices for all tokenpairs 
+    /// @dev for quick overview of possible buyerBalances to calculate the possible withdraw tokens
+    /// @param auctionSellToken is the sellToken defining an auctionPair
+    /// @param auctionBuyToken is the buyToken defining an auctionPair
+    /// @param user is the user who wants to his tokens
+    /// @param lastNAuctions how many auctions will be checked. 0 means all
+    //@returns returns sellbal for all indices for all tokenpairs
     function getIndicesWithClaimableTokensForBuyers(
         address auctionSellToken,
         address auctionBuyToken,
@@ -1172,7 +1191,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
 
         uint arrayLength;
-        
+
         uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
 
         for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
@@ -1193,12 +1212,12 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
                 k++;
             }
         }
-    }    
+    }
 
-    //@dev for quick overview of current sellerBalances for a user
-    //@param auctionSellTokens are the sellTokens defining an auctionPair
-    //@param auctionBuyTokens are the buyTokens defining an auctionPair
-    //@param user is the user who wants to his tokens
+    /// @dev for quick overview of current sellerBalances for a user
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param user is the user who wants to his tokens
     function getBuyerBalancesOfCurrentAuctions(
         address[] auctionSellTokens,
         address[] auctionBuyTokens,
@@ -1222,11 +1241,28 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         return buyersBalances;
     }
 
-    //@dev for multiple withdraws
-    //@param auctionSellTokens are the sellTokens defining an auctionPair
-    //@param auctionBuyTokens are the buyTokens defining an auctionPair
-    //@param auctionIndices are the auction indices on which an token should be claimedAmounts
-    //@param user is the user who wants to his tokens
+    function checkLengthsForSeveralAuctionClaiming(
+        address[] auctionSellTokens,
+        address[] auctionBuyTokens,
+        uint[] auctionIndices
+    )
+        internal
+        pure
+        returns (uint length)
+    {
+        length = auctionSellTokens.length;
+        uint length2 = auctionBuyTokens.length;
+        require(length == length2);
+
+        uint length3 = auctionIndices.length;
+        require(length2 == length3);
+    }
+
+    /// @dev for multiple claims
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    /// @param user is the user who wants to his tokens
     function claimTokensFromSeveralAuctionsAsSeller(
         address[] auctionSellTokens,
         address[] auctionBuyTokens,
@@ -1234,22 +1270,30 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         address user
     )
         external
+        returns (uint[], uint[])
     {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2);
+        uint length = checkLengthsForSeveralAuctionClaiming(
+            auctionSellTokens,
+            auctionBuyTokens,
+            auctionIndices
+        );
 
-        uint length3 = auctionIndices.length;
-        require(length2 == length3);
+        uint[] memory claimAmounts = new uint[](length);
+        uint[] memory frtsIssuedList = new uint[](length);
 
-        for (uint i = 0; i < length; i++)
-            claimSellerFunds(auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], frtsIssuedList[i]) = claimSellerFunds(
+            auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
+        }
+
+        return (claimAmounts, frtsIssuedList);
     }
-    //@dev for multiple withdraws
-    //@param auctionSellTokens are the sellTokens defining an auctionPair
-    //@param auctionBuyTokens are the buyTokens defining an auctionPair
-    //@param auctionIndices are the auction indices on which an token should be claimedAmounts
-    //@param user is the user who wants to his tokens
+
+    /// @dev for multiple claims
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    /// @param user is the user who wants to his tokens
     function claimTokensFromSeveralAuctionsAsBuyer(
         address[] auctionSellTokens,
         address[] auctionBuyTokens,
@@ -1257,21 +1301,94 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         address user
     )
         external
+        returns (uint[], uint[])
     {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2);
+        uint length = checkLengthsForSeveralAuctionClaiming(
+            auctionSellTokens,
+            auctionBuyTokens,
+            auctionIndices
+        );
 
-        uint length3 = auctionIndices.length;
-        require(length2 == length3);
+        uint[] memory claimAmounts = new uint[](length);
+        uint[] memory frtsIssuedList = new uint[](length);
 
-        for (uint i = 0; i < length; i++)
-            claimBuyerFunds(auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], frtsIssuedList[i]) = claimBuyerFunds(
+            auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
+        }
+
+        return (claimAmounts, frtsIssuedList);
+    }
+
+    /// @dev for multiple withdraws
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    function claimAndWithdrawTokensFromSeveralAuctionsAsSeller(
+        address[] auctionSellTokens,
+        address[] auctionBuyTokens,
+        uint[] auctionIndices
+    )
+        external
+        returns (uint[], uint frtsIssued)
+    {
+        uint length = checkLengthsForSeveralAuctionClaiming(
+            auctionSellTokens,
+            auctionBuyTokens,
+            auctionIndices
+        );
+
+        uint[] memory claimAmounts = new uint[](length);
+        uint claimFrts = 0;
+
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], claimFrts) = claimSellerFunds(
+            auctionSellTokens[i], auctionBuyTokens[i], msg.sender, auctionIndices[i]);
+
+            frtsIssued += claimFrts;
+
+            withdraw(auctionBuyTokens[i], claimAmounts[i]);
+        }
+
+        return (claimAmounts, frtsIssued);
+    }
+
+    /// @dev for multiple withdraws
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    function claimAndWithdrawTokensFromSeveralAuctionsAsBuyer(
+        address[] auctionSellTokens,
+        address[] auctionBuyTokens,
+        uint[] auctionIndices
+    )
+        external
+        returns (uint[], uint frtsIssued)
+    {
+        uint length = checkLengthsForSeveralAuctionClaiming(
+            auctionSellTokens,
+            auctionBuyTokens,
+            auctionIndices
+        );
+
+        uint[] memory claimAmounts = new uint[](length);
+        uint claimFrts = 0;
+
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], claimFrts) = claimBuyerFunds(
+            auctionSellTokens[i], auctionBuyTokens[i], msg.sender, auctionIndices[i]);
+
+            frtsIssued += claimFrts;
+
+            withdraw(auctionSellTokens[i], claimAmounts[i]);
+        }
+
+        return (claimAmounts, frtsIssued);
     }
 
     function getMasterCopy()
         external
-        view 
+        view
         returns (address)
     {
         return masterCopy;
@@ -1279,15 +1396,15 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
 
     // > Events
     event NewDeposit(
-         address indexed token,
-         uint amount
+        address indexed token,
+        uint amount
     );
 
     event NewWithdrawal(
         address indexed token,
         uint amount
     );
-    
+
     event NewSellOrder(
         address indexed sellToken,
         address indexed buyToken,

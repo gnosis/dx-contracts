@@ -3,9 +3,9 @@ pragma solidity ^0.4.11;
 import "./AuctioneerManaged.sol";
 
 contract TokenWhitelist is AuctioneerManaged {
-    // mapping that stores the tokens, which are approved
-    // Token => approved
+    // Mapping that stores the tokens, which are approved
     // Only tokens approved by auctioneer generate frtToken tokens
+    // addressToken => boolApproved
     mapping (address => bool) public approvedTokens;
 
     event Approval(
@@ -23,21 +23,21 @@ contract TokenWhitelist is AuctioneerManaged {
         }
     }
 
-     //@dev for quick overview of approved Tokens
-    //@param addressesToCheck are the ERC-20 token addresses to be checked whether they are approved
+    /// @dev for quick overview of approved Tokens
+    /// @param addressesToCheck are the ERC-20 token addresses to be checked whether they are approved
     function getApprovedAddressesOfList(
-        address[] addressToCheck
+        address[] addressesToCheck
     )
         external
         view
         returns (bool[])
     {
-        uint length = addressToCheck.length;
+        uint length = addressesToCheck.length;
 
         bool[] memory isApproved = new bool[](length);
 
         for (uint i = 0; i < length; i++) {
-            isApproved[i] = approvedTokens[addressToCheck[i]];
+            isApproved[i] = approvedTokens[addressesToCheck[i]];
         }
 
         return isApproved;

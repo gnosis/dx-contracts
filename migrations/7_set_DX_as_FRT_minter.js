@@ -1,6 +1,6 @@
 /* global artifacts, web3 */
 /* eslint no-undef: "error" */
-const setDxAsFrtOwner = require('../src/migrations-truffle-5/7_set_DX_as_FRT_minter')
+const setDxAsFrtOwner = require('../src/migrations-truffle-4/7_set_DX_as_FRT_minter')
 
 module.exports = function (deployer, network, accounts) {
   return setDxAsFrtOwner({
