@@ -12,7 +12,8 @@ const {
   waitUntilPriceIsXPercentOfPreviousPrice,
   setAndCheckAuctionStarted,
   postBuyOrder,
-  postSellOrder
+  postSellOrder,
+  getClearingTime
 } = require('./testFunctions')
 
 // Test VARS
@@ -115,6 +116,11 @@ contract('DutchExchange - getPriceInPastAuction', accounts => {
     auctionIndex = await getAuctionIndex()
     assert.equal(3, auctionIndex)
 
+    // check that clearingTime was saved
+    const clearingTime = await getClearingTime(gno, eth, auctionIndex)
+    const now = timestamp()
+    assert.equal(clearingTime, now, 'clearingTime was set')
+
     // checking that closingPriceETH.num == 0
     const [closingPriceNumToken] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex - 1)).map(i => i.toNumber())
     assert.equal(closingPriceNumToken, 0)
@@ -140,6 +146,11 @@ contract('DutchExchange - getPriceInPastAuction', accounts => {
     // check that auction actually closed
     auctionIndex = await getAuctionIndex()
     assert.equal(3, auctionIndex)
+
+    // check that clearingTime was saved
+    const clearingTime = await getClearingTime(gno, eth, auctionIndex)
+    const now = timestamp()
+    assert.equal(clearingTime, now, 'clearingTime was set')
 
     const [closingPriceNum, closingPriceDen] = await dx.closingPrices.call(eth.address, gno.address, auctionIndex - 1)
     const [closingPriceNumOpp, closingPriceDenOpp] = await dx.closingPrices.call(gno.address, eth.address, auctionIndex - 1)

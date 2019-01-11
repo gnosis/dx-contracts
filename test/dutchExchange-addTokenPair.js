@@ -6,7 +6,7 @@ const {
   gasLogger
 } = require('./utils')
 
-const { getContracts, setupTest } = require('./testFunctions')
+const { getContracts, setupTest, getClearingTime } = require('./testFunctions')
 
 const TokenGNO = artifacts.require('TokenGNO')
 
@@ -280,9 +280,7 @@ contract('DutchExchange - addTokenPair', accounts => {
 
   const assertClearingTime = async (sellToken, buyToken) => {
     const clearingTime = await getClearingTime(sellToken, buyToken, 0)
-
-    const now = web3.eth.getBlock('latest').timestamp
-    
+    const now = timestamp()
     assert.equal(clearingTime, now, 'clearing time for 0th auction set')
   }
 
