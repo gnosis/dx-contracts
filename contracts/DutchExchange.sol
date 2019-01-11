@@ -348,6 +348,29 @@ contract DutchExchange is Proxied {
         NewTokenPair(token1, token2);
     }
 
+    function safeTransfer(address token, address to, uint value, bool from) public returns (bool result) {
+        if (from) {
+            Token(token).transferFrom(msg.sender, this, value);
+        } else {
+            Token(token).transfer(to,value);
+        }
+
+        assembly {
+            switch returndatasize()   
+                case 0 {                      // This is our BadToken
+                    result := not(0)          // result is true
+                }
+                case 32 {                     // This is our GoodToken
+                    returndatacopy(0, 0, 32) 
+                    result := mload(0)        // result == returndata of external call
+                }
+                default {                     // This is not an ERC20 token
+                    revert(0, 0) 
+                }
+        }
+        return result;
+    }
+
     function deposit(
         address tokenAddress,
         uint amount
@@ -356,7 +379,7 @@ contract DutchExchange is Proxied {
         returns (uint)
     {
         // R1
-        require(Token(tokenAddress).transferFrom(msg.sender, this, amount));
+        require(safeTransfer(tokenAddress, msg.sender, amount, true));
 
         uint newBal = add(balances[tokenAddress][msg.sender], amount);
 
@@ -381,7 +404,7 @@ contract DutchExchange is Proxied {
         require(amount > 0);
 
         // R2
-        require(Token(tokenAddress).transfer(msg.sender, amount));
+        require(safeTransfer(tokenAddress, msg.sender, amount, false));
 
         uint newBal = sub(usersBalance, amount);
         balances[tokenAddress][msg.sender] = newBal;
