@@ -260,6 +260,10 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         sellerBalances[token1][token2][1][msg.sender] = token1FundingAfterFee;
         sellerBalances[token2][token1][1][msg.sender] = token2FundingAfterFee;
 
+        // Save clearingTime as adding time
+        (address tokenA, address tokenB) = getTokenOrder(token1, token2);
+        clearingTimes[tokenA][tokenB][0] = now;
+
         setAuctionStart(token1, token2, WAITING_PERIOD_NEW_TOKEN_PAIR);
         emit NewTokenPair(token1, token2);
     }
