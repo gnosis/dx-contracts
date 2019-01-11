@@ -5,7 +5,7 @@
   "scripts": {
     "rpc": "ganache-cli -d --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --defaultBalanceEther '500000000000000000000'",
     "preversion": "npm run restore",
-    "test": "npx truffle test -s test/**/*.spec.js",
+    "test": "npx truffle test -s test/*.spec.js",
     "coverage": "npx solidity-coverage",
     "truffle": "npx truffle",
     "networks-extract": "node src/extract_network_info.js",
