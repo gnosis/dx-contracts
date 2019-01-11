@@ -4,7 +4,7 @@ pragma solidity ^0.4.21;
 import "@gnosis.pm/util-contracts/contracts/Token.sol";
 
 contract SafeTransfer {
-    function safeTransfer(address token, address to, uint value, bool from) public returns (bool result) {
+    function safeTransfer(address token, address to, uint value, bool from) internal returns (bool result) {
         if (from) {
             Token(token).transferFrom(msg.sender, this, value);
         } else {
