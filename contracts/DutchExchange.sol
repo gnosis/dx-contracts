@@ -4,13 +4,14 @@ import "./TokenFRT.sol";
 import "./Oracle/PriceOracleInterface.sol";  
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
 import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
+import "./SafeTransfer.sol";
 
 
 /// @title Dutch Exchange - exchange token pairs with the clever mechanism of the dutch auction
 /// @author Alex Herrmann - <alex@gnosis.pm>
 /// @author Dominik Teiml - <dominik@gnosis.pm>
 
-contract DutchExchange is Proxied {
+contract DutchExchange is Proxied, SafeTransfer {
 
     // The price is a rational number, so we need a concept of a fraction
     struct fraction {
@@ -346,29 +347,6 @@ contract DutchExchange is Proxied {
         
         setAuctionStart(token1, token2, WAITING_PERIOD_NEW_TOKEN_PAIR);
         NewTokenPair(token1, token2);
-    }
-
-    function safeTransfer(address token, address to, uint value, bool from) public returns (bool result) {
-        if (from) {
-            Token(token).transferFrom(msg.sender, this, value);
-        } else {
-            Token(token).transfer(to,value);
-        }
-
-        assembly {
-            switch returndatasize()   
-                case 0 {                      // This is our BadToken
-                    result := not(0)          // result is true
-                }
-                case 32 {                     // This is our GoodToken
-                    returndatacopy(0, 0, 32) 
-                    result := mload(0)        // result == returndata of external call
-                }
-                default {                     // This is not an ERC20 token
-                    revert(0, 0) 
-                }
-        }
-        return result;
     }
 
     function deposit(
