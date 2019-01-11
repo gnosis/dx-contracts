@@ -2,7 +2,7 @@ pragma solidity ^0.4.24;
 
 import "./TokenFRT.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
-import "./SafeTransfer.sol";
+import "./base/SafeTransfer.sol";
 import "./base/TokenWhitelist.sol";
 import "./base/DxMath.sol";
 import "./base/EthOracle.sol";
