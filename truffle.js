@@ -15,8 +15,13 @@ if (!privateKey && !mnemonic) {
 }
 
 // Solc
-const solcUseDocker = process.env.SOLC_USE_DOCKER === 'true' || false
-const solcVersion = '0.5.2'
+const compatibilityTruffle4 = true
+let solcUseDocker, solcVersion
+if (!compatibilityTruffle4) {
+  // Use truffle 5
+  solcUseDocker = process.env.SOLC_USE_DOCKER === 'true' || false
+  solcVersion = '0.5.2'
+}
 
 // Gas price
 const gasPriceGWei = process.env.GAS_PRICE_GWEI || DEFAULT_GAS_PRICE_GWEI
@@ -37,7 +42,8 @@ module.exports = {
     aditionalNetwork,
     optimizedEnabled: true,
     solcUseDocker,
-    solcVersion
+    solcVersion,
+    compatibilityTruffle4
   }),
   // https://github.com/mochajs/mocha/wiki/Using-mocha-programmatically#set-options
   mocha: {
