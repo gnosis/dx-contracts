@@ -3,12 +3,17 @@ pragma solidity ^0.4.21;
 
 import "@gnosis.pm/util-contracts/contracts/Token.sol";
 
+interface BadToken {
+    function transfer(address to, uint value) external;
+    function transferFrom(address from, address to, uint value) external;
+}
+
 contract SafeTransfer {
     function safeTransfer(address token, address to, uint value, bool from) internal returns (bool result) {
         if (from) {
-            Token(token).transferFrom(msg.sender, this, value);
+            BadToken(token).transferFrom(msg.sender, this, value);
         } else {
-            Token(token).transfer(to, value);
+            BadToken(token).transfer(to, value);
         }
 
         assembly {
@@ -21,7 +26,7 @@ contract SafeTransfer {
               result := mload(0)        // result == returndata of external call
             }
             default {                     // This is not an ERC20 token
-              revert(0, 0) 
+              result := 0 
             }
         }
         return result;
