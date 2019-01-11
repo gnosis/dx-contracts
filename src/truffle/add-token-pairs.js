@@ -306,7 +306,7 @@ async function loadContractsInfo () {
 
   // Get ether price from oracle
   const oracle = PriceOracleInterface.at(ethUSDOracleAddress)
-  const etherPrice = await oracle.getUSDETHPrice.call()
+  const etherPrice = await oracle.getUsdEthPrice.call()
 
   // Get the ether balance
   const account = accounts[0]
