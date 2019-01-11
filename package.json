@@ -24,7 +24,8 @@
     "set-auctioneer": "npx truffle exec src/truffle/set-auctioneer.js",
     "get-abi-encoded-params": "npx truffle exec src/truffle/get-abi-encoded-params.js",
     "decode": "node ./node_modules/decode-eth/main.js",
-    "prettier": "prettier --write --tab-width 4 --print-width 120 '**/*.sol'"
+    "prettier": "prettier --write --tab-width 4 --print-width 120 '**/*.sol'",
+    "install": "cd node_modules/truffle && npm install solc@0.5.2 && cd ../.."
   },
   "repository": {
     "type": "git",
