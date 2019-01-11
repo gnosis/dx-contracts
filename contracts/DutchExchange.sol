@@ -1,17 +1,19 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "./TokenFRT.sol";
-import "./Oracle/PriceOracleInterface.sol";  
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
-import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
 import "./SafeTransfer.sol";
+import "./base/TokenWhitelist.sol";
+import "./base/DxMath.sol";
+import "./base/EthOracle.sol";
+import "./base/DxUpgrade.sol";
 
 
 /// @title Dutch Exchange - exchange token pairs with the clever mechanism of the dutch auction
 /// @author Alex Herrmann - <alex@gnosis.pm>
 /// @author Dominik Teiml - <dominik@gnosis.pm>
 
-contract DutchExchange is Proxied, SafeTransfer {
+contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
 
     // The price is a rational number, so we need a concept of a fraction
     struct fraction {
@@ -21,23 +23,13 @@ contract DutchExchange is Proxied, SafeTransfer {
 
     uint constant WAITING_PERIOD_NEW_TOKEN_PAIR = 6 hours;
     uint constant WAITING_PERIOD_NEW_AUCTION = 10 minutes;
-    uint constant WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE = 30 days;
     uint constant AUCTION_START_WAITING_FOR_FUNDING = 1;
 
-    address public newMasterCopy;
-    // Time when new masterCopy is updatabale
-    uint public masterCopyCountdown;
 
     // > Storage
-    // auctioneer has the power to manage some variables
-    address public auctioneer;
     // Ether ERC-20 token
     address public ethToken;
-    // Price Oracle interface 
-    PriceOracleInterface public ethUSDOracle;
-    // Price Oracle interface proposals during update process
-    PriceOracleInterface public newProposalEthUSDOracle;
-    uint public oracleInterfaceCountdown;
+
     // Minimum required sell funding for adding a new token pair, in USD
     uint public thresholdNewTokenPair;
     // Minimum required sell funding for starting antoher auction, in USD
@@ -46,11 +38,6 @@ contract DutchExchange is Proxied, SafeTransfer {
     TokenFRT public frtToken;
     // Token for paying fees
     TokenOWL public owlToken;
-
-    // mapping that stores the tokens, which are approved
-    // Token => approved
-    // Only tokens approved by auctioneer generate frtToken tokens
-    mapping (address => bool) public approvedTokens;
 
     // For the following two mappings, there is one mapping for each token pair
     // The order which the tokens should be called is smaller, larger
@@ -82,14 +69,6 @@ contract DutchExchange is Proxied, SafeTransfer {
     mapping (address => mapping (address => mapping (uint => mapping (address => uint)))) public buyerBalances;
     mapping (address => mapping (address => mapping (uint => mapping (address => uint)))) public claimedAmounts;
 
-    // > Modifiers
-    modifier onlyAuctioneer() {
-        // Only allows auctioneer to proceed
-        // R1
-        require(msg.sender == auctioneer);
-        _;
-    }
-
     /// @dev Constructor-Function creates exchange
     /// @param _frtToken - address of frtToken ERC-20 token
     /// @param _owlToken - address of owlToken ERC-20 token
@@ -100,7 +79,7 @@ contract DutchExchange is Proxied, SafeTransfer {
     function setupDutchExchange(
         TokenFRT _frtToken,
         TokenOWL _owlToken,
-        address _auctioneer, 
+        address _auctioneer,
         address _ethToken,
         PriceOracleInterface _ethUSDOracle,
         uint _thresholdNewTokenPair,
@@ -109,14 +88,14 @@ contract DutchExchange is Proxied, SafeTransfer {
         public
     {
         // Make sure contract hasn't been initialised
-        require(ethToken == 0);
+        require(ethToken == 0, "The contract must be uninitialized");
 
         // Validates inputs
-        require(address(_owlToken) != address(0));
-        require(address(_frtToken) != address(0));
-        require(_auctioneer != 0);
-        require(_ethToken != 0);
-        require(address(_ethUSDOracle) != address(0));
+        require(address(_owlToken) != address(0), "The OWL address must be valid");
+        require(address(_frtToken) != address(0), "The FRT address must be valid");
+        require(_auctioneer != 0, "The auctioneer address must be valid");
+        require(_ethToken != 0, "The WETH address must be valid");
+        require(address(_ethUSDOracle) != address(0), "The oracle address must be valid");
 
         frtToken = _frtToken;
         owlToken = _owlToken;
@@ -125,38 +104,6 @@ contract DutchExchange is Proxied, SafeTransfer {
         ethUSDOracle = _ethUSDOracle;
         thresholdNewTokenPair = _thresholdNewTokenPair;
         thresholdNewAuction = _thresholdNewAuction;
-    }
-
-    function updateAuctioneer(
-        address _auctioneer
-    )
-        public
-        onlyAuctioneer
-    {
-        require(_auctioneer != address(0));
-        auctioneer = _auctioneer;
-    }
-
-    function initiateEthUsdOracleUpdate(
-        PriceOracleInterface _ethUSDOracle
-    )
-        public
-        onlyAuctioneer
-    {         
-        require(address(_ethUSDOracle) != address(0));
-        newProposalEthUSDOracle = _ethUSDOracle;
-        oracleInterfaceCountdown = add(now, WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE);
-        NewOracleProposal(_ethUSDOracle);
-    }
-
-    function updateEthUSDOracle()
-        public
-        onlyAuctioneer
-    {
-        require(address(newProposalEthUSDOracle) != address(0));
-        require(oracleInterfaceCountdown < now);
-        ethUSDOracle = newProposalEthUSDOracle;
-        newProposalEthUSDOracle = PriceOracleInterface(0);
     }
 
     function updateThresholdNewTokenPair(
@@ -177,44 +124,7 @@ contract DutchExchange is Proxied, SafeTransfer {
         thresholdNewAuction = _thresholdNewAuction;
     }
 
-    function updateApprovalOfToken(
-        address[] token,
-        bool approved
-    )
-        public
-        onlyAuctioneer
-     {  
-        for(uint i = 0; i < token.length; i++) {
-            approvedTokens[token[i]] = approved;
-            Approval(token[i], approved);
-        }
-     }
 
-     function startMasterCopyCountdown (
-        address _masterCopy
-     )
-        public
-        onlyAuctioneer
-    {
-        require(_masterCopy != address(0));
-
-        // Update masterCopyCountdown
-        newMasterCopy = _masterCopy;
-        masterCopyCountdown = add(now, WAITING_PERIOD_CHANGE_MASTERCOPY_OR_ORACLE);
-        NewMasterCopyProposal(_masterCopy);
-    }
-
-    function updateMasterCopy()
-        public
-        onlyAuctioneer
-    {
-        require(newMasterCopy != address(0));
-        require(now >= masterCopyCountdown);
-
-        // Update masterCopy
-        masterCopy = newMasterCopy;
-        newMasterCopy = address(0);
-    }
 
     /// @param initialClosingPriceNum initial price will be 2 * initialClosingPrice. This is its numerator
     /// @param initialClosingPriceDen initial price will be 2 * initialClosingPrice. This is its denominator
@@ -224,27 +134,27 @@ contract DutchExchange is Proxied, SafeTransfer {
         uint token1Funding,
         uint token2Funding,
         uint initialClosingPriceNum,
-        uint initialClosingPriceDen 
+        uint initialClosingPriceDen
     )
         public
     {
         // R1
-        require(token1 != token2);
+        require(token1 != token2, "You cannot add a token pair using the same token");
 
         // R2
-        require(initialClosingPriceNum != 0);
+        require(initialClosingPriceNum != 0, "You must set the numerator for the initial price");
 
         // R3
-        require(initialClosingPriceDen != 0);
+        require(initialClosingPriceDen != 0, "You must set the denominator for the initial price");
 
         // R4
-        require(getAuctionIndex(token1, token2) == 0);
+        require(getAuctionIndex(token1, token2) == 0, "The token pair was already added");
 
         // R5: to prevent overflow
-        require(initialClosingPriceNum < 10 ** 18);
+        require(initialClosingPriceNum < 10 ** 18, "You must set a smaller numerator for the initial price");
 
         // R6
-        require(initialClosingPriceDen < 10 ** 18);
+        require(initialClosingPriceDen < 10 ** 18, "You must set a smaller denominator for the initial price");
 
         setAuctionIndex(token1, token2);
 
@@ -252,10 +162,10 @@ contract DutchExchange is Proxied, SafeTransfer {
         token2Funding = min(token2Funding, balances[token2][msg.sender]);
 
         // R7
-        require(token1Funding < 10 ** 30);
+        require(token1Funding < 10 ** 30, "You should use a smaller funding for token 1");
 
         // R8
-        require(token2Funding < 10 ** 30);
+        require(token2Funding < 10 ** 30, "You should use a smaller funding for token 2");
 
         uint fundedValueUSD;
         uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
@@ -272,12 +182,13 @@ contract DutchExchange is Proxied, SafeTransfer {
             fundedValueUSD = mul(token2Funding, ethUSDPrice);
         } else {
             // C3: Neither token is ethToken
-            fundedValueUSD = calculateFundedValueTokenToken(token1, token2, 
-                token1Funding, token2Funding, ethTokenMem, ethUSDPrice);
+            fundedValueUSD = calculateFundedValueTokenToken(
+                token1, token2, token1Funding, token2Funding, ethTokenMem,
+                ethUSDPrice);
         }
 
         // R5
-        require(fundedValueUSD >= thresholdNewTokenPair);
+        require(fundedValueUSD >= thresholdNewTokenPair, "You should surplus the threshold for adding token pairs");
 
         // Save prices of opposite auctions
         closingPrices[token1][token2][0] = fraction(initialClosingPriceNum, initialClosingPriceDen);
@@ -318,8 +229,10 @@ contract DutchExchange is Proxied, SafeTransfer {
 
         // Compute funded value in ethToken and USD
         // 10^30 * 10^30 = 10^60
-        uint fundedValueETH = add(mul(token1Funding, priceToken1Num) / priceToken1Den,
-            token2Funding * priceToken2Num / priceToken2Den);
+        uint fundedValueETH = add(
+            mul(token1Funding, priceToken1Num) / priceToken1Den,
+            token2Funding * priceToken2Num / priceToken2Den
+        );
 
         fundedValueUSD = mul(fundedValueETH, ethUSDPrice);
     }
@@ -344,9 +257,9 @@ contract DutchExchange is Proxied, SafeTransfer {
         sellVolumesCurrent[token2][token1] = token2FundingAfterFee;
         sellerBalances[token1][token2][1][msg.sender] = token1FundingAfterFee;
         sellerBalances[token2][token1][1][msg.sender] = token2FundingAfterFee;
-        
+
         setAuctionStart(token1, token2, WAITING_PERIOD_NEW_TOKEN_PAIR);
-        NewTokenPair(token1, token2);
+        emit NewTokenPair(token1, token2);
     }
 
     function deposit(
@@ -357,13 +270,13 @@ contract DutchExchange is Proxied, SafeTransfer {
         returns (uint)
     {
         // R1
-        require(safeTransfer(tokenAddress, msg.sender, amount, true));
+        require(safeTransfer(tokenAddress, msg.sender, amount, true), "The deposit transaction must succeed");
 
         uint newBal = add(balances[tokenAddress][msg.sender], amount);
 
         balances[tokenAddress][msg.sender] = newBal;
 
-        NewDeposit(tokenAddress, amount);
+        emit NewDeposit(tokenAddress, amount);
 
         return newBal;
     }
@@ -379,15 +292,14 @@ contract DutchExchange is Proxied, SafeTransfer {
         amount = min(amount, usersBalance);
 
         // R1
-        require(amount > 0);
-
-        // R2
-        require(safeTransfer(tokenAddress, msg.sender, amount, false));
+        require(amount > 0, "The amount must be greater than 0");
 
         uint newBal = sub(usersBalance, amount);
         balances[tokenAddress][msg.sender] = newBal;
 
-        NewWithdrawal(tokenAddress, amount);
+        // R2
+        require(safeTransfer(tokenAddress, msg.sender, amount, false), "The withdraw transfer must succeed");
+        emit NewWithdrawal(tokenAddress, amount);
 
         return newBal;
     }
@@ -407,12 +319,12 @@ contract DutchExchange is Proxied, SafeTransfer {
         amount = min(amount, balances[sellToken][msg.sender]);
 
         // R1
-        require(amount > 0);
-        
+        require(amount > 0, "Sell amount should be greater than 0");
+
         // R2
         uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
         require(latestAuctionIndex > 0);
-      
+
         // R3
         uint auctionStart = getAuctionStart(sellToken, buyToken);
         if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING || auctionStart > now) {
@@ -424,7 +336,8 @@ contract DutchExchange is Proxied, SafeTransfer {
             if (auctionIndex == 0) {
                 auctionIndex = latestAuctionIndex;
             } else {
-                require(auctionIndex == latestAuctionIndex);
+                require(auctionIndex == latestAuctionIndex,
+                    "Auction index should be equal to latest auction index");
             }
 
             // R1.2
@@ -458,13 +371,16 @@ contract DutchExchange is Proxied, SafeTransfer {
             // C2
             uint sellVolumeNext = sellVolumesNext[sellToken][buyToken];
             sellVolumesNext[sellToken][buyToken] = add(sellVolumeNext, amountAfterFee);
+
+            // close previous auction if theoretically closed
+            closeTheoreticalClosedAuction(sellToken, buyToken, latestAuctionIndex);
         }
 
         if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING) {
             scheduleNextAuction(sellToken, buyToken);
         }
 
-        NewSellOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
+        emit NewSellOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
 
         return (auctionIndex, newSellerBal);
     }
@@ -488,19 +404,19 @@ contract DutchExchange is Proxied, SafeTransfer {
 
         // R4
         require(auctionIndex == getAuctionIndex(sellToken, buyToken));
-        
+
         // R5: auction must not be in waiting period
         require(auctionStart > AUCTION_START_WAITING_FOR_FUNDING);
-        
+
         // R6: auction must be funded
         require(sellVolumesCurrent[sellToken][buyToken] > 0);
-        
+
         uint buyVolume = buyVolumes[sellToken][buyToken];
         amount = min(amount, balances[buyToken][msg.sender]);
 
         // R7
         require(add(buyVolume, amount) < 10 ** 30);
-        
+
         // Overbuy is when a part of a buy order clears an auction
         // In that case we only process the part before the overbuy
         // To calculate overbuy, we first get current price
@@ -529,7 +445,7 @@ contract DutchExchange is Proxied, SafeTransfer {
             uint newBuyerBal = add(buyerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
             buyerBalances[sellToken][buyToken][auctionIndex][msg.sender] = newBuyerBal;
             buyVolumes[sellToken][buyToken] = add(buyVolumes[sellToken][buyToken], amountAfterFee);
-            NewBuyOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
+            emit NewBuyOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
         }
 
         // Checking for equality would suffice here. nevertheless:
@@ -540,7 +456,7 @@ contract DutchExchange is Proxied, SafeTransfer {
 
         return (newBuyerBal);
     }
-    
+
     function claimSellerFunds(
         address sellToken,
         address buyToken,
@@ -576,7 +492,7 @@ contract DutchExchange is Proxied, SafeTransfer {
         if (returned > 0) {
             balances[buyToken][user] = add(balances[buyToken][user], returned);
         }
-        NewSellerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
+        emit NewSellerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
     }
 
     function claimBuyerFunds(
@@ -589,14 +505,15 @@ contract DutchExchange is Proxied, SafeTransfer {
         returns (uint returned, uint frtsIssued)
     {
         closeTheoreticalClosedAuction(sellToken, buyToken, auctionIndex);
-        
+
         uint num;
         uint den;
         (returned, num, den) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
 
         if (closingPrices[sellToken][buyToken][auctionIndex].den == 0) {
             // Auction is running
-            claimedAmounts[sellToken][buyToken][auctionIndex][user] = add(claimedAmounts[sellToken][buyToken][auctionIndex][user], returned);
+            claimedAmounts[sellToken][buyToken][auctionIndex][user] =
+            add(claimedAmounts[sellToken][buyToken][auctionIndex][user], returned);
         } else {
             // Auction has closed
             // We DON'T want to check for returned > 0, because that would fail if a user claims
@@ -617,15 +534,15 @@ contract DutchExchange is Proxied, SafeTransfer {
             // Auction has closed
             // Reset buyerBalances and claimedAmounts
             buyerBalances[sellToken][buyToken][auctionIndex][user] = 0;
-            claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0; 
+            claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0;
         }
 
         // Claim tokens
         if (returned > 0) {
             balances[sellToken][user] = add(balances[sellToken][user], returned);
         }
-        
-        NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
+
+        emit NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
     }
 
     function issueFrts(
@@ -663,10 +580,10 @@ contract DutchExchange is Proxied, SafeTransfer {
         }
     }
 
-    //@dev allows to close possible theoretical closed markets
-    //@param sellToken sellToken of an auction
-    //@param buyToken buyToken of an auction 
-    //@param index is the auctionIndex of the auction
+    /// @dev allows to close possible theoretical closed markets
+    /// @param sellToken sellToken of an auction
+    /// @param buyToken buyToken of an auction
+    /// @param auctionIndex is the auctionIndex of the auction
     function closeTheoreticalClosedAuction(
         address sellToken,
         address buyToken,
@@ -674,17 +591,20 @@ contract DutchExchange is Proxied, SafeTransfer {
     )
         public
     {
-        if(auctionIndex == getAuctionIndex(buyToken, sellToken) && closingPrices[sellToken][buyToken][auctionIndex].num == 0) {
+        if (auctionIndex == getAuctionIndex(buyToken, sellToken) &&
+            closingPrices[sellToken][buyToken][auctionIndex].num == 0) {
             uint buyVolume = buyVolumes[sellToken][buyToken];
             uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
             uint num;
             uint den;
             (num, den) = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
             // 10^30 * 10^37 = 10^67
-            uint outstandingVolume = atleastZero(int(mul(sellVolume, num) / den - buyVolume));
-            
-            if(outstandingVolume == 0) {
-                postBuyOrder(sellToken, buyToken, auctionIndex, 0);
+            if (sellVolume > 0) {
+                uint outstandingVolume = atleastZero(int(mul(sellVolume, num) / den - buyVolume));
+
+                if (outstandingVolume == 0) {
+                    postBuyOrder(sellToken, buyToken, auctionIndex, 0);
+                }
             }
         }
     }
@@ -714,7 +634,7 @@ contract DutchExchange is Proxied, SafeTransfer {
             uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
             // < 10^30 * 10^37 = 10^67
             unclaimedBuyerFunds = atleastZero(int(
-                mul(buyerBalance, den) / num - 
+                mul(buyerBalance, den) / num -
                 claimedAmounts[sellToken][buyToken][auctionIndex][user]
             ));
         }
@@ -738,13 +658,13 @@ contract DutchExchange is Proxied, SafeTransfer {
 
         if (fee > 0) {
             fee = settleFeeSecondPart(primaryToken, fee);
-            
+
             uint usersExtraTokens = extraTokens[primaryToken][secondaryToken][auctionIndex + 1];
             extraTokens[primaryToken][secondaryToken][auctionIndex + 1] = add(usersExtraTokens, fee);
 
-            Fee(primaryToken, secondaryToken, msg.sender, auctionIndex, fee);
+            emit Fee(primaryToken, secondaryToken, msg.sender, auctionIndex, fee);
         }
-        
+
         amountAfterFee = sub(amount, fee);
     }
 
@@ -766,7 +686,7 @@ contract DutchExchange is Proxied, SafeTransfer {
 
         uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
         // 10^29 * 10^6 = 10^35
-        // Uses 18 decimal places <> exactly as owlToken tokens: 10**18 owlToken == 1 USD 
+        // Uses 18 decimal places <> exactly as owlToken tokens: 10**18 owlToken == 1 USD
         uint feeInUSD = mul(feeInETH, ethUSDPrice);
         uint amountOfowlTokenBurned = min(owlToken.allowance(msg.sender, this), feeInUSD / 2);
         amountOfowlTokenBurned = min(owlToken.balanceOf(msg.sender), amountOfowlTokenBurned);
@@ -782,7 +702,7 @@ contract DutchExchange is Proxied, SafeTransfer {
             newFee = fee;
         }
     }
-    
+
     function getFeeRatio(
         address user
     )
@@ -791,33 +711,45 @@ contract DutchExchange is Proxied, SafeTransfer {
         // feeRatio < 10^4
         returns (uint num, uint den)
     {
-        uint t = frtToken.totalSupply();
-        uint b = frtToken.lockedTokenBalances(user);
+        uint totalSupply = frtToken.totalSupply();
+        uint lockedFrt = frtToken.lockedTokenBalances(user);
 
-        if (b * 100000 < t || t == 0) {
-            // 0.5%
+        /*
+          Fee Model:
+            locked FRT range     Fee
+            -----------------   ------
+            [0, 0.01%)           0.5%
+            [0.01%, 0.1%)        0.4%
+            [0.1%, 1%)           0.3%
+            [1%, 10%)            0.2%
+            [10%, 100%)          0.1%
+        */
+
+        if (lockedFrt * 10000 < totalSupply || totalSupply == 0) {
+            // Maximum fee, if user has locked less than 0.01% of the total FRT
+            // Fee: 0.5%
             num = 1;
             den = 200;
-        } else if (b * 10000 < t) {
-            // 0.4%
+        } else if (lockedFrt * 1000 < totalSupply) {
+            // If user has locked more than 0.01% and less than 0.1% of the total FRT
+            // Fee: 0.4%
             num = 1;
             den = 250;
-        } else if (b * 1000 < t) {
-            // 0.3%
+        } else if (lockedFrt * 100 < totalSupply) {
+            // If user has locked more than 0.1% and less than 1% of the total FRT
+            // Fee: 0.3%
             num = 3;
             den = 1000;
-        } else if (b * 100 < t) {
-            // 0.2%
+        } else if (lockedFrt * 10 < totalSupply) {
+            // If user has locked more than 1% and less than 10% of the total FRT
+            // Fee: 0.2%
             num = 1;
             den = 500;
-        } else if (b * 10 < t) {
-            // 0.1%
+        } else {
+            // If user has locked more than 10% of the total FRT
+            // Fee: 0.1%
             num = 1;
             den = 1000;
-        } else {
-            // 0% 
-            num = 0; 
-            den = 1;
         }
     }
 
@@ -880,7 +812,7 @@ contract DutchExchange is Proxied, SafeTransfer {
             scheduleNextAuction(sellToken, buyToken);
         }
 
-        AuctionCleared(sellToken, buyToken, sellVolume, buyVolume, auctionIndex);
+        emit AuctionCleared(sellToken, buyToken, sellVolume, buyVolume, auctionIndex);
     }
 
     function scheduleNextAuction(
@@ -908,7 +840,7 @@ contract DutchExchange is Proxied, SafeTransfer {
         // < 10^30 * 10^31 * 10^6 = 10^67
         uint sellVolume = mul(mul(sellVolumesCurrent[sellToken][buyToken], sellNum), ethUSDPrice) / sellDen;
         uint sellVolumeOpp = mul(mul(sellVolumesCurrent[buyToken][sellToken], buyNum), ethUSDPrice) / buyDen;
-        if (sellVolume >= thresholdNewAuction || sellVolumeOpp >= thresholdNewAuction) {
+        if (sellVolume >= thresholdNewAuction && sellVolumeOpp >= thresholdNewAuction) {
             // Schedule next auction
             setAuctionStart(sellToken, buyToken, WAITING_PERIOD_NEW_AUCTION);
         } else {
@@ -953,8 +885,8 @@ contract DutchExchange is Proxied, SafeTransfer {
             while (!correctPair) {
                 closingPriceToken2 = closingPrices[token2][token1][auctionIndex - i];
                 closingPriceToken1 = closingPrices[token1][token2][auctionIndex - i];
-                
-                if (closingPriceToken1.num > 0 && closingPriceToken1.den > 0 || 
+
+                if (closingPriceToken1.num > 0 && closingPriceToken1.den > 0 ||
                     closingPriceToken2.num > 0 && closingPriceToken2.den > 0)
                 {
                     correctPair = true;
@@ -975,12 +907,12 @@ contract DutchExchange is Proxied, SafeTransfer {
                 num = closingPriceToken2.den + closingPriceToken1.num;
                 den = closingPriceToken2.num + closingPriceToken1.den;
             }
-        } 
+        }
     }
 
     /// @dev Gives best estimate for market price of a token in ETH of any price oracle on the Ethereum network
     /// @param token address of ERC-20 token
-    /// @return Weighted average of closing prices of opposite Token-ethToken auctions, based on their sellVolume  
+    /// @return Weighted average of closing prices of opposite Token-ethToken auctions, based on their sellVolume
     function getPriceOfTokenInLastAuction(
         address token
     )
@@ -1085,11 +1017,11 @@ contract DutchExchange is Proxied, SafeTransfer {
     )
         internal
     {
-        (token1, token2) = getTokenOrder(token1, token2);        
+        (token1, token2) = getTokenOrder(token1, token2);
         uint auctionStart = now + value;
         uint auctionIndex = latestAuctionIndices[token1][token2];
         auctionStarts[token1][token2] = auctionStart;
-        AuctionStartScheduled(token1, token2, auctionIndex, auctionStart);
+        emit AuctionStartScheduled(token1, token2, auctionIndex, auctionStart);
     }
 
     function resetAuctionStart(
@@ -1133,109 +1065,10 @@ contract DutchExchange is Proxied, SafeTransfer {
     )
         public
         view
-        returns (uint auctionIndex) 
+        returns (uint auctionIndex)
     {
         (token1, token2) = getTokenOrder(token1, token2);
         auctionIndex = latestAuctionIndices[token1][token2];
-    }
-
-    // > Math fns
-    function min(uint a, uint b) 
-        public
-        pure
-        returns (uint)
-    {
-        if (a < b) {
-            return a;
-        } else {
-            return b;
-        }
-    }
-
-    function atleastZero(int a)
-        public
-        pure
-        returns (uint)
-    {
-        if (a < 0) {
-            return 0;
-        } else {
-            return uint(a);
-        }
-    }
-    /// @dev Returns whether an add operation causes an overflow
-    /// @param a First addend
-    /// @param b Second addend
-    /// @return Did no overflow occur?
-    function safeToAdd(uint a, uint b)
-        public
-        pure
-        returns (bool)
-    {
-        return a + b >= a;
-    }
-
-    /// @dev Returns whether a subtraction operation causes an underflow
-    /// @param a Minuend
-    /// @param b Subtrahend
-    /// @return Did no underflow occur?
-    function safeToSub(uint a, uint b)
-        public
-        pure
-        returns (bool)
-    {
-        return a >= b;
-    }
-
-    /// @dev Returns whether a multiply operation causes an overflow
-    /// @param a First factor
-    /// @param b Second factor
-    /// @return Did no overflow occur?
-    function safeToMul(uint a, uint b)
-        public
-        pure
-        returns (bool)
-    {
-        return b == 0 || a * b / b == a;
-    }
-
-    /// @dev Returns sum if no overflow occurred
-    /// @param a First addend
-    /// @param b Second addend
-    /// @return Sum
-    function add(uint a, uint b)
-        public
-        pure
-        returns (uint)
-    {
-        require(safeToAdd(a, b));
-        return a + b;
-    }
-
-    /// @dev Returns difference if no overflow occurred
-    /// @param a Minuend
-    /// @param b Subtrahend
-    /// @return Difference
-    function sub(uint a, uint b)
-        public
-        pure
-        returns (uint)
-    {
-        require(safeToSub(a, b));
-        return a - b;
-    }
-
-    /// @dev Returns product if no overflow occurred
-    /// @param a First factor
-    /// @param b Second factor
-    /// @return Product
-    function mul(uint a, uint b)
-        public
-        pure
-        returns (uint)
-    {
-        require(safeToMul(a, b));
-        return a * b;
     }
 
     function getRunningTokenPairs(
@@ -1270,13 +1103,13 @@ contract DutchExchange is Proxied, SafeTransfer {
             }
         }
     }
-    
-    //@dev for quick overview of possible sellerBalances to calculate the possible withdraw tokens
-    //@param auctionSellToken is the sellToken defining an auctionPair
-    //@param auctionBuyToken is the buyToken defining an auctionPair
-    //@param user is the user who wants to his tokens
-    //@param lastNAuctions how many auctions will be checked. 0 means all
-    //@returns returns sellbal for all indices for all tokenpairs 
+
+    /// @dev for quick overview of possible sellerBalances to calculate the possible withdraw tokens
+    /// @param auctionSellToken is the sellToken defining an auctionPair
+    /// @param auctionBuyToken is the buyToken defining an auctionPair
+    /// @param user is the user who wants to his tokens
+    /// @param lastNAuctions how many auctions will be checked. 0 means all
+    //@returns returns sellbal for all indices for all tokenpairs
     function getIndicesWithClaimableTokensForSellers(
         address auctionSellToken,
         address auctionBuyToken,
@@ -1290,7 +1123,7 @@ contract DutchExchange is Proxied, SafeTransfer {
         uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
 
         uint arrayLength;
-        
+
         uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
 
         for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
@@ -1311,12 +1144,12 @@ contract DutchExchange is Proxied, SafeTransfer {
                 k++;
             }
         }
-    }    
+    }
 
-    //@dev for quick overview of current sellerBalances for a user
-    //@param auctionSellTokens are the sellTokens defining an auctionPair
-    //@param auctionBuyTokens are the buyTokens defining an auctionPair
-    //@param user is the user who wants to his tokens
+    /// @dev for quick overview of current sellerBalances for a user
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param user is the user who wants to his tokens
     function getSellerBalancesOfCurrentAuctions(
         address[] auctionSellTokens,
         address[] auctionBuyTokens,
@@ -1340,12 +1173,12 @@ contract DutchExchange is Proxied, SafeTransfer {
         return sellersBalances;
     }
 
-    //@dev for quick overview of possible buyerBalances to calculate the possible withdraw tokens
-    //@param auctionSellToken is the sellToken defining an auctionPair
-    //@param auctionBuyToken is the buyToken defining an auctionPair
-    //@param user is the user who wants to his tokens
-    //@param lastNAuctions how many auctions will be checked. 0 means all
-    //@returns returns sellbal for all indices for all tokenpairs 
+    /// @dev for quick overview of possible buyerBalances to calculate the possible withdraw tokens
+    /// @param auctionSellToken is the sellToken defining an auctionPair
+    /// @param auctionBuyToken is the buyToken defining an auctionPair
+    /// @param user is the user who wants to his tokens
+    /// @param lastNAuctions how many auctions will be checked. 0 means all
+    //@returns returns sellbal for all indices for all tokenpairs
     function getIndicesWithClaimableTokensForBuyers(
         address auctionSellToken,
         address auctionBuyToken,
@@ -1359,7 +1192,7 @@ contract DutchExchange is Proxied, SafeTransfer {
         uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
 
         uint arrayLength;
-        
+
         uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
 
         for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
@@ -1380,12 +1213,12 @@ contract DutchExchange is Proxied, SafeTransfer {
                 k++;
             }
         }
-    }    
+    }
 
-    //@dev for quick overview of current sellerBalances for a user
-    //@param auctionSellTokens are the sellTokens defining an auctionPair
-    //@param auctionBuyTokens are the buyTokens defining an auctionPair
-    //@param user is the user who wants to his tokens
+    /// @dev for quick overview of current sellerBalances for a user
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param user is the user who wants to his tokens
     function getBuyerBalancesOfCurrentAuctions(
         address[] auctionSellTokens,
         address[] auctionBuyTokens,
@@ -1409,31 +1242,28 @@ contract DutchExchange is Proxied, SafeTransfer {
         return buyersBalances;
     }
 
-    //@dev for quick overview of approved Tokens
-    //@param addressesToCheck are the ERC-20 token addresses to be checked whether they are approved
-    function getApprovedAddressesOfList(
-        address[] addressToCheck
+    function checkLengthsForSeveralAuctionClaiming(
+        address[] auctionSellTokens,
+        address[] auctionBuyTokens,
+        uint[] auctionIndices
     )
-        external
-        view
-        returns (bool[])
+        internal
+        pure
+        returns (uint length)
     {
-        uint length = addressToCheck.length;
+        length = auctionSellTokens.length;
+        uint length2 = auctionBuyTokens.length;
+        require(length == length2);
 
-        bool[] memory isApproved = new bool[](length);
-
-        for (uint i = 0; i < length; i++) {
-            isApproved[i] = approvedTokens[addressToCheck[i]];
-        }
-
-        return isApproved;
+        uint length3 = auctionIndices.length;
+        require(length2 == length3);
     }
 
-    //@dev for multiple withdraws
-    //@param auctionSellTokens are the sellTokens defining an auctionPair
-    //@param auctionBuyTokens are the buyTokens defining an auctionPair
-    //@param auctionIndices are the auction indices on which an token should be claimedAmounts
-    //@param user is the user who wants to his tokens
+    /// @dev for multiple claims
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    /// @param user is the user who wants to his tokens
     function claimTokensFromSeveralAuctionsAsSeller(
         address[] auctionSellTokens,
         address[] auctionBuyTokens,
@@ -1441,22 +1271,30 @@ contract DutchExchange is Proxied, SafeTransfer {
         address user
     )
         external
+        returns (uint[], uint[])
     {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2);
+        uint length = checkLengthsForSeveralAuctionClaiming(
+            auctionSellTokens,
+            auctionBuyTokens,
+            auctionIndices
+        );
 
-        uint length3 = auctionIndices.length;
-        require(length2 == length3);
+        uint[] memory claimAmounts = new uint[](length);
+        uint[] memory frtsIssuedList = new uint[](length);
 
-        for (uint i = 0; i < length; i++)
-            claimSellerFunds(auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], frtsIssuedList[i]) = claimSellerFunds(
+            auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
+        }
+
+        return (claimAmounts, frtsIssuedList);
     }
-    //@dev for multiple withdraws
-    //@param auctionSellTokens are the sellTokens defining an auctionPair
-    //@param auctionBuyTokens are the buyTokens defining an auctionPair
-    //@param auctionIndices are the auction indices on which an token should be claimedAmounts
-    //@param user is the user who wants to his tokens
+
+    /// @dev for multiple claims
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    /// @param user is the user who wants to his tokens
     function claimTokensFromSeveralAuctionsAsBuyer(
         address[] auctionSellTokens,
         address[] auctionBuyTokens,
@@ -1464,21 +1302,94 @@ contract DutchExchange is Proxied, SafeTransfer {
         address user
     )
         external
+        returns (uint[], uint[])
     {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2);
+        uint length = checkLengthsForSeveralAuctionClaiming(
+            auctionSellTokens,
+            auctionBuyTokens,
+            auctionIndices
+        );
 
-        uint length3 = auctionIndices.length;
-        require(length2 == length3);
+        uint[] memory claimAmounts = new uint[](length);
+        uint[] memory frtsIssuedList = new uint[](length);
 
-        for (uint i = 0; i < length; i++)
-            claimBuyerFunds(auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], frtsIssuedList[i]) = claimBuyerFunds(
+            auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
+        }
+
+        return (claimAmounts, frtsIssuedList);
+    }
+
+    /// @dev for multiple withdraws
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    function claimAndWithdrawTokensFromSeveralAuctionsAsSeller(
+        address[] auctionSellTokens,
+        address[] auctionBuyTokens,
+        uint[] auctionIndices
+    )
+        external
+        returns (uint[], uint frtsIssued)
+    {
+        uint length = checkLengthsForSeveralAuctionClaiming(
+            auctionSellTokens,
+            auctionBuyTokens,
+            auctionIndices
+        );
+
+        uint[] memory claimAmounts = new uint[](length);
+        uint claimFrts = 0;
+
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], claimFrts) = claimSellerFunds(
+            auctionSellTokens[i], auctionBuyTokens[i], msg.sender, auctionIndices[i]);
+
+            frtsIssued += claimFrts;
+
+            withdraw(auctionBuyTokens[i], claimAmounts[i]);
+        }
+
+        return (claimAmounts, frtsIssued);
+    }
+
+    /// @dev for multiple withdraws
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    function claimAndWithdrawTokensFromSeveralAuctionsAsBuyer(
+        address[] auctionSellTokens,
+        address[] auctionBuyTokens,
+        uint[] auctionIndices
+    )
+        external
+        returns (uint[], uint frtsIssued)
+    {
+        uint length = checkLengthsForSeveralAuctionClaiming(
+            auctionSellTokens,
+            auctionBuyTokens,
+            auctionIndices
+        );
+
+        uint[] memory claimAmounts = new uint[](length);
+        uint claimFrts = 0;
+
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], claimFrts) = claimBuyerFunds(
+            auctionSellTokens[i], auctionBuyTokens[i], msg.sender, auctionIndices[i]);
+
+            frtsIssued += claimFrts;
+
+            withdraw(auctionSellTokens[i], claimAmounts[i]);
+        }
+
+        return (claimAmounts, frtsIssued);
     }
 
     function getMasterCopy()
         external
-        view 
+        view
         returns (address)
     {
         return masterCopy;
@@ -1486,24 +1397,15 @@ contract DutchExchange is Proxied, SafeTransfer {
 
     // > Events
     event NewDeposit(
-         address indexed token,
-         uint amount
-    );
-
-    event NewOracleProposal(
-         PriceOracleInterface priceOracleInterface
-    );
-
-
-    event NewMasterCopyProposal(
-         address newMasterCopy
+        address indexed token,
+        uint amount
     );
 
     event NewWithdrawal(
         address indexed token,
         uint amount
     );
-    
+
     event NewSellOrder(
         address indexed sellToken,
         address indexed buyToken,
@@ -1549,11 +1451,6 @@ contract DutchExchange is Proxied, SafeTransfer {
         uint sellVolume,
         uint buyVolume,
         uint indexed auctionIndex
-    );
-
-    event Approval(
-        address indexed token,
-        bool approved
     );
 
     event AuctionStartScheduled(

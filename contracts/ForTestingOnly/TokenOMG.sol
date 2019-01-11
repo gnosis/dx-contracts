@@ -1,13 +1,13 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
-import "@gnosis.pm/util-contracts/contracts/StandardToken.sol";
+import "@gnosis.pm/util-contracts/contracts/GnosisStandardToken.sol";
 
-contract TokenOMG is StandardToken {
+contract TokenOMG is GnosisStandardToken {
     string public constant symbol = "OMG";
     string public constant name = "OMG Test Token";
     uint8 public constant decimals = 18;
 
-    function TokenOMG(
+    constructor(
     	uint amount
     )
     	public 

@@ -45,8 +45,12 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
   it('Adds Token Pair', () => dx.addTokenPair(eth.address, gno.address, initialToken1Funding, 0, 2, 1, { from: accounts[1] }))
 
   it('DX Auction idx = 1 + Auction Start Time is > timestamp NOW [auction not started]', async () => {
-    assert.equal(await getAuctionIndex(), 1, 'Auction index should be moved to 1')
-    assert.isAbove(await dx.getAuctionStart.call(eth.address, gno.address), timestamp(), 'auction time should be above now')
+    const [ auctionIndex, auctionStart ] = await Promise.all([
+      getAuctionIndex(),
+      dx.getAuctionStart.call(eth.address, gno.address)
+    ])
+    assert.equal(auctionIndex, 1, 'Auction index should be moved to 1')
+    assert.isAbove(auctionStart.toNumber(), timestamp(), 'auction time should be above now')
   })
 
   it('DX balances cannot be more than amt deposited initially', () => Promise.all(testingAccs.map(async (acc) => {

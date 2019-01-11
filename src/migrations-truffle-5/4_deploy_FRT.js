@@ -1,20 +1,21 @@
-function migrate ({
+async function migrate ({
   artifacts,
   deployer,
   network,
   accounts
 }) {
+  const account = accounts[0]
   const TokenFRT = artifacts.require('TokenFRT')
+  const TokenFRTProxy = artifacts.require('TokenFRTProxy')
   const { Math } = _getDependencies(artifacts, network, deployer)
+  await Math.deployed()
 
-  return deployer
-    .then(() => Math.deployed())
-    .then(math => deployer.link(Math, TokenFRT))
-    .then(() => {
-      const account = accounts[0]
-      console.log('Deploying TokenFRT with owner: %s', account)
-      return deployer.deploy(TokenFRT, account)
-    })
+  console.log('Link math lib to TokenFrt')
+  await deployer.link(Math, [TokenFRT, TokenFRTProxy])
+
+  console.log('Deploying TokenFRT with owner: %s', account)
+  await deployer.deploy(TokenFRT, account)
+  await deployer.deploy(TokenFRTProxy, TokenFRT.address, account)
 }
 
 function _getDependencies (artifacts, network, deployer) {

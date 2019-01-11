@@ -150,14 +150,14 @@ async function addTokenPair (tokenPair, contractsInfo, params) {
   }
 }
 
-async function ensureEnoughBalance (token, { account, wethAddress, etherBalance, StandardToken, dx }) {
+async function ensureEnoughBalance (token, { account, wethAddress, etherBalance, GnosisStandardToken, dx }) {
   const { address: tokenAddress, funding, symbol } = token
   if (funding === 0) {
     // If we don fund the token, we can skip the balance check
     return
   }
 
-  const tokenContract = StandardToken.at(tokenAddress)
+  const tokenContract = GnosisStandardToken.at(tokenAddress)
 
   // dx.deposit.call(tokenAddress)
   const [ balanceToken, balanceDx ] = await Promise.all([
@@ -265,14 +265,14 @@ async function getPriceInPastAuction (tokenA, tokenB, dx) {
 }
 
 async function loadContractsInfo () {
-  const Proxy = artifacts.require('DutchExchangeProxy')
+  const DXProxy = artifacts.require('DutchExchangeProxy')
   const DutchExchange = artifacts.require('DutchExchange')
-  const StandardToken = artifacts.require('StandardToken')
+  const GnosisStandardToken = artifacts.require('GnosisStandardToken')
   const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 
   // Get contract examples
-  const proxy = await Proxy.deployed()
-  const dx = DutchExchange.at(proxy.address)
+  const dxProxy = await DXProxy.deployed()
+  const dx = DutchExchange.at(dxProxy.address)
 
   // Get some data from dx
   const [
@@ -326,7 +326,7 @@ async function loadContractsInfo () {
     wethAddress,
     etherBalance,
     thresholdInUSD,
-    StandardToken,
+    GnosisStandardToken,
     account
   }
 }
