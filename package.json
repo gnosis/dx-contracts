@@ -3,10 +3,10 @@
   "version": "2.0.0-RC7",
   "description": "DutchX - Gnosis Dutch Auction Trading Platform. This npm package provides all smartcontracts used in the project",
   "scripts": {
-    "rpc": "ganache-cli -d --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --defaultBalanceEther '500000000000000000000' --gasLimit=7e6",
+    "rpc": "ganache-cli -d --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --defaultBalanceEther '500000000000000000000'",
     "preversion": "npm run restore",
-    "test": "GAS_LIMIT=7e6 npx truffle test -s",
-    "coverage": "GAS_LIMIT=7e6 npx solidity-coverage",
+    "test": "npx truffle test -s test/**/*.spec.js",
+    "coverage": "npx solidity-coverage",
     "truffle": "npx truffle",
     "networks-extract": "node src/extract_network_info.js",
     "networks-inject": "node src/inject_network_info.js",

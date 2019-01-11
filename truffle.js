@@ -28,13 +28,19 @@ const gas = process.env.GAS_LIMIT || DEFAULT_GAS_LIMIT
 //  i.e. NETWORK='{ "name": "docker", "networkId": "99999", "url": "http://rpc:8545", "gas": "6700000", "gasPrice": "25000000000"  }'
 let aditionalNetwork = process.env.NETWORK ? JSON.parse(process.env.NETWORK) : null
 
-module.exports = truffleConfig({
-  mnemonic,
-  privateKey,
-  gasPriceGWei,
-  gas,
-  aditionalNetwork,
-  optimizedEnabled: true,
-  solcUseDocker,
-  solcVersion
-})
+module.exports = {
+  ...truffleConfig({
+    mnemonic,
+    privateKey,
+    gasPriceGWei,
+    gas,
+    aditionalNetwork,
+    optimizedEnabled: true,
+    solcUseDocker,
+    solcVersion
+  }),
+  // https://github.com/mochajs/mocha/wiki/Using-mocha-programmatically#set-options
+  mocha: {
+
+  }
+}
