@@ -1,4 +1,4 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.5.0;
 
 import "../Oracle/DSThing.sol";
 
@@ -13,11 +13,11 @@ contract DSValue is DSThing {
         assert(_has);
         return wut;
     }
-    function poke(bytes32 wut) public note auth {
+    function poke(bytes32 wut) public payable note auth {
         val = wut;
         has = true;
     }
-    function void() public note auth {
+    function void() public payable note auth {
         // unset the value
         has = false;
     }

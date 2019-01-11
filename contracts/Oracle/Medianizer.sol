@@ -1,9 +1,11 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.5.0;
+
+import "./DSValue.sol";
 
 contract Medianizer is DSValue {
     mapping(bytes12 => address) public values;
     mapping(address => bytes12) public indexes;
-    bytes12 public next = toBytes12(0x1);
+    bytes12 public next = bytes12(uint96(1));
     uint96 public minimun = 0x1;
 
     function set(address wat) public auth {
@@ -13,7 +15,7 @@ contract Medianizer is DSValue {
         next = nextId;
     }
 
-    function set(bytes12 pos, address wat) public note auth {
+    function set(bytes12 pos, address wat) public payable note auth {
         require(pos != 0x0, "pos cannot be 0x0");
         require(wat == address(0) || indexes[wat] == 0, "wat is not defined or it has an index");
 
@@ -26,12 +28,12 @@ contract Medianizer is DSValue {
         values[pos] = wat;
     }
 
-    function setMin(uint96 min_) public note auth {
+    function setMin(uint96 min_) public payable note auth {
         require(min_ != 0x0, "min cannot be 0x0");
         minimun = min_;
     }
 
-    function setNext(bytes12 next_) public note auth {
+    function setNext(bytes12 next_) public payable note auth {
         require(next_ != 0x0, "next cannot be 0x0");
         next = next_;
     }
@@ -48,7 +50,7 @@ contract Medianizer is DSValue {
         poke(0);
     }
 
-    function poke(bytes32) public note {
+    function poke(bytes32) public payable note {
         (val, has) = compute();
     }
 
@@ -80,28 +82,13 @@ contract Medianizer is DSValue {
 
         bytes32 value;
         if (ctr % 2 == 0) {
-            uint128 val1 = uint128(wuts[(ctr / 2) - 1]);
-            uint128 val2 = uint128(wuts[ctr / 2]);
-            value = bytes32(wdiv(hadd(val1, val2), 2 ether));
+            uint128 val1 = uint128(uint(wuts[(ctr / 2) - 1]));
+            uint128 val2 = uint128(uint(wuts[ctr / 2]));
+            value = bytes32(uint256(wdiv(hadd(val1, val2), 2 ether)));
         } else {
             value = wuts[(ctr - 1) / 2];
         }
 
         return (value, true);
     }
-
-    function toBytes12(uint256 x) public pure returns (bytes12 b) {
-        b = new bytes(12);
-        assembly {
-            mstore(add(b, 12), x)
-        }
-    }
-
-    // function bytesToUint(bytes b) public pure returns (uint256){
-    //     uint256 number;
-    //     for(uint i=0;i<b.length;i++){
-    //         number = number + uint(b[i])*(2**(8*(b.length-(i+1))));
-    //     }
-    //     return number;
-    // }
 }

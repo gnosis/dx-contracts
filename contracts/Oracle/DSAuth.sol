@@ -1,4 +1,4 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.5.0;
 
 contract DSAuthority {
     function canCall(address src, address dst, bytes4 sig) public view returns (bool);
@@ -25,7 +25,7 @@ contract DSAuth is DSAuthEvents {
 
     function setAuthority(DSAuthority authority_) public auth {
         authority = authority_;
-        emit LogSetAuthority(authority);
+        emit LogSetAuthority(address(authority));
     }
 
     modifier auth {
@@ -41,7 +41,7 @@ contract DSAuth is DSAuthEvents {
         } else if (authority == DSAuthority(0)) {
             return false;
         } else {
-            return authority.canCall(src, this, sig);
+            return authority.canCall(src, address(this), sig);
         }
     }
 }
