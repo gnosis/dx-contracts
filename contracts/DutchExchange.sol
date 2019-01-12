@@ -582,7 +582,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     /// @dev allows to close possible theoretical closed markets
     /// @param sellToken sellToken of an auction
     /// @param buyToken buyToken of an auction
-    /// @param index is the auctionIndex of the auction
+    /// @param auctionIndex is the index of the auction
     function closeTheoreticalClosedAuction(
         address sellToken,
         address buyToken,
