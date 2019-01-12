@@ -10,8 +10,8 @@ const DEFAULT_BATCH = 50
 
 // Usage example:
 //  yarn approve-tokens -h
-//  MNEMONIC="your mnemonic here.." yarn approve-tokens -f test/resources/approve-tokens/top150tokens.js --network rinkeby --dry-run
-//  MNEMONIC="your mnemonic here.." yarn approve-tokens -f test/resources/approve-tokens/top150tokens.js --network rinkeby
+//  MNEMONIC="your mnemonic here.." yarn approve-tokens -f resources/approve-tokens/top150tokens.js --network rinkeby --dry-run
+//  MNEMONIC="your mnemonic here.." yarn approve-tokens -f resources/approve-tokens/top150tokens.js --network rinkeby
 
 var argv = require('yargs')
   .usage('Usage: yarn approve-tokens -f <file> [--gas num] [--gas-price num] [--network name] [--dry-run] [--batch-size num]')

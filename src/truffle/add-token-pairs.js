@@ -9,8 +9,8 @@ const DEFAULT_GAS_PRICE_GWEI = 5 // 5 GWei
 
 // Usage example:
 //  yarn add-token-pairs -h
-//  MNEMONIC="your mnemonic ..." yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/01_RDN-WETH.js --network rinkeby --dry-run
-//  MNEMONIC="your mnemonic ..." yarn add-token-pairs -f ./test/resources/add-token-pair/rinkeby/01_RDN-WETH.js --network rinkeby
+//  MNEMONIC="your mnemonic ..." yarn add-token-pairs -f ./resources/add-token-pair/rinkeby/01_RDN-WETH.js --network rinkeby --dry-run
+//  MNEMONIC="your mnemonic ..." yarn add-token-pairs -f ./resources/add-token-pair/rinkeby/01_RDN-WETH.js --network rinkeby
 
 var argv = require('yargs')
   .usage('Usage: yarn add-token-pairs -f <file> [--gas num] [--gas-price num] [--network name] [--dry-run]')
