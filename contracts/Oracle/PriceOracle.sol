@@ -1,4 +1,4 @@
-pragma solidity ^0.5.2;
+pragma solidity >0.4.24 <0.5.2;
 
 /*
 This contract is the interface between the MakerDAO priceFeed and our DX platform.
@@ -6,9 +6,10 @@ This contract is the interface between the MakerDAO priceFeed and our DX platfor
 
 import "../Oracle/PriceFeed.sol";
 import "../Oracle/Medianizer.sol";
+import "../interfaces/PriceOracleInterface.sol";
 
 
-contract PriceOracleInterface {
+contract PriceOracle is PriceOracleInterface {
     address public priceFeedSource;
     address public owner;
     bool public emergencyMode;
