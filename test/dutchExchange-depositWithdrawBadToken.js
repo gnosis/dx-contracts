@@ -65,6 +65,6 @@ contract('DutchExchange - addTokenPair', accounts => {
     const deposited = await dx.balances(badGNO.address, seller1)
     log('deposited: ', deposited.toString())
 
-    assert(deposited.eq(0), 'deposited amount was exactly equal startingGNO')
+    assert(deposited.eq(0), 'deposited amount is exactly 0 after startingGNO was withdrawn')
   })
 })
