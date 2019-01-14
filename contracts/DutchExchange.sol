@@ -90,8 +90,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint arrayLength;
 
         for (uint k = 0; k < tokens.length - 1; k++) {
-            for (uint l = k + 1; l < tokens.length; l++) {
-                if (getAuctionIndex(tokens[k], tokens[l]) > 0) {
+            for (uint j = k + 1; j < tokens.length; j++) {
+                if (getAuctionIndex(tokens[k], tokens[j]) > 0) {
                     arrayLength++;
                 }
             }
