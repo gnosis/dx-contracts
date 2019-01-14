@@ -217,7 +217,7 @@ contract('DutchExchange - addTokenPair', accounts => {
     token1Funding = addTokenPairDefaults.token1Funding,
     token2Funding = addTokenPairDefaults.token2Funding
   ) => {
-    const ETHUSDPrice = await oracle.getUsdEthPrice.call()
+    const ETHUSDPrice = await oracle.getUSDETHPrice.call()
     let fundedValueETH
 
     if (sellToken === eth || sellToken === eth.address) {

@@ -167,7 +167,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         require(token2Funding < 10 ** 30, "You should use a smaller funding for token 2");
 
         uint fundedValueUSD;
-        uint ethUSDPrice = ethUSDOracle.getUsdEthPrice();
+        uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
 
         // Compute fundedValueUSD
         address ethTokenMem = ethToken;
@@ -683,7 +683,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         // 10^29 * 10^30 / 10^30 = 10^29
         uint feeInETH = mul(fee, num) / den;
 
-        uint ethUSDPrice = ethUSDOracle.getUsdEthPrice();
+        uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
         // 10^29 * 10^6 = 10^35
         // Uses 18 decimal places <> exactly as owlToken tokens: 10**18 owlToken == 1 USD
         uint feeInUSD = mul(feeInETH, ethUSDPrice);
@@ -821,7 +821,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         internal
     {
         // Check if auctions received enough sell orders
-        uint ethUSDPrice = ethUSDOracle.getUsdEthPrice();
+        uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
 
         uint sellNum;
         uint sellDen;

@@ -74,34 +74,34 @@ const c1 = () => contract('DX PriceOracleInterface Flow', accounts => {
   it('raiseEmergency: switches into emergency mode', async () => {
     await oracle.raiseEmergency(true, { from: owner })
     
-    let ethUSDPrice = (await oracle.getUsdEthPrice.call()).toNumber()
+    let ethUSDPrice = (await oracle.getUSDETHPrice.call()).toNumber()
     assert.equal(ethUSDPrice, 600, 'Oracle ethUSDPrice should report emergency price')
     await oracle.raiseEmergency(false, { from: owner })
     
-    ethUSDPrice = (await oracle.getUsdEthPrice.call()).toNumber()
+    ethUSDPrice = (await oracle.getUSDETHPrice.call()).toNumber()
     assert.equal(ethUSDPrice, 1100, 'Oracle ethUSDPrice should on longer report emergency price')
   })
 
-  it('getUsdEthPrice: calls this correctly', async () => {
-    const ethUSDPrice = (await oracle.getUsdEthPrice.call()).toNumber()
+  it('getUSDETHPrice: calls this correctly', async () => {
+    const ethUSDPrice = (await oracle.getUSDETHPrice.call()).toNumber()
     assert.equal(ethUSDPrice, 1100, 'Oracle ethUSDPrice is not the set price ethUSDPrice: 1100..toWei(),')
   })
 
-  it('getUsdEthPrice: price is correctly restricted if actual price is 0', async () => {   
+  it('getUSDETHPrice: price is correctly restricted if actual price is 0', async () => {   
     newPriceOracleInterface = await PriceOracleInterface.new(owner, medzr2.address)
     await dx.initiateEthUsdOracleUpdate(newPriceOracleInterface.address, { from: owner })
     await assertRejects(dx.updateEthUSDOracle({ from: owner }))
     await wait(60 * 60 * 24 * 30 + 5)
     await dx.updateEthUSDOracle({ from: owner })
-    const ethUSDPrice = (await newPriceOracleInterface.getUsdEthPrice.call()).toNumber()
+    const ethUSDPrice = (await newPriceOracleInterface.getUSDETHPrice.call()).toNumber()
     assert.equal(ethUSDPrice, 1, 'Oracle ethUSDPrice is not set and should return 1')
  
  })
-  it('getUsdEthPrice: set price should work correctly', async () => { 
+  it('getUSDETHPrice: set price should work correctly', async () => { 
     const ethUSDPrice = 1500..toWei()
     await Medianizer.at(medzr2.address).set(PriceFeed.address, { from: owner })
     await priceFeed.post(ethUSDPrice, 1516168838 * 2, medzr2.address, { from: owner })
-    const getNewETHUSDPrice = (await newPriceOracleInterface.getUsdEthPrice.call()).toNumber()
+    const getNewETHUSDPrice = (await newPriceOracleInterface.getUSDETHPrice.call()).toNumber()
 
     assert.equal(ethUSDPrice.toEth(), getNewETHUSDPrice, 'Should be same')
   })

@@ -338,7 +338,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
     )*/
 
     await mgn.updateMinter(master, { from: master })
-    logger('PRICE ORACLE', await oracle.getUsdEthPrice.call())
+    logger('PRICE ORACLE', await oracle.getUSDETHPrice.call())
 
 
     eventWatcher(dx, 'LogNumber')
@@ -481,7 +481,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
 
   const calculateFeeInUSD = async (fee, token) => {
     const [ETHUSDPrice, [num, den]] = await Promise.all([
-      oracle.getUsdEthPrice.call(),
+      oracle.getUSDETHPrice.call(),
       dx.getPriceOfTokenInLastAuction.call(token),
     ])
 

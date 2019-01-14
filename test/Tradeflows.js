@@ -214,7 +214,7 @@ contract('DutchExchange - TradeFlows', accounts => {
       const auctionIndex = await getAuctionIndex()
 
       // general setup information
-      logger('PRICE ORACLE', oracle.getUsdEthPrice.call())
+      logger('PRICE ORACLE', oracle.getUSDETHPrice.call())
 
       // ASSERT Auction has started
       await setAndCheckAuctionStarted(eth, gno)

@@ -55,14 +55,8 @@ contract PriceOracleInterface {
         return Medianizer(priceFeedSource).peek();
     }
 
-    // @deprecated: FIXME: Delete after migrating the projects
-    function getUSDETHPrice() public view returns (uint256) {
-        return getUsdEthPrice();
-    }
-
     /// @dev returns the USDETH price, ie gets the USD price from Maker feed with 18 digits, but last 18 digits are cut off
-    // FIXME: Use came case --> getUsdEthPrice
-    function getUsdEthPrice() public view returns (uint256) {
+    function getUSDETHPrice() public view returns (uint256) {
         // if the contract is in the emergencyMode, because there is an issue with the oracle, we will simply return a price of 600 USD
         if (emergencyMode) {
             return 600;
