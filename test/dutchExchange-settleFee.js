@@ -31,14 +31,14 @@ const getExchangeParams = async (dxContr = dx) => {
     ethUSDOracle,
     thresholdNewTokenPair,
     thresholdNewAuction] = await Promise.all([
-    dxContr.frtToken.call(),
-    dxContr.owlToken.call(),
-    dxContr.auctioneer.call(),
-    dxContr.ethToken.call(),
-    dxContr.ethUSDOracle.call(),
-    dxContr.thresholdNewTokenPair.call(),
-    dxContr.thresholdNewAuction.call()
-  ])
+      dxContr.frtToken.call(),
+      dxContr.owlToken.call(),
+      dxContr.auctioneer.call(),
+      dxContr.ethToken.call(),
+      dxContr.ethUSDOracle.call(),
+      dxContr.thresholdNewTokenPair.call(),
+      dxContr.thresholdNewAuction.call()
+    ])
 
   return [
     frtToken,
@@ -310,8 +310,8 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
 
     //generatae OWL
 
-      gno.approve(owlA.address, 50000 * (10 ** 18))
-      owlA.lockGNO(50000 * (10 ** 18))
+    gno.approve(owlA.address, 50000 * (10 ** 18))
+    owlA.lockGNO(50000 * (10 ** 18))
 
     const depositETH = async (amt, acct) => {
       await eth.deposit({ from: acct, value: amt })
@@ -325,7 +325,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
     await depositETH(ETHBalance, seller1)
 
 
-    await mgn.updateMinter(dx.address,{from: master})
+    await mgn.updateMinter(dx.address, { from: master })
     /*// add tokenPair ETH GNO
     await dx.addTokenPair(
       eth.address,
@@ -338,7 +338,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
     )*/
 
     await mgn.updateMinter(master, { from: master })
-    logger('PRICE ORACLE', await oracle.getUSDETHPrice.call())
+    logger('PRICE ORACLE', await oracle.getUsdEthPrice.call())
 
 
     eventWatcher(dx, 'LogNumber')
@@ -481,7 +481,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
 
   const calculateFeeInUSD = async (fee, token) => {
     const [ETHUSDPrice, [num, den]] = await Promise.all([
-      oracle.getUSDETHPrice.call(),
+      oracle.getUsdEthPrice.call(),
       dx.getPriceOfTokenInLastAuction.call(token),
     ])
 
@@ -605,7 +605,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
 
     await owl.approve(dx.address, owlAmount * 5, { from: seller1 })
 
-    const amountOfOWLBurned = Math.min( Math.floor(feeInUSD / 2), owlAmount);
+    const amountOfOWLBurned = Math.min(Math.floor(feeInUSD / 2), owlAmount);
     fee = adjustFee(fee, amountOfOWLBurned, feeInUSD)
     assert.isAbove(fee, 0, 'fee must be > 0')
 
@@ -640,12 +640,12 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
     const owlAmount = Math.floor(feeInUSD / 2) - 1
 
     const owlBalanceBefore = (await owl.balanceOf(seller1)).toNumber()
-    await owl.transfer(seller1, owlAmount-owlBalanceBefore, { from: master })
+    await owl.transfer(seller1, owlAmount - owlBalanceBefore, { from: master })
     const owlBalance1 = (await owl.balanceOf(seller1)).toNumber()
     assert.strictEqual(owlBalance1, owlAmount, 'account should have OWL balance < feeInUSD / 2')
     assert.isAbove(owlBalance1, 0, 'account should have OWL balance > 0')
 
-    await owl.approve(dx.address, owlAmount*1000, { from: seller1 })
+    await owl.approve(dx.address, owlAmount * 1000, { from: seller1 })
     const amountOfOWLBurned = owlBalance1
 
     fee = adjustFee(fee, amountOfOWLBurned, feeInUSD)

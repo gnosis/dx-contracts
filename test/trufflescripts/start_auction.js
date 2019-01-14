@@ -125,7 +125,7 @@ module.exports = async () => {
   // TODO: fails here - dx.updateExchangeParams is not a function
   const { thresholdNewTokenPair } = await getExchangeParams()
 
-  const ETHUSDPrice = (await po.getUSDETHPrice()).toNumber()
+  const ETHUSDPrice = (await po.getUsdEthPrice()).toNumber()
 
   // calculating funded value, depends on oracle price
   let fundedValueUSD
