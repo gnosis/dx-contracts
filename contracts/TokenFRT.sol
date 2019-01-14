@@ -3,6 +3,7 @@ pragma solidity ^0.5.2;
 import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
 import "@gnosis.pm/util-contracts/contracts/GnosisStandardToken.sol";
 
+
 /// @title Standard token contract with overflow protection
 contract TokenFRT is Proxied, GnosisStandardToken {
     address public owner;

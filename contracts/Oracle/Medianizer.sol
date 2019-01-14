@@ -2,6 +2,7 @@ pragma solidity ^0.5.2;
 
 import "./DSValue.sol";
 
+
 contract Medianizer is DSValue {
     mapping(bytes12 => address) public values;
     mapping(address => bytes12) public indexes;

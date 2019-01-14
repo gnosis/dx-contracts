@@ -11,6 +11,7 @@ import "./base/DxUpgrade.sol";
 /// @author Alex Herrmann - <alex@gnosis.pm>
 /// @author Dominik Teiml - <dominik@gnosis.pm>
 
+
 contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     // The price is a rational number, so we need a concept of a fraction
     struct fraction {

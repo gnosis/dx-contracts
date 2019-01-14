@@ -2,6 +2,7 @@ pragma solidity ^0.5.2;
 
 import "./AuctioneerManaged.sol";
 
+
 contract TokenWhitelist is AuctioneerManaged {
     // Mapping that stores the tokens, which are approved
     // Only tokens approved by auctioneer generate frtToken tokens

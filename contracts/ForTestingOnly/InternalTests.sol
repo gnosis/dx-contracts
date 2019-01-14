@@ -2,6 +2,7 @@ pragma solidity ^0.5.2;
 
 import "../DutchExchange.sol";
 
+
 contract InternalTests is DutchExchange {
     function settleFeePub(address primaryToken, address secondaryToken, uint auctionIndex, address user, uint amount)
         public
