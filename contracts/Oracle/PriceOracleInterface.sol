@@ -37,7 +37,7 @@ contract PriceOracleInterface {
     }
 
     /// @dev returns the USDETH price
-    function getUsdEthPricePeek() public returns (bytes32 price, bool valid) {
+    function getUsdEthPricePeek() public view returns (bytes32 price, bool valid) {
         return Medianizer(priceFeedSource).peek();
     }
 
