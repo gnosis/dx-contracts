@@ -2,6 +2,7 @@ pragma solidity ^0.4.24;
 
 import "./TokenFRT.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
+import "./base/SafeTransfer.sol";
 import "./base/TokenWhitelist.sol";
 import "./base/DxMath.sol";
 import "./base/EthOracle.sol";
@@ -12,7 +13,7 @@ import "./base/DxUpgrade.sol";
 /// @author Alex Herrmann - <alex@gnosis.pm>
 /// @author Dominik Teiml - <dominik@gnosis.pm>
 
-contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
+contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
 
     // The price is a rational number, so we need a concept of a fraction
     struct fraction {
@@ -269,7 +270,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         returns (uint)
     {
         // R1
-        require(Token(tokenAddress).transferFrom(msg.sender, this, amount), "The deposit transaction must succeed");
+        require(safeTransfer(tokenAddress, msg.sender, amount, true), "The deposit transaction must succeed");
 
         uint newBal = add(balances[tokenAddress][msg.sender], amount);
 
@@ -297,7 +298,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         balances[tokenAddress][msg.sender] = newBal;
 
         // R2
-        require(Token(tokenAddress).transfer(msg.sender, amount), "The withdraw transfer must succeed");
+        require(safeTransfer(tokenAddress, msg.sender, amount, false), "The withdraw transfer must succeed");
         emit NewWithdrawal(tokenAddress, amount);
 
         return newBal;
