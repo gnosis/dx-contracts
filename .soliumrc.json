@@ -16,8 +16,8 @@
       "warning",
       5
     ],
-    "error-reason": [
-      "off"
-    ]
+    "error-reason": 0,
+    "security/no-assign-params": 0,
+    "security/no-inline-assembly": 0
   }
 }
