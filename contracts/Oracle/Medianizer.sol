@@ -79,7 +79,8 @@ contract Medianizer is DSValue {
             }
         }
 
-        if (ctr < minimun) return (val, false);
+        if (ctr < minimun)
+            return (val, false);
 
         bytes32 value;
         if (ctr % 2 == 0) {

@@ -11,13 +11,6 @@ contract TokenWhitelist is AuctioneerManaged {
 
     event Approval(address indexed token, bool approved);
 
-    function updateApprovalOfToken(address[] memory token, bool approved) public onlyAuctioneer {
-        for (uint i = 0; i < token.length; i++) {
-            approvedTokens[token[i]] = approved;
-            emit Approval(token[i], approved);
-        }
-    }
-
     /// @dev for quick overview of approved Tokens
     /// @param addressesToCheck are the ERC-20 token addresses to be checked whether they are approved
     function getApprovedAddressesOfList(address[] calldata addressesToCheck) external view returns (bool[] memory) {
@@ -31,4 +24,12 @@ contract TokenWhitelist is AuctioneerManaged {
 
         return isApproved;
     }
+    
+    function updateApprovalOfToken(address[] memory token, bool approved) public onlyAuctioneer {
+        for (uint i = 0; i < token.length; i++) {
+            approvedTokens[token[i]] = approved;
+            emit Approval(token[i], approved);
+        }
+    }
+
 }
