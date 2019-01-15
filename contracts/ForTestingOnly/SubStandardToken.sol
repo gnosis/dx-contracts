@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.5.2;
 import "./BadToken.sol";
 import "@gnosis.pm/util-contracts/contracts/Math.sol";
 import "@gnosis.pm/util-contracts/contracts/Proxy.sol";

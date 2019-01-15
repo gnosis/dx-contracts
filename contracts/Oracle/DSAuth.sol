@@ -1,45 +1,34 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.2;
 
 
 contract DSAuthority {
-    function canCall(
-        address src,
-        address dst,
-        bytes4 sig
-    )
-        public 
-        view 
-        returns (bool);
+    function canCall(address src, address dst, bytes4 sig) public view returns (bool);
 }
+
 
 contract DSAuthEvents {
-    event LogSetAuthority (address indexed authority);
-    event LogSetOwner (address indexed owner);
+    event LogSetAuthority(address indexed authority);
+    event LogSetOwner(address indexed owner);
 }
 
-contract DSAuth is DSAuthEvents {
-    DSAuthority  public  authority;
-    address      public  owner;
 
-    constructor () public {
+contract DSAuth is DSAuthEvents {
+    DSAuthority public authority;
+    address public owner;
+
+    constructor() public {
         owner = msg.sender;
         emit LogSetOwner(msg.sender);
     }
 
-    function setOwner(address owner_)
-        public
-        auth
-    {
+    function setOwner(address owner_) public auth {
         owner = owner_;
         emit LogSetOwner(owner);
     }
 
-    function setAuthority(DSAuthority authority_)
-        public
-        auth
-    {
+    function setAuthority(DSAuthority authority_) public auth {
         authority = authority_;
-        emit LogSetAuthority(authority);
+        emit LogSetAuthority(address(authority));
     }
 
     modifier auth {
@@ -55,7 +44,7 @@ contract DSAuth is DSAuthEvents {
         } else if (authority == DSAuthority(0)) {
             return false;
         } else {
-            return authority.canCall(src, this, sig);
+            return authority.canCall(src, address(this), sig);
         }
     }
 }

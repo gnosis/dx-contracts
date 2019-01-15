@@ -29,7 +29,7 @@ function migrate ({
         PriceFeed.deployed(),
         getTime(web3)
       ]))
-      .then(([ priceFeed, now ]) => priceFeed.post(
+      .then(([priceFeed, now]) => priceFeed.post(
         ethUsdPrice * 1e18,
         now + feedExpirePeriodDays * 24 * 60 * 60,
         Medianizer.address, {

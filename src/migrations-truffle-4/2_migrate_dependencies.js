@@ -8,7 +8,8 @@ function migrate ({
   network,
   accounts,
   initialTokenAmount,
-  gnoLockPeriodInHours
+  gnoLockPeriodInHours,
+  web3
 }) {
   if (network === 'development') {
     const deployParams = {
@@ -17,7 +18,8 @@ function migrate ({
       network,
       accounts,
       initialTokenAmount,
-      gnoLockPeriodInHours
+      gnoLockPeriodInHours,
+      web3
     }
     deployer
       .then(() => deployUtils(deployParams))

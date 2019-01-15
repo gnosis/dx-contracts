@@ -89,7 +89,6 @@ contract('DutchExchange updating exchange params', (accounts) => {
     assert.notStrictEqual(auctioneer, acc, 'account should not be DutchExchange contract auctioneer')
   }
 
-
   it('not auctioneer can\'t change params', async () => {
     const params1 = await getAndPrintExchangeParams()
   
@@ -109,7 +108,7 @@ contract('DutchExchange updating exchange params', (accounts) => {
     const params1 = await getAndPrintExchangeParams()
 
     await assertIsAuctioneer(master)
-    console.log(params2.ethUSDOracle)
+    logger(`initiating oracle address update to ${params2.ethUSDOracle}`)
     await dx.initiateEthUsdOracleUpdate(params2.ethUSDOracle, { from: master })
     await assertRejects(dx.updateEthUSDOracle({ from: master }), 'to early to change oracle interface')
   })
