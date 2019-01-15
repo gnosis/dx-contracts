@@ -14,7 +14,7 @@ contract DSNote {
     modifier note {
         bytes32 foo;
         bytes32 bar;
-
+        // solium-disable-next-line security/no-inline-assembly
         assembly {
             foo := calldataload(4)
             bar := calldataload(36)
