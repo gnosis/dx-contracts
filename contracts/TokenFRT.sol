@@ -12,7 +12,7 @@ contract TokenFRT is Proxied, GnosisStandardToken {
     string public constant name = "Magnolia Token";
     uint8 public constant decimals = 18;
 
-    struct unlockedToken {
+    struct UnlockedToken {
         uint amountUnlocked;
         uint withdrawalTime;
     }
@@ -22,8 +22,8 @@ contract TokenFRT is Proxied, GnosisStandardToken {
      */
     address public minter;
 
-    // user => unlockedToken
-    mapping(address => unlockedToken) public unlockedTokens;
+    // user => UnlockedToken
+    mapping(address => UnlockedToken) public unlockedTokens;
 
     // user => amount
     mapping(address => uint) public lockedTokenBalances;
