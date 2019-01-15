@@ -3,7 +3,7 @@ const {
   log: utilsLog,
   assertRejects,
   timestamp,
-  gasLogger,
+  gasLogger
 } = require('./utils')
 
 const { getContracts, setupTest } = require('./testFunctions')
@@ -19,20 +19,19 @@ let oracle
 
 let feeRatio
 
-
 let contracts, symbols
 
 const separateLogs = () => utilsLog('\n    ----------------------------------')
 const log = (...args) => utilsLog('\t', ...args)
 
-contract('DutchExchange - addTokenPair', (accounts) => {
+contract('DutchExchange - addTokenPair', accounts => {
   const [master, seller1] = accounts
 
   const startBal = {
     startingETH: 90.0.toWei(),
     startingGNO: 90.0.toWei(),
     ethUSDPrice: 1008.0.toWei(),
-    sellingAmount: 50.0.toWei(),
+    sellingAmount: 50.0.toWei()
   }
 
   let addTokenPairDefaults
@@ -49,7 +48,7 @@ contract('DutchExchange - addTokenPair', (accounts) => {
       TokenGNO: gno,
       TokenFRT: mgn,
       DutchExchange: dx,
-      PriceOracleInterface: oracle,
+      PriceOracleInterface: oracle
     } = contracts)
 
     await setupTest(accounts, contracts, startBal)
@@ -69,21 +68,21 @@ contract('DutchExchange - addTokenPair', (accounts) => {
       token1Funding: 10 ** 6,
       token2Funding: 1000,
       initialClosingPriceNum: 2,
-      initialClosingPriceDen: 1,
+      initialClosingPriceDen: 1
     }
 
     // a new deployed GNO to act as a different token
     gno2 = await TokenGNO.new(1e22, { from: master })
     await Promise.all([
       gno2.transfer(seller1, startBal.startingGNO, { from: master }),
-      gno2.approve(dx.address, startBal.startingGNO, { from: seller1 }),
+      gno2.approve(dx.address, startBal.startingGNO, { from: seller1 })
     ])
     await dx.deposit(gno2.address, startBal.startingGNO, { from: seller1 })
 
     symbols = {
       [eth.address]: 'ETH',
       [gno.address]: 'GNO',
-      [gno2.address]: 'GNO2',
+      [gno2.address]: 'GNO2'
     }
   })
 
@@ -101,14 +100,14 @@ contract('DutchExchange - addTokenPair', (accounts) => {
 
   const getTokenBalances = (account, sellToken, buyToken) => Promise.all([
     getTokenBalance(account, sellToken),
-    getTokenBalance(account, buyToken),
+    getTokenBalance(account, buyToken)
   ])
 
   const assertTokenBalances = (
     [token1Bal, token2Bal],
     balances2,
     token1Funding = addTokenPairDefaults.token1Funding,
-    token2Funding = addTokenPairDefaults.token2Funding,
+    token2Funding = addTokenPairDefaults.token2Funding
   ) => assert.deepEqual(balances2, [token1Bal - token1Funding, token2Bal - token2Funding], 'balances should decrease by tokenFunding amount')
 
   const getAuctionStart = async (sellToken, buyToken) =>
@@ -128,7 +127,7 @@ contract('DutchExchange - addTokenPair', (accounts) => {
   const getAmounts = async (account, sellToken, buyToken) => {
     const [sellerBalance, sellVolumeCurrent] = await Promise.all([
       getSellerBalance(account, sellToken, buyToken, 1),
-      getSellVolumeCurrent(sellToken, buyToken),
+      getSellVolumeCurrent(sellToken, buyToken)
     ])
 
     log(`
@@ -140,14 +139,14 @@ contract('DutchExchange - addTokenPair', (accounts) => {
 
     return {
       sellerBalance,
-      sellVolumeCurrent,
+      sellVolumeCurrent
     }
   }
 
   const getAmountsForPair = async (account, sellToken, buyToken) => {
     const [direct, opposite] = await Promise.all([
       getAmounts(account, sellToken, buyToken),
-      getAmounts(account, buyToken, sellToken),
+      getAmounts(account, buyToken, sellToken)
     ])
 
     return { direct, opposite }
@@ -158,12 +157,12 @@ contract('DutchExchange - addTokenPair', (accounts) => {
   const assertAmounts = (
     { direct, opposite },
     token1Funding = addTokenPairDefaults.token1Funding,
-    token2Funding = addTokenPairDefaults.token2Funding,
+    token2Funding = addTokenPairDefaults.token2Funding
   ) => {
     const token1FundingAfterFee = getAmountAfterFee(token1Funding)
     const token2FundingAfterFee = getAmountAfterFee(token2Funding)
 
-    Object.keys(direct).forEach((key) => {
+    Object.keys(direct).forEach(key => {
       assert.strictEqual(direct[key], token1FundingAfterFee, `${key} should be equal to token1Funding`)
       assert.strictEqual(opposite[key], token2FundingAfterFee, `${key} should be equal to token2Funding`)
     })
@@ -180,7 +179,7 @@ contract('DutchExchange - addTokenPair', (accounts) => {
     assert.deepEqual(
       getEventFromTX(tx, 'NewTokenPair'),
       { sellToken: sellToken.address || sellToken, buyToken: buyToken.address || buyToken },
-      'token pair should be added',
+      'token pair should be added'
     )
 
   const addTokenPair = (account, options) => {
@@ -194,7 +193,7 @@ contract('DutchExchange - addTokenPair', (accounts) => {
       token1Funding,
       token2Funding,
       initialClosingPriceNum,
-      initialClosingPriceDen,
+      initialClosingPriceDen
     } = options
 
     log(`tx params:
@@ -208,7 +207,7 @@ contract('DutchExchange - addTokenPair', (accounts) => {
       token2Funding,
       initialClosingPriceNum,
       initialClosingPriceDen,
-      { from: account },
+      { from: account }
     )
   }
 
@@ -216,7 +215,7 @@ contract('DutchExchange - addTokenPair', (accounts) => {
     sellToken,
     buyToken,
     token1Funding = addTokenPairDefaults.token1Funding,
-    token2Funding = addTokenPairDefaults.token2Funding,
+    token2Funding = addTokenPairDefaults.token2Funding
   ) => {
     const ETHUSDPrice = await oracle.getUSDETHPrice.call()
     let fundedValueETH
@@ -258,7 +257,7 @@ contract('DutchExchange - addTokenPair', (accounts) => {
     sellToken,
     buyToken,
     initialClosingPriceNum = addTokenPairDefaults.initialClosingPriceNum,
-    initialClosingPriceDen = addTokenPairDefaults.initialClosingPriceDen,
+    initialClosingPriceDen = addTokenPairDefaults.initialClosingPriceDen
   ) => {
     const closingPrice1 = await getInitClosingPrice(sellToken, buyToken)
     const closingPrice2 = await getInitClosingPrice(buyToken, sellToken)

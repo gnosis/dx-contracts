@@ -1,11 +1,11 @@
 /* global artifacts, web3 */
 /* eslint no-undef: "error" */
 
-const deployUtils = require('@gnosis.pm/util-contracts/src/migrations-truffle-5')
-const deployGno = require('@gnosis.pm/gno-token/src/migrations-truffle-5')
-const deployOwl = require('@gnosis.pm/owl-token/src/migrations-truffle-5')
+const deployUtils = require('@gnosis.pm/util-contracts/src/migrations-truffle-4')
+const deployGno = require('@gnosis.pm/gno-token/src/migrations-truffle-4')
+const deployOwl = require('@gnosis.pm/owl-token/src/migrations-truffle-4')
 
-const migrationsDx = require('@gnosis.pm/dx-contracts/src/migrations-truffle-5')
+const migrationsDx = require('@gnosis.pm/dx-contracts/src/migrations-truffle-4')
 
 module.exports = async (deployer, network, accounts) => {
   if (network === 'development') {

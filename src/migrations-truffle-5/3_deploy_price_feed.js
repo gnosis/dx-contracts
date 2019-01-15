@@ -1,5 +1,6 @@
 const DEFAULT_ETH_USD_PRICE = process.env.ETH_USD_PRICE || 1100 // 500 USD/ETH
-const DEFAULT_FEED_EXPIRE_PERIOD_DAYS = process.env.FEED_EXPIRE_PERIOD_DAYS || 365 // 1 year
+const DEFAULT_FEED_EXPIRE_PERIOD_DAYS =
+  process.env.FEED_EXPIRE_PERIOD_DAYS || 365 // 1 year
 
 async function migrate ({
   artifacts,
@@ -17,7 +18,9 @@ async function migrate ({
   const medianizerAddress = getMedianizerAddress(Medianizer)
   const account = accounts[0]
   if (!medianizerAddress) {
-    console.log(`Deploying Maker Dao feed contracts, because they weren published in network "${network}" yet`)
+    console.log(
+      `Deploying Maker Dao feed contracts, because they weren published in network "${network}" yet`
+    )
     // Deployment of PriceFeedInfrastructure
 
     console.log('Deploy PriceFeed')
@@ -31,11 +34,7 @@ async function migrate ({
     console.log('Deploy PriceOracleInterface:')
     console.log('  - account: %s', account)
     console.log('  - medianizer address: %s', medianizer.address)
-    await deployer.deploy(
-      PriceOracleInterface,
-      account,
-      medianizer.address
-    )
+    await deployer.deploy(PriceOracleInterface, account, medianizer.address)
 
     console.log('Set price feed for medianizer:')
     console.log('  - price feed address: %s', PriceFeed.address)
@@ -50,16 +49,12 @@ async function migrate ({
     console.log('  - Medianizer address: %s', medianizer.address)
 
     const BN = web3.utils.BN
-    const ethUsdPriceWei = web3.utils.toWei(
-      new BN(ethUsdPrice)
-    )
-    await priceFeed.post(
-      ethUsdPriceWei,
-      expireTime,
-      medianizer.address
-    )
+    const ethUsdPriceWei = web3.utils.toWei(new BN(ethUsdPrice))
+    await priceFeed.post(ethUsdPriceWei, expireTime, medianizer.address)
   } else {
-    console.log(`No need to deploy the Medianizer. Using ${medianizerAddress} as the Medianizer address`)
+    console.log(
+      `No need to deploy the Medianizer. Using ${medianizerAddress} as the Medianizer address`
+    )
 
     console.log('Deploy PriceOracleInterface:')
     console.log('  - account: %s', account)

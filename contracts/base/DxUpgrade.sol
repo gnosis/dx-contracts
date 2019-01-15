@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.5.2;
 
 import "./DxMath.sol";
 import "./AuctioneerManaged.sol";
@@ -11,16 +11,9 @@ contract DxUpgrade is Proxied, AuctioneerManaged, DxMath {
     // Time when new masterCopy is updatabale
     uint public masterCopyCountdown;
 
-    event NewMasterCopyProposal(
-         address newMasterCopy
-    );
+    event NewMasterCopyProposal(address newMasterCopy);
 
-    function startMasterCopyCountdown (
-        address _masterCopy
-    )
-        public
-        onlyAuctioneer
-    {
+    function startMasterCopyCountdown(address _masterCopy) public onlyAuctioneer {
         require(_masterCopy != address(0), "The new master copy must be a valid address");
 
         // Update masterCopyCountdown
@@ -29,10 +22,7 @@ contract DxUpgrade is Proxied, AuctioneerManaged, DxMath {
         emit NewMasterCopyProposal(_masterCopy);
     }
 
-    function updateMasterCopy()
-        public
-        onlyAuctioneer
-    {
+    function updateMasterCopy() public {
         require(newMasterCopy != address(0), "The new master copy must be a valid address");
         require(block.timestamp >= masterCopyCountdown, "The master contract cannot be updated in a waiting period");
 
@@ -40,5 +30,5 @@ contract DxUpgrade is Proxied, AuctioneerManaged, DxMath {
         masterCopy = newMasterCopy;
         newMasterCopy = address(0);
     }
-    
+
 }

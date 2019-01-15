@@ -1,4 +1,4 @@
-/* eslint no-console:0 */
+/* eslint-disable arrow-parens, no-console:0 */
 
 module.exports = (artifacts) => {
   const TokenETH = artifacts.require('./EtherToken')
@@ -43,7 +43,7 @@ module.exports = (artifacts) => {
     Proxy,
     PriceOracleInterface,
     PriceFeed,
-    Medianizer,
+    Medianizer
   }
 
   const shortMap = {
@@ -58,7 +58,7 @@ module.exports = (artifacts) => {
     Proxy: 'proxy',
     PriceOracleInterface: 'po',
     PriceFeed: 'pf',
-    Medianizer: 'mn',
+    Medianizer: 'mn'
   }
 
   const mapToNumber = arr => arr.map(n => (n.toNumber ? n.toNumber() : n))
@@ -82,7 +82,7 @@ module.exports = (artifacts) => {
     deployedMap[shortMap.TokenOWL] = await TokenOWL.at(TokenOWLProxy.address)
     deployedMap[shortMap.DutchExchange] = await artifacts.require('DutchExchange').at(Proxy.address)
     deployedMap[shortMap.TokenOMG] = await TokenOMG.new(5000000e18)
-    deployedMap[shortMap.TokenRDN] =await TokenRDN.new(5000000e18)
+    deployedMap[shortMap.TokenRDN] = await TokenRDN.new(5000000e18)
     // remove extra non-tokens
     // delete deployedMap.owlProxy
     // delete deployedMap.proxy
@@ -107,9 +107,7 @@ module.exports = (artifacts) => {
  * @prop {DeployedContract} po - deployed PriceOracleInterface contract
  */
   /** @type {Promise<DeployedContracts>} */
-  const
-
-deployed = getDeployed(contracts)
+  const deployed = getDeployed(contracts)
 
   /**
    * helper function that iterates through given tokensMap
@@ -126,8 +124,7 @@ deployed = getDeployed(contracts)
       // skip for 0 amounts or falsy tokens
       if (!amount || !token) return null
 
-
-return cb({ key, token, amount })
+      return cb({ key, token, amount })
     })
 
     return Promise.all(promisedDeposits)
@@ -146,7 +143,7 @@ return cb({ key, token, amount })
       frt.balanceOf(acc),
       omg.balanceOf(acc),
       rdn.balanceOf(acc),
-      owl.balanceOf(acc),
+      owl.balanceOf(acc)
     ])
 
     const [ETH, GNO, FRT, OMG, RDN, OWL] = mapToNumber(balances)
@@ -168,7 +165,7 @@ return cb({ key, token, amount })
       dx.balances.call(frt.address, acc),
       dx.balances.call(rdn.address, acc),
       dx.balances.call(omg.address, acc),
-      dx.balances.call(owl.address, acc),
+      dx.balances.call(owl.address, acc)
     ])
 
     const [ETH, GNO, FRT, OMG, RDN, OWL] = mapToNumber(deposits)
@@ -261,8 +258,7 @@ return cb({ key, token, amount })
     const { dx } = await deployed
 
     try {
-
-const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
+      const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
       return mapToNumber(oraclePrice)
     } catch (error) {
       if (silent) return undefined
@@ -311,7 +307,7 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
       dx.sellVolumesCurrent.call(t1, t2),
       dx.sellVolumesNext.call(t1, t2),
       dx.getAuctionIndex.call(t1, t2),
-      dx.getAuctionStart.call(t1, t2),
+      dx.getAuctionStart.call(t1, t2)
     ])
 
     const [
@@ -319,7 +315,7 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
       sellVolumeCurrent,
       sellVolumeNext,
       latestAuctionIndex,
-      auctionStart,
+      auctionStart
     ] = mapToNumber(stats)
 
     return {
@@ -331,7 +327,7 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
       sellVolumeCurrent,
       sellVolumeNext,
       latestAuctionIndex,
-      auctionStart,
+      auctionStart
     }
   }
 
@@ -382,14 +378,14 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
     const [closingPrice, price, extraTokens] = await Promise.all([
       dx.closingPrices.call(t1, t2, index),
       getPriceForTokenPairAuction({ sellToken, buyToken, index }, true),
-      dx.extraTokens.call(t1, t2, index),
+      dx.extraTokens.call(t1, t2, index)
     ])
 
     return {
       auctionIndex: index,
       closingPrice: mapToNumber(closingPrice),
       extraTokens: extraTokens.toNumber(),
-      price,
+      price
     }
   }
 
@@ -412,7 +408,7 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
     const promisedStatsArray = accounts.map(account => Promise.all([
       dx.sellerBalances.call(t1, t2, index, account),
       dx.buyerBalances.call(t1, t2, index, account),
-      dx.claimedAmounts.call(t1, t2, index, account),
+      dx.claimedAmounts.call(t1, t2, index, account)
     ]))
 
     const statsArray = await Promise.all(promisedStatsArray)
@@ -472,19 +468,19 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
     const promisedStats = auctionIndices.map(async (auctionIndex) => {
       const [auctionStats, accountStats] = await Promise.all([
         getAuctionStatsForTokenPair({ ...options, index: auctionIndex }),
-        getAccountStats && getAccountsStatsForTokenPairAuction({ ...options, index: auctionIndex }),
+        getAccountStats && getAccountsStatsForTokenPairAuction({ ...options, index: auctionIndex })
       ])
 
       return {
         ...auctionStats,
         accounts: accountStats,
-        isLatestAuction: auctionIndex === latestAuctionIndex,
+        isLatestAuction: auctionIndex === latestAuctionIndex
       }
     })
 
     return {
       ...exchangeStats,
-      auctions: await Promise.all(promisedStats),
+      auctions: await Promise.all(promisedStats)
     }
   }
 
@@ -510,7 +506,7 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
       dx.frtToken.call(),
       dx.owlToken.call(),
       dx.thresholdNewTokenPair.call(),
-      dx.thresholdNewAuction.call(),
+      dx.thresholdNewAuction.call()
     ])
 
     const [thresholdNewTokenPair, thresholdNewAuction] = mapToNumber(prices)
@@ -522,7 +518,7 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
       FRT,
       OWL,
       thresholdNewTokenPair,
-      thresholdNewAuction,
+      thresholdNewAuction
     }
   }
 
@@ -542,27 +538,27 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
     let {
       auctioneer,
       thresholdNewTokenPair,
-      thresholdNewAuction,
+      thresholdNewAuction
     } = options
 
     let params
 
-    if (auctioneer === undefined
-      || thresholdNewTokenPair === undefined
-      || thresholdNewAuction === undefined) {
+    if (auctioneer === undefined ||
+      thresholdNewTokenPair === undefined ||
+      thresholdNewAuction === undefined) {
       params = await getExchangeParams();
 
       ({
         auctioneer,
         thresholdNewTokenPair,
-        thresholdNewAuction,
+        thresholdNewAuction
       } = { ...params, ...options })
     }
 
     return Promise.all([
       dx.updateAuctioneer(auctioneer, { from: params.auctioneer }),
       dx.updateThresholdNewTokenPair(thresholdNewTokenPair, { from: params.auctioneer }),
-      dx.updateThresholdNewAuction(thresholdNewAuction, { from: params.auctioneer }),
+      dx.updateThresholdNewAuction(thresholdNewAuction, { from: params.auctioneer })
     ])
   }
 
@@ -578,7 +574,6 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
       initialClosingPriceDen: number,
     }}
 
-
     @returns addTokenPair transaction | undefined
    */
   const addTokenPair = async ({
@@ -588,7 +583,7 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
     sellTokenFunding,
     buyTokenFunding,
     initialClosingPriceNum,
-    initialClosingPriceDen,
+    initialClosingPriceDen
   }) => {
     const t1 = sellToken.address || sellToken
     const t2 = buyToken.address || buyToken
@@ -603,7 +598,7 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
         buyTokenFunding,
         initialClosingPriceNum,
         initialClosingPriceDen,
-        { from: account },
+        { from: account }
       )
     } catch (error) {
       console.warn('Error adding token pair')
@@ -821,6 +816,6 @@ const oraclePrice = await dx.getPriceOracleForJS.call(token.address || token)
     claimSellerFunds,
     claimBuyerFunds,
     getUnclaimedBuyerFunds,
-    getUnclaimedSellerFunds,
+    getUnclaimedSellerFunds
   }
 }
