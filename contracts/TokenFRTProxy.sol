@@ -3,6 +3,7 @@ pragma solidity ^0.5.2;
 import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
 import "@gnosis.pm/util-contracts/contracts/GnosisStandardToken.sol";
 
+
 contract TokenFRTProxy is Proxy, GnosisStandardToken {
     /// @dev State variables remain for Blockchain exploring Proxied Token contracts
     address public owner;

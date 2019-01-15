@@ -4,6 +4,7 @@ import "./DxMath.sol";
 import "./AuctioneerManaged.sol";
 import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
 
+
 contract DxUpgrade is Proxied, AuctioneerManaged, DxMath {
     uint constant WAITING_PERIOD_CHANGE_MASTERCOPY = 30 days;
 
