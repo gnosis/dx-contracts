@@ -15,7 +15,7 @@ import "./base/DxUpgrade.sol";
 contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
 
     // The price is a rational number, so we need a concept of a fraction
-    struct fraction {
+    struct Fraction {
         uint num;
         uint den;
     }
@@ -46,7 +46,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
     mapping(address => mapping(address => uint)) public auctionStarts;
 
     // Token => Token => auctionIndex => price
-    mapping(address => mapping(address => mapping(uint => fraction))) public closingPrices;
+    mapping(address => mapping(address => mapping(uint => Fraction))) public closingPrices;
 
     // Token => Token => amount
     mapping(address => mapping(address => uint)) public sellVolumesCurrent;
@@ -67,6 +67,303 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
     mapping(address => mapping(address => mapping(uint => mapping(address => uint)))) public buyerBalances;
     mapping(address => mapping(address => mapping(uint => mapping(address => uint)))) public claimedAmounts;
 
+    function depositAndSell(address sellToken, address buyToken, uint amount)
+        external
+        returns (uint newBal, uint auctionIndex, uint newSellerBal)
+    {
+        newBal = deposit(sellToken, amount);
+        (auctionIndex, newSellerBal) = postSellOrder(sellToken, buyToken, 0, amount);
+    }
+
+    function claimAndWithdraw(address sellToken, address buyToken, address user, uint auctionIndex, uint amount)
+        external
+        returns (uint returned, uint frtsIssued, uint newBal)
+    {
+        (returned, frtsIssued) = claimSellerFunds(sellToken, buyToken, user, auctionIndex);
+        newBal = withdraw(buyToken, amount);
+    }
+
+    function getRunningTokenPairs(address[] calldata tokens)
+        external
+        view
+        returns (address[] memory tokens1, address[] memory tokens2)
+    {
+        uint arrayLength;
+
+        for (uint k = 0; k < tokens.length - 1; k++) {
+            for (uint j = k + 1; j < tokens.length; j++) {
+                if (getAuctionIndex(tokens[k], tokens[j]) > 0) {
+                    arrayLength++;
+                }
+            }
+        }
+
+        tokens1 = new address[](arrayLength);
+        tokens2 = new address[](arrayLength);
+
+        uint h;
+
+        for (uint i = 0; i < tokens.length - 1; i++) {
+            for (uint j = i + 1; j < tokens.length; j++) {
+                if (getAuctionIndex(tokens[i], tokens[j]) > 0) {
+                    tokens1[h] = tokens[i];
+                    tokens2[h] = tokens[j];
+                    h++;
+                }
+            }
+        }
+    }
+
+    /// @dev for quick overview of possible sellerBalances to calculate the possible withdraw tokens
+    /// @param auctionSellToken is the sellToken defining an auctionPair
+    /// @param auctionBuyToken is the buyToken defining an auctionPair
+    /// @param user is the user who wants to his tokens
+    /// @param lastNAuctions how many auctions will be checked. 0 means all
+    //@returns returns sellbal for all indices for all tokenpairs
+    function getIndicesWithClaimableTokensForSellers(
+        address auctionSellToken,
+        address auctionBuyToken,
+        address user,
+        uint lastNAuctions
+    ) external view returns (uint[] memory indices, uint[] memory usersBalances)
+    {
+        uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
+
+        uint arrayLength;
+
+        uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
+
+        for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
+            if (sellerBalances[auctionSellToken][auctionBuyToken][j][user] > 0) {
+                arrayLength++;
+            }
+        }
+
+        indices = new uint[](arrayLength);
+        usersBalances = new uint[](arrayLength);
+
+        uint k;
+
+        for (uint i = startingIndex; i <= runningAuctionIndex; i++) {
+            if (sellerBalances[auctionSellToken][auctionBuyToken][i][user] > 0) {
+                indices[k] = i;
+                usersBalances[k] = sellerBalances[auctionSellToken][auctionBuyToken][i][user];
+                k++;
+            }
+        }
+    }
+
+    /// @dev for quick overview of current sellerBalances for a user
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param user is the user who wants to his tokens
+    function getSellerBalancesOfCurrentAuctions(
+        address[] calldata auctionSellTokens,
+        address[] calldata auctionBuyTokens,
+        address user
+    ) external view returns (uint[] memory)
+    {
+        uint length = auctionSellTokens.length;
+        uint length2 = auctionBuyTokens.length;
+        require(length == length2);
+
+        uint[] memory sellersBalances = new uint[](length);
+
+        for (uint i = 0; i < length; i++) {
+            uint runningAuctionIndex = getAuctionIndex(auctionSellTokens[i], auctionBuyTokens[i]);
+            sellersBalances[i] = sellerBalances[auctionSellTokens[i]][auctionBuyTokens[i]][runningAuctionIndex][user];
+        }
+
+        return sellersBalances;
+    }
+
+    /// @dev for quick overview of possible buyerBalances to calculate the possible withdraw tokens
+    /// @param auctionSellToken is the sellToken defining an auctionPair
+    /// @param auctionBuyToken is the buyToken defining an auctionPair
+    /// @param user is the user who wants to his tokens
+    /// @param lastNAuctions how many auctions will be checked. 0 means all
+    //@returns returns sellbal for all indices for all tokenpairs
+    function getIndicesWithClaimableTokensForBuyers(
+        address auctionSellToken,
+        address auctionBuyToken,
+        address user,
+        uint lastNAuctions
+    ) external view returns (uint[] memory indices, uint[] memory usersBalances)
+    {
+        uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
+
+        uint arrayLength;
+
+        uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
+
+        for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
+            if (buyerBalances[auctionSellToken][auctionBuyToken][j][user] > 0) {
+                arrayLength++;
+            }
+        }
+
+        indices = new uint[](arrayLength);
+        usersBalances = new uint[](arrayLength);
+
+        uint k;
+
+        for (uint i = startingIndex; i <= runningAuctionIndex; i++) {
+            if (buyerBalances[auctionSellToken][auctionBuyToken][i][user] > 0) {
+                indices[k] = i;
+                usersBalances[k] = buyerBalances[auctionSellToken][auctionBuyToken][i][user];
+                k++;
+            }
+        }
+    }
+
+    /// @dev for quick overview of current sellerBalances for a user
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param user is the user who wants to his tokens
+    function getBuyerBalancesOfCurrentAuctions(
+        address[] calldata auctionSellTokens,
+        address[] calldata auctionBuyTokens,
+        address user
+    ) external view returns (uint[] memory)
+    {
+        uint length = auctionSellTokens.length;
+        uint length2 = auctionBuyTokens.length;
+        require(length == length2);
+
+        uint[] memory buyersBalances = new uint[](length);
+
+        for (uint i = 0; i < length; i++) {
+            uint runningAuctionIndex = getAuctionIndex(auctionSellTokens[i], auctionBuyTokens[i]);
+            buyersBalances[i] = buyerBalances[auctionSellTokens[i]][auctionBuyTokens[i]][runningAuctionIndex][user];
+        }
+
+        return buyersBalances;
+    }
+
+/// @dev for multiple claims
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    /// @param user is the user who wants to his tokens
+    function claimTokensFromSeveralAuctionsAsSeller(
+        address[] calldata auctionSellTokens,
+        address[] calldata auctionBuyTokens,
+        uint[] calldata auctionIndices,
+        address user
+    ) external returns (uint[] memory, uint[] memory)
+    {
+        uint length = checkLengthsForSeveralAuctionClaiming(auctionSellTokens, auctionBuyTokens, auctionIndices);
+
+        uint[] memory claimAmounts = new uint[](length);
+        uint[] memory frtsIssuedList = new uint[](length);
+
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], frtsIssuedList[i]) = claimSellerFunds(
+                auctionSellTokens[i],
+                auctionBuyTokens[i],
+                user,
+                auctionIndices[i]
+            );
+        }
+
+        return (claimAmounts, frtsIssuedList);
+    }
+
+    /// @dev for multiple claims
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    /// @param user is the user who wants to his tokens
+    function claimTokensFromSeveralAuctionsAsBuyer(
+        address[] calldata auctionSellTokens,
+        address[] calldata auctionBuyTokens,
+        uint[] calldata auctionIndices,
+        address user
+    ) external returns (uint[] memory, uint[] memory)
+    {
+        uint length = checkLengthsForSeveralAuctionClaiming(auctionSellTokens, auctionBuyTokens, auctionIndices);
+
+        uint[] memory claimAmounts = new uint[](length);
+        uint[] memory frtsIssuedList = new uint[](length);
+
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], frtsIssuedList[i]) = claimBuyerFunds(
+                auctionSellTokens[i],
+                auctionBuyTokens[i],
+                user,
+                auctionIndices[i]
+            );
+        }
+
+        return (claimAmounts, frtsIssuedList);
+    }
+
+    /// @dev for multiple withdraws
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    function claimAndWithdrawTokensFromSeveralAuctionsAsSeller(
+        address[] calldata auctionSellTokens,
+        address[] calldata auctionBuyTokens,
+        uint[] calldata auctionIndices
+    ) external returns (uint[] memory, uint frtsIssued)
+    {
+        uint length = checkLengthsForSeveralAuctionClaiming(auctionSellTokens, auctionBuyTokens, auctionIndices);
+
+        uint[] memory claimAmounts = new uint[](length);
+        uint claimFrts = 0;
+
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], claimFrts) = claimSellerFunds(
+                auctionSellTokens[i],
+                auctionBuyTokens[i],
+                msg.sender,
+                auctionIndices[i]
+            );
+
+            frtsIssued += claimFrts;
+
+            withdraw(auctionBuyTokens[i], claimAmounts[i]);
+        }
+
+        return (claimAmounts, frtsIssued);
+    }
+
+    /// @dev for multiple withdraws
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    function claimAndWithdrawTokensFromSeveralAuctionsAsBuyer(
+        address[] calldata auctionSellTokens,
+        address[] calldata auctionBuyTokens,
+        uint[] calldata auctionIndices
+    ) external returns (uint[] memory, uint frtsIssued)
+    {
+        uint length = checkLengthsForSeveralAuctionClaiming(auctionSellTokens, auctionBuyTokens, auctionIndices);
+
+        uint[] memory claimAmounts = new uint[](length);
+        uint claimFrts = 0;
+
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], claimFrts) = claimBuyerFunds(
+                auctionSellTokens[i],
+                auctionBuyTokens[i],
+                msg.sender,
+                auctionIndices[i]
+            );
+
+            frtsIssued += claimFrts;
+
+            withdraw(auctionSellTokens[i], claimAmounts[i]);
+        }
+
+        return (claimAmounts, frtsIssued);
+    }
+
+    function getMasterCopy() external view returns (address) {
+        return masterCopy;
+    }
+
     /// @dev Constructor-Function creates exchange
     /// @param _frtToken - address of frtToken ERC-20 token
     /// @param _owlToken - address of owlToken ERC-20 token
@@ -82,7 +379,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         PriceOracleInterface _ethUSDOracle,
         uint _thresholdNewTokenPair,
         uint _thresholdNewAuction
-    ) public {
+    ) public
+    {
         // Make sure contract hasn't been initialised
         require(ethToken == address(0), "The contract must be uninitialized");
 
@@ -119,7 +417,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         uint token2Funding,
         uint initialClosingPriceNum,
         uint initialClosingPriceDen
-    ) public {
+    ) public
+    {
         // R1
         require(token1 != token2, "You cannot add a token pair using the same token");
 
@@ -178,64 +477,11 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         require(fundedValueUSD >= thresholdNewTokenPair, "You should surplus the threshold for adding token pairs");
 
         // Save prices of opposite auctions
-        closingPrices[token1][token2][0] = fraction(initialClosingPriceNum, initialClosingPriceDen);
-        closingPrices[token2][token1][0] = fraction(initialClosingPriceDen, initialClosingPriceNum);
+        closingPrices[token1][token2][0] = Fraction(initialClosingPriceNum, initialClosingPriceDen);
+        closingPrices[token2][token1][0] = Fraction(initialClosingPriceDen, initialClosingPriceNum);
 
         // Split into two fns because of 16 local-var cap
         addTokenPairSecondPart(token1, token2, token1Funding, token2Funding);
-    }
-
-    function calculateFundedValueTokenToken(
-        address token1,
-        address token2,
-        uint token1Funding,
-        uint token2Funding,
-        address ethTokenMem,
-        uint ethUSDPrice
-    ) internal view returns (uint fundedValueUSD) {
-        // We require there to exist ethToken-Token auctions
-        // R3.1
-        require(getAuctionIndex(token1, ethTokenMem) > 0);
-
-        // R3.2
-        require(getAuctionIndex(token2, ethTokenMem) > 0);
-
-        // Price of Token 1
-        uint priceToken1Num;
-        uint priceToken1Den;
-        (priceToken1Num, priceToken1Den) = getPriceOfTokenInLastAuction(token1);
-
-        // Price of Token 2
-        uint priceToken2Num;
-        uint priceToken2Den;
-        (priceToken2Num, priceToken2Den) = getPriceOfTokenInLastAuction(token2);
-
-        // Compute funded value in ethToken and USD
-        // 10^30 * 10^30 = 10^60
-        uint fundedValueETH = add(
-            mul(token1Funding, priceToken1Num) / priceToken1Den,
-            token2Funding * priceToken2Num / priceToken2Den
-        );
-
-        fundedValueUSD = mul(fundedValueETH, ethUSDPrice);
-    }
-
-    function addTokenPairSecondPart(address token1, address token2, uint token1Funding, uint token2Funding) internal {
-        balances[token1][msg.sender] = sub(balances[token1][msg.sender], token1Funding);
-        balances[token2][msg.sender] = sub(balances[token2][msg.sender], token2Funding);
-
-        // Fee mechanism, fees are added to extraTokens
-        uint token1FundingAfterFee = settleFee(token1, token2, 1, token1Funding);
-        uint token2FundingAfterFee = settleFee(token2, token1, 1, token2Funding);
-
-        // Update other variables
-        sellVolumesCurrent[token1][token2] = token1FundingAfterFee;
-        sellVolumesCurrent[token2][token1] = token2FundingAfterFee;
-        sellerBalances[token1][token2][1][msg.sender] = token1FundingAfterFee;
-        sellerBalances[token2][token1][1][msg.sender] = token2FundingAfterFee;
-
-        setAuctionStart(token1, token2, WAITING_PERIOD_NEW_TOKEN_PAIR);
-        emit NewTokenPair(token1, token2);
     }
 
     function deposit(address tokenAddress, uint amount) public returns (uint) {
@@ -425,7 +671,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         require(sellerBalance > 0);
 
         // Get closing price for said auction
-        fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
+        Fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
         uint num = closingPrice.num;
         uint den = closingPrice.den;
 
@@ -436,14 +682,28 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         // < 10^30 * 10^30 = 10^60
         returned = mul(sellerBalance, num) / den;
 
-        frtsIssued = issueFrts(sellToken, buyToken, returned, auctionIndex, sellerBalance, user);
+        frtsIssued = issueFrts(
+            sellToken,
+            buyToken,
+            returned,
+            auctionIndex,
+            sellerBalance,
+            user
+        );
 
         // Claim tokens
         sellerBalances[sellToken][buyToken][auctionIndex][user] = 0;
         if (returned > 0) {
             balances[buyToken][user] = add(balances[buyToken][user], returned);
         }
-        emit NewSellerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
+        emit NewSellerFundsClaim(
+            sellToken,
+            buyToken,
+            user,
+            auctionIndex,
+            returned,
+            frtsIssued
+        );
     }
 
     function claimBuyerFunds(address sellToken, address buyToken, address user, uint auctionIndex)
@@ -480,7 +740,14 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
             ) / closingPrices[sellToken][buyToken][auctionIndex].num;
             returned = add(returned, tokensExtra);
 
-            frtsIssued = issueFrts(buyToken, sellToken, mul(buyerBalance, den) / num, auctionIndex, buyerBalance, user);
+            frtsIssued = issueFrts(
+                buyToken,
+                sellToken,
+                mul(buyerBalance, den) / num,
+                auctionIndex,
+                buyerBalance,
+                user
+            );
 
             // Auction has closed
             // Reset buyerBalances and claimedAmounts
@@ -493,36 +760,15 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
             balances[sellToken][user] = add(balances[sellToken][user], returned);
         }
 
-        emit NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
-    }
-
-    function issueFrts(address primaryToken, address secondaryToken, uint x, uint auctionIndex, uint bal, address user)
-        internal
-        returns (uint frtsIssued)
-    {
-        if (approvedTokens[primaryToken] && approvedTokens[secondaryToken]) {
-            address ethTokenMem = ethToken;
-            // Get frts issued based on ETH price of returned tokens
-            if (primaryToken == ethTokenMem) {
-                frtsIssued = bal;
-            } else if (secondaryToken == ethTokenMem) {
-                // 10^30 * 10^39 = 10^66
-                frtsIssued = x;
-            } else {
-                // Neither token is ethToken, so we use getHhistoricalPriceOracle()
-                uint pastNum;
-                uint pastDen;
-                (pastNum, pastDen) = getPriceInPastAuction(primaryToken, ethTokenMem, auctionIndex - 1);
-                // 10^30 * 10^35 = 10^65
-                frtsIssued = mul(bal, pastNum) / pastDen;
-            }
-
-            if (frtsIssued > 0) {
-                // Issue frtToken
-                frtToken.mintTokens(user, frtsIssued);
-            }
-        }
-    }
+        emit NewBuyerFundsClaim(
+            sellToken,
+            buyToken,
+            user,
+            auctionIndex,
+            returned,
+            frtsIssued
+        );
+    }    
 
     /// @dev allows to close possible theoretical closed markets
     /// @param sellToken sellToken of an auction
@@ -575,6 +821,281 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
             unclaimedBuyerFunds = atleastZero(
                 int(mul(buyerBalance, den) / num - claimedAmounts[sellToken][buyToken][auctionIndex][user])
             );
+        }
+    }
+
+    function getFeeRatio(address user)
+        public
+        view
+        returns (
+        // feeRatio < 10^4
+        uint num,
+        uint den
+    )
+    {
+        uint totalSupply = frtToken.totalSupply();
+        uint lockedFrt = frtToken.lockedTokenBalances(user);
+
+        /*
+          Fee Model:
+            locked FRT range     Fee
+            -----------------   ------
+            [0, 0.01%)           0.5%
+            [0.01%, 0.1%)        0.4%
+            [0.1%, 1%)           0.3%
+            [1%, 10%)            0.2%
+            [10%, 100%)          0.1%
+        */
+
+        if (lockedFrt * 10000 < totalSupply || totalSupply == 0) {
+            // Maximum fee, if user has locked less than 0.01% of the total FRT
+            // Fee: 0.5%
+            num = 1;
+            den = 200;
+        } else if (lockedFrt * 1000 < totalSupply) {
+            // If user has locked more than 0.01% and less than 0.1% of the total FRT
+            // Fee: 0.4%
+            num = 1;
+            den = 250;
+        } else if (lockedFrt * 100 < totalSupply) {
+            // If user has locked more than 0.1% and less than 1% of the total FRT
+            // Fee: 0.3%
+            num = 3;
+            den = 1000;
+        } else if (lockedFrt * 10 < totalSupply) {
+            // If user has locked more than 1% and less than 10% of the total FRT
+            // Fee: 0.2%
+            num = 1;
+            den = 500;
+        } else {
+            // If user has locked more than 10% of the total FRT
+            // Fee: 0.1%
+            num = 1;
+            den = 1000;
+        }
+    }
+
+    //@ dev returns price in units [token2]/[token1]
+    //@ param token1 first token for price calculation
+    //@ param token2 second token for price calculation
+    //@ param auctionIndex index for the auction to get the averaged price from
+    function getPriceInPastAuction(address token1, address token2, uint auctionIndex)
+        public
+        view
+        returns (
+        // price < 10^31
+        uint num,
+        uint den
+    )
+    {
+        if (token1 == token2) {
+            // C1
+            num = 1;
+            den = 1;
+        } else {
+            // C2
+            // R2.1
+            require(auctionIndex >= 0);
+
+            // C3
+            // R3.1
+            require(auctionIndex <= getAuctionIndex(token1, token2));
+            // auction still running
+
+            uint i = 0;
+            bool correctPair = false;
+            Fraction memory closingPriceToken1;
+            Fraction memory closingPriceToken2;
+
+            while (!correctPair) {
+                closingPriceToken2 = closingPrices[token2][token1][auctionIndex - i];
+                closingPriceToken1 = closingPrices[token1][token2][auctionIndex - i];
+
+                if (closingPriceToken1.num > 0 && closingPriceToken1.den > 0 || closingPriceToken2.num > 0 && closingPriceToken2.den > 0) {
+                    correctPair = true;
+                }
+                i++;
+            }
+
+            // At this point at least one closing price is strictly positive
+            // If only one is positive, we want to output that
+            if (closingPriceToken1.num == 0 || closingPriceToken1.den == 0) {
+                num = closingPriceToken2.den;
+                den = closingPriceToken2.num;
+            } else if (closingPriceToken2.num == 0 || closingPriceToken2.den == 0) {
+                num = closingPriceToken1.num;
+                den = closingPriceToken1.den;
+            } else {
+                // If both prices are positive, output weighted average
+                num = closingPriceToken2.den + closingPriceToken1.num;
+                den = closingPriceToken2.num + closingPriceToken1.den;
+            }
+        }
+    }
+
+    /// @dev Gives best estimate for market price of a token in ETH of any price oracle on the Ethereum network
+    /// @param token address of ERC-20 token
+    /// @return Weighted average of closing prices of opposite Token-ethToken auctions, based on their sellVolume
+    function getPriceOfTokenInLastAuction(address token)
+        public
+        view
+        returns (
+        // price < 10^31
+        uint num,
+        uint den
+    )
+    {
+        uint latestAuctionIndex = getAuctionIndex(token, ethToken);
+        // getPriceInPastAuction < 10^30
+        (num, den) = getPriceInPastAuction(token, ethToken, latestAuctionIndex - 1);
+    }
+
+    function getCurrentAuctionPrice(address sellToken, address buyToken, uint auctionIndex)
+        public
+        view
+        returns (
+        // price < 10^37
+        uint num,
+        uint den
+    )
+    {
+        Fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
+
+        if (closingPrice.den != 0) {
+            // Auction has closed
+            (num, den) = (closingPrice.num, closingPrice.den);
+        } else if (auctionIndex > getAuctionIndex(sellToken, buyToken)) {
+            (num, den) = (0, 0);
+        } else {
+            // Auction is running
+            uint pastNum;
+            uint pastDen;
+            (pastNum, pastDen) = getPriceInPastAuction(sellToken, buyToken, auctionIndex - 1);
+
+            // If we're calling the function into an unstarted auction,
+            // it will return the starting price of that auction
+            uint timeElapsed = atleastZero(int(now - getAuctionStart(sellToken, buyToken)));
+
+            // The numbers below are chosen such that
+            // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
+
+            // 10^5 * 10^31 = 10^36
+            num = atleastZero(int((86400 - timeElapsed) * pastNum));
+            // 10^6 * 10^31 = 10^37
+            den = mul((timeElapsed + 43200), pastDen);
+
+            if (mul(num, sellVolumesCurrent[sellToken][buyToken]) <= mul(den, buyVolumes[sellToken][buyToken])) {
+                num = buyVolumes[sellToken][buyToken];
+                den = sellVolumesCurrent[sellToken][buyToken];
+            }
+        }
+    }
+
+    // > Helper fns
+    function getTokenOrder(address token1, address token2) public pure returns (address, address) {
+        if (token2 < token1) {
+            (token1, token2) = (token2, token1);
+        }
+
+        return (token1, token2);
+    }
+
+    function getAuctionStart(address token1, address token2) public view returns (uint auctionStart) {
+        (token1, token2) = getTokenOrder(token1, token2);
+        auctionStart = auctionStarts[token1][token2];
+    }
+
+    function getAuctionIndex(address token1, address token2) public view returns (uint auctionIndex) {
+        (token1, token2) = getTokenOrder(token1, token2);
+        auctionIndex = latestAuctionIndices[token1][token2];
+    }
+
+    function calculateFundedValueTokenToken(
+        address token1,
+        address token2,
+        uint token1Funding,
+        uint token2Funding,
+        address ethTokenMem,
+        uint ethUSDPrice
+    ) internal view returns (uint fundedValueUSD)
+    {
+        // We require there to exist ethToken-Token auctions
+        // R3.1
+        require(getAuctionIndex(token1, ethTokenMem) > 0);
+
+        // R3.2
+        require(getAuctionIndex(token2, ethTokenMem) > 0);
+
+        // Price of Token 1
+        uint priceToken1Num;
+        uint priceToken1Den;
+        (priceToken1Num, priceToken1Den) = getPriceOfTokenInLastAuction(token1);
+
+        // Price of Token 2
+        uint priceToken2Num;
+        uint priceToken2Den;
+        (priceToken2Num, priceToken2Den) = getPriceOfTokenInLastAuction(token2);
+
+        // Compute funded value in ethToken and USD
+        // 10^30 * 10^30 = 10^60
+        uint fundedValueETH = add(
+            mul(token1Funding, priceToken1Num) / priceToken1Den,
+            token2Funding * priceToken2Num / priceToken2Den
+        );
+
+        fundedValueUSD = mul(fundedValueETH, ethUSDPrice);
+    }
+
+    function addTokenPairSecondPart(address token1, address token2, uint token1Funding, uint token2Funding) internal {
+        balances[token1][msg.sender] = sub(balances[token1][msg.sender], token1Funding);
+        balances[token2][msg.sender] = sub(balances[token2][msg.sender], token2Funding);
+
+        // Fee mechanism, fees are added to extraTokens
+        uint token1FundingAfterFee = settleFee(token1, token2, 1, token1Funding);
+        uint token2FundingAfterFee = settleFee(token2, token1, 1, token2Funding);
+
+        // Update other variables
+        sellVolumesCurrent[token1][token2] = token1FundingAfterFee;
+        sellVolumesCurrent[token2][token1] = token2FundingAfterFee;
+        sellerBalances[token1][token2][1][msg.sender] = token1FundingAfterFee;
+        sellerBalances[token2][token1][1][msg.sender] = token2FundingAfterFee;
+
+        setAuctionStart(token1, token2, WAITING_PERIOD_NEW_TOKEN_PAIR);
+        emit NewTokenPair(token1, token2);
+    }
+
+    function issueFrts(
+        address primaryToken,
+        address secondaryToken,
+        uint x,
+        uint auctionIndex,
+        uint bal,
+        address user
+    )
+        internal
+        returns (uint frtsIssued)
+    {
+        if (approvedTokens[primaryToken] && approvedTokens[secondaryToken]) {
+            address ethTokenMem = ethToken;
+            // Get frts issued based on ETH price of returned tokens
+            if (primaryToken == ethTokenMem) {
+                frtsIssued = bal;
+            } else if (secondaryToken == ethTokenMem) {
+                // 10^30 * 10^39 = 10^66
+                frtsIssued = x;
+            } else {
+                // Neither token is ethToken, so we use getHhistoricalPriceOracle()
+                uint pastNum;
+                uint pastDen;
+                (pastNum, pastDen) = getPriceInPastAuction(primaryToken, ethTokenMem, auctionIndex - 1);
+                // 10^30 * 10^35 = 10^65
+                frtsIssued = mul(bal, pastNum) / pastDen;
+            }
+
+            if (frtsIssued > 0) {
+                // Issue frtToken
+                frtToken.mintTokens(user, frtsIssued);
+            }
         }
     }
 
@@ -631,58 +1152,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         }
     }
 
-    function getFeeRatio(address user)
-        public
-        view
-        returns (
-        // feeRatio < 10^4
-        uint num,
-        uint den
-    )
-    {
-        uint totalSupply = frtToken.totalSupply();
-        uint lockedFrt = frtToken.lockedTokenBalances(user);
-
-        /*
-          Fee Model:
-            locked FRT range     Fee
-            -----------------   ------
-            [0, 0.01%)           0.5%
-            [0.01%, 0.1%)        0.4%
-            [0.1%, 1%)           0.3%
-            [1%, 10%)            0.2%
-            [10%, 100%)          0.1%
-        */
-
-        if (lockedFrt * 10000 < totalSupply || totalSupply == 0) {
-            // Maximum fee, if user has locked less than 0.01% of the total FRT
-            // Fee: 0.5%
-            num = 1;
-            den = 200;
-        } else if (lockedFrt * 1000 < totalSupply) {
-            // If user has locked more than 0.01% and less than 0.1% of the total FRT
-            // Fee: 0.4%
-            num = 1;
-            den = 250;
-        } else if (lockedFrt * 100 < totalSupply) {
-            // If user has locked more than 0.1% and less than 1% of the total FRT
-            // Fee: 0.3%
-            num = 3;
-            den = 1000;
-        } else if (lockedFrt * 10 < totalSupply) {
-            // If user has locked more than 1% and less than 10% of the total FRT
-            // Fee: 0.2%
-            num = 1;
-            den = 500;
-        } else {
-            // If user has locked more than 10% of the total FRT
-            // Fee: 0.1%
-            num = 1;
-            den = 1000;
-        }
-    }
-
-    /// @dev clears an Auction
+/// @dev clears an Auction
     /// @param sellToken sellToken of the auction
     /// @param buyToken  buyToken of the auction
     /// @param auctionIndex of the auction to be cleared.
@@ -695,7 +1165,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
 
         // Update closing price
         if (sellVolume > 0) {
-            closingPrices[sellToken][buyToken][auctionIndex] = fraction(buyVolume, sellVolume);
+            closingPrices[sellToken][buyToken][auctionIndex] = Fraction(buyVolume, sellVolume);
         }
 
         // if (opposite is 0 auction OR price = 0 OR opposite auction cleared)
@@ -705,7 +1175,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
             uint buyVolumeOpp = buyVolumes[buyToken][sellToken];
             if (closingPriceOppDen == 0 && sellVolumeOpp > 0) {
                 // Save opposite price
-                closingPrices[buyToken][sellToken][auctionIndex] = fraction(buyVolumeOpp, sellVolumeOpp);
+                closingPrices[buyToken][sellToken][auctionIndex] = Fraction(buyVolumeOpp, sellVolumeOpp);
             }
 
             uint sellVolumeNext = sellVolumesNext[sellToken][buyToken];
@@ -765,147 +1235,6 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         }
     }
 
-    //@ dev returns price in units [token2]/[token1]
-    //@ param token1 first token for price calculation
-    //@ param token2 second token for price calculation
-    //@ param auctionIndex index for the auction to get the averaged price from
-    function getPriceInPastAuction(address token1, address token2, uint auctionIndex)
-        public
-        view
-        returns (
-        // price < 10^31
-        uint num,
-        uint den
-    )
-    {
-        if (token1 == token2) {
-            // C1
-            num = 1;
-            den = 1;
-        } else {
-            // C2
-            // R2.1
-            require(auctionIndex >= 0);
-
-            // C3
-            // R3.1
-            require(auctionIndex <= getAuctionIndex(token1, token2));
-            // auction still running
-
-            uint i = 0;
-            bool correctPair = false;
-            fraction memory closingPriceToken1;
-            fraction memory closingPriceToken2;
-
-            while (!correctPair) {
-                closingPriceToken2 = closingPrices[token2][token1][auctionIndex - i];
-                closingPriceToken1 = closingPrices[token1][token2][auctionIndex - i];
-
-                if (closingPriceToken1.num > 0 && closingPriceToken1.den > 0 || closingPriceToken2.num > 0 && closingPriceToken2.den > 0) {
-                    correctPair = true;
-                }
-                i++;
-            }
-
-            // At this point at least one closing price is strictly positive
-            // If only one is positive, we want to output that
-            if (closingPriceToken1.num == 0 || closingPriceToken1.den == 0) {
-                num = closingPriceToken2.den;
-                den = closingPriceToken2.num;
-            } else if (closingPriceToken2.num == 0 || closingPriceToken2.den == 0) {
-                num = closingPriceToken1.num;
-                den = closingPriceToken1.den;
-            } else {
-                // If both prices are positive, output weighted average
-                num = closingPriceToken2.den + closingPriceToken1.num;
-                den = closingPriceToken2.num + closingPriceToken1.den;
-            }
-        }
-    }
-
-    /// @dev Gives best estimate for market price of a token in ETH of any price oracle on the Ethereum network
-    /// @param token address of ERC-20 token
-    /// @return Weighted average of closing prices of opposite Token-ethToken auctions, based on their sellVolume
-    function getPriceOfTokenInLastAuction(address token)
-        public
-        view
-        returns (
-        // price < 10^31
-        uint num,
-        uint den
-    )
-    {
-        uint latestAuctionIndex = getAuctionIndex(token, ethToken);
-        // getPriceInPastAuction < 10^30
-        (num, den) = getPriceInPastAuction(token, ethToken, latestAuctionIndex - 1);
-    }
-
-    function getCurrentAuctionPrice(address sellToken, address buyToken, uint auctionIndex)
-        public
-        view
-        returns (
-        // price < 10^37
-        uint num,
-        uint den
-    )
-    {
-        fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
-
-        if (closingPrice.den != 0) {
-            // Auction has closed
-            (num, den) = (closingPrice.num, closingPrice.den);
-        } else if (auctionIndex > getAuctionIndex(sellToken, buyToken)) {
-            (num, den) = (0, 0);
-        } else {
-            // Auction is running
-            uint pastNum;
-            uint pastDen;
-            (pastNum, pastDen) = getPriceInPastAuction(sellToken, buyToken, auctionIndex - 1);
-
-            // If we're calling the function into an unstarted auction,
-            // it will return the starting price of that auction
-            uint timeElapsed = atleastZero(int(now - getAuctionStart(sellToken, buyToken)));
-
-            // The numbers below are chosen such that
-            // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
-
-            // 10^5 * 10^31 = 10^36
-            num = atleastZero(int((86400 - timeElapsed) * pastNum));
-            // 10^6 * 10^31 = 10^37
-            den = mul((timeElapsed + 43200), pastDen);
-
-            if (mul(num, sellVolumesCurrent[sellToken][buyToken]) <= mul(den, buyVolumes[sellToken][buyToken])) {
-                num = buyVolumes[sellToken][buyToken];
-                den = sellVolumesCurrent[sellToken][buyToken];
-            }
-        }
-    }
-
-    function depositAndSell(address sellToken, address buyToken, uint amount)
-        external
-        returns (uint newBal, uint auctionIndex, uint newSellerBal)
-    {
-        newBal = deposit(sellToken, amount);
-        (auctionIndex, newSellerBal) = postSellOrder(sellToken, buyToken, 0, amount);
-    }
-
-    function claimAndWithdraw(address sellToken, address buyToken, address user, uint auctionIndex, uint amount)
-        external
-        returns (uint returned, uint frtsIssued, uint newBal)
-    {
-        (returned, frtsIssued) = claimSellerFunds(sellToken, buyToken, user, auctionIndex);
-        newBal = withdraw(buyToken, amount);
-    }
-
-    // > Helper fns
-    function getTokenOrder(address token1, address token2) public pure returns (address, address) {
-        if (token2 < token1) {
-            (token1, token2) = (token2, token1);
-        }
-
-        return (token1, token2);
-    }
-
     function setAuctionStart(address token1, address token2, uint value) internal {
         (token1, token2) = getTokenOrder(token1, token2);
         uint auctionStart = now + value;
@@ -921,179 +1250,17 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         }
     }
 
-    function getAuctionStart(address token1, address token2) public view returns (uint auctionStart) {
-        (token1, token2) = getTokenOrder(token1, token2);
-        auctionStart = auctionStarts[token1][token2];
-    }
-
     function setAuctionIndex(address token1, address token2) internal {
         (token1, token2) = getTokenOrder(token1, token2);
         latestAuctionIndices[token1][token2] += 1;
-    }
-
-    function getAuctionIndex(address token1, address token2) public view returns (uint auctionIndex) {
-        (token1, token2) = getTokenOrder(token1, token2);
-        auctionIndex = latestAuctionIndices[token1][token2];
-    }
-
-    function getRunningTokenPairs(address[] calldata tokens)
-        external
-        view
-        returns (address[] memory tokens1, address[] memory tokens2)
-    {
-        uint arrayLength;
-
-        for (uint k = 0; k < tokens.length - 1; k++) {
-            for (uint l = k + 1; l < tokens.length; l++) {
-                if (getAuctionIndex(tokens[k], tokens[l]) > 0) {
-                    arrayLength++;
-                }
-            }
-        }
-
-        tokens1 = new address[](arrayLength);
-        tokens2 = new address[](arrayLength);
-
-        uint h;
-
-        for (uint i = 0; i < tokens.length - 1; i++) {
-            for (uint j = i + 1; j < tokens.length; j++) {
-                if (getAuctionIndex(tokens[i], tokens[j]) > 0) {
-                    tokens1[h] = tokens[i];
-                    tokens2[h] = tokens[j];
-                    h++;
-                }
-            }
-        }
-    }
-
-    /// @dev for quick overview of possible sellerBalances to calculate the possible withdraw tokens
-    /// @param auctionSellToken is the sellToken defining an auctionPair
-    /// @param auctionBuyToken is the buyToken defining an auctionPair
-    /// @param user is the user who wants to his tokens
-    /// @param lastNAuctions how many auctions will be checked. 0 means all
-    //@returns returns sellbal for all indices for all tokenpairs
-    function getIndicesWithClaimableTokensForSellers(
-        address auctionSellToken,
-        address auctionBuyToken,
-        address user,
-        uint lastNAuctions
-    ) external view returns (uint[] memory indices, uint[] memory usersBalances) {
-        uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
-
-        uint arrayLength;
-
-        uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
-
-        for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
-            if (sellerBalances[auctionSellToken][auctionBuyToken][j][user] > 0) {
-                arrayLength++;
-            }
-        }
-
-        indices = new uint[](arrayLength);
-        usersBalances = new uint[](arrayLength);
-
-        uint k;
-
-        for (uint i = startingIndex; i <= runningAuctionIndex; i++) {
-            if (sellerBalances[auctionSellToken][auctionBuyToken][i][user] > 0) {
-                indices[k] = i;
-                usersBalances[k] = sellerBalances[auctionSellToken][auctionBuyToken][i][user];
-                k++;
-            }
-        }
-    }
-
-    /// @dev for quick overview of current sellerBalances for a user
-    /// @param auctionSellTokens are the sellTokens defining an auctionPair
-    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
-    /// @param user is the user who wants to his tokens
-    function getSellerBalancesOfCurrentAuctions(
-        address[] calldata auctionSellTokens,
-        address[] calldata auctionBuyTokens,
-        address user
-    ) external view returns (uint[] memory) {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2);
-
-        uint[] memory sellersBalances = new uint[](length);
-
-        for (uint i = 0; i < length; i++) {
-            uint runningAuctionIndex = getAuctionIndex(auctionSellTokens[i], auctionBuyTokens[i]);
-            sellersBalances[i] = sellerBalances[auctionSellTokens[i]][auctionBuyTokens[i]][runningAuctionIndex][user];
-        }
-
-        return sellersBalances;
-    }
-
-    /// @dev for quick overview of possible buyerBalances to calculate the possible withdraw tokens
-    /// @param auctionSellToken is the sellToken defining an auctionPair
-    /// @param auctionBuyToken is the buyToken defining an auctionPair
-    /// @param user is the user who wants to his tokens
-    /// @param lastNAuctions how many auctions will be checked. 0 means all
-    //@returns returns sellbal for all indices for all tokenpairs
-    function getIndicesWithClaimableTokensForBuyers(
-        address auctionSellToken,
-        address auctionBuyToken,
-        address user,
-        uint lastNAuctions
-    ) external view returns (uint[] memory indices, uint[] memory usersBalances) {
-        uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
-
-        uint arrayLength;
-
-        uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
-
-        for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
-            if (buyerBalances[auctionSellToken][auctionBuyToken][j][user] > 0) {
-                arrayLength++;
-            }
-        }
-
-        indices = new uint[](arrayLength);
-        usersBalances = new uint[](arrayLength);
-
-        uint k;
-
-        for (uint i = startingIndex; i <= runningAuctionIndex; i++) {
-            if (buyerBalances[auctionSellToken][auctionBuyToken][i][user] > 0) {
-                indices[k] = i;
-                usersBalances[k] = buyerBalances[auctionSellToken][auctionBuyToken][i][user];
-                k++;
-            }
-        }
-    }
-
-    /// @dev for quick overview of current sellerBalances for a user
-    /// @param auctionSellTokens are the sellTokens defining an auctionPair
-    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
-    /// @param user is the user who wants to his tokens
-    function getBuyerBalancesOfCurrentAuctions(
-        address[] calldata auctionSellTokens,
-        address[] calldata auctionBuyTokens,
-        address user
-    ) external view returns (uint[] memory) {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2);
-
-        uint[] memory buyersBalances = new uint[](length);
-
-        for (uint i = 0; i < length; i++) {
-            uint runningAuctionIndex = getAuctionIndex(auctionSellTokens[i], auctionBuyTokens[i]);
-            buyersBalances[i] = buyerBalances[auctionSellTokens[i]][auctionBuyTokens[i]][runningAuctionIndex][user];
-        }
-
-        return buyersBalances;
     }
 
     function checkLengthsForSeveralAuctionClaiming(
         address[] memory auctionSellTokens,
         address[] memory auctionBuyTokens,
         uint[] memory auctionIndices
-    ) internal pure returns (uint length) {
+    ) internal pure returns (uint length)
+    {
         length = auctionSellTokens.length;
         uint length2 = auctionBuyTokens.length;
         require(length == length2);
@@ -1101,127 +1268,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         uint length3 = auctionIndices.length;
         require(length2 == length3);
     }
-
-    /// @dev for multiple claims
-    /// @param auctionSellTokens are the sellTokens defining an auctionPair
-    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
-    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
-    /// @param user is the user who wants to his tokens
-    function claimTokensFromSeveralAuctionsAsSeller(
-        address[] calldata auctionSellTokens,
-        address[] calldata auctionBuyTokens,
-        uint[] calldata auctionIndices,
-        address user
-    ) external returns (uint[] memory, uint[] memory) {
-        uint length = checkLengthsForSeveralAuctionClaiming(auctionSellTokens, auctionBuyTokens, auctionIndices);
-
-        uint[] memory claimAmounts = new uint[](length);
-        uint[] memory frtsIssuedList = new uint[](length);
-
-        for (uint i = 0; i < length; i++) {
-            (claimAmounts[i], frtsIssuedList[i]) = claimSellerFunds(
-                auctionSellTokens[i],
-                auctionBuyTokens[i],
-                user,
-                auctionIndices[i]
-            );
-        }
-
-        return (claimAmounts, frtsIssuedList);
-    }
-
-    /// @dev for multiple claims
-    /// @param auctionSellTokens are the sellTokens defining an auctionPair
-    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
-    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
-    /// @param user is the user who wants to his tokens
-    function claimTokensFromSeveralAuctionsAsBuyer(
-        address[] calldata auctionSellTokens,
-        address[] calldata auctionBuyTokens,
-        uint[] calldata auctionIndices,
-        address user
-    ) external returns (uint[] memory, uint[] memory) {
-        uint length = checkLengthsForSeveralAuctionClaiming(auctionSellTokens, auctionBuyTokens, auctionIndices);
-
-        uint[] memory claimAmounts = new uint[](length);
-        uint[] memory frtsIssuedList = new uint[](length);
-
-        for (uint i = 0; i < length; i++) {
-            (claimAmounts[i], frtsIssuedList[i]) = claimBuyerFunds(
-                auctionSellTokens[i],
-                auctionBuyTokens[i],
-                user,
-                auctionIndices[i]
-            );
-        }
-
-        return (claimAmounts, frtsIssuedList);
-    }
-
-    /// @dev for multiple withdraws
-    /// @param auctionSellTokens are the sellTokens defining an auctionPair
-    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
-    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
-    function claimAndWithdrawTokensFromSeveralAuctionsAsSeller(
-        address[] calldata auctionSellTokens,
-        address[] calldata auctionBuyTokens,
-        uint[] calldata auctionIndices
-    ) external returns (uint[] memory, uint frtsIssued) {
-        uint length = checkLengthsForSeveralAuctionClaiming(auctionSellTokens, auctionBuyTokens, auctionIndices);
-
-        uint[] memory claimAmounts = new uint[](length);
-        uint claimFrts = 0;
-
-        for (uint i = 0; i < length; i++) {
-            (claimAmounts[i], claimFrts) = claimSellerFunds(
-                auctionSellTokens[i],
-                auctionBuyTokens[i],
-                msg.sender,
-                auctionIndices[i]
-            );
-
-            frtsIssued += claimFrts;
-
-            withdraw(auctionBuyTokens[i], claimAmounts[i]);
-        }
-
-        return (claimAmounts, frtsIssued);
-    }
-
-    /// @dev for multiple withdraws
-    /// @param auctionSellTokens are the sellTokens defining an auctionPair
-    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
-    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
-    function claimAndWithdrawTokensFromSeveralAuctionsAsBuyer(
-        address[] calldata auctionSellTokens,
-        address[] calldata auctionBuyTokens,
-        uint[] calldata auctionIndices
-    ) external returns (uint[] memory, uint frtsIssued) {
-        uint length = checkLengthsForSeveralAuctionClaiming(auctionSellTokens, auctionBuyTokens, auctionIndices);
-
-        uint[] memory claimAmounts = new uint[](length);
-        uint claimFrts = 0;
-
-        for (uint i = 0; i < length; i++) {
-            (claimAmounts[i], claimFrts) = claimBuyerFunds(
-                auctionSellTokens[i],
-                auctionBuyTokens[i],
-                msg.sender,
-                auctionIndices[i]
-            );
-
-            frtsIssued += claimFrts;
-
-            withdraw(auctionSellTokens[i], claimAmounts[i]);
-        }
-
-        return (claimAmounts, frtsIssued);
-    }
-
-    function getMasterCopy() external view returns (address) {
-        return masterCopy;
-    }
-
+    
     // > Events
     event NewDeposit(address indexed token, uint amount);
 

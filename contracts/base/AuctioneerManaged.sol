@@ -1,5 +1,6 @@
 pragma solidity ^0.5.2;
 
+
 contract AuctioneerManaged {
     // auctioneer has the power to manage some variables
     address public auctioneer;

@@ -2,6 +2,7 @@ pragma solidity ^0.5.2;
 
 import "@gnosis.pm/util-contracts/contracts/GnosisStandardToken.sol";
 
+
 contract TokenRDN is GnosisStandardToken {
     string public constant symbol = "RDN";
     string public constant name = "Raiden network tokens";

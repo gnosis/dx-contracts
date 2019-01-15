@@ -4,6 +4,7 @@ import "../Oracle/PriceOracleInterface.sol";
 import "./AuctioneerManaged.sol";
 import "./DxMath.sol";
 
+
 contract EthOracle is AuctioneerManaged, DxMath {
     uint constant WAITING_PERIOD_CHANGE_ORACLE = 30 days;
 

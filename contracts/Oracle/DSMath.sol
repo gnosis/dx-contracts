@@ -1,5 +1,6 @@
 pragma solidity ^0.5.2;
 
+
 contract DSMath {
     /*
     standard uint256 functions
@@ -24,6 +25,7 @@ contract DSMath {
     function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
         return x <= y ? x : y;
     }
+
     function max(uint256 x, uint256 y) internal pure returns (uint256 z) {
         return x >= y ? x : y;
     }
@@ -51,6 +53,7 @@ contract DSMath {
     function hmin(uint128 x, uint128 y) internal pure returns (uint128 z) {
         return x <= y ? x : y;
     }
+
     function hmax(uint128 x, uint128 y) internal pure returns (uint128 z) {
         return x >= y ? x : y;
     }
@@ -62,6 +65,7 @@ contract DSMath {
     function imin(int256 x, int256 y) internal pure returns (int256 z) {
         return x <= y ? x : y;
     }
+
     function imax(int256 x, int256 y) internal pure returns (int256 z) {
         return x >= y ? x : y;
     }
@@ -91,6 +95,7 @@ contract DSMath {
     function wmin(uint128 x, uint128 y) internal pure returns (uint128) {
         return hmin(x, y);
     }
+
     function wmax(uint128 x, uint128 y) internal pure returns (uint128) {
         return hmax(x, y);
     }
@@ -147,6 +152,7 @@ contract DSMath {
     function rmin(uint128 x, uint128 y) internal pure returns (uint128) {
         return hmin(x, y);
     }
+
     function rmax(uint128 x, uint128 y) internal pure returns (uint128) {
         return hmax(x, y);
     }

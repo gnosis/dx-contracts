@@ -3,6 +3,7 @@ pragma solidity ^0.5.2;
 import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
 import "@gnosis.pm/util-contracts/contracts/GnosisStandardToken.sol";
 
+
 /// @title Standard token contract with overflow protection
 contract TokenFRT is Proxied, GnosisStandardToken {
     address public owner;
@@ -11,7 +12,7 @@ contract TokenFRT is Proxied, GnosisStandardToken {
     string public constant name = "Magnolia Token";
     uint8 public constant decimals = 18;
 
-    struct unlockedToken {
+    struct UnlockedToken {
         uint amountUnlocked;
         uint withdrawalTime;
     }
@@ -21,8 +22,8 @@ contract TokenFRT is Proxied, GnosisStandardToken {
      */
     address public minter;
 
-    // user => unlockedToken
-    mapping(address => unlockedToken) public unlockedTokens;
+    // user => UnlockedToken
+    mapping(address => UnlockedToken) public unlockedTokens;
 
     // user => amount
     mapping(address => uint) public lockedTokenBalances;
@@ -97,6 +98,7 @@ contract TokenFRT is Proxied, GnosisStandardToken {
             return b;
         }
     }
+    
     /// @dev Returns whether an add operation causes an overflow
     /// @param a First addend
     /// @param b Second addend

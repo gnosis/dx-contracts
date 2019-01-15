@@ -1,5 +1,6 @@
 pragma solidity ^0.5.2;
 
+
 contract DxMath {
     // > Math fns
     function min(uint a, uint b) public pure returns (uint) {
@@ -17,6 +18,7 @@ contract DxMath {
             return uint(a);
         }
     }
+    
     /// @dev Returns whether an add operation causes an overflow
     /// @param a First addend
     /// @param b Second addend

@@ -2,6 +2,7 @@ pragma solidity ^0.5.2;
 
 import "./DSValue.sol";
 
+
 contract Medianizer is DSValue {
     mapping(bytes12 => address) public values;
     mapping(address => bytes12) public indexes;
@@ -78,7 +79,8 @@ contract Medianizer is DSValue {
             }
         }
 
-        if (ctr < minimun) return (val, false);
+        if (ctr < minimun)
+            return (val, false);
 
         bytes32 value;
         if (ctr % 2 == 0) {
