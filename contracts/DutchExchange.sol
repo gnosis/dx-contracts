@@ -829,6 +829,37 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
     )
         internal
     {
+        (uint sellVolume, uint sellVolumeOpp) = getSellVolumesInUSD(sellToken, buyToken);
+
+        bool enoughSellVolume = sellVolume >= thresholdNewAuction;
+        bool enoughSellVolumeOpp = sellVolumeOpp >= thresholdNewAuction;
+        bool schedule;
+        // Make sure both sides have liquidity in order to start the auction
+        if (enoughSellVolume && enoughSellVolumeOpp) {
+            schedule = true;
+        } else if (enoughSellVolume || enoughSellVolumeOpp) {
+            // But if the auction didn't start in 24h, then is enough to have 
+            // liquidity in one of the two sides
+            uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
+            uint clearingTime = getClearingTime(sellToken, buyToken, getAuctionIndex(sellToken, buyToken));
+            schedule = clearingTime <= now - 24 hours;
+        }
+
+        if (schedule) {
+            // Schedule next auction
+            setAuctionStart(sellToken, buyToken, WAITING_PERIOD_NEW_AUCTION);
+        } else {            
+            resetAuctionStart(sellToken, buyToken);
+        }
+    }
+
+    function getSellVolumesInUSD(
+        address sellToken,
+        address buyToken
+    )
+        internal
+        returns (uint sellVolume, uint sellVolumeOpp)
+    {
         // Check if auctions received enough sell orders
         uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
 
@@ -846,14 +877,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         // since it might also be called from postSellOrder())
 
         // < 10^30 * 10^31 * 10^6 = 10^67
-        uint sellVolume = mul(mul(sellVolumesCurrent[sellToken][buyToken], sellNum), ethUSDPrice) / sellDen;
-        uint sellVolumeOpp = mul(mul(sellVolumesCurrent[buyToken][sellToken], buyNum), ethUSDPrice) / buyDen;
-        if (sellVolume >= thresholdNewAuction && sellVolumeOpp >= thresholdNewAuction) {
-            // Schedule next auction
-            setAuctionStart(sellToken, buyToken, WAITING_PERIOD_NEW_AUCTION);
-        } else {
-            resetAuctionStart(sellToken, buyToken);
-        }
+        sellVolume = mul(mul(sellVolumesCurrent[sellToken][buyToken], sellNum), ethUSDPrice) / sellDen;
+        sellVolumeOpp = mul(mul(sellVolumesCurrent[buyToken][sellToken], buyNum), ethUSDPrice) / buyDen;
     }
 
     //@ dev returns price in units [token2]/[token1]
