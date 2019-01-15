@@ -1,5 +1,4 @@
-
-pragma solidity ^0.4.21;
+pragma solidity ^0.5.0;
 
 import "@gnosis.pm/util-contracts/contracts/Token.sol";
 
@@ -17,17 +16,20 @@ contract SafeTransfer {
         }
 
         assembly {
-          switch returndatasize()   
-            case 0 {                      // This is our BadToken
-              result := not(0)          // result is true
-            }
-            case 32 {                     // This is our GoodToken
-              returndatacopy(0, 0, 32) 
-              result := mload(0)        // result == returndata of external call
-            }
-            default {                     // This is not an ERC20 token
-              result := 0 
-            }
+            switch returndatasize
+                case 0 {
+                    // This is our BadToken
+                    result := not(0) // result is true
+                }
+                case 32 {
+                    // This is our GoodToken
+                    returndatacopy(0, 0, 32)
+                    result := mload(0) // result == returndata of external call
+                }
+                default {
+                    // This is not an ERC20 token
+                    result := 0
+                }
         }
         return result;
     }
