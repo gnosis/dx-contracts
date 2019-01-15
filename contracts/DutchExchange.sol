@@ -848,10 +848,25 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         // < 10^30 * 10^31 * 10^6 = 10^67
         uint sellVolume = mul(mul(sellVolumesCurrent[sellToken][buyToken], sellNum), ethUSDPrice) / sellDen;
         uint sellVolumeOpp = mul(mul(sellVolumesCurrent[buyToken][sellToken], buyNum), ethUSDPrice) / buyDen;
-        if (sellVolume >= thresholdNewAuction && sellVolumeOpp >= thresholdNewAuction) {
+        bool enoughSellVolume = sellVolume >= thresholdNewAuction;
+        bool enoughSellVolumeOpp = sellVolumeOpp >= thresholdNewAuction;
+
+        bool schedule;
+        // Make sure both sides have liquidity in order to start the auction
+        if (enoughSellVolume || enoughSellVolumeOpp) {
+            schedule = true;
+        } else if (enoughSellVolume || enoughSellVolumeOpp) {
+            // But if the auction didn't in 24h, is enough to have liquidity in one of the
+            uint latestAuctionIndex = getAuctionIndex(token, ethToken);
+            uint clearingTime = getClearingTime(sellToken, buyToken, latestAuctionIndex);
+            schedule = clearingTime <= now - 24 hours;
+        }
+
+        if (schedule) {
             // Schedule next auction
             setAuctionStart(sellToken, buyToken, WAITING_PERIOD_NEW_AUCTION);
         } else {
+            
             resetAuctionStart(sellToken, buyToken);
         }
     }
