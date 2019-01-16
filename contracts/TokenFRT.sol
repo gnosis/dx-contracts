@@ -2,6 +2,7 @@ pragma solidity ^0.4.24;
 
 import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
 import "@gnosis.pm/util-contracts/contracts/GnosisStandardToken.sol";
+import "./base/DxMath.sol";
 
 /// @title Standard token contract with overflow protection
 contract TokenFRT is Proxied, GnosisStandardToken {
@@ -64,8 +65,8 @@ contract TokenFRT is Proxied, GnosisStandardToken {
     {
         require(msg.sender == minter, "Only the minter can mint tokens");
 
-        lockedTokenBalances[user] = add(lockedTokenBalances[user], amount);
-        totalTokens = add(totalTokens, amount);
+        lockedTokenBalances[user] = DxMath.add(lockedTokenBalances[user], amount);
+        totalTokens = DxMath.add(totalTokens, amount);
     }
 
     /// @dev Lock Token
@@ -76,11 +77,11 @@ contract TokenFRT is Proxied, GnosisStandardToken {
         returns (uint totalAmountLocked)
     {
         // Adjust amount by balance
-        uint actualAmount = min(amount, balances[msg.sender]);
+        uint actualAmount = DxMath.min(amount, balances[msg.sender]);
 
         // Update state variables
-        balances[msg.sender] = sub(balances[msg.sender], actualAmount);
-        lockedTokenBalances[msg.sender] = add(lockedTokenBalances[msg.sender], actualAmount);
+        balances[msg.sender] = DxMath.sub(balances[msg.sender], actualAmount);
+        lockedTokenBalances[msg.sender] = DxMath.add(lockedTokenBalances[msg.sender], actualAmount);
 
         // Get return variable
         totalAmountLocked = lockedTokenBalances[msg.sender];
@@ -95,8 +96,8 @@ contract TokenFRT is Proxied, GnosisStandardToken {
 
         if (amount > 0) {
             // Update state variables
-            lockedTokenBalances[msg.sender] = sub(lockedTokenBalances[msg.sender], amount);
-            unlockedTokens[msg.sender].amountUnlocked = add(
+            lockedTokenBalances[msg.sender] = DxMath.sub(lockedTokenBalances[msg.sender], amount);
+            unlockedTokens[msg.sender].amountUnlocked = DxMath.add(
               unlockedTokens[msg.sender].amountUnlocked,
               amount
             );
@@ -112,69 +113,7 @@ contract TokenFRT is Proxied, GnosisStandardToken {
         public
     {
         require(unlockedTokens[msg.sender].withdrawalTime < now, "The tokens cannot be withdrawn yet");
-        balances[msg.sender] = add(balances[msg.sender], unlockedTokens[msg.sender].amountUnlocked);
+        balances[msg.sender] = DxMath.add(balances[msg.sender], unlockedTokens[msg.sender].amountUnlocked);
         unlockedTokens[msg.sender].amountUnlocked = 0;
-    }
-
-    function min(uint a, uint b)
-        public
-        pure
-        returns (uint)
-    {
-        if (a < b) {
-            return a;
-        } else {
-            return b;
-        }
-    }
-        /// @dev Returns whether an add operation causes an overflow
-    /// @param a First addend
-    /// @param b Second addend
-    /// @return Did no overflow occur?
-    function safeToAdd(uint a, uint b)
-        public
-        pure
-        returns (bool)
-    {
-        return a + b >= a;
-    }
-
-    /// @dev Returns whether a subtraction operation causes an underflow
-    /// @param a Minuend
-    /// @param b Subtrahend
-    /// @return Did no underflow occur?
-    function safeToSub(uint a, uint b)
-        public
-        pure
-        returns (bool)
-    {
-        return a >= b;
-    }
-
-
-    /// @dev Returns sum if no overflow occurred
-    /// @param a First addend
-    /// @param b Second addend
-    /// @return Sum
-    function add(uint a, uint b)
-        public
-        pure
-        returns (uint)
-    {
-        require(safeToAdd(a, b), "It must be a safe adition");
-        return a + b;
-    }
-
-    /// @dev Returns difference if no overflow occurred
-    /// @param a Minuend
-    /// @param b Subtrahend
-    /// @return Difference
-    function sub(uint a, uint b)
-        public
-        pure
-        returns (uint)
-    {
-        require(safeToSub(a, b), "It must be a safe substraction");
-        return a - b;
     }
 }

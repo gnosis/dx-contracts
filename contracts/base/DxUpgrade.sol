@@ -4,7 +4,7 @@ import "./DxMath.sol";
 import "./AuctioneerManaged.sol";
 import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
 
-contract DxUpgrade is Proxied, AuctioneerManaged, DxMath {
+contract DxUpgrade is Proxied, AuctioneerManaged {
     uint constant WAITING_PERIOD_CHANGE_MASTERCOPY = 30 days;
 
     address public newMasterCopy;
@@ -25,7 +25,7 @@ contract DxUpgrade is Proxied, AuctioneerManaged, DxMath {
 
         // Update masterCopyCountdown
         newMasterCopy = _masterCopy;
-        masterCopyCountdown = add(block.timestamp, WAITING_PERIOD_CHANGE_MASTERCOPY);
+        masterCopyCountdown = DxMath.add(block.timestamp, WAITING_PERIOD_CHANGE_MASTERCOPY);
         emit NewMasterCopyProposal(_masterCopy);
     }
 

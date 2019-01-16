@@ -1,10 +1,9 @@
 pragma solidity ^0.4.11;
 
-contract DxMath {
+library DxMath {
 // > Math fns
     function min(uint a, uint b) 
-        public
-        pure
+        internal
         returns (uint)
     {
         if (a < b) {
@@ -15,8 +14,7 @@ contract DxMath {
     }
 
     function atleastZero(int a)
-        public
-        pure
+        internal
         returns (uint)
     {
         if (a < 0) {
@@ -30,8 +28,7 @@ contract DxMath {
     /// @param b Second addend
     /// @return Did no overflow occur?
     function safeToAdd(uint a, uint b)
-        public
-        pure
+        internal
         returns (bool)
     {
         return a + b >= a;
@@ -42,8 +39,7 @@ contract DxMath {
     /// @param b Subtrahend
     /// @return Did no underflow occur?
     function safeToSub(uint a, uint b)
-        public
-        pure
+        internal
         returns (bool)
     {
         return a >= b;
@@ -54,8 +50,7 @@ contract DxMath {
     /// @param b Second factor
     /// @return Did no overflow occur?
     function safeToMul(uint a, uint b)
-        public
-        pure
+        internal
         returns (bool)
     {
         return b == 0 || a * b / b == a;
@@ -66,8 +61,7 @@ contract DxMath {
     /// @param b Second addend
     /// @return Sum
     function add(uint a, uint b)
-        public
-        pure
+        internal
         returns (uint)
     {
         require(safeToAdd(a, b));
@@ -79,8 +73,7 @@ contract DxMath {
     /// @param b Subtrahend
     /// @return Difference
     function sub(uint a, uint b)
-        public
-        pure
+        internal
         returns (uint)
     {
         require(safeToSub(a, b));
@@ -92,8 +85,7 @@ contract DxMath {
     /// @param b Second factor
     /// @return Product
     function mul(uint a, uint b)
-        public
-        pure
+        internal
         returns (uint)
     {
         require(safeToMul(a, b));

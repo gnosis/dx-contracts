@@ -138,7 +138,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         public
     {
         // R1
-        require(token1 != token2, "You cannot add a token pair using the same token");
+        require(token1 != token2, "You cannot DxMath.add a token pair using the same token");
 
         // R2
         require(initialClosingPriceNum != 0, "You must set the numerator for the initial price");
@@ -157,8 +157,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
 
         setAuctionIndex(token1, token2);
 
-        token1Funding = min(token1Funding, balances[token1][msg.sender]);
-        token2Funding = min(token2Funding, balances[token2][msg.sender]);
+        token1Funding = DxMath.min(token1Funding, balances[token1][msg.sender]);
+        token2Funding = DxMath.min(token2Funding, balances[token2][msg.sender]);
 
         // R7
         require(token1Funding < 10 ** 30, "You should use a smaller funding for token 1");
@@ -174,11 +174,11 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         if (token1 == ethTokenMem) {
             // C1
             // MUL: 10^30 * 10^6 = 10^36
-            fundedValueUSD = mul(token1Funding, ethUSDPrice);
+            fundedValueUSD = DxMath.mul(token1Funding, ethUSDPrice);
         } else if (token2 == ethTokenMem) {
             // C2
             // MUL: 10^30 * 10^6 = 10^36
-            fundedValueUSD = mul(token2Funding, ethUSDPrice);
+            fundedValueUSD = DxMath.mul(token2Funding, ethUSDPrice);
         } else {
             // C3: Neither token is ethToken
             fundedValueUSD = calculateFundedValueTokenToken(
@@ -228,12 +228,12 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
 
         // Compute funded value in ethToken and USD
         // 10^30 * 10^30 = 10^60
-        uint fundedValueETH = add(
-            mul(token1Funding, priceToken1Num) / priceToken1Den,
+        uint fundedValueETH = DxMath.add(
+            DxMath.mul(token1Funding, priceToken1Num) / priceToken1Den,
             token2Funding * priceToken2Num / priceToken2Den
         );
 
-        fundedValueUSD = mul(fundedValueETH, ethUSDPrice);
+        fundedValueUSD = DxMath.mul(fundedValueETH, ethUSDPrice);
     }
 
     function addTokenPairSecondPart(
@@ -244,8 +244,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     )
         internal
     {
-        balances[token1][msg.sender] = sub(balances[token1][msg.sender], token1Funding);
-        balances[token2][msg.sender] = sub(balances[token2][msg.sender], token2Funding);
+        balances[token1][msg.sender] = DxMath.sub(balances[token1][msg.sender], token1Funding);
+        balances[token2][msg.sender] = DxMath.sub(balances[token2][msg.sender], token2Funding);
 
         // Fee mechanism, fees are added to extraTokens
         uint token1FundingAfterFee = settleFee(token1, token2, 1, token1Funding);
@@ -271,7 +271,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         // R1
         require(Token(tokenAddress).transferFrom(msg.sender, this, amount), "The deposit transaction must succeed");
 
-        uint newBal = add(balances[tokenAddress][msg.sender], amount);
+        uint newBal = DxMath.add(balances[tokenAddress][msg.sender], amount);
 
         balances[tokenAddress][msg.sender] = newBal;
 
@@ -288,12 +288,12 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         returns (uint)
     {
         uint usersBalance = balances[tokenAddress][msg.sender];
-        amount = min(amount, usersBalance);
+        amount = DxMath.min(amount, usersBalance);
 
         // R1
         require(amount > 0, "The amount must be greater than 0");
 
-        uint newBal = sub(usersBalance, amount);
+        uint newBal = DxMath.sub(usersBalance, amount);
         balances[tokenAddress][msg.sender] = newBal;
 
         // R2
@@ -315,7 +315,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         // Note: if a user specifies auctionIndex of 0, it
         // means he is agnostic which auction his sell order goes into
 
-        amount = min(amount, balances[sellToken][msg.sender]);
+        amount = DxMath.min(amount, balances[sellToken][msg.sender]);
 
         // R1
         require(amount > 0, "Sell amount should be greater than 0");
@@ -340,7 +340,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             }
 
             // R1.2
-            require(add(sellVolumesCurrent[sellToken][buyToken], amount) < 10 ** 30);
+            require(DxMath.add(sellVolumesCurrent[sellToken][buyToken], amount) < 10 ** 30);
         } else {
             // C2
             // R2.1: Sell orders must go to next auction
@@ -351,25 +351,25 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             }
 
             // R2.2
-            require(add(sellVolumesNext[sellToken][buyToken], amount) < 10 ** 30);
+            require(DxMath.add(sellVolumesNext[sellToken][buyToken], amount) < 10 ** 30);
         }
 
         // Fee mechanism, fees are added to extraTokens
         uint amountAfterFee = settleFee(sellToken, buyToken, auctionIndex, amount);
 
         // Update variables
-        balances[sellToken][msg.sender] = sub(balances[sellToken][msg.sender], amount);
-        uint newSellerBal = add(sellerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
+        balances[sellToken][msg.sender] = DxMath.sub(balances[sellToken][msg.sender], amount);
+        uint newSellerBal = DxMath.add(sellerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
         sellerBalances[sellToken][buyToken][auctionIndex][msg.sender] = newSellerBal;
 
         if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING || auctionStart > now) {
             // C1
             uint sellVolumeCurrent = sellVolumesCurrent[sellToken][buyToken];
-            sellVolumesCurrent[sellToken][buyToken] = add(sellVolumeCurrent, amountAfterFee);
+            sellVolumesCurrent[sellToken][buyToken] = DxMath.add(sellVolumeCurrent, amountAfterFee);
         } else {
             // C2
             uint sellVolumeNext = sellVolumesNext[sellToken][buyToken];
-            sellVolumesNext[sellToken][buyToken] = add(sellVolumeNext, amountAfterFee);
+            sellVolumesNext[sellToken][buyToken] = DxMath.add(sellVolumeNext, amountAfterFee);
 
             // close previous auction if theoretically closed
             closeTheoreticalClosedAuction(sellToken, buyToken, latestAuctionIndex);
@@ -411,10 +411,10 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         require(sellVolumesCurrent[sellToken][buyToken] > 0);
 
         uint buyVolume = buyVolumes[sellToken][buyToken];
-        amount = min(amount, balances[buyToken][msg.sender]);
+        amount = DxMath.min(amount, balances[buyToken][msg.sender]);
 
         // R7
-        require(add(buyVolume, amount) < 10 ** 30);
+        require(DxMath.add(buyVolume, amount) < 10 ** 30);
 
         // Overbuy is when a part of a buy order clears an auction
         // In that case we only process the part before the overbuy
@@ -425,7 +425,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint den;
         (num, den) = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
         // 10^30 * 10^37 = 10^67
-        uint outstandingVolume = atleastZero(int(mul(sellVolume, num) / den - buyVolume));
+        uint outstandingVolume = DxMath.atleastZero(int(DxMath.mul(sellVolume, num) / den - buyVolume));
 
         uint amountAfterFee;
         if (amount < outstandingVolume) {
@@ -440,10 +440,10 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         // Here we could also use outstandingVolume or amountAfterFee, it doesn't matter
         if (amount > 0) {
             // Update variables
-            balances[buyToken][msg.sender] = sub(balances[buyToken][msg.sender], amount);
-            uint newBuyerBal = add(buyerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
+            balances[buyToken][msg.sender] = DxMath.sub(balances[buyToken][msg.sender], amount);
+            uint newBuyerBal = DxMath.add(buyerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
             buyerBalances[sellToken][buyToken][auctionIndex][msg.sender] = newBuyerBal;
-            buyVolumes[sellToken][buyToken] = add(buyVolumes[sellToken][buyToken], amountAfterFee);
+            buyVolumes[sellToken][buyToken] = DxMath.add(buyVolumes[sellToken][buyToken], amountAfterFee);
             emit NewBuyOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
         }
 
@@ -482,14 +482,14 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
 
         // Calculate return
         // < 10^30 * 10^30 = 10^60
-        returned = mul(sellerBalance, num) / den;
+        returned = DxMath.mul(sellerBalance, num) / den;
 
         frtsIssued = issueFrts(sellToken, buyToken, returned, auctionIndex, sellerBalance, user);
 
         // Claim tokens
         sellerBalances[sellToken][buyToken][auctionIndex][user] = 0;
         if (returned > 0) {
-            balances[buyToken][user] = add(balances[buyToken][user], returned);
+            balances[buyToken][user] = DxMath.add(balances[buyToken][user], returned);
         }
         emit NewSellerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
     }
@@ -512,7 +512,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         if (closingPrices[sellToken][buyToken][auctionIndex].den == 0) {
             // Auction is running
             claimedAmounts[sellToken][buyToken][auctionIndex][user] =
-            add(claimedAmounts[sellToken][buyToken][auctionIndex][user], returned);
+            DxMath.add(claimedAmounts[sellToken][buyToken][auctionIndex][user], returned);
         } else {
             // Auction has closed
             // We DON'T want to check for returned > 0, because that would fail if a user claims
@@ -525,10 +525,10 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
 
             // closingPrices.num represents buyVolume
             // < 10^30 * 10^30 = 10^60
-            uint tokensExtra = mul(buyerBalance, extraTokensTotal) / closingPrices[sellToken][buyToken][auctionIndex].num;
-            returned = add(returned, tokensExtra);
+            uint tokensExtra = DxMath.mul(buyerBalance, extraTokensTotal) / closingPrices[sellToken][buyToken][auctionIndex].num;
+            returned = DxMath.add(returned, tokensExtra);
 
-            frtsIssued = issueFrts(buyToken, sellToken, mul(buyerBalance, den) / num, auctionIndex, buyerBalance, user);
+            frtsIssued = issueFrts(buyToken, sellToken, DxMath.mul(buyerBalance, den) / num, auctionIndex, buyerBalance, user);
 
             // Auction has closed
             // Reset buyerBalances and claimedAmounts
@@ -538,7 +538,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
 
         // Claim tokens
         if (returned > 0) {
-            balances[sellToken][user] = add(balances[sellToken][user], returned);
+            balances[sellToken][user] = DxMath.add(balances[sellToken][user], returned);
         }
 
         emit NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
@@ -569,7 +569,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
                 uint pastDen;
                 (pastNum, pastDen) = getPriceInPastAuction(primaryToken, ethTokenMem, auctionIndex - 1);
                 // 10^30 * 10^35 = 10^65
-                frtsIssued = mul(bal, pastNum) / pastDen;
+                frtsIssued = DxMath.mul(bal, pastNum) / pastDen;
             }
 
             if (frtsIssued > 0) {
@@ -599,7 +599,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             (num, den) = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
             // 10^30 * 10^37 = 10^67
             if (sellVolume > 0) {
-                uint outstandingVolume = atleastZero(int(mul(sellVolume, num) / den - buyVolume));
+                uint outstandingVolume = DxMath.atleastZero(int(DxMath.mul(sellVolume, num) / den - buyVolume));
 
                 if (outstandingVolume == 0) {
                     postBuyOrder(sellToken, buyToken, auctionIndex, 0);
@@ -632,8 +632,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         } else {
             uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
             // < 10^30 * 10^37 = 10^67
-            unclaimedBuyerFunds = atleastZero(int(
-                mul(buyerBalance, den) / num -
+            unclaimedBuyerFunds = DxMath.atleastZero(int(
+                DxMath.mul(buyerBalance, den) / num -
                 claimedAmounts[sellToken][buyToken][auctionIndex][user]
             ));
         }
@@ -653,18 +653,18 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint feeDen;
         (feeNum, feeDen) = getFeeRatio(msg.sender);
         // 10^30 * 10^3 / 10^4 = 10^29
-        uint fee = mul(amount, feeNum) / feeDen;
+        uint fee = DxMath.mul(amount, feeNum) / feeDen;
 
         if (fee > 0) {
             fee = settleFeeSecondPart(primaryToken, fee);
 
             uint usersExtraTokens = extraTokens[primaryToken][secondaryToken][auctionIndex + 1];
-            extraTokens[primaryToken][secondaryToken][auctionIndex + 1] = add(usersExtraTokens, fee);
+            extraTokens[primaryToken][secondaryToken][auctionIndex + 1] = DxMath.add(usersExtraTokens, fee);
 
             emit Fee(primaryToken, secondaryToken, msg.sender, auctionIndex, fee);
         }
 
-        amountAfterFee = sub(amount, fee);
+        amountAfterFee = DxMath.sub(amount, fee);
     }
 
     function settleFeeSecondPart(
@@ -681,22 +681,22 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
 
         // Convert fee to ETH, then USD
         // 10^29 * 10^30 / 10^30 = 10^29
-        uint feeInETH = mul(fee, num) / den;
+        uint feeInETH = DxMath.mul(fee, num) / den;
 
         uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
         // 10^29 * 10^6 = 10^35
         // Uses 18 decimal places <> exactly as owlToken tokens: 10**18 owlToken == 1 USD
-        uint feeInUSD = mul(feeInETH, ethUSDPrice);
-        uint amountOfowlTokenBurned = min(owlToken.allowance(msg.sender, this), feeInUSD / 2);
-        amountOfowlTokenBurned = min(owlToken.balanceOf(msg.sender), amountOfowlTokenBurned);
+        uint feeInUSD = DxMath.mul(feeInETH, ethUSDPrice);
+        uint amountOfowlTokenBurned = DxMath.min(owlToken.allowance(msg.sender, this), feeInUSD / 2);
+        amountOfowlTokenBurned = DxMath.min(owlToken.balanceOf(msg.sender), amountOfowlTokenBurned);
 
 
         if (amountOfowlTokenBurned > 0) {
             owlToken.burnOWL(msg.sender, amountOfowlTokenBurned);
             // Adjust fee
             // 10^35 * 10^29 = 10^64
-            uint adjustment = mul(amountOfowlTokenBurned, fee) / feeInUSD;
-            newFee = sub(fee, adjustment);
+            uint adjustment = DxMath.mul(amountOfowlTokenBurned, fee) / feeInUSD;
+            newFee = DxMath.sub(fee, adjustment);
         } else {
             newFee = fee;
         }
@@ -837,8 +837,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         // since it might also be called from postSellOrder())
 
         // < 10^30 * 10^31 * 10^6 = 10^67
-        uint sellVolume = mul(mul(sellVolumesCurrent[sellToken][buyToken], sellNum), ethUSDPrice) / sellDen;
-        uint sellVolumeOpp = mul(mul(sellVolumesCurrent[buyToken][sellToken], buyNum), ethUSDPrice) / buyDen;
+        uint sellVolume = DxMath.mul(DxMath.mul(sellVolumesCurrent[sellToken][buyToken], sellNum), ethUSDPrice) / sellDen;
+        uint sellVolumeOpp = DxMath.mul(DxMath.mul(sellVolumesCurrent[buyToken][sellToken], buyNum), ethUSDPrice) / buyDen;
         if (sellVolume >= thresholdNewAuction && sellVolumeOpp >= thresholdNewAuction) {
             // Schedule next auction
             setAuctionStart(sellToken, buyToken, WAITING_PERIOD_NEW_AUCTION);
@@ -950,17 +950,17 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
 
             // If we're calling the function into an unstarted auction,
             // it will return the starting price of that auction
-            uint timeElapsed = atleastZero(int(now - getAuctionStart(sellToken, buyToken)));
+            uint timeElapsed = DxMath.atleastZero(int(now - getAuctionStart(sellToken, buyToken)));
 
             // The numbers below are chosen such that
             // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
 
             // 10^5 * 10^31 = 10^36
-            num = atleastZero(int((86400 - timeElapsed) * pastNum));
+            num = DxMath.atleastZero(int((86400 - timeElapsed) * pastNum));
             // 10^6 * 10^31 = 10^37
-            den = mul((timeElapsed + 43200), pastDen);
+            den = DxMath.mul((timeElapsed + 43200), pastDen);
 
-            if (mul(num, sellVolumesCurrent[sellToken][buyToken]) <= mul(den, buyVolumes[sellToken][buyToken])) {
+            if (DxMath.mul(num, sellVolumesCurrent[sellToken][buyToken]) <= DxMath.mul(den, buyVolumes[sellToken][buyToken])) {
                 num = buyVolumes[sellToken][buyToken];
                 den = sellVolumesCurrent[sellToken][buyToken];
             }

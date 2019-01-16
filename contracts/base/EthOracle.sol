@@ -4,7 +4,7 @@ import "../Oracle/PriceOracleInterface.sol";
 import "./AuctioneerManaged.sol";
 import "./DxMath.sol";
 
-contract EthOracle is AuctioneerManaged, DxMath {
+contract EthOracle is AuctioneerManaged {
     uint constant WAITING_PERIOD_CHANGE_ORACLE = 30 days;
     
     // Price Oracle interface 
@@ -26,7 +26,7 @@ contract EthOracle is AuctioneerManaged, DxMath {
     {         
         require(address(_ethUSDOracle) != address(0), "The oracle address must be valid");
         newProposalEthUSDOracle = _ethUSDOracle;
-        oracleInterfaceCountdown = add(block.timestamp, WAITING_PERIOD_CHANGE_ORACLE);
+        oracleInterfaceCountdown = DxMath.add(block.timestamp, WAITING_PERIOD_CHANGE_ORACLE);
         emit NewOracleProposal(_ethUSDOracle);
     }
 
