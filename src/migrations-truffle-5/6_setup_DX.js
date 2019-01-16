@@ -15,7 +15,7 @@ async function migrate ({
   const TokenFRTProxy = artifacts.require('TokenFRTProxy')
   const DutchExchange = artifacts.require('DutchExchange')
   const DutchExchangeProxy = artifacts.require('DutchExchangeProxy')
-  const PriceOracleInterface = artifacts.require('PriceOracleInterface')
+  const PriceOracle = artifacts.require('PriceOracle')
   const {
     EtherToken,
     TokenGNO,
@@ -24,7 +24,7 @@ async function migrate ({
 
   // Ensure the folowing contracts are deployed:
   //   - Tokens: GNO, OWL, WETH, MGN
-  //   - PriceOracleInterface
+  //   - PriceOracle
   //   - DX contract and its proxy
   await TokenGNO.deployed()
   const tokenOWLProxy = await TokenOWLProxy.deployed()
@@ -32,7 +32,7 @@ async function migrate ({
   
   const tokenFRT = await TokenFRT.at(TokenFRTProxy.address)
 
-  const priceOracleInterface = await PriceOracleInterface.deployed()
+  const priceOracle = await PriceOracle.deployed()
   const dxProxy = await DutchExchangeProxy.deployed()
   await DutchExchange.deployed()
   const dx = await DutchExchange.at(dxProxy.address)
@@ -40,7 +40,7 @@ async function migrate ({
   const frtAddress = tokenFRT.address
   const owlAddress = tokenOWLProxy.address
   const wethAddress = etherToken.address
-  const oracleAddress = priceOracleInterface.address
+  const oracleAddress = priceOracle.address
 
   console.log('Setup DX with:')
   console.log('\t Owner: %s', owner)

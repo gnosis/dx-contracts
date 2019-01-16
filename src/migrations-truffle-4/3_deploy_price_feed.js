@@ -11,7 +11,7 @@ function migrate ({
   feedExpirePeriodDays = DEFAULT_FEED_EXPIRE_PERIOD_DAYS
 }) {
   const Medianizer = artifacts.require('Medianizer')
-  const PriceOracleInterface = artifacts.require('PriceOracleInterface')
+  const PriceOracle = artifacts.require('PriceOracle')
   const PriceFeed = artifacts.require('PriceFeed')
 
   const medianizerAddress = getMedianizerAddress(Medianizer)
@@ -22,7 +22,7 @@ function migrate ({
     return deployer
       .deploy(PriceFeed)
       .then(() => deployer.deploy(Medianizer))
-      .then(() => deployer.deploy(PriceOracleInterface, account, Medianizer.address))
+      .then(() => deployer.deploy(PriceOracle, account, Medianizer.address))
       .then(() => Medianizer.deployed())
       .then(medianizer => medianizer.set(PriceFeed.address, { from: account }))
       .then(() => Promise.all([
@@ -36,11 +36,13 @@ function migrate ({
           from: account
         })
       )
+      .then(() => console.log('SETUP 3 DONE'))
   } else {
     console.log(`No need to deploy the Medianizer. Using ${medianizerAddress} as the Medianizer address`)
-    console.log('Deploying PriceOracleInterface with owner: %s', account)
+    console.log('Deploying PriceOracle with owner: %s', account)
     return deployer
-      .deploy(PriceOracleInterface, account, Medianizer.address)
+      .deploy(PriceOracle, account, Medianizer.address)
+      .then(() => console.log('SETUP 3 DONE'))
   }
 }
 

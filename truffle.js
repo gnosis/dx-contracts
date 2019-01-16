@@ -1,7 +1,7 @@
 const truffleConfig = require('@gnosis.pm/util-contracts/src/util/truffleConfig')
 
 const DEFAULT_GAS_PRICE_GWEI = 5
-const DEFAULT_GAS_LIMIT = 6721975
+const DEFAULT_GAS_LIMIT = 7e6
 const DEFAULT_MNEMONIC = 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat'
 
 // Load env vars
@@ -15,7 +15,7 @@ if (!privateKey && !mnemonic) {
 }
 
 // Solc
-const compatibilityTruffle4 = true
+const compatibilityTruffle4 = false
 let solcUseDocker, solcVersion
 if (!compatibilityTruffle4) {
   // Use truffle 5

@@ -1,8 +1,9 @@
 pragma solidity ^0.5.2;
 
-import "../Oracle/PriceOracleInterface.sol";
+import "../interfaces/PriceOracleInterface.sol";
 import "./AuctioneerManaged.sol";
 import "./DxMath.sol";
+
 
 contract EthOracle is AuctioneerManaged, DxMath {
     uint constant WAITING_PERIOD_CHANGE_ORACLE = 30 days;

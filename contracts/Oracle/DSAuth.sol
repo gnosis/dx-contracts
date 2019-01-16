@@ -1,13 +1,16 @@
 pragma solidity ^0.5.2;
 
+
 contract DSAuthority {
     function canCall(address src, address dst, bytes4 sig) public view returns (bool);
 }
+
 
 contract DSAuthEvents {
     event LogSetAuthority(address indexed authority);
     event LogSetOwner(address indexed owner);
 }
+
 
 contract DSAuth is DSAuthEvents {
     DSAuthority public authority;

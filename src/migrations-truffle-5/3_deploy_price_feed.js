@@ -12,7 +12,7 @@ async function migrate ({
   feedExpirePeriodDays = DEFAULT_FEED_EXPIRE_PERIOD_DAYS
 }) {
   const Medianizer = artifacts.require('Medianizer')
-  const PriceOracleInterface = artifacts.require('PriceOracleInterface')
+  const PriceOracle = artifacts.require('PriceOracle')
   const PriceFeed = artifacts.require('PriceFeed')
 
   const medianizerAddress = getMedianizerAddress(Medianizer)
@@ -31,10 +31,10 @@ async function migrate ({
     await deployer.deploy(Medianizer)
     const medianizer = await Medianizer.deployed()
 
-    console.log('Deploy PriceOracleInterface:')
+    console.log('Deploy PriceOracle:')
     console.log('  - account: %s', account)
     console.log('  - medianizer address: %s', medianizer.address)
-    await deployer.deploy(PriceOracleInterface, account, medianizer.address)
+    await deployer.deploy(PriceOracle, account, medianizer.address)
 
     console.log('Set price feed for medianizer:')
     console.log('  - price feed address: %s', PriceFeed.address)
@@ -56,10 +56,10 @@ async function migrate ({
       `No need to deploy the Medianizer. Using ${medianizerAddress} as the Medianizer address`
     )
 
-    console.log('Deploy PriceOracleInterface:')
+    console.log('Deploy PriceOracle:')
     console.log('  - account: %s', account)
     console.log('  - medianizer address: %s', medianizerAddress)
-    await deployer.deploy(PriceOracleInterface, account, medianizerAddress)
+    await deployer.deploy(PriceOracle, account, medianizerAddress)
   }
 }
 

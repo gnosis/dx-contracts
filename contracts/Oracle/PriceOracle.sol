@@ -6,8 +6,10 @@ This contract is the interface between the MakerDAO priceFeed and our DX platfor
 
 import "../Oracle/PriceFeed.sol";
 import "../Oracle/Medianizer.sol";
+import "../interfaces/PriceOracleInterface.sol";
 
-contract PriceOracleInterface {
+
+contract PriceOracle is PriceOracleInterface {
     address public priceFeedSource;
     address public owner;
     bool public emergencyMode;
@@ -24,6 +26,7 @@ contract PriceOracleInterface {
         owner = _owner;
         priceFeedSource = _priceFeedSource;
     }
+    
     /// @dev gives the owner the possibility to put the Interface into an emergencyMode, which will
     /// output always a price of 600 USD. This gives everyone time to set up a new pricefeed.
     function raiseEmergency(bool _emergencyMode) public onlyOwner {

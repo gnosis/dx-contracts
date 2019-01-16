@@ -2,14 +2,8 @@ pragma solidity ^0.5.2;
 
 import "../DutchExchange.sol";
 
-contract InternalTests is DutchExchange {
-    function settleFeePub(address primaryToken, address secondaryToken, uint auctionIndex, address user, uint amount)
-        public
-        returns (uint)
-    {
-        return super.settleFee(primaryToken, secondaryToken, auctionIndex, amount);
-    }
 
+contract InternalTests is DutchExchange {
     constructor(
         TokenFRT _FRT,
         TokenOWL _OWL,
@@ -19,7 +13,22 @@ contract InternalTests is DutchExchange {
         uint _thresholdNewTokenPair,
         uint _thresholdNewAuction
     ) public {
-        setupDutchExchange(_FRT, _OWL, _owner, _ETH, _ETHUSDOracle, _thresholdNewTokenPair, _thresholdNewAuction);
+        setupDutchExchange(
+            _FRT,
+            _OWL,
+            _owner,
+            _ETH,
+            _ETHUSDOracle,
+            _thresholdNewTokenPair,
+            _thresholdNewAuction
+        );
+    }
+
+    function settleFeePub(address primaryToken, address secondaryToken, uint auctionIndex, address user, uint amount)
+        public
+        returns (uint)
+    {
+        return super.settleFee(primaryToken, secondaryToken, auctionIndex, amount);
     }
 
     function getFeeRatioForJS(address user) public view returns (uint feeRatioNum, uint feeRatioDen) {
