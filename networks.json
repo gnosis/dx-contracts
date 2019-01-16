@@ -9,14 +9,22 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0xaa4096cf2df747a9b2a04dd8a6d2e150a4333715",
-      "transactionHash": "0xc7f846efd14481cb56269db601b057781cee18789af266c3a57474c39bc19f4d"
+      "address": "0x01b812e96275e5b2551ee8741dfe9a53525deef5",
+      "transactionHash": "0xac8bcc6f67e838017ae17ae82425e511948d58771007b6bae4cbaf72cb7b4b48"
     },
     "42": {
       "events": {},
       "links": {},
       "address": "0xd133d9f2fdce177ae3b3cc2aaa8dfef23414c5aa",
       "transactionHash": "0x5fc7d868a36704ebbe7162e0207de9f472d46defc56be80386a6f77af61efbfb"
+    }
+  },
+  "DutchExchangeHelper": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0x14b8008da4912d2bc932740e2f4ae4c0d6eef5c4",
+      "transactionHash": "0x7b62bc6affcd8dfe80f66d2b7e2e5536af51eb0ff4f4518d135017a677f84dcd"
     }
   },
   "DutchExchangeProxy": {
@@ -29,8 +37,8 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0x1e818fb3a6a1c2c49127fd5d4f769cd2831d3593",
-      "transactionHash": "0x49ccc702bfeb2e34992e91ffe2f55f3d7e8e95e656005d6a3e7c6d5fcb822481"
+      "address": "0xad6aea9b383409ebfd4191a60dfbd68c5fa89e71",
+      "transactionHash": "0x5f60d04951739ed6bee5c33673476ec801c8bf8a4f838aa50d65f8bbb5e80cc2"
     },
     "42": {
       "events": {},
@@ -228,8 +236,8 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0x8181df31eb433f58eb3f185db930b231e15b04fd",
-      "transactionHash": "0xe4be77f80d2e03a2276d2e205002b82c0d67a6f5f857c52c949c5fb327b06ef1"
+      "address": "0x25b0d44506db86212180ac16a63f30e129520b22",
+      "transactionHash": "0x117a9f23859dc67771c1f5cdd36460c5f0352001e1fc9deed66c0c4eef433162"
     },
     "42": {
       "events": {},
@@ -250,8 +258,8 @@
       "links": {
         "Math": "0xbf0dacc0d3897dda763f90cfaf1d0e36c61ae68c"
       },
-      "address": "0x2ee1bc4730b95a7472eb1f77034bbd98dc91794a",
-      "transactionHash": "0xdb367a96ceddc9cbc695d862a4ad7682280d3c6cb0993467b6901517bd5c428c"
+      "address": "0x6949d0d3f6c757b01abaf32e7a90c5e6ddef6913",
+      "transactionHash": "0x8c0b7ef6fc88e81b8e7b3494962693585b6624d40cef08200fc5092f2019f0eb"
     },
     "42": {
       "events": {},
@@ -264,8 +272,8 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0xd92cd77af968a6ad15557b6d7c79c5c65a640dc6",
-      "transactionHash": "0x24079c240fde5e7e48884f9cc727bad1792e9dc00b8aea63993aa083417386ad"
+      "address": "0x6f1b6a44bfeef30e264d15ad6eb0273a5374e117",
+      "transactionHash": "0xe67fd933b52a6fb06c8312615df1af8c85c8f789763bf936154ab8959baadadb"
     }
   }
 }
