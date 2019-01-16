@@ -1,4 +1,4 @@
-pragma solidity >0.4.24 <0.5.2;
+pragma solidity ^0.5.2;
 
 /*
 This contract is the interface between the MakerDAO priceFeed and our DX platform.

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.2;
 
 import "./TokenFRTInterfaceCore.sol";
 // TODO: potentially replace with util-contracts PR GnosisIERC20Info.sol (interface w/ERC20 token name, symbol etc)
@@ -6,8 +6,8 @@ interface GnosisIERC20Info {
     /*
      *  Public getters
      */
-    function name() external view returns (string);
-    function symbol() external view returns (string);
+    function name() external view returns (string memory);
+    function symbol() external view returns (string memory);
     function decimals() external view returns (uint8);
 }
 

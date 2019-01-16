@@ -1,5 +1,5 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.2;
 
 interface PriceOracleInterface {
-    function getUSDETHPrice() external returns (uint256);
+    function getUSDETHPrice() external view returns (uint256);
 }

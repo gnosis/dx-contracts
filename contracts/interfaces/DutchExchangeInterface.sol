@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.2;
 
 interface DutchExchangeInterface {
     /**
@@ -153,11 +153,11 @@ interface DutchExchangeInterface {
         returns (uint auctionIndex);
 
     function getRunningTokenPairs(
-        address[] tokens
+        address[] calldata tokens
     )
         external
         view
-        returns (address[] tokens1, address[] tokens2);
+        returns (address[] memory tokens1, address[] memory tokens2);
 
     /// @dev for quick overview of possible sellerBalances to calculate the possible withdraw tokens
     /// @param auctionSellToken is the sellToken defining an auctionPair
@@ -173,20 +173,20 @@ interface DutchExchangeInterface {
     )
         external
         view
-        returns(uint[] indices, uint[] usersBalances);        
+        returns(uint[] memory indices, uint[] memory usersBalances);        
 
     /// @dev for quick overview of current sellerBalances for a user
     /// @param auctionSellTokens are the sellTokens defining an auctionPair
     /// @param auctionBuyTokens are the buyTokens defining an auctionPair
     /// @param user is the user who wants to his tokens
     function getSellerBalancesOfCurrentAuctions(
-        address[] auctionSellTokens,
-        address[] auctionBuyTokens,
+        address[] calldata auctionSellTokens,
+        address[] calldata auctionBuyTokens,
         address user
     )
         external
         view
-        returns (uint[]);
+        returns (uint[] memory);
     
     /// @dev for quick overview of possible buyerBalances to calculate the possible withdraw tokens
     /// @param auctionSellToken is the sellToken defining an auctionPair
@@ -202,20 +202,20 @@ interface DutchExchangeInterface {
     )
         external
         view
-        returns(uint[] indices, uint[] usersBalances);
+        returns(uint[] memory indices, uint[] memory usersBalances);
 
     /// @dev for quick overview of current sellerBalances for a user
     /// @param auctionSellTokens are the sellTokens defining an auctionPair
     /// @param auctionBuyTokens are the buyTokens defining an auctionPair
     /// @param user is the user who wants to his tokens
     function getBuyerBalancesOfCurrentAuctions(
-        address[] auctionSellTokens,
-        address[] auctionBuyTokens,
+        address[] calldata auctionSellTokens,
+        address[] calldata auctionBuyTokens,
         address user
     )
         external
         view
-        returns (uint[]);
+        returns (uint[] memory);
 
     /// @dev for multiple claims
     /// @param auctionSellTokens are the sellTokens defining an auctionPair
@@ -223,13 +223,13 @@ interface DutchExchangeInterface {
     /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
     /// @param user is the user who wants to his tokens
     function claimTokensFromSeveralAuctionsAsSeller(
-        address[] auctionSellTokens,
-        address[] auctionBuyTokens,
-        uint[] auctionIndices,
+        address[] calldata auctionSellTokens,
+        address[] calldata auctionBuyTokens,
+        uint[] calldata auctionIndices,
         address user
     )
         external
-        returns (uint[], uint[]);
+        returns (uint[] memory, uint[] memory);
 
     /// @dev for multiple claims
     /// @param auctionSellTokens are the sellTokens defining an auctionPair
@@ -237,37 +237,37 @@ interface DutchExchangeInterface {
     /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
     /// @param user is the user who wants to his tokens
     function claimTokensFromSeveralAuctionsAsBuyer(
-        address[] auctionSellTokens,
-        address[] auctionBuyTokens,
-        uint[] auctionIndices,
+        address[] calldata auctionSellTokens,
+        address[] calldata auctionBuyTokens,
+        uint[] calldata auctionIndices,
         address user
     )
         external
-        returns (uint[], uint[]);
+        returns (uint[] memory, uint[] memory);
 
     /// @dev for multiple withdraws
     /// @param auctionSellTokens are the sellTokens defining an auctionPair
     /// @param auctionBuyTokens are the buyTokens defining an auctionPair
     /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
     function claimAndWithdrawTokensFromSeveralAuctionsAsSeller(
-        address[] auctionSellTokens,
-        address[] auctionBuyTokens,
-        uint[] auctionIndices
+        address[] calldata auctionSellTokens,
+        address[] calldata auctionBuyTokens,
+        uint[] calldata auctionIndices
     )
         external
-        returns (uint[], uint frtsIssued);
+        returns (uint[] memory, uint frtsIssued);
     
     /// @dev for multiple withdraws
     /// @param auctionSellTokens are the sellTokens defining an auctionPair
     /// @param auctionBuyTokens are the buyTokens defining an auctionPair
     /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
     function claimAndWithdrawTokensFromSeveralAuctionsAsBuyer(
-        address[] auctionSellTokens,
-        address[] auctionBuyTokens,
-        uint[] auctionIndices
+        address[] calldata auctionSellTokens,
+        address[] calldata auctionBuyTokens,
+        uint[] calldata auctionIndices
     )
         external
-        returns (uint[], uint frtsIssued);
+        returns (uint[] memory, uint frtsIssued);
 
     function getMasterCopy()
         external
