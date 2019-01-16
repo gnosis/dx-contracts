@@ -138,7 +138,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         public
     {
         // R1
-        require(token1 != token2, "You cannot DxMath.add a token pair using the same token");
+        require(token1 != token2, "You cannot add a token pair using the same token");
 
         // R2
         require(initialClosingPriceNum != 0, "You must set the numerator for the initial price");
