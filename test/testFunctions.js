@@ -39,6 +39,7 @@ const contractNames = [
   'TokenGNO',
   'TokenOWLProxy',
   'TokenFRT',
+  'TokenFRTProxy',
   'PriceOracleInterface',
   'PriceFeed',
   'Medianizer',
@@ -61,9 +62,10 @@ const getContracts = async () => {
     return acc
   }, {});
 
-  [deployedContracts.DutchExchange, deployedContracts.TokenOWL] = gasLogWrapper([
+  [deployedContracts.DutchExchange, deployedContracts.TokenOWL, deployedContracts.TokenFRT] = gasLogWrapper([
     artifacts.require('DutchExchange').at(deployedContracts.DutchExchangeProxy.address),
     artifacts.require('TokenOWL').at(deployedContracts.TokenOWLProxy.address),
+    artifacts.require('TokenFRT').at(deployedContracts.TokenFRTProxy.address)
   ])
   return deployedContracts
 }
@@ -136,6 +138,7 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
   ST = ST || eth; BT = BT || gno
 
   const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
+  assert.equal(startingTimeOfAuction > 1, true, 'Auction hasn`t started yet')
 
   // wait for the right time to send buyOrder
   // implements isAtLeastZero (aka will not go BACK in time)
@@ -215,7 +218,7 @@ const checkBalanceBeforeClaim = async (
   ST,
   BT,
   amt = (10 ** 9),
-  round = (MaxRoundingError),
+  round = (MaxRoundingError)
 ) => {
   const { DutchExchange: dx, EtherToken: eth, TokenGNO: gno } = await getContracts()
   ST = ST || eth; BT = BT || gno
@@ -601,8 +604,8 @@ const unlockMGNTokens = async (user, ST, BT) => {
   /*
    * SUB TEST 3: UN-LOCK TOKENS
    */
-  await tokenMGN.unlockTokens(lockedUserMGNs, { from: user });
-  ([unlockedFunds, withdrawTime] = (await tokenMGN.unlockTokens.call(lockedUserMGNs, { from: user })).map(t => t.toNumber()))
+  await tokenMGN.unlockTokens({ from: user });
+  ([unlockedFunds, withdrawTime] = (await tokenMGN.unlockTokens.call({ from: user })).map(t => t.toNumber()))
   log(`
   AMT OF UNLOCKED FUNDS  = ${unlockedFunds.toEth()}
   TIME OF WITHDRAWAL     = ${withdrawTime} --> ${new Date(withdrawTime * 1000)}
@@ -684,6 +687,9 @@ const calculateTokensInExchange = async (Accounts, Tokens) => {
   return results
 }
 
+const getClearingTime = async (sellToken, buyToken, auctionIndex) =>
+  (await dx.getClearingTime.call(sellToken.address || sellToken, buyToken.address || buyToken, auctionIndex)).toNumber()
+
 module.exports = {
   assertClaimingFundsCreatesMGNs,
   assertReturnedPlusMGNs,
@@ -702,4 +708,5 @@ module.exports = {
   wait,
   waitUntilPriceIsXPercentOfPreviousPrice,
   calculateTokensInExchange,
+  getClearingTime,
 }

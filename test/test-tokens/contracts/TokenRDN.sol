@@ -1,9 +1,7 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.5.2;
 
 import "./TestToken.sol";
 
 contract TokenRDN is TestToken {
-    function TokenRDN (uint amount) public
-      TestToken ("RDN", "Raiden", 18, amount) {
-    }
+    constructor(uint amount) public TestToken("RDN", "Raiden", 18, amount) {}
 }

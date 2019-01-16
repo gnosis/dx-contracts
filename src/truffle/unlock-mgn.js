@@ -41,7 +41,7 @@ async function setAuctioneer () {
     Network: ${network}
     Gas: ${GAS}
     Gas Price: ${gasPrice} GWei`)
-    
+
     // Load the DX info
     const { mgn, dx, account } = await loadContractsInfo()
     const lockedAmount = await mgn.lockedTokenBalances(account)
@@ -57,14 +57,14 @@ async function setAuctioneer () {
       if (dryRun) {
         // Dry run
         console.log('The dry run execution passed all validations')
-        await mgn.unlockTokens.call(lockedAmount, {
+        await mgn.unlockTokens.call({
           from: account
         })
         console.log('Dry run success!')
       } else {
         // Real add token pair execution
         console.log('Changing auctioneer to: ' + newAuctioneer)
-        const txResult = await mgn.unlockTokens(lockedAmount, {
+        const txResult = await mgn.unlockTokens({
           from: account,
           gas: GAS,
           gasPrice: gasPrice * 1e9
