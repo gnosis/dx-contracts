@@ -1,6 +1,6 @@
 {
   "name": "@gnosis.pm/dx-contracts",
-  "version": "2.0.0-RC8",
+  "version": "2.0.0-RC9",
   "description": "DutchX - Gnosis Dutch Auction Trading Platform. This npm package provides all smartcontracts used in the project",
   "scripts": {
     "rpc": "ganache-cli -d --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --defaultBalanceEther '500000000000000000000'",
@@ -10,9 +10,9 @@
     "truffle": "npx truffle",
     "networks-extract": "node src/extract_network_info.js",
     "networks-inject": "node src/inject_network_info.js",
-    "networks-reset": "mkdir -p build/contracts && truffle networks --clean && npm run networks-inject",
+    "networks-reset": "mkdir -p build/contracts && npx truffle networks --clean && npm run networks-inject",
     "networks": "npx truffle networks",
-    "compile-todo": "eslint --fix . && eslint . && truffle compile",
+    "compile-todo": "eslint --fix . && eslint . && npx truffle compile",
     "compile": "npx truffle compile",
     "restore": "rm -rf build && npm run compile && npm run networks-reset",
     "migrate": "npx truffle migrate",

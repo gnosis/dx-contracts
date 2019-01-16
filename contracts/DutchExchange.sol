@@ -37,13 +37,15 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
     // Token for paying fees
     TokenOWL public owlToken;
 
-    // For the following two mappings, there is one mapping for each token pair
+    // For the following three mappings, there is one mapping for each token pair
     // The order which the tokens should be called is smaller, larger
     // These variables should never be called directly! They have getters below
     // Token => Token => index
     mapping(address => mapping(address => uint)) public latestAuctionIndices;
     // Token => Token => time
-    mapping(address => mapping(address => uint)) public auctionStarts;
+    mapping (address => mapping (address => uint)) public auctionStarts;
+    // Token => Token => auctionIndex => time
+    mapping (address => mapping (address => mapping (uint => uint))) public clearingTimes;
 
     // Token => Token => auctionIndex => price
     mapping(address => mapping(address => mapping(uint => Fraction))) public closingPrices;
@@ -83,164 +85,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         newBal = withdraw(buyToken, amount);
     }
 
-    function getRunningTokenPairs(address[] calldata tokens)
-        external
-        view
-        returns (address[] memory tokens1, address[] memory tokens2)
-    {
-        uint arrayLength;
-
-        for (uint k = 0; k < tokens.length - 1; k++) {
-            for (uint j = k + 1; j < tokens.length; j++) {
-                if (getAuctionIndex(tokens[k], tokens[j]) > 0) {
-                    arrayLength++;
-                }
-            }
-        }
-
-        tokens1 = new address[](arrayLength);
-        tokens2 = new address[](arrayLength);
-
-        uint h;
-
-        for (uint i = 0; i < tokens.length - 1; i++) {
-            for (uint j = i + 1; j < tokens.length; j++) {
-                if (getAuctionIndex(tokens[i], tokens[j]) > 0) {
-                    tokens1[h] = tokens[i];
-                    tokens2[h] = tokens[j];
-                    h++;
-                }
-            }
-        }
-    }
-
-    /// @dev for quick overview of possible sellerBalances to calculate the possible withdraw tokens
-    /// @param auctionSellToken is the sellToken defining an auctionPair
-    /// @param auctionBuyToken is the buyToken defining an auctionPair
-    /// @param user is the user who wants to his tokens
-    /// @param lastNAuctions how many auctions will be checked. 0 means all
-    //@returns returns sellbal for all indices for all tokenpairs
-    function getIndicesWithClaimableTokensForSellers(
-        address auctionSellToken,
-        address auctionBuyToken,
-        address user,
-        uint lastNAuctions
-    ) external view returns (uint[] memory indices, uint[] memory usersBalances)
-    {
-        uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
-
-        uint arrayLength;
-
-        uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
-
-        for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
-            if (sellerBalances[auctionSellToken][auctionBuyToken][j][user] > 0) {
-                arrayLength++;
-            }
-        }
-
-        indices = new uint[](arrayLength);
-        usersBalances = new uint[](arrayLength);
-
-        uint k;
-
-        for (uint i = startingIndex; i <= runningAuctionIndex; i++) {
-            if (sellerBalances[auctionSellToken][auctionBuyToken][i][user] > 0) {
-                indices[k] = i;
-                usersBalances[k] = sellerBalances[auctionSellToken][auctionBuyToken][i][user];
-                k++;
-            }
-        }
-    }
-
-    /// @dev for quick overview of current sellerBalances for a user
-    /// @param auctionSellTokens are the sellTokens defining an auctionPair
-    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
-    /// @param user is the user who wants to his tokens
-    function getSellerBalancesOfCurrentAuctions(
-        address[] calldata auctionSellTokens,
-        address[] calldata auctionBuyTokens,
-        address user
-    ) external view returns (uint[] memory)
-    {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2);
-
-        uint[] memory sellersBalances = new uint[](length);
-
-        for (uint i = 0; i < length; i++) {
-            uint runningAuctionIndex = getAuctionIndex(auctionSellTokens[i], auctionBuyTokens[i]);
-            sellersBalances[i] = sellerBalances[auctionSellTokens[i]][auctionBuyTokens[i]][runningAuctionIndex][user];
-        }
-
-        return sellersBalances;
-    }
-
-    /// @dev for quick overview of possible buyerBalances to calculate the possible withdraw tokens
-    /// @param auctionSellToken is the sellToken defining an auctionPair
-    /// @param auctionBuyToken is the buyToken defining an auctionPair
-    /// @param user is the user who wants to his tokens
-    /// @param lastNAuctions how many auctions will be checked. 0 means all
-    //@returns returns sellbal for all indices for all tokenpairs
-    function getIndicesWithClaimableTokensForBuyers(
-        address auctionSellToken,
-        address auctionBuyToken,
-        address user,
-        uint lastNAuctions
-    ) external view returns (uint[] memory indices, uint[] memory usersBalances)
-    {
-        uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
-
-        uint arrayLength;
-
-        uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
-
-        for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
-            if (buyerBalances[auctionSellToken][auctionBuyToken][j][user] > 0) {
-                arrayLength++;
-            }
-        }
-
-        indices = new uint[](arrayLength);
-        usersBalances = new uint[](arrayLength);
-
-        uint k;
-
-        for (uint i = startingIndex; i <= runningAuctionIndex; i++) {
-            if (buyerBalances[auctionSellToken][auctionBuyToken][i][user] > 0) {
-                indices[k] = i;
-                usersBalances[k] = buyerBalances[auctionSellToken][auctionBuyToken][i][user];
-                k++;
-            }
-        }
-    }
-
-    /// @dev for quick overview of current sellerBalances for a user
-    /// @param auctionSellTokens are the sellTokens defining an auctionPair
-    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
-    /// @param user is the user who wants to his tokens
-    function getBuyerBalancesOfCurrentAuctions(
-        address[] calldata auctionSellTokens,
-        address[] calldata auctionBuyTokens,
-        address user
-    ) external view returns (uint[] memory)
-    {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2);
-
-        uint[] memory buyersBalances = new uint[](length);
-
-        for (uint i = 0; i < length; i++) {
-            uint runningAuctionIndex = getAuctionIndex(auctionSellTokens[i], auctionBuyTokens[i]);
-            buyersBalances[i] = buyerBalances[auctionSellTokens[i]][auctionBuyTokens[i]][runningAuctionIndex][user];
-        }
-
-        return buyersBalances;
-    }
-
-/// @dev for multiple claims
+    /// @dev for multiple claims
     /// @param auctionSellTokens are the sellTokens defining an auctionPair
     /// @param auctionBuyTokens are the buyTokens defining an auctionPair
     /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
@@ -879,14 +724,15 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
     //@ param token1 first token for price calculation
     //@ param token2 second token for price calculation
     //@ param auctionIndex index for the auction to get the averaged price from
-    function getPriceInPastAuction(address token1, address token2, uint auctionIndex)
+    function getPriceInPastAuction(
+        address token1,
+        address token2,
+        uint auctionIndex
+    )
         public
         view
-        returns (
         // price < 10^31
-        uint num,
-        uint den
-    )
+        returns (uint num, uint den)
     {
         if (token1 == token2) {
             // C1
@@ -896,6 +742,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
             // C2
             // R2.1
             require(auctionIndex >= 0);
+
 
             // C3
             // R3.1
@@ -911,7 +758,9 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
                 closingPriceToken2 = closingPrices[token2][token1][auctionIndex - i];
                 closingPriceToken1 = closingPrices[token1][token2][auctionIndex - i];
 
-                if (closingPriceToken1.num > 0 && closingPriceToken1.den > 0 || closingPriceToken2.num > 0 && closingPriceToken2.den > 0) {
+                if (closingPriceToken1.num > 0 && closingPriceToken1.den > 0 ||
+                    closingPriceToken2.num > 0 && closingPriceToken2.den > 0)
+                {
                     correctPair = true;
                 }
                 i++;
@@ -933,6 +782,65 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         }
     }
 
+    function scheduleNextAuction(
+        address sellToken,
+        address buyToken
+    )
+        internal
+    {
+        (uint sellVolume, uint sellVolumeOpp) = getSellVolumesInUSD(sellToken, buyToken);
+
+        bool enoughSellVolume = sellVolume >= thresholdNewAuction;
+        bool enoughSellVolumeOpp = sellVolumeOpp >= thresholdNewAuction;
+        bool schedule;
+        // Make sure both sides have liquidity in order to start the auction
+        if (enoughSellVolume && enoughSellVolumeOpp) {
+            schedule = true;
+        } else if (enoughSellVolume || enoughSellVolumeOpp) {
+            // But if the auction didn't start in 24h, then is enough to have 
+            // liquidity in one of the two sides
+            uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
+            uint clearingTime = getClearingTime(sellToken, buyToken, latestAuctionIndex - 1);
+            schedule = clearingTime <= now - 24 hours;
+        }
+
+        if (schedule) {
+            // Schedule next auction
+            setAuctionStart(sellToken, buyToken, WAITING_PERIOD_NEW_AUCTION);
+        } else {            
+            resetAuctionStart(sellToken, buyToken);
+        }
+    }
+
+    function getSellVolumesInUSD(
+        address sellToken,
+        address buyToken
+    )
+        internal
+        view
+        returns (uint sellVolume, uint sellVolumeOpp)
+    {
+        // Check if auctions received enough sell orders
+        uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
+
+        uint sellNum;
+        uint sellDen;
+        (sellNum, sellDen) = getPriceOfTokenInLastAuction(sellToken);
+
+        uint buyNum;
+        uint buyDen;
+        (buyNum, buyDen) = getPriceOfTokenInLastAuction(buyToken);
+
+        // We use current sell volume, because in clearAuction() we set
+        // sellVolumesCurrent = sellVolumesNext before calling this function
+        // (this is so that we don't need case work,
+        // since it might also be called from postSellOrder())
+
+        // < 10^30 * 10^31 * 10^6 = 10^67
+        sellVolume = mul(mul(sellVolumesCurrent[sellToken][buyToken], sellNum), ethUSDPrice) / sellDen;
+        sellVolumeOpp = mul(mul(sellVolumesCurrent[buyToken][sellToken], buyNum), ethUSDPrice) / buyDen;
+    }
+    
     /// @dev Gives best estimate for market price of a token in ETH of any price oracle on the Ethereum network
     /// @param token address of ERC-20 token
     /// @return Weighted average of closing prices of opposite Token-ethToken auctions, based on their sellVolume
@@ -1017,7 +925,10 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         uint token2Funding,
         address ethTokenMem,
         uint ethUSDPrice
-    ) internal view returns (uint fundedValueUSD)
+    )
+        internal
+        view
+        returns (uint fundedValueUSD)
     {
         // We require there to exist ethToken-Token auctions
         // R3.1
@@ -1046,7 +957,14 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         fundedValueUSD = mul(fundedValueETH, ethUSDPrice);
     }
 
-    function addTokenPairSecondPart(address token1, address token2, uint token1Funding, uint token2Funding) internal {
+    function addTokenPairSecondPart(
+        address token1,
+        address token2,
+        uint token1Funding,
+        uint token2Funding
+    )
+        internal
+    {
         balances[token1][msg.sender] = sub(balances[token1][msg.sender], token1Funding);
         balances[token2][msg.sender] = sub(balances[token2][msg.sender], token2Funding);
 
@@ -1060,8 +978,45 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         sellerBalances[token1][token2][1][msg.sender] = token1FundingAfterFee;
         sellerBalances[token2][token1][1][msg.sender] = token2FundingAfterFee;
 
+        // Save clearingTime as adding time
+        (address tokenA, address tokenB) = getTokenOrder(token1, token2);
+        clearingTimes[tokenA][tokenB][0] = now;
+
         setAuctionStart(token1, token2, WAITING_PERIOD_NEW_TOKEN_PAIR);
         emit NewTokenPair(token1, token2);
+    }
+
+    function setClearingTime(
+        address token1,
+        address token2,
+        uint auctionIndex,
+        uint auctionStart,
+        uint sellVolume,
+        uint buyVolume
+    )
+        internal
+    {
+        (uint pastNum, uint pastDen) = getPriceInPastAuction(token1, token2, auctionIndex - 1);
+        // 43200 = 12 hrs, 86400 = 24 hrs
+        // timeElapsed = 43200(2 * pastNum * sellVolume - buyVolume * pastDen)/(sellVolume * pastNum + buyVolume * pastDen)
+        uint numerator = sub(mul(mul(pastNum, sellVolume), 86400), mul(mul(buyVolume, pastDen), 43200));
+        uint timeElapsed = numerator / (add(mul(sellVolume, pastNum), mul(buyVolume, pastDen)));
+        uint clearingTime = auctionStart + timeElapsed;
+        (token1, token2) = getTokenOrder(token1, token2);
+        clearingTimes[token1][token2][auctionIndex] = clearingTime;
+    }
+
+    function getClearingTime(
+        address token1,
+        address token2,
+        uint auctionIndex
+    )
+        public
+        view
+        returns (uint time)
+    {
+        (token1, token2) = getTokenOrder(token1, token2);
+        time = clearingTimes[token1][token2][auctionIndex];
     }
 
     function issueFrts(
@@ -1152,11 +1107,19 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         }
     }
 
-/// @dev clears an Auction
+    // addClearTimes
+    /// @dev clears an Auction
     /// @param sellToken sellToken of the auction
     /// @param buyToken  buyToken of the auction
     /// @param auctionIndex of the auction to be cleared.
-    function clearAuction(address sellToken, address buyToken, uint auctionIndex, uint sellVolume) internal {
+    function clearAuction(
+        address sellToken,
+        address buyToken,
+        uint auctionIndex,
+        uint sellVolume
+    )
+        internal
+    {
         // Get variables
         uint buyVolume = buyVolumes[sellToken][buyToken];
         uint sellVolumeOpp = sellVolumesCurrent[buyToken][sellToken];
@@ -1198,6 +1161,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
                 buyVolumes[buyToken][sellToken] = 0;
             }
 
+            // Save clearing time
+            setClearingTime(sellToken, buyToken, auctionIndex, auctionStart, sellVolume, buyVolume);
             // Increment auction index
             setAuctionIndex(sellToken, buyToken);
             // Check if next auction can be scheduled
@@ -1205,34 +1170,6 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         }
 
         emit AuctionCleared(sellToken, buyToken, sellVolume, buyVolume, auctionIndex);
-    }
-
-    function scheduleNextAuction(address sellToken, address buyToken) internal {
-        // Check if auctions received enough sell orders
-        uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
-
-        uint sellNum;
-        uint sellDen;
-        (sellNum, sellDen) = getPriceOfTokenInLastAuction(sellToken);
-
-        uint buyNum;
-        uint buyDen;
-        (buyNum, buyDen) = getPriceOfTokenInLastAuction(buyToken);
-
-        // We use current sell volume, because in clearAuction() we set
-        // sellVolumesCurrent = sellVolumesNext before calling this function
-        // (this is so that we don't need case work,
-        // since it might also be called from postSellOrder())
-
-        // < 10^30 * 10^31 * 10^6 = 10^67
-        uint sellVolume = mul(mul(sellVolumesCurrent[sellToken][buyToken], sellNum), ethUSDPrice) / sellDen;
-        uint sellVolumeOpp = mul(mul(sellVolumesCurrent[buyToken][sellToken], buyNum), ethUSDPrice) / buyDen;
-        if (sellVolume >= thresholdNewAuction && sellVolumeOpp >= thresholdNewAuction) {
-            // Schedule next auction
-            setAuctionStart(sellToken, buyToken, WAITING_PERIOD_NEW_AUCTION);
-        } else {
-            resetAuctionStart(sellToken, buyToken);
-        }
     }
 
     function setAuctionStart(address token1, address token2, uint value) internal {

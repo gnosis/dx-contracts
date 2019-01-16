@@ -86,6 +86,12 @@ contract('DutchExchange - claimSellerFunds', accounts => {
     auctionIndex = await getAuctionIndex()
     // await setAndCheckAuctionStarted(eth, gno)
     assert.equal(2, auctionIndex)
+
+    // check that clearingTime was saved
+    const clearingTime = await getClearingTime(gno, eth, auctionIndex)
+    const now = timestamp()
+    assert.equal(clearingTime, now, 'clearingTime was set')
+
     // check condition
     assert.equal((await dx.sellerBalances.call(eth.address, gno.address, 1, seller2)).toNumber(), 0)
     // now claiming should not be possible and return == 0

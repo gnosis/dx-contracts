@@ -6,7 +6,7 @@ const {
   gasLogger
 } = require('./utils')
 
-const { getContracts, setupTest } = require('./testFunctions')
+const { getContracts, setupTest, getClearingTime } = require('./testFunctions')
 
 const TokenGNO = artifacts.require('TokenGNO')
 
@@ -272,6 +272,18 @@ contract('DutchExchange - addTokenPair', accounts => {
     assert.strictEqual(auctionStart - timestamp(), 6 * 3600, 'auction should start in 6 hours')
   }
 
+  const assertAuctionIndex = async (sellToken, buyToken) => {
+    const auctionIndex = await getAuctionIndex(sellToken, buyToken)
+
+    assert.equal(auctionIndex, 1, 'auctionIndex incremented')
+  }
+
+  const assertClearingTime = async (sellToken, buyToken) => {
+    const clearingTime = await getClearingTime(sellToken, buyToken, 0)
+    const now = timestamp()
+    assert.equal(clearingTime, now, 'clearing time for 0th auction set')
+  }
+
   const assertAfterTx = async (account, tx, oldBalances, sellToken, buyToken) => {
     assertNewTokenPairEvent(tx, sellToken, buyToken)
     const amounts = await getAmountsForPair(account, sellToken, buyToken)
@@ -279,6 +291,8 @@ contract('DutchExchange - addTokenPair', accounts => {
     await assertClosingPrices(sellToken, buyToken)
     await assertTokenBalances(oldBalances, await getTokenBalances(account, sellToken, buyToken))
     await assertAuctionStart(sellToken, buyToken)
+    await assertAuctionIndex(sellToken, buyToken)
+    await assertClearingTime(sellToken, buyToken)
   }
 
   it('rejects if both tokens in a pair are the same', async () => {
