@@ -1,6 +1,6 @@
 {
   "name": "@gnosis.pm/dx-contracts",
-  "version": "2.0.0-RC9",
+  "version": "2.0.0-RC10",
   "description": "DutchX - Gnosis Dutch Auction Trading Platform. This npm package provides all smartcontracts used in the project",
   "scripts": {
     "rpc": "ganache-cli -d --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --defaultBalanceEther '500000000000000000000'",
@@ -26,7 +26,7 @@
     "get-abi-encoded-params": "npx truffle exec src/truffle/get-abi-encoded-params.js",
     "decode": "node ./node_modules/decode-eth/main.js",
     "prettier": "prettier --write --tab-width 4 --print-width 120 '**/*.sol'",
-    "install": "cd node_modules/truffle && npm install solc@0.5.2 && cd ../.."
+    "install": "cd $INIT_CWD && npm explore truffle -- npm install solc@0.5.2"
   },
   "repository": {
     "type": "git",
