@@ -1,6 +1,6 @@
 pragma solidity ^0.5.2;
 
-import "../Oracle/PriceOracleInterface.sol";
+import "../interfaces/PriceOracleInterface.sol";
 import "./AuctioneerManaged.sol";
 import "./DxMath.sol";
 

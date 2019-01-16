@@ -18,6 +18,7 @@ function migrate ({
       console.log('Deploying TokenFRTProxy with ACCOUNT ==> ', accounts[0])
       return deployer.deploy(TokenFRTProxy, TokenFRT.address, accounts[0])
     })
+    .then(() => console.log('SETUP 4 DONE'))
 }
 
 function _getDependencies (artifacts, network, deployer) {

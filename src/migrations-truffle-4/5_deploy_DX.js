@@ -11,6 +11,7 @@ function migrate ({
     // Deploy DX and it's proxy
     .then(() => deployer.deploy(DutchExchange))
     .then(() => deployer.deploy(DutchExchangeProxy, DutchExchange.address))
+    .then(() => console.log('SETUP 5 DONE'))
 }
 
 module.exports = migrate

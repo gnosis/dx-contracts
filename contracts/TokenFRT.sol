@@ -1,11 +1,13 @@
 pragma solidity ^0.5.2;
 
+import "./interfaces/TokenFRTInterface.sol";
+
 import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
 import "@gnosis.pm/util-contracts/contracts/GnosisStandardToken.sol";
 
 
 /// @title Standard token contract with overflow protection
-contract TokenFRT is Proxied, GnosisStandardToken {
+contract TokenFRT is Proxied, GnosisStandardToken, TokenFRTInterface {
     address public owner;
 
     string public constant symbol = "MGN";

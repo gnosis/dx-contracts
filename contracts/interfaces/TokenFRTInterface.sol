@@ -1,16 +1,17 @@
 pragma solidity ^0.4.24;
 
-interface TokenFRTInterface {
-    function updateMinter(address _minter) external;
-    function updateOwner(address owner) external;
-    function mintTokens(address user, uint amount) external;
-    function lockTokens(uint amount) external returns (uint totalAmountLocked);
-    function unlockTokens() external returns (uint totalAmountUnlocked, uint withdrawalTime);
-    function withdrawUnlockedTokens() external;
-    
-    function min(uint a, uint b) external pure returns (uint);
-    function safeToAdd(uint a, uint b) external pure returns (bool);
-    function safeToSub(uint a, uint b) external pure returns (bool);
-    function add(uint a, uint b) external pure returns (uint);
-    function sub(uint a, uint b) external pure returns (uint);
+import "./TokenFRTInterfaceCore.sol";
+// TODO: potentially replace with util-contracts PR GnosisIERC20Info.sol (interface w/ERC20 token name, symbol etc)
+interface GnosisIERC20Info {
+    /*
+     *  Public getters
+     */
+    function name() external view returns (string);
+    function symbol() external view returns (string);
+    function decimals() external view returns (uint8);
 }
+
+/// @title TokenFRTInterfaceFull - Abstract Contract
+/// @dev   Full (token info + core FRT functions) TokenFRT + ERC20 naming interface
+//  @todo  Replace with proper interface when/if inheritance is incorporated
+contract TokenFRTInterface is GnosisIERC20Info, TokenFRTInterfaceCore {}

@@ -1,18 +1,19 @@
 pragma solidity ^0.5.2;
 
-import "./TokenFRT.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
+import "./TokenFRT.sol";
 import "./base/SafeTransfer.sol";
 import "./base/TokenWhitelist.sol";
 import "./base/DxMath.sol";
 import "./base/EthOracle.sol";
 import "./base/DxUpgrade.sol";
+// import "./interfaces/DutchExchangeInterface.sol";
 
 /// @title Dutch Exchange - exchange token pairs with the clever mechanism of the dutch auction
 /// @author Alex Herrmann - <alex@gnosis.pm>
 /// @author Dominik Teiml - <dominik@gnosis.pm>
 
-contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
+contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer/* , DutchExchangeInterface */ {
 
     // The price is a rational number, so we need a concept of a fraction
     struct Fraction {
