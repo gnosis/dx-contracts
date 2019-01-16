@@ -889,7 +889,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
             // But if the auction didn't start in 24h, then is enough to have 
             // liquidity in one of the two sides
             uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
-            uint clearingTime = getClearingTime(sellToken, buyToken, getAuctionIndex(sellToken, buyToken));
+            uint clearingTime = getClearingTime(sellToken, buyToken, latestAuctionIndex);
             schedule = clearingTime <= now - 24 hours;
         }
 
