@@ -85,75 +85,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         newBal = withdraw(buyToken, amount);
     }
 
-    function getRunningTokenPairs(address[] calldata tokens)
-        external
-        view
-        returns (address[] memory tokens1, address[] memory tokens2)
-    {
-        uint arrayLength;
-
-        for (uint k = 0; k < tokens.length - 1; k++) {
-            for (uint j = k + 1; j < tokens.length; j++) {
-                if (getAuctionIndex(tokens[k], tokens[j]) > 0) {
-                    arrayLength++;
-                }
-            }
-        }
-
-        tokens1 = new address[](arrayLength);
-        tokens2 = new address[](arrayLength);
-
-        uint h;
-
-        for (uint i = 0; i < tokens.length - 1; i++) {
-            for (uint j = i + 1; j < tokens.length; j++) {
-                if (getAuctionIndex(tokens[i], tokens[j]) > 0) {
-                    tokens1[h] = tokens[i];
-                    tokens2[h] = tokens[j];
-                    h++;
-                }
-            }
-        }
-    }
-
-    /// @dev for quick overview of possible sellerBalances to calculate the possible withdraw tokens
-    /// @param auctionSellToken is the sellToken defining an auctionPair
-    /// @param auctionBuyToken is the buyToken defining an auctionPair
-    /// @param user is the user who wants to his tokens
-    /// @param lastNAuctions how many auctions will be checked. 0 means all
-    //@returns returns sellbal for all indices for all tokenpairs
-    function getIndicesWithClaimableTokensForSellers(
-        address auctionSellToken,
-        address auctionBuyToken,
-        address user,
-        uint lastNAuctions
-    ) external view returns (uint[] memory indices, uint[] memory usersBalances)
-    {
-        uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
-
-        uint arrayLength;
-
-        uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
-
-        for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
-            if (sellerBalances[auctionSellToken][auctionBuyToken][j][user] > 0) {
-                arrayLength++;
-            }
-        }
-
-        indices = new uint[](arrayLength);
-        usersBalances = new uint[](arrayLength);
-
-        uint k;
-
-        for (uint i = startingIndex; i <= runningAuctionIndex; i++) {
-            if (sellerBalances[auctionSellToken][auctionBuyToken][i][user] > 0) {
-                indices[k] = i;
-                usersBalances[k] = sellerBalances[auctionSellToken][auctionBuyToken][i][user];
-                k++;
-            }
-        }
-    }
+    
 
     /// @dev for quick overview of current sellerBalances for a user
     /// @param auctionSellTokens are the sellTokens defining an auctionPair
@@ -242,7 +174,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         return buyersBalances;
     }
 
-/// @dev for multiple claims
+    /// @dev for multiple claims
     /// @param auctionSellTokens are the sellTokens defining an auctionPair
     /// @param auctionBuyTokens are the buyTokens defining an auctionPair
     /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
@@ -974,6 +906,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         address buyToken
     )
         internal
+        view
         returns (uint sellVolume, uint sellVolumeOpp)
     {
         // Check if auctions received enough sell orders
