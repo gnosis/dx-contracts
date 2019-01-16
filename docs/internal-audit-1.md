@@ -28,33 +28,65 @@ DutchExchange
     └── DxMath
 ```
 
-Must be authorized for the following:
+Trusted for the following:
 
 * `mintTokens` for `TokenFRT` (Magnolia)
 * `burnOWL` for `TokenOWL`
+* By users to keep custody of their token `balances`
 
 Places trust in the following:
 
-* caller of `setupDutchExchange` for setting `thresholdNewTokenPair` and `thresholdNewAuction`
+* caller of `setupDutchExchange` for setting `thresholdNewTokenPair` and `thresholdNewAuction` (this can only happen once)
 * `ethUSDOracle` (an instance of `EthOracle`) for `getUSDETHPrice`
   - `owner` (curator? see `updateCurator`) of the `ethUSDOracle` for `raiseEmergency`
 * `auctioneer` for:
   - Code updates with time buffer (implemented by `DxUpgrade`)
-  - Managing the token whitelist (implemented by `TokenWhitelist`)
-* Whitelisted tokens to be sane(?)
-* US Dollars for reference
+  - Managing the token whitelist `approvedTokens` (implemented by `TokenWhitelist`)
+  - Determining and maintaining the `thresholdNewTokenPair`
+  - Determining and maintaining the `thresholdNewAuction`
+* Whitelisted tokens `approvedTokens` for:
+  - Being sane enough to have trading volume between pairs of these tokens generate `TokenFRT`
+* W-ETH for being liquid against token pairs that would trade against it, i.e. reference on-chain
+* US Dollars for reference off-chain
 
 Nitpicks:
 
 * `ethTokenMem` is actually on the stack
+* `require(auctionStart != AUCTION_START_WAITING_FOR_FUNDING);` for sentinel value checks
 
 Minor:
 
 * `DxMath` is unnecessary, and adds additional bytecode/possible calls to the runtime. Recommend removing this as a parent and using a library with `internal` function calls instead.
+* `latestAuctionIndices` should be `internal` due to more useful getter already implemented.
 
 Note:
 
-* There are two accounts with special powers: `owner` and `auctioneer`. In practice, both of these refer to the same account IIRC. 
+* There are two accounts with special powers: `owner` and `auctioneer`. In practice, both of these refer to the same account IIRC (planned to be handed over to DxDAO).
+
+`getPriceInPastAuction` LGTM.
+
+`getPriceOfTokenInLastAuction` LGTM.
+
+`setAuctionStart` LGTM.
+
+`addTokenPair` (and associated `calculateFundedValueTokenToken` and `addTokenPairSecondPart`) LGTM.
+
+`deposit`/`withdraw` LGTM.
+
+`settleFee` (and `settleFeeSecondPart` and `getFeeRatio`) LGTM.
+
+`closeTheoreticalClosedAuction`
+* Closes a running auction if the time is right(?) by doing a `postBuyOrder` with 0. This seems sort of kludgey to me... Why not just call `clearAuction`? I don't think there is a security with doing it one way or another... am I missing something?
+
+`postBuyOrder`:
+* Last trade is fee-less? See: `else { amount = outstandingVolume; amountAfterFee = outstandingVolume; }`
+
+`postSellOrder` LGTM
+
+`claimSellerFunds`/`claimBuyerFunds` (and `getUnclaimedBuyerFunds`):
+* Potentially may get locked out by TokenFRT over-minting FRT if somehow DutchExchange gets tricked into thinking 10^12 ETH is regularly being transacted by a user??? Okay maybe by then there are already bigger problems. Besides `getPriceOfTokenInLastAuction` LGTM
+* `DxMath.atleastZero(int(DxMath.mul(buyerBalance, den) / num - claimedAmounts[sellToken][buyToken][auctionIndex][user]));` happens to work because two's complement representation means EVM uses same opcode for signed and unsigned addition/subtraction, though the cast happens after an underflow would ;)
+
 
 ### DxUpgrade
 
