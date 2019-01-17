@@ -1,3 +1,6 @@
+/* global contract, assert, timestamp */
+/* eslint no-undef: "error" */
+
 const {
   eventWatcher,
   log: utilsLog,
@@ -189,7 +192,7 @@ contract('DutchExchange - postBuyOrder', accounts => {
     // check that clearingTime was set correctly
     const clearingTime = await getClearingTime(eth.address, gno.address, auctionIndex)
     const now = timestamp()
-    assert.equal(clearingTime, now, 'clearingTime was set')     
+    assert.equal(clearingTime, now, 'clearingTime was set')
   })
 
   it('rejects when auction is not funded', async () => {
