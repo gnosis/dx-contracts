@@ -5,8 +5,8 @@ module.exports = [
   require('./WETH_OMG.js'),
 
   // WETH-OMG
-  require('./WETH_RDN.js'),
+  require('./WETH_RDN.js')
 
   // RDN-OMG
-  require('./RDN_OMG.js')
+  // require('./RDN_OMG.js')
 ]
