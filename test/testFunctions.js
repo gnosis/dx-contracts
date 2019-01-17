@@ -83,6 +83,11 @@ const getBalance = async (acct, token) => {
   return (await dx.balances.call(token.address, acct)).toNumber()
 }
 
+const getAuctionStart = async (ST, BT) => {
+  const { DutchExchange: dx } = await getContracts()
+  return (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
+}
+
 /**
  * >setupTest()
  * @param {Array[address]} accounts         => ganache-cli accounts passed in globally
@@ -119,6 +124,7 @@ const setupTest = async (
     dx.deposit(eth.address, startingETH, { from: acct })
     dx.deposit(gno.address, startingGNO, { from: acct })
   }))
+
   // add token Pair
   // updating the oracle Price. Needs to be changed later to another mechanism
   await oracle.post(ethUSDPrice, 1516168838 * 2, medianizer.address, { from: accounts[0] })
@@ -319,6 +325,7 @@ const postSellOrder = async (ST, BT, aucIdx, amt, acct) => {
     `)
   }
   // log('POSTBUYORDER TX RECEIPT ==', await dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct }))
+  // console.log({ st: ST.address, bt: BT.address, auctionIdx, amt, from: acct })
   return dx.postSellOrder(ST.address, BT.address, auctionIdx, amt, { from: acct })
 }
 
@@ -711,5 +718,6 @@ module.exports = {
   wait,
   waitUntilPriceIsXPercentOfPreviousPrice,
   calculateTokensInExchange,
-  getClearingTime
+  getClearingTime,
+  getAuctionStart
 }
