@@ -1,3 +1,6 @@
+/* global contract, assert */
+/* eslint no-undef: "error" */
+
 // This file tests all the states and their interaction as outlined here:
 // https://drive.google.com/drive/folders/0ByHhiGx-ltJZczhjZHhHeGpHcHM
 // States are generated with the function getIntoState and
@@ -108,7 +111,7 @@ const getState = async (ST, BT) => {
     (dx.closingPrices.call(ST.address, BT.address, auctionIndex))
   ])
 
-  const isAuctionTheoreticalClosed = (numP.mul(denBasedOnVolume).sub(numBasedOnVolume.mul(denP)).toNumber() <= 0);
+  const isAuctionTheoreticalClosed = (numP.mul(denBasedOnVolume).sub(numBasedOnVolume.mul(denP)).toNumber() <= 0)
   const isAuctionClosed = (numPP.toNumber() > 0)
 
   // calculate state of OppAuction
@@ -124,7 +127,7 @@ const getState = async (ST, BT) => {
     (dx.closingPrices.call(BT.address, ST.address, auctionIndex))
   ])
 
-  const isOppAuctionTheoreticalClosed = (numP2.mul(denBasedOnVolumeOpp).minus(numBasedOnVolumeOpp.mul(denP2)).toNumber() <= 0);
+  const isOppAuctionTheoreticalClosed = (numP2.mul(denBasedOnVolumeOpp).minus(numBasedOnVolumeOpp.mul(denP2)).toNumber() <= 0)
   const isOppAuctionClosed = (numPPOpp.toNumber() > 0)
 
   // Got sellVolumesCurrent as denominator based on volume. Rename for better reading
@@ -400,7 +403,7 @@ contract('DutchExchange - stateTransitions', accounts => {
       // clearing first auction
       await postBuyOrder(eth, gno, auctionIndex, 10.0.toWei() * 3, buyer1)
 
-      const[ state ] = await Promise.all([
+      const [state] = await Promise.all([
         getState(eth, gno),
         // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
         checkState(1, auctionStart, valMinusFee(10.0.toWei()), 0, valMinusFee(10.0.toWei() * 3), valMinusFee(10.0.toWei()) * 3, valMinusFee(10.0.toWei()), eth, gno, 10 ** 16),
@@ -421,7 +424,7 @@ contract('DutchExchange - stateTransitions', accounts => {
       await assertRejects(postSellOrder(eth, gno, auctionIndex, 10.0.toWei() * 3, seller1))
       await assertRejects(postSellOrder(eth, gno, auctionIndex + 2, 10.0.toWei() * 3, seller1))
 
-      const [ state ] = await Promise.all([
+      const [state] = await Promise.all([
         getState(eth, gno),
         // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
         checkState(1, auctionStart, valMinusFee(10.0.toWei()), valMinusFee(10.0.toWei() * 6), 0, 0, 0, eth, gno, 1),
@@ -498,7 +501,7 @@ contract('DutchExchange - stateTransitions', accounts => {
       // clearing first auction
       await assertRejects(postBuyOrder(gno, eth, auctionIndex, 10.0.toWei() * 3, buyer1))
 
-      const [ state ] = await Promise.all([
+      const [state] = await Promise.all([
         getState(eth, gno),
         // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
         checkState(1, auctionStart, 0, 0, 0, 0, 0, gno, eth, 0),
@@ -516,7 +519,7 @@ contract('DutchExchange - stateTransitions', accounts => {
       // clearing first auction
       await postBuyOrder(eth, gno, auctionIndex, 10.0.toWei() * 3, buyer1)
 
-      const [ state ] = await Promise.all([
+      const [state] = await Promise.all([
         getState(eth, gno),
         // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
         checkState(2, 1, 0, 0, 0, 0, 0, eth, gno, 1),
@@ -538,7 +541,7 @@ contract('DutchExchange - stateTransitions', accounts => {
       await assertRejects(postSellOrder(eth, gno, auctionIndex, 10.0.toWei() * 3, seller1))
       await assertRejects(postSellOrder(eth, gno, auctionIndex + 2, 10.0.toWei() * 3, seller1))
 
-      const [ state ] = await Promise.all([
+      const [state] = await Promise.all([
         getState(eth, gno),
         // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
         checkState(1, auctionStart, valMinusFee(10.0.toWei()), valMinusFee(10.0.toWei() * 6), 0, 0, 0, eth, gno, 0),
@@ -557,7 +560,7 @@ contract('DutchExchange - stateTransitions', accounts => {
       // post buyOrder to clear auction with small overbuy
       await postBuyOrder(eth, gno, auctionIndex, (10.0.toWei()), buyer1)
 
-      const [ state ] = await Promise.all([
+      const [state] = await Promise.all([
         getState(eth, gno),
         // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
         checkState(1, auctionStart, valMinusFee(10.0.toWei()), 0, valMinusFee(10.0.toWei()), 0, 0, eth, gno, 0),
@@ -789,7 +792,6 @@ contract('DutchExchange - stateTransitions', accounts => {
     it('timeelapse - getting into S4', async () => {
       const auctionIndex = await getAuctionIndex()
       await setAndCheckAuctionStarted(eth, gno)
-
 
       await postBuyOrder(gno, eth, auctionIndex, (ether * 5 / 2 / 2 / 2), buyer2)
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.1)

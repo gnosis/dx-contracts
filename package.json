@@ -1,6 +1,6 @@
 {
   "name": "@gnosis.pm/dx-contracts",
-  "version": "2.0.0-RC12",
+  "version": "2.0.0-RC13",
   "description": "DutchX - Gnosis Dutch Auction Trading Platform. This npm package provides all smartcontracts used in the project",
   "scripts": {
     "rpc": "ganache-cli -d --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --defaultBalanceEther '500000000000000000000'",
@@ -35,9 +35,9 @@
   "author": "Gnosis",
   "license": "LGPL-3.0",
   "dependencies": {
-    "@gnosis.pm/gno-token": "^2.0.0-RC2",
-    "@gnosis.pm/owl-token": "^2.0.0-RC1",
-    "@gnosis.pm/util-contracts": "^2.0.0-RC1"
+    "@gnosis.pm/gno-token": "^2.0.0-RC3",
+    "@gnosis.pm/owl-token": "^2.0.0-RC2",
+    "@gnosis.pm/util-contracts": "^2.0.0-RC2"
   },
   "devDependencies": {
     "@digix/tempo": "^0.2.0",
@@ -54,13 +54,13 @@
     "eslint-plugin-standard": "^4.0.0",
     "minimist": "^1.2.0",
     "prettier": "^1.15.3",
-    "prettier-plugin-solidity-refactor": "^1.0.0-alpha.12",
+    "prettier-plugin-solidity-refactor": "^1.0.0-alpha.14",
     "solc": "0.5.2",
     "solidity-coverage": "^0.5.11",
     "truffle": "^5.0.0-beta.2",
     "truffle-contract": "^3.0.6",
-    "truffle-flattener": "^1.2.5",
-    "truffle-hdwallet-provider": "^1.0.0-web3one.1",
+    "truffle-flattener": "^1.2.10",
+    "truffle-hdwallet-provider": "1.0.2",
     "yargs": "^11.0.0"
   }
 }

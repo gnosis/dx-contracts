@@ -1,13 +1,16 @@
+/* global contract, assert, artifacts */
+/* eslint no-undef: "error" */
+
 const {
   logger,
   assertRejects,
-  gasLogger,
+  gasLogger
 } = require('./utils')
 
 const {
   getContracts,
-  wait,
- } = require('./testFunctions')
+  wait
+} = require('./testFunctions')
 
 const PriceOracleInterface = artifacts.require('PriceOracleInterface')
 
@@ -18,7 +21,7 @@ let medianizer
 let params2
 let contracts
 
-contract('DutchExchange updating exchange params', (accounts) => {
+contract('DutchExchange updating exchange params', accounts => {
   const [master, seller1] = accounts
 
   afterEach(gasLogger)
@@ -29,19 +32,19 @@ contract('DutchExchange updating exchange params', (accounts) => {
     // destructure contracts into upper state
     ({
       DutchExchange: dx,
-      Medianizer: medianizer,
+      Medianizer: medianizer
     } = contracts)
 
     // a new deployed PriceOracleInterface to replace the old with
     contracts.newPO = await PriceOracleInterface.new(master, medianizer.address);
     ({ newPO } = contracts)
 
-     params2 = {
-       auctioneer: seller1,
-       ethUSDOracle: newPO.address,
-       thresholdNewTokenPair: 5000,
-       thresholdNewAuction: 500,
-     }
+    params2 = {
+      auctioneer: seller1,
+      ethUSDOracle: newPO.address,
+      thresholdNewTokenPair: 5000,
+      thresholdNewAuction: 500
+    }
   })
 
   const getExchangeParams = async () => {
@@ -49,14 +52,14 @@ contract('DutchExchange updating exchange params', (accounts) => {
       dx.auctioneer.call(),
       dx.ethUSDOracle.call(),
       dx.thresholdNewTokenPair.call(),
-      dx.thresholdNewAuction.call(),
+      dx.thresholdNewAuction.call()
     ])
 
     return {
       auctioneer,
       ethUSDOracle,
       thresholdNewTokenPair: thresholdNewTokenPair.toNumber(),
-      thresholdNewAuction: thresholdNewAuction.toNumber(),
+      thresholdNewAuction: thresholdNewAuction.toNumber()
     }
   }
 
@@ -66,7 +69,7 @@ contract('DutchExchange updating exchange params', (accounts) => {
       auctioneer,
       ethUSDOracle,
       thresholdNewTokenPair,
-      thresholdNewAuction,
+      thresholdNewAuction
     } = params
 
     logger(`DutchExchange parameters:
@@ -79,25 +82,25 @@ contract('DutchExchange updating exchange params', (accounts) => {
     return params
   }
 
-  const assertIsAuctioneer = async (acc) => {
+  const assertIsAuctioneer = async acc => {
     const auctioneer = await dx.auctioneer.call()
     assert.strictEqual(auctioneer, acc, 'account should be DutchExchange contract auctioneer')
   }
 
-  const assertIsNotAuctioneer = async (acc) => {
+  const assertIsNotAuctioneer = async acc => {
     const auctioneer = await dx.auctioneer.call()
     assert.notStrictEqual(auctioneer, acc, 'account should not be DutchExchange contract auctioneer')
   }
 
   it('not auctioneer can\'t change params', async () => {
     const params1 = await getAndPrintExchangeParams()
-  
+
     await assertIsNotAuctioneer(seller1)
     assert.notDeepEqual(params1, params2, 'parameters must be different')
 
     logger(`Not auctioneer tries to change params to ${JSON.stringify(params2, null, 5)}`)
     await assertRejects(dx.updateAuctioneer(params2.auctioneer, { from: seller1 }), 'not auctioneer can\'t change params')
-    await assertRejects(dx.initiateEthUsdOracleUpdate( { from: seller1 }), 'not auctioneer can\'t change params')
+    await assertRejects(dx.initiateEthUsdOracleUpdate({ from: seller1 }), 'not auctioneer can\'t change params')
     await assertRejects(dx.updateEthUSDOracle(params2.ethUSDOracle, { from: seller1 }), 'not auctioneer can\'t change params')
     await assertRejects(dx.updateThresholdNewTokenPair(params2.thresholdNewTokenPair, { from: seller1 }), 'not auctioneer can\'t change params')
     await assertRejects(dx.updateThresholdNewAuction(params2.thresholdNewAuction, { from: seller1 }), 'not auctioneer can\'t change params')
@@ -118,9 +121,9 @@ contract('DutchExchange updating exchange params', (accounts) => {
     await assertIsAuctioneer(master)
 
     assert.notDeepEqual(params1, params2, 'parameters must be different')
-    await wait(60*60*24*30+5)
+    await wait(60 * 60 * 24 * 30 + 5)
     logger(`auctioneer changes params to ${JSON.stringify(params2, null, 5)}`)
-    await dx.updateEthUSDOracle( { from: master })
+    await dx.updateEthUSDOracle({ from: master })
     await dx.updateThresholdNewTokenPair(params2.thresholdNewTokenPair, { from: master })
     await dx.updateThresholdNewAuction(params2.thresholdNewAuction, { from: master })
     await dx.updateAuctioneer(params2.auctioneer, { from: master })

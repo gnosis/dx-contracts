@@ -1,3 +1,6 @@
+/* global contract, assert, artifacts */
+/* eslint no-undef: "error" */
+
 const {
   log: utilsLog,
   gasLogger

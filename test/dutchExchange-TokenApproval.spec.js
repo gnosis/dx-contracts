@@ -1,7 +1,10 @@
+/* global contract, assert */
+/* eslint no-undef: "error" */
+
 const {
   logger,
   assertRejects,
-  gasLogger,
+  gasLogger
 } = require('./utils')
 
 const { getContracts } = require('./testFunctions')
@@ -11,10 +14,9 @@ let eth
 let gno
 let dx
 
-
 let contracts
 
-contract('DutchExchange updating token aprroval', (accounts) => {
+contract('DutchExchange updating token aprroval', accounts => {
   const [master, seller1] = accounts
   let testingTokens
 
@@ -26,13 +28,13 @@ contract('DutchExchange updating token aprroval', (accounts) => {
     ({
       DutchExchange: dx,
       EtherToken: eth,
-      TokenGNO: gno,
+      TokenGNO: gno
     } = contracts)
 
     testingTokens = [eth, gno]
   })
 
-  const getTokenApproval = (token) => {
+  const getTokenApproval = token => {
     const addr = token.address || token
 
     return dx.approvedTokens.call(addr)
@@ -45,24 +47,24 @@ contract('DutchExchange updating token aprroval', (accounts) => {
     return approved
   }
 
-  const assertIsOwner = async (acc) => {
+  const assertIsOwner = async acc => {
     const owner = await dx.auctioneer.call()
     assert.strictEqual(owner, acc, 'account should be DutchExchange contract owner')
   }
 
-  const assertIsNotOwner = async (acc) => {
+  const assertIsNotOwner = async acc => {
     const owner = await dx.auctioneer.call()
     assert.notStrictEqual(owner, acc, 'account should not be DutchExchange contract owner')
   }
 
-  it('intially tokens aren\'t approved', () => Promise.all(testingTokens.map(async (token) => {
+  it('intially tokens aren\'t approved', () => Promise.all(testingTokens.map(async token => {
     const symbol = await token.symbol.call()
     const approved = await getAndPrintApproval(token, symbol)
 
     assert.isFalse(approved, `${symbol} token shouldn't be approved yet`)
   })))
 
-  it('not owner can\'t set token approval', () => Promise.all(testingTokens.map(async (token) => {
+  it('not owner can\'t set token approval', () => Promise.all(testingTokens.map(async token => {
     const symbol = await token.symbol.call()
     const approved1 = await getAndPrintApproval(token, symbol)
     assert.isFalse(approved1, `${symbol} token is not approved`)
@@ -79,7 +81,7 @@ contract('DutchExchange updating token aprroval', (accounts) => {
     assert.isFalse(approved2, `${symbol} token shouldn't be approved yet`)
   })))
 
-  it('owner can set token approval', () => Promise.all(testingTokens.map(async (token) => {
+  it('owner can set token approval', () => Promise.all(testingTokens.map(async token => {
     const symbol = await token.symbol.call()
     const approved1 = await getAndPrintApproval(token, symbol)
     assert.isFalse(approved1, `${symbol} token is not approved`)
@@ -96,7 +98,7 @@ contract('DutchExchange updating token aprroval', (accounts) => {
     assert.isTrue(approved2, `${symbol} token should be approved`)
   })))
 
-  it('not owner can\'t remove token approval', () => Promise.all(testingTokens.map(async (token) => {
+  it('not owner can\'t remove token approval', () => Promise.all(testingTokens.map(async token => {
     const symbol = await token.symbol.call()
     const approved1 = await getAndPrintApproval(token, symbol)
     assert.isTrue(approved1, `${symbol} token is approved`)
@@ -113,7 +115,7 @@ contract('DutchExchange updating token aprroval', (accounts) => {
     assert.isTrue(approved2, `${symbol} token should still be approved`)
   })))
 
-  it('owner can remove token approval', () => Promise.all(testingTokens.map(async (token) => {
+  it('owner can remove token approval', () => Promise.all(testingTokens.map(async token => {
     const symbol = await token.symbol.call()
     const approved1 = await getAndPrintApproval(token, symbol)
     assert.isTrue(approved1, `${symbol} token is approved`)

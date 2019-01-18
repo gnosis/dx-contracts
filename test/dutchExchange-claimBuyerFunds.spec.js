@@ -1,3 +1,6 @@
+/* global contract, assert, timestamp */
+/* eslint no-undef: "error" */
+
 /*
 MGN token issuing will not be covered in these tests, as they are covered in the magnolia testing scripts
 */
@@ -174,7 +177,7 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
     })
   })
 
-  describe ('Running independent tests', () => {
+  describe('Running independent tests', () => {
     beforeEach(async () => {
       currentSnapshotId = await makeSnapshot()
       // add tokenPair ETH GNO
@@ -279,7 +282,7 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
       const clearingTime = await getClearingTime(gno, eth, auctionIndex)
       const now = timestamp()
       assert.equal(clearingTime, now, 'clearingTime was set')
-      
+
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.6)
       const extraTokensAvailable = await dx.extraTokens.call(eth.address, gno.address, 2)
       await postBuyOrder(eth, gno, auctionIndex, 10e18, buyer1)
