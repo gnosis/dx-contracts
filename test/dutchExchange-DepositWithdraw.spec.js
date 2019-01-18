@@ -1,8 +1,11 @@
+/* global contract, assert */
+/* eslint no-undef: "error" */
+
 const {
   eventWatcher,
   log,
   gasLogger,
-  assertRejects,
+  assertRejects
 } = require('./utils')
 
 const { getContracts } = require('./testFunctions')
@@ -12,10 +15,9 @@ let eth
 let gno
 let dx
 
-
 let contracts
 
-contract('DutchExchange deposit/withdraw tests', (accounts) => {
+contract('DutchExchange deposit/withdraw tests', accounts => {
   const [master] = accounts
   const testingAccs = accounts.slice(1, 5)
 
@@ -30,7 +32,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
     ({
       DutchExchange: dx,
       EtherToken: eth,
-      TokenGNO: gno,
+      TokenGNO: gno
     } = contracts)
 
     // set up initial balances for accounts and allowance for dx in accounts' names
@@ -38,26 +40,26 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
       eth.deposit({ from: acct, value: ETHBalance }),
       eth.approve(dx.address, ETHBalance, { from: acct }),
       gno.transfer(acct, GNOBalance, { from: master }),
-      gno.approve(dx.address, GNOBalance, { from: acct }),
+      gno.approve(dx.address, GNOBalance, { from: acct })
     ])))
   })
 
   afterEach(gasLogger)
   after(eventWatcher.stopWatching)
 
-  const getAccDeposits = async (acc) => {
+  const getAccDeposits = async acc => {
     const [ETH, GNO] = (await Promise.all([
       dx.balances.call(eth.address, acc),
-      dx.balances.call(gno.address, acc),
+      dx.balances.call(gno.address, acc)
     ])).map(n => n.toNumber())
 
     return { ETH, GNO }
   }
 
-  const getAccBalances = async (acc) => {
+  const getAccBalances = async acc => {
     const [ETH, GNO] = (await Promise.all([
       eth.balanceOf.call(acc),
-      gno.balanceOf.call(acc),
+      gno.balanceOf.call(acc)
     ])).map(n => n.toNumber())
 
     return { ETH, GNO }
@@ -66,20 +68,20 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
   const getAccAllowance = async (owner, spender) => {
     const [ETH, GNO] = (await Promise.all([
       eth.allowance.call(owner, spender),
-      gno.allowance.call(owner, spender),
+      gno.allowance.call(owner, spender)
     ])).map(n => n.toNumber())
 
     return { ETH, GNO }
   }
 
-  it('intially deposits are 0', () => Promise.all(testingAccs.map(async (acc) => {
+  it('intially deposits are 0', () => Promise.all(testingAccs.map(async acc => {
     const { ETH, GNO } = await getAccDeposits(acc)
 
     assert.strictEqual(ETH, 0, `${acc} ETH deposit should be 0`)
     assert.strictEqual(GNO, 0, `${acc} GNO deposit should be 0`)
   })))
 
-  it('can deposit the right amount ', () => Promise.all(testingAccs.map(async (acc) => {
+  it('can deposit the right amount ', () => Promise.all(testingAccs.map(async acc => {
     const depositETH = 100
     const depositGNO = 200
 
@@ -105,7 +107,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
     assert.strictEqual(GNODep, GNOBalance - GNOBal, `${acc}'s GNO balance should decrease by the amount deposited`)
   })))
 
-  it('can withdraw the right amount ', () => Promise.all(testingAccs.map(async (acc) => {
+  it('can withdraw the right amount ', () => Promise.all(testingAccs.map(async acc => {
     const withdrawETH = 90
     const withdrawGNO = 150
 
@@ -134,7 +136,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
     assert.strictEqual(GNOBal2 - GNOBal1, withdrawGNO, 'GNO balance should increase by the amount withdrawn')
   })))
 
-  it('withdraws the whole deposit when trying to withdraw more than available', () => Promise.all(testingAccs.map(async (acc) => {
+  it('withdraws the whole deposit when trying to withdraw more than available', () => Promise.all(testingAccs.map(async acc => {
     const withdrawETH = 290
     const withdrawGNO = 350
 
@@ -166,7 +168,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
     assert.strictEqual(GNOBal2 - GNOBal1, GNODep1, 'GNO balance should increase by the amount withdrawn (whole deposit)')
   })))
 
-  it('rejects when trying to wihdraw when deposit is 0', () => Promise.all(testingAccs.map(async (acc) => {
+  it('rejects when trying to wihdraw when deposit is 0', () => Promise.all(testingAccs.map(async acc => {
     const withdrawETH = 10
     const withdrawGNO = 20
 
@@ -190,7 +192,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
     assert.strictEqual(GNODep1, GNODep2, 'GNO deposit should not change')
   })))
 
-  it('rejects when trying to deposit more than balance available', () => Promise.all(testingAccs.map(async (acc) => {
+  it('rejects when trying to deposit more than balance available', () => Promise.all(testingAccs.map(async acc => {
     const { ETH: ETHBal1, GNO: GNOBal1 } = await getAccBalances(acc)
     const { ETH: ETHDep1, GNO: GNODep1 } = await getAccDeposits(acc)
 
@@ -210,7 +212,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
     assert.strictEqual(GNODep1, GNODep2, 'GNO deposit should not change')
   })))
 
-  it('rejects when trying to deposit more than allowance', () => Promise.all(testingAccs.map(async (acc) => {
+  it('rejects when trying to deposit more than allowance', () => Promise.all(testingAccs.map(async acc => {
     const { ETH: ETHAllow, GNO: GNOAllow } = await getAccAllowance(acc, dx.address)
     const { ETH: ETHDep1, GNO: GNODep1 } = await getAccDeposits(acc)
 

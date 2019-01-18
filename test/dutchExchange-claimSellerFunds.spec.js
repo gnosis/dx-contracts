@@ -1,3 +1,6 @@
+/* global contract, assert, timestamp */
+/* eslint no-undef: "error" */
+
 /* Fee Reduction Token issuing is tested seperately in dutchExchange-MGN.js */
 
 const {
@@ -276,7 +279,7 @@ contract('DutchExchange - claimSellerFunds', accounts => {
       assert.equal((await dx.sellerBalances.call(gno.address, eth.address, auctionIndex, seller1)).toNumber(), 0)
       assert.equal(seller1NotDepositedETHBal + claimedAmountsS1, (await eth.balanceOf.call(seller1)).toNumber())
       assert.equal(seller2NotDepositedETHBal + claimedAmountsS2, (await eth.balanceOf.call(seller2)).toNumber())
-      //assert that claimed and withdrawed the amount (same deposited in DX)
+      // assert that claimed and withdrawed the amount (same deposited in DX)
       assert.equal(seller1ETHBal, (await dx.balances.call(eth.address, seller1)).toNumber())
       assert.equal(seller2ETHBal, (await dx.balances.call(eth.address, seller2)).toNumber())
     })

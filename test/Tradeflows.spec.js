@@ -1,3 +1,6 @@
+/* global contract, assert, artifacts */
+/* eslint no-undef: "error" */
+
 //
 // All tradeflows are desribed in the excel file:
 // https://docs.google.com/spreadsheets/d/1H-NXEvuxGKFW8azXtyQC26WQQuI5jmSxR7zK9tHDqSs/edit#gid=394399433

@@ -1,3 +1,6 @@
+/* global contract, assert, artifacts */
+/* eslint no-undef: "error" */
+
 /*
   eslint prefer-const: 0,
   max-len: 0,
@@ -264,14 +267,14 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       let idx = await getAuctionIndex() - 1
 
       const [claimedFunds, mgnsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
-      
+
       log(`
       claimedFunds: ${claimedFunds},
       mgnsIssued: ${mgnsIssued}
       `)
 
       await assertClaimingFundsCreatesMGNs(eth, gno, buyer1, 'buyer')
-      
+
       log(`
       RETURNED//CLAIMED FUNDS => ${claimedFunds.toEth()}
       MGN ISSUED           => ${mgnsIssued.toEth()}

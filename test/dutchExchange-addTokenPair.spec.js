@@ -1,3 +1,6 @@
+/* global contract, assert, artifacts */
+/* eslint no-undef: "error" */
+
 const {
   eventWatcher,
   log: utilsLog,
@@ -57,8 +60,8 @@ contract('DutchExchange - addTokenPair', accounts => {
     eventWatcher(dx, 'Log')
     eventWatcher(dx, 'LogNumber')
 
-    const totalTul = (await mgn.totalSupply.call()).toNumber()
-    assert.strictEqual(totalTul, 0, 'total TUL tokens should be 0')
+    const totalMgn = (await mgn.totalSupply.call()).toNumber()
+    assert.strictEqual(totalMgn, 0, 'total MGN tokens should be 0')
     // then we know that feeRatio = 1 / 200
     feeRatio = 1 / 200
 

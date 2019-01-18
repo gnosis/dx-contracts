@@ -1,12 +1,15 @@
+/* global contract, assert */
+/* eslint no-undef: "error" */
+
 /* eslint no-floating-decimal:0 */
 const {
   timestamp,
-  gasLogger,
+  gasLogger
 } = require('./utils')
 
 const {
   getContracts,
-  getAuctionIndex,
+  getAuctionIndex
 } = require('./testFunctions')
 
 // Test VARS
@@ -16,7 +19,7 @@ let dx
 
 let contracts
 
-contract('DutchExchange deposit/withdraw tests', (accounts) => {
+contract('DutchExchange deposit/withdraw tests', accounts => {
   const testingAccs = accounts.slice(1, 5)
 
   const ETHBalance = 50..toWei()
@@ -31,12 +34,12 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
     ({
       DutchExchange: dx,
       EtherToken: eth,
-      TokenGNO: gno,
+      TokenGNO: gno
     } = contracts)
 
     await Promise.all(testingAccs.map(acc => Promise.all([
       eth.deposit({ from: acc, value: ETHBalance }),
-      eth.approve(dx.address, ETHBalance, { from: acc }),
+      eth.approve(dx.address, ETHBalance, { from: acc })
     ])))
 
     await Promise.all(testingAccs.map(acc => dx.deposit(eth.address, ETHBalance / 2, { from: acc })))
@@ -45,7 +48,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
   it('Adds Token Pair', () => dx.addTokenPair(eth.address, gno.address, initialToken1Funding, 0, 2, 1, { from: accounts[1] }))
 
   it('DX Auction idx = 1 + Auction Start Time is > timestamp NOW [auction not started]', async () => {
-    const [ auctionIndex, auctionStart ] = await Promise.all([
+    const [auctionIndex, auctionStart] = await Promise.all([
       getAuctionIndex(),
       dx.getAuctionStart.call(eth.address, gno.address)
     ])
@@ -53,7 +56,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
     assert.isAbove(auctionStart.toNumber(), timestamp(), 'auction time should be above now')
   })
 
-  it('DX balances cannot be more than amt deposited initially', () => Promise.all(testingAccs.map(async (acc) => {
+  it('DX balances cannot be more than amt deposited initially', () => Promise.all(testingAccs.map(async acc => {
     assert(await dx.balances.call(eth.address, acc) <= ETHBalance / 2, 'Balances cannot be more than ETHBalance / 2')
   })))
 
@@ -61,7 +64,7 @@ contract('DutchExchange deposit/withdraw tests', (accounts) => {
     assert.equal(((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber()).toEth(), (initialToken1Funding.toEth() * 0.995), 'SellVolumesCurrent = 0')
   })
 
-  it('Deposits some ETH into DX and Posts Sell Order at same time', () => Promise.all(testingAccs.map(async (acc) => {
+  it('Deposits some ETH into DX and Posts Sell Order at same time', () => Promise.all(testingAccs.map(async acc => {
     await dx.depositAndSell(eth.address, gno.address, 4..toWei(), { from: acc })
     const fee = 0.995
 
