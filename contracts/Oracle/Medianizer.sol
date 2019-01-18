@@ -1,13 +1,13 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.2;
 
-import "../Oracle/DSValue.sol";
+import "./DSValue.sol";
+
 
 contract Medianizer is DSValue {
-    mapping (bytes12 => address) public values;
-    mapping (address => bytes12) public indexes;
-    bytes12 public next = 0x1;
-
-    uint96 public min = 0x1;
+    mapping(bytes12 => address) public values;
+    mapping(address => bytes12) public indexes;
+    bytes12 public next = bytes12(uint96(1));
+    uint96 public minimun = 0x1;
 
     function set(address wat) public auth {
         bytes12 nextId = bytes12(uint96(next) + 1);
@@ -16,42 +16,42 @@ contract Medianizer is DSValue {
         next = nextId;
     }
 
-    function set(bytes12 pos, address wat) public note auth {
+    function set(bytes12 pos, address wat) public payable note auth {
         require(pos != 0x0, "pos cannot be 0x0");
-        require(wat == 0 || indexes[wat] == 0, "wat is not defined or it has an index");
+        require(wat == address(0) || indexes[wat] == 0, "wat is not defined or it has an index");
 
         indexes[values[pos]] = bytes12(0); // Making sure to remove a possible existing address in that position
 
-        if (wat != 0) {
+        if (wat != address(0)) {
             indexes[wat] = pos;
         }
 
         values[pos] = wat;
     }
 
-    function setMin(uint96 min_) public note auth {
+    function setMin(uint96 min_) public payable note auth {
         require(min_ != 0x0, "min cannot be 0x0");
-        min = min_;
+        minimun = min_;
     }
 
-    function setNext(bytes12 next_) public note auth {
+    function setNext(bytes12 next_) public payable note auth {
         require(next_ != 0x0, "next cannot be 0x0");
         next = next_;
     }
 
     function unset(bytes12 pos) public {
-        set(pos, 0);
+        set(pos, address(0));
     }
 
     function unset(address wat) public {
-        set(indexes[wat], 0);
+        set(indexes[wat], address(0));
     }
 
     function poke() public {
         poke(0);
     }
 
-    function poke(bytes32) public note {
+    function poke(bytes32) public payable note {
         (val, has) = compute();
     }
 
@@ -59,7 +59,7 @@ contract Medianizer is DSValue {
         bytes32[] memory wuts = new bytes32[](uint96(next) - 1);
         uint96 ctr = 0;
         for (uint96 i = 1; i < uint96(next); i++) {
-            if (values[bytes12(i)] != 0) {
+            if (values[bytes12(i)] != address(0)) {
                 (bytes32 wut, bool wuz) = DSValue(values[bytes12(i)]).peek();
                 if (wuz) {
                     if (ctr == 0 || wut >= wuts[ctr - 1]) {
@@ -79,13 +79,14 @@ contract Medianizer is DSValue {
             }
         }
 
-        if (ctr < min) return (val, false);
+        if (ctr < minimun)
+            return (val, false);
 
         bytes32 value;
         if (ctr % 2 == 0) {
-            uint128 val1 = uint128(wuts[(ctr / 2) - 1]);
-            uint128 val2 = uint128(wuts[ctr / 2]);
-            value = bytes32(wdiv(hadd(val1, val2), 2 ether));
+            uint128 val1 = uint128(uint(wuts[(ctr / 2) - 1]));
+            uint128 val2 = uint128(uint(wuts[ctr / 2]));
+            value = bytes32(uint256(wdiv(hadd(val1, val2), 2 ether)));
         } else {
             value = wuts[(ctr - 1) / 2];
         }

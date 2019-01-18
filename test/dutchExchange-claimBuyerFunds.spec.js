@@ -19,7 +19,8 @@ const {
   waitUntilPriceIsXPercentOfPreviousPrice,
   setAndCheckAuctionStarted,
   postBuyOrder,
-  postSellOrder
+  postSellOrder,
+  getClearingTime
 } = require('./testFunctions')
 
 // Test VARS
@@ -108,6 +109,11 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
       auctionIndex = await getAuctionIndex()
       await setAndCheckAuctionStarted(eth, gno)
       assert.equal(2, auctionIndex)
+
+      // check that clearingTime was saved
+      const clearingTime = await getClearingTime(gno, eth, auctionIndex)
+      const now = timestamp()
+      assert.equal(clearingTime, now, 'clearingTime was set')
 
       // now claiming should not be possible and return == 0
       await setAndCheckAuctionStarted(eth, gno)
@@ -268,6 +274,12 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
 
       auctionIndex = await getAuctionIndex()
       assert.equal(auctionIndex, 2)
+
+      // check that clearingTime was saved
+      const clearingTime = await getClearingTime(gno, eth, auctionIndex)
+      const now = timestamp()
+      assert.equal(clearingTime, now, 'clearingTime was set')
+      
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.6)
       const extraTokensAvailable = await dx.extraTokens.call(eth.address, gno.address, 2)
       await postBuyOrder(eth, gno, auctionIndex, 10e18, buyer1)

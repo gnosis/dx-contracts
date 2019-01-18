@@ -1,21 +1,21 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.2;
 
 import "./TokenFRT.sol";
 import "@gnosis.pm/owl-token/contracts/TokenOWL.sol";
+import "./base/SafeTransfer.sol";
 import "./base/TokenWhitelist.sol";
 import "./base/DxMath.sol";
 import "./base/EthOracle.sol";
 import "./base/DxUpgrade.sol";
 
-
 /// @title Dutch Exchange - exchange token pairs with the clever mechanism of the dutch auction
 /// @author Alex Herrmann - <alex@gnosis.pm>
 /// @author Dominik Teiml - <dominik@gnosis.pm>
 
-contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
+contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
 
     // The price is a rational number, so we need a concept of a fraction
-    struct fraction {
+    struct Fraction {
         uint num;
         uint den;
     }
@@ -23,7 +23,6 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     uint constant WAITING_PERIOD_NEW_TOKEN_PAIR = 6 hours;
     uint constant WAITING_PERIOD_NEW_AUCTION = 10 minutes;
     uint constant AUCTION_START_WAITING_FOR_FUNDING = 1;
-
 
     // > Storage
     // Ether ERC-20 token
@@ -38,35 +37,177 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
     // Token for paying fees
     TokenOWL public owlToken;
 
-    // For the following two mappings, there is one mapping for each token pair
+    // For the following three mappings, there is one mapping for each token pair
     // The order which the tokens should be called is smaller, larger
     // These variables should never be called directly! They have getters below
     // Token => Token => index
-    mapping (address => mapping (address => uint)) public latestAuctionIndices;
+    mapping(address => mapping(address => uint)) public latestAuctionIndices;
     // Token => Token => time
     mapping (address => mapping (address => uint)) public auctionStarts;
+    // Token => Token => auctionIndex => time
+    mapping (address => mapping (address => mapping (uint => uint))) public clearingTimes;
 
     // Token => Token => auctionIndex => price
-    mapping (address => mapping (address => mapping (uint => fraction))) public closingPrices;
+    mapping(address => mapping(address => mapping(uint => Fraction))) public closingPrices;
 
     // Token => Token => amount
-    mapping (address => mapping (address => uint)) public sellVolumesCurrent;
+    mapping(address => mapping(address => uint)) public sellVolumesCurrent;
     // Token => Token => amount
-    mapping (address => mapping (address => uint)) public sellVolumesNext;
+    mapping(address => mapping(address => uint)) public sellVolumesNext;
     // Token => Token => amount
-    mapping (address => mapping (address => uint)) public buyVolumes;
+    mapping(address => mapping(address => uint)) public buyVolumes;
 
     // Token => user => amount
     // balances stores a user's balance in the DutchX
-    mapping (address => mapping (address => uint)) public balances;
+    mapping(address => mapping(address => uint)) public balances;
 
     // Token => Token => auctionIndex => amount
-    mapping (address => mapping (address => mapping (uint => uint))) public extraTokens;
+    mapping(address => mapping(address => mapping(uint => uint))) public extraTokens;
 
     // Token => Token =>  auctionIndex => user => amount
-    mapping (address => mapping (address => mapping (uint => mapping (address => uint)))) public sellerBalances;
-    mapping (address => mapping (address => mapping (uint => mapping (address => uint)))) public buyerBalances;
-    mapping (address => mapping (address => mapping (uint => mapping (address => uint)))) public claimedAmounts;
+    mapping(address => mapping(address => mapping(uint => mapping(address => uint)))) public sellerBalances;
+    mapping(address => mapping(address => mapping(uint => mapping(address => uint)))) public buyerBalances;
+    mapping(address => mapping(address => mapping(uint => mapping(address => uint)))) public claimedAmounts;
+
+    function depositAndSell(address sellToken, address buyToken, uint amount)
+        external
+        returns (uint newBal, uint auctionIndex, uint newSellerBal)
+    {
+        newBal = deposit(sellToken, amount);
+        (auctionIndex, newSellerBal) = postSellOrder(sellToken, buyToken, 0, amount);
+    }
+
+    function claimAndWithdraw(address sellToken, address buyToken, address user, uint auctionIndex, uint amount)
+        external
+        returns (uint returned, uint frtsIssued, uint newBal)
+    {
+        (returned, frtsIssued) = claimSellerFunds(sellToken, buyToken, user, auctionIndex);
+        newBal = withdraw(buyToken, amount);
+    }
+
+    /// @dev for multiple claims
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    /// @param user is the user who wants to his tokens
+    function claimTokensFromSeveralAuctionsAsSeller(
+        address[] calldata auctionSellTokens,
+        address[] calldata auctionBuyTokens,
+        uint[] calldata auctionIndices,
+        address user
+    ) external returns (uint[] memory, uint[] memory)
+    {
+        uint length = checkLengthsForSeveralAuctionClaiming(auctionSellTokens, auctionBuyTokens, auctionIndices);
+
+        uint[] memory claimAmounts = new uint[](length);
+        uint[] memory frtsIssuedList = new uint[](length);
+
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], frtsIssuedList[i]) = claimSellerFunds(
+                auctionSellTokens[i],
+                auctionBuyTokens[i],
+                user,
+                auctionIndices[i]
+            );
+        }
+
+        return (claimAmounts, frtsIssuedList);
+    }
+
+    /// @dev for multiple claims
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    /// @param user is the user who wants to his tokens
+    function claimTokensFromSeveralAuctionsAsBuyer(
+        address[] calldata auctionSellTokens,
+        address[] calldata auctionBuyTokens,
+        uint[] calldata auctionIndices,
+        address user
+    ) external returns (uint[] memory, uint[] memory)
+    {
+        uint length = checkLengthsForSeveralAuctionClaiming(auctionSellTokens, auctionBuyTokens, auctionIndices);
+
+        uint[] memory claimAmounts = new uint[](length);
+        uint[] memory frtsIssuedList = new uint[](length);
+
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], frtsIssuedList[i]) = claimBuyerFunds(
+                auctionSellTokens[i],
+                auctionBuyTokens[i],
+                user,
+                auctionIndices[i]
+            );
+        }
+
+        return (claimAmounts, frtsIssuedList);
+    }
+
+    /// @dev for multiple withdraws
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    function claimAndWithdrawTokensFromSeveralAuctionsAsSeller(
+        address[] calldata auctionSellTokens,
+        address[] calldata auctionBuyTokens,
+        uint[] calldata auctionIndices
+    ) external returns (uint[] memory, uint frtsIssued)
+    {
+        uint length = checkLengthsForSeveralAuctionClaiming(auctionSellTokens, auctionBuyTokens, auctionIndices);
+
+        uint[] memory claimAmounts = new uint[](length);
+        uint claimFrts = 0;
+
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], claimFrts) = claimSellerFunds(
+                auctionSellTokens[i],
+                auctionBuyTokens[i],
+                msg.sender,
+                auctionIndices[i]
+            );
+
+            frtsIssued += claimFrts;
+
+            withdraw(auctionBuyTokens[i], claimAmounts[i]);
+        }
+
+        return (claimAmounts, frtsIssued);
+    }
+
+    /// @dev for multiple withdraws
+    /// @param auctionSellTokens are the sellTokens defining an auctionPair
+    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
+    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
+    function claimAndWithdrawTokensFromSeveralAuctionsAsBuyer(
+        address[] calldata auctionSellTokens,
+        address[] calldata auctionBuyTokens,
+        uint[] calldata auctionIndices
+    ) external returns (uint[] memory, uint frtsIssued)
+    {
+        uint length = checkLengthsForSeveralAuctionClaiming(auctionSellTokens, auctionBuyTokens, auctionIndices);
+
+        uint[] memory claimAmounts = new uint[](length);
+        uint claimFrts = 0;
+
+        for (uint i = 0; i < length; i++) {
+            (claimAmounts[i], claimFrts) = claimBuyerFunds(
+                auctionSellTokens[i],
+                auctionBuyTokens[i],
+                msg.sender,
+                auctionIndices[i]
+            );
+
+            frtsIssued += claimFrts;
+
+            withdraw(auctionSellTokens[i], claimAmounts[i]);
+        }
+
+        return (claimAmounts, frtsIssued);
+    }
+
+    function getMasterCopy() external view returns (address) {
+        return masterCopy;
+    }
 
     /// @dev Constructor-Function creates exchange
     /// @param _frtToken - address of frtToken ERC-20 token
@@ -83,17 +224,16 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         PriceOracleInterface _ethUSDOracle,
         uint _thresholdNewTokenPair,
         uint _thresholdNewAuction
-    )
-        public
+    ) public
     {
         // Make sure contract hasn't been initialised
-        require(ethToken == 0, "The contract must be uninitialized");
+        require(ethToken == address(0), "The contract must be uninitialized");
 
         // Validates inputs
         require(address(_owlToken) != address(0), "The OWL address must be valid");
         require(address(_frtToken) != address(0), "The FRT address must be valid");
-        require(_auctioneer != 0, "The auctioneer address must be valid");
-        require(_ethToken != 0, "The WETH address must be valid");
+        require(_auctioneer != address(0), "The auctioneer address must be valid");
+        require(_ethToken != address(0), "The WETH address must be valid");
         require(address(_ethUSDOracle) != address(0), "The oracle address must be valid");
 
         frtToken = _frtToken;
@@ -105,25 +245,13 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         thresholdNewAuction = _thresholdNewAuction;
     }
 
-    function updateThresholdNewTokenPair(
-        uint _thresholdNewTokenPair
-    )
-        public
-        onlyAuctioneer
-    {
+    function updateThresholdNewTokenPair(uint _thresholdNewTokenPair) public onlyAuctioneer {
         thresholdNewTokenPair = _thresholdNewTokenPair;
     }
 
-    function updateThresholdNewAuction(
-        uint _thresholdNewAuction
-    )
-        public
-        onlyAuctioneer
-    {
+    function updateThresholdNewAuction(uint _thresholdNewAuction) public onlyAuctioneer {
         thresholdNewAuction = _thresholdNewAuction;
     }
-
-
 
     /// @param initialClosingPriceNum initial price will be 2 * initialClosingPrice. This is its numerator
     /// @param initialClosingPriceDen initial price will be 2 * initialClosingPrice. This is its denominator
@@ -134,8 +262,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint token2Funding,
         uint initialClosingPriceNum,
         uint initialClosingPriceDen
-    )
-        public
+    ) public
     {
         // R1
         require(token1 != token2, "You cannot add a token pair using the same token");
@@ -182,19 +309,613 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         } else {
             // C3: Neither token is ethToken
             fundedValueUSD = calculateFundedValueTokenToken(
-                token1, token2, token1Funding, token2Funding, ethTokenMem,
-                ethUSDPrice);
+                token1,
+                token2,
+                token1Funding,
+                token2Funding,
+                ethTokenMem,
+                ethUSDPrice
+            );
         }
 
         // R5
         require(fundedValueUSD >= thresholdNewTokenPair, "You should surplus the threshold for adding token pairs");
 
         // Save prices of opposite auctions
-        closingPrices[token1][token2][0] = fraction(initialClosingPriceNum, initialClosingPriceDen);
-        closingPrices[token2][token1][0] = fraction(initialClosingPriceDen, initialClosingPriceNum);
+        closingPrices[token1][token2][0] = Fraction(initialClosingPriceNum, initialClosingPriceDen);
+        closingPrices[token2][token1][0] = Fraction(initialClosingPriceDen, initialClosingPriceNum);
 
         // Split into two fns because of 16 local-var cap
         addTokenPairSecondPart(token1, token2, token1Funding, token2Funding);
+    }
+
+    function deposit(address tokenAddress, uint amount) public returns (uint) {
+        // R1
+        require(safeTransfer(tokenAddress, msg.sender, amount, true), "The deposit transaction must succeed");
+
+        uint newBal = add(balances[tokenAddress][msg.sender], amount);
+
+        balances[tokenAddress][msg.sender] = newBal;
+
+        emit NewDeposit(tokenAddress, amount);
+
+        return newBal;
+    }
+
+    function withdraw(address tokenAddress, uint amount) public returns (uint) {
+        uint usersBalance = balances[tokenAddress][msg.sender];
+        amount = min(amount, usersBalance);
+
+        // R1
+        require(amount > 0, "The amount must be greater than 0");
+
+        uint newBal = sub(usersBalance, amount);
+        balances[tokenAddress][msg.sender] = newBal;
+
+        // R2
+        require(safeTransfer(tokenAddress, msg.sender, amount, false), "The withdraw transfer must succeed");
+        emit NewWithdrawal(tokenAddress, amount);
+
+        return newBal;
+    }
+
+    function postSellOrder(address sellToken, address buyToken, uint auctionIndex, uint amount)
+        public
+        returns (uint, uint)
+    {
+        // Note: if a user specifies auctionIndex of 0, it
+        // means he is agnostic which auction his sell order goes into
+
+        amount = min(amount, balances[sellToken][msg.sender]);
+
+        // R1
+        require(amount > 0, "Sell amount should be greater than 0");
+
+        // R2
+        uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
+        require(latestAuctionIndex > 0);
+
+        // R3
+        uint auctionStart = getAuctionStart(sellToken, buyToken);
+        if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING || auctionStart > now) {
+            // C1: We are in the 10 minute buffer period
+            // OR waiting for an auction to receive sufficient sellVolume
+            // Auction has already cleared, and index has been incremented
+            // sell order must use that auction index
+            // R1.1
+            if (auctionIndex == 0) {
+                auctionIndex = latestAuctionIndex;
+            } else {
+                require(auctionIndex == latestAuctionIndex, "Auction index should be equal to latest auction index");
+            }
+
+            // R1.2
+            require(add(sellVolumesCurrent[sellToken][buyToken], amount) < 10 ** 30);
+        } else {
+            // C2
+            // R2.1: Sell orders must go to next auction
+            if (auctionIndex == 0) {
+                auctionIndex = latestAuctionIndex + 1;
+            } else {
+                require(auctionIndex == latestAuctionIndex + 1);
+            }
+
+            // R2.2
+            require(add(sellVolumesNext[sellToken][buyToken], amount) < 10 ** 30);
+        }
+
+        // Fee mechanism, fees are added to extraTokens
+        uint amountAfterFee = settleFee(sellToken, buyToken, auctionIndex, amount);
+
+        // Update variables
+        balances[sellToken][msg.sender] = sub(balances[sellToken][msg.sender], amount);
+        uint newSellerBal = add(sellerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
+        sellerBalances[sellToken][buyToken][auctionIndex][msg.sender] = newSellerBal;
+
+        if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING || auctionStart > now) {
+            // C1
+            uint sellVolumeCurrent = sellVolumesCurrent[sellToken][buyToken];
+            sellVolumesCurrent[sellToken][buyToken] = add(sellVolumeCurrent, amountAfterFee);
+        } else {
+            // C2
+            uint sellVolumeNext = sellVolumesNext[sellToken][buyToken];
+            sellVolumesNext[sellToken][buyToken] = add(sellVolumeNext, amountAfterFee);
+
+            // close previous auction if theoretically closed
+            closeTheoreticalClosedAuction(sellToken, buyToken, latestAuctionIndex);
+        }
+
+        if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING) {
+            scheduleNextAuction(sellToken, buyToken);
+        }
+
+        emit NewSellOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
+
+        return (auctionIndex, newSellerBal);
+    }
+
+    function postBuyOrder(address sellToken, address buyToken, uint auctionIndex, uint amount)
+        public
+        returns (uint newBuyerBal)
+    {
+        // R1: auction must not have cleared
+        require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
+
+        uint auctionStart = getAuctionStart(sellToken, buyToken);
+
+        // R2
+        require(auctionStart <= now);
+
+        // R4
+        require(auctionIndex == getAuctionIndex(sellToken, buyToken));
+
+        // R5: auction must not be in waiting period
+        require(auctionStart > AUCTION_START_WAITING_FOR_FUNDING);
+
+        // R6: auction must be funded
+        require(sellVolumesCurrent[sellToken][buyToken] > 0);
+
+        uint buyVolume = buyVolumes[sellToken][buyToken];
+        amount = min(amount, balances[buyToken][msg.sender]);
+
+        // R7
+        require(add(buyVolume, amount) < 10 ** 30);
+
+        // Overbuy is when a part of a buy order clears an auction
+        // In that case we only process the part before the overbuy
+        // To calculate overbuy, we first get current price
+        uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
+
+        uint num;
+        uint den;
+        (num, den) = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
+        // 10^30 * 10^37 = 10^67
+        uint outstandingVolume = atleastZero(int(mul(sellVolume, num) / den - buyVolume));
+
+        uint amountAfterFee;
+        if (amount < outstandingVolume) {
+            if (amount > 0) {
+                amountAfterFee = settleFee(buyToken, sellToken, auctionIndex, amount);
+            }
+        } else {
+            amount = outstandingVolume;
+            amountAfterFee = outstandingVolume;
+        }
+
+        // Here we could also use outstandingVolume or amountAfterFee, it doesn't matter
+        if (amount > 0) {
+            // Update variables
+            balances[buyToken][msg.sender] = sub(balances[buyToken][msg.sender], amount);
+            newBuyerBal = add(buyerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
+            buyerBalances[sellToken][buyToken][auctionIndex][msg.sender] = newBuyerBal;
+            buyVolumes[sellToken][buyToken] = add(buyVolumes[sellToken][buyToken], amountAfterFee);
+            emit NewBuyOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
+        }
+
+        // Checking for equality would suffice here. nevertheless:
+        if (amount >= outstandingVolume) {
+            // Clear auction
+            clearAuction(sellToken, buyToken, auctionIndex, sellVolume);
+        }
+
+        return (newBuyerBal);
+    }
+
+    function claimSellerFunds(address sellToken, address buyToken, address user, uint auctionIndex)
+        public
+        returns (
+        // < (10^60, 10^61)
+        uint returned,
+        uint frtsIssued
+    )
+    {
+        closeTheoreticalClosedAuction(sellToken, buyToken, auctionIndex);
+        uint sellerBalance = sellerBalances[sellToken][buyToken][auctionIndex][user];
+
+        // R1
+        require(sellerBalance > 0);
+
+        // Get closing price for said auction
+        Fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
+        uint num = closingPrice.num;
+        uint den = closingPrice.den;
+
+        // R2: require auction to have cleared
+        require(den > 0);
+
+        // Calculate return
+        // < 10^30 * 10^30 = 10^60
+        returned = mul(sellerBalance, num) / den;
+
+        frtsIssued = issueFrts(
+            sellToken,
+            buyToken,
+            returned,
+            auctionIndex,
+            sellerBalance,
+            user
+        );
+
+        // Claim tokens
+        sellerBalances[sellToken][buyToken][auctionIndex][user] = 0;
+        if (returned > 0) {
+            balances[buyToken][user] = add(balances[buyToken][user], returned);
+        }
+        emit NewSellerFundsClaim(
+            sellToken,
+            buyToken,
+            user,
+            auctionIndex,
+            returned,
+            frtsIssued
+        );
+    }
+
+    function claimBuyerFunds(address sellToken, address buyToken, address user, uint auctionIndex)
+        public
+        returns (uint returned, uint frtsIssued)
+    {
+        closeTheoreticalClosedAuction(sellToken, buyToken, auctionIndex);
+
+        uint num;
+        uint den;
+        (returned, num, den) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
+
+        if (closingPrices[sellToken][buyToken][auctionIndex].den == 0) {
+            // Auction is running
+            claimedAmounts[sellToken][buyToken][auctionIndex][user] = add(
+                claimedAmounts[sellToken][buyToken][auctionIndex][user],
+                returned
+            );
+        } else {
+            // Auction has closed
+            // We DON'T want to check for returned > 0, because that would fail if a user claims
+            // intermediate funds & auction clears in same block (he/she would not be able to claim extraTokens)
+
+            // Assign extra sell tokens (this is possible only after auction has cleared,
+            // because buyVolume could still increase before that)
+            uint extraTokensTotal = extraTokens[sellToken][buyToken][auctionIndex];
+            uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
+
+            // closingPrices.num represents buyVolume
+            // < 10^30 * 10^30 = 10^60
+            uint tokensExtra = mul(
+                buyerBalance,
+                extraTokensTotal
+            ) / closingPrices[sellToken][buyToken][auctionIndex].num;
+            returned = add(returned, tokensExtra);
+
+            frtsIssued = issueFrts(
+                buyToken,
+                sellToken,
+                mul(buyerBalance, den) / num,
+                auctionIndex,
+                buyerBalance,
+                user
+            );
+
+            // Auction has closed
+            // Reset buyerBalances and claimedAmounts
+            buyerBalances[sellToken][buyToken][auctionIndex][user] = 0;
+            claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0;
+        }
+
+        // Claim tokens
+        if (returned > 0) {
+            balances[sellToken][user] = add(balances[sellToken][user], returned);
+        }
+
+        emit NewBuyerFundsClaim(
+            sellToken,
+            buyToken,
+            user,
+            auctionIndex,
+            returned,
+            frtsIssued
+        );
+    }    
+
+    /// @dev allows to close possible theoretical closed markets
+    /// @param sellToken sellToken of an auction
+    /// @param buyToken buyToken of an auction
+    /// @param auctionIndex is the auctionIndex of the auction
+    function closeTheoreticalClosedAuction(address sellToken, address buyToken, uint auctionIndex) public {
+        if (auctionIndex == getAuctionIndex(
+            buyToken,
+            sellToken
+        ) && closingPrices[sellToken][buyToken][auctionIndex].num == 0) {
+            uint buyVolume = buyVolumes[sellToken][buyToken];
+            uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
+            uint num;
+            uint den;
+            (num, den) = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
+            // 10^30 * 10^37 = 10^67
+            if (sellVolume > 0) {
+                uint outstandingVolume = atleastZero(int(mul(sellVolume, num) / den - buyVolume));
+
+                if (outstandingVolume == 0) {
+                    postBuyOrder(sellToken, buyToken, auctionIndex, 0);
+                }
+            }
+        }
+    }
+
+    /// @dev Claim buyer funds for one auction
+    function getUnclaimedBuyerFunds(address sellToken, address buyToken, address user, uint auctionIndex)
+        public
+        view
+        returns (
+        // < (10^67, 10^37)
+        uint unclaimedBuyerFunds,
+        uint num,
+        uint den
+    )
+    {
+        // R1: checks if particular auction has ever run
+        require(auctionIndex <= getAuctionIndex(sellToken, buyToken));
+
+        (num, den) = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
+
+        if (num == 0) {
+            // This should rarely happen - as long as there is >= 1 buy order,
+            // auction will clear before price = 0. So this is just fail-safe
+            unclaimedBuyerFunds = 0;
+        } else {
+            uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
+            // < 10^30 * 10^37 = 10^67
+            unclaimedBuyerFunds = atleastZero(
+                int(mul(buyerBalance, den) / num - claimedAmounts[sellToken][buyToken][auctionIndex][user])
+            );
+        }
+    }
+
+    function getFeeRatio(address user)
+        public
+        view
+        returns (
+        // feeRatio < 10^4
+        uint num,
+        uint den
+    )
+    {
+        uint totalSupply = frtToken.totalSupply();
+        uint lockedFrt = frtToken.lockedTokenBalances(user);
+
+        /*
+          Fee Model:
+            locked FRT range     Fee
+            -----------------   ------
+            [0, 0.01%)           0.5%
+            [0.01%, 0.1%)        0.4%
+            [0.1%, 1%)           0.3%
+            [1%, 10%)            0.2%
+            [10%, 100%)          0.1%
+        */
+
+        if (lockedFrt * 10000 < totalSupply || totalSupply == 0) {
+            // Maximum fee, if user has locked less than 0.01% of the total FRT
+            // Fee: 0.5%
+            num = 1;
+            den = 200;
+        } else if (lockedFrt * 1000 < totalSupply) {
+            // If user has locked more than 0.01% and less than 0.1% of the total FRT
+            // Fee: 0.4%
+            num = 1;
+            den = 250;
+        } else if (lockedFrt * 100 < totalSupply) {
+            // If user has locked more than 0.1% and less than 1% of the total FRT
+            // Fee: 0.3%
+            num = 3;
+            den = 1000;
+        } else if (lockedFrt * 10 < totalSupply) {
+            // If user has locked more than 1% and less than 10% of the total FRT
+            // Fee: 0.2%
+            num = 1;
+            den = 500;
+        } else {
+            // If user has locked more than 10% of the total FRT
+            // Fee: 0.1%
+            num = 1;
+            den = 1000;
+        }
+    }
+
+    //@ dev returns price in units [token2]/[token1]
+    //@ param token1 first token for price calculation
+    //@ param token2 second token for price calculation
+    //@ param auctionIndex index for the auction to get the averaged price from
+    function getPriceInPastAuction(
+        address token1,
+        address token2,
+        uint auctionIndex
+    )
+        public
+        view
+        // price < 10^31
+        returns (uint num, uint den)
+    {
+        if (token1 == token2) {
+            // C1
+            num = 1;
+            den = 1;
+        } else {
+            // C2
+            // R2.1
+            require(auctionIndex >= 0);
+
+
+            // C3
+            // R3.1
+            require(auctionIndex <= getAuctionIndex(token1, token2));
+            // auction still running
+
+            uint i = 0;
+            bool correctPair = false;
+            Fraction memory closingPriceToken1;
+            Fraction memory closingPriceToken2;
+
+            while (!correctPair) {
+                closingPriceToken2 = closingPrices[token2][token1][auctionIndex - i];
+                closingPriceToken1 = closingPrices[token1][token2][auctionIndex - i];
+
+                if (closingPriceToken1.num > 0 && closingPriceToken1.den > 0 ||
+                    closingPriceToken2.num > 0 && closingPriceToken2.den > 0)
+                {
+                    correctPair = true;
+                }
+                i++;
+            }
+
+            // At this point at least one closing price is strictly positive
+            // If only one is positive, we want to output that
+            if (closingPriceToken1.num == 0 || closingPriceToken1.den == 0) {
+                num = closingPriceToken2.den;
+                den = closingPriceToken2.num;
+            } else if (closingPriceToken2.num == 0 || closingPriceToken2.den == 0) {
+                num = closingPriceToken1.num;
+                den = closingPriceToken1.den;
+            } else {
+                // If both prices are positive, output weighted average
+                num = closingPriceToken2.den + closingPriceToken1.num;
+                den = closingPriceToken2.num + closingPriceToken1.den;
+            }
+        }
+    }
+
+    function scheduleNextAuction(
+        address sellToken,
+        address buyToken
+    )
+        internal
+    {
+        (uint sellVolume, uint sellVolumeOpp) = getSellVolumesInUSD(sellToken, buyToken);
+
+        bool enoughSellVolume = sellVolume >= thresholdNewAuction;
+        bool enoughSellVolumeOpp = sellVolumeOpp >= thresholdNewAuction;
+        bool schedule;
+        // Make sure both sides have liquidity in order to start the auction
+        if (enoughSellVolume && enoughSellVolumeOpp) {
+            schedule = true;
+        } else if (enoughSellVolume || enoughSellVolumeOpp) {
+            // But if the auction didn't start in 24h, then is enough to have 
+            // liquidity in one of the two sides
+            uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
+            uint clearingTime = getClearingTime(sellToken, buyToken, latestAuctionIndex - 1);
+            schedule = clearingTime <= now - 24 hours;
+        }
+
+        if (schedule) {
+            // Schedule next auction
+            setAuctionStart(sellToken, buyToken, WAITING_PERIOD_NEW_AUCTION);
+        } else {            
+            resetAuctionStart(sellToken, buyToken);
+        }
+    }
+
+    function getSellVolumesInUSD(
+        address sellToken,
+        address buyToken
+    )
+        internal
+        view
+        returns (uint sellVolume, uint sellVolumeOpp)
+    {
+        // Check if auctions received enough sell orders
+        uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
+
+        uint sellNum;
+        uint sellDen;
+        (sellNum, sellDen) = getPriceOfTokenInLastAuction(sellToken);
+
+        uint buyNum;
+        uint buyDen;
+        (buyNum, buyDen) = getPriceOfTokenInLastAuction(buyToken);
+
+        // We use current sell volume, because in clearAuction() we set
+        // sellVolumesCurrent = sellVolumesNext before calling this function
+        // (this is so that we don't need case work,
+        // since it might also be called from postSellOrder())
+
+        // < 10^30 * 10^31 * 10^6 = 10^67
+        sellVolume = mul(mul(sellVolumesCurrent[sellToken][buyToken], sellNum), ethUSDPrice) / sellDen;
+        sellVolumeOpp = mul(mul(sellVolumesCurrent[buyToken][sellToken], buyNum), ethUSDPrice) / buyDen;
+    }
+    
+    /// @dev Gives best estimate for market price of a token in ETH of any price oracle on the Ethereum network
+    /// @param token address of ERC-20 token
+    /// @return Weighted average of closing prices of opposite Token-ethToken auctions, based on their sellVolume
+    function getPriceOfTokenInLastAuction(address token)
+        public
+        view
+        returns (
+        // price < 10^31
+        uint num,
+        uint den
+    )
+    {
+        uint latestAuctionIndex = getAuctionIndex(token, ethToken);
+        // getPriceInPastAuction < 10^30
+        (num, den) = getPriceInPastAuction(token, ethToken, latestAuctionIndex - 1);
+    }
+
+    function getCurrentAuctionPrice(address sellToken, address buyToken, uint auctionIndex)
+        public
+        view
+        returns (
+        // price < 10^37
+        uint num,
+        uint den
+    )
+    {
+        Fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
+
+        if (closingPrice.den != 0) {
+            // Auction has closed
+            (num, den) = (closingPrice.num, closingPrice.den);
+        } else if (auctionIndex > getAuctionIndex(sellToken, buyToken)) {
+            (num, den) = (0, 0);
+        } else {
+            // Auction is running
+            uint pastNum;
+            uint pastDen;
+            (pastNum, pastDen) = getPriceInPastAuction(sellToken, buyToken, auctionIndex - 1);
+
+            // If we're calling the function into an unstarted auction,
+            // it will return the starting price of that auction
+            uint timeElapsed = atleastZero(int(now - getAuctionStart(sellToken, buyToken)));
+
+            // The numbers below are chosen such that
+            // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
+
+            // 10^5 * 10^31 = 10^36
+            num = atleastZero(int((86400 - timeElapsed) * pastNum));
+            // 10^6 * 10^31 = 10^37
+            den = mul((timeElapsed + 43200), pastDen);
+
+            if (mul(num, sellVolumesCurrent[sellToken][buyToken]) <= mul(den, buyVolumes[sellToken][buyToken])) {
+                num = buyVolumes[sellToken][buyToken];
+                den = sellVolumesCurrent[sellToken][buyToken];
+            }
+        }
+    }
+
+    // > Helper fns
+    function getTokenOrder(address token1, address token2) public pure returns (address, address) {
+        if (token2 < token1) {
+            (token1, token2) = (token2, token1);
+        }
+
+        return (token1, token2);
+    }
+
+    function getAuctionStart(address token1, address token2) public view returns (uint auctionStart) {
+        (token1, token2) = getTokenOrder(token1, token2);
+        auctionStart = auctionStarts[token1][token2];
+    }
+
+    function getAuctionIndex(address token1, address token2) public view returns (uint auctionIndex) {
+        (token1, token2) = getTokenOrder(token1, token2);
+        auctionIndex = latestAuctionIndices[token1][token2];
     }
 
     function calculateFundedValueTokenToken(
@@ -257,291 +978,45 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         sellerBalances[token1][token2][1][msg.sender] = token1FundingAfterFee;
         sellerBalances[token2][token1][1][msg.sender] = token2FundingAfterFee;
 
+        // Save clearingTime as adding time
+        (address tokenA, address tokenB) = getTokenOrder(token1, token2);
+        clearingTimes[tokenA][tokenB][0] = now;
+
         setAuctionStart(token1, token2, WAITING_PERIOD_NEW_TOKEN_PAIR);
         emit NewTokenPair(token1, token2);
     }
 
-    function deposit(
-        address tokenAddress,
-        uint amount
-    )
-        public
-        returns (uint)
-    {
-        // R1
-        require(Token(tokenAddress).transferFrom(msg.sender, this, amount), "The deposit transaction must succeed");
-
-        uint newBal = add(balances[tokenAddress][msg.sender], amount);
-
-        balances[tokenAddress][msg.sender] = newBal;
-
-        emit NewDeposit(tokenAddress, amount);
-
-        return newBal;
-    }
-
-    function withdraw(
-        address tokenAddress,
-        uint amount
-    )
-        public
-        returns (uint)
-    {
-        uint usersBalance = balances[tokenAddress][msg.sender];
-        amount = min(amount, usersBalance);
-
-        // R1
-        require(amount > 0, "The amount must be greater than 0");
-
-        uint newBal = sub(usersBalance, amount);
-        balances[tokenAddress][msg.sender] = newBal;
-
-        // R2
-        require(Token(tokenAddress).transfer(msg.sender, amount), "The withdraw transfer must succeed");
-        emit NewWithdrawal(tokenAddress, amount);
-
-        return newBal;
-    }
-
-    function postSellOrder(
-        address sellToken,
-        address buyToken,
+    function setClearingTime(
+        address token1,
+        address token2,
         uint auctionIndex,
-        uint amount
+        uint auctionStart,
+        uint sellVolume,
+        uint buyVolume
     )
-        public
-        returns (uint, uint)
+        internal
     {
-        // Note: if a user specifies auctionIndex of 0, it
-        // means he is agnostic which auction his sell order goes into
-
-        amount = min(amount, balances[sellToken][msg.sender]);
-
-        // R1
-        require(amount > 0, "Sell amount should be greater than 0");
-
-        // R2
-        uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
-        require(latestAuctionIndex > 0);
-
-        // R3
-        uint auctionStart = getAuctionStart(sellToken, buyToken);
-        if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING || auctionStart > now) {
-            // C1: We are in the 10 minute buffer period
-            // OR waiting for an auction to receive sufficient sellVolume
-            // Auction has already cleared, and index has been incremented
-            // sell order must use that auction index
-            // R1.1
-            if (auctionIndex == 0) {
-                auctionIndex = latestAuctionIndex;
-            } else {
-                require(auctionIndex == latestAuctionIndex,
-                    "Auction index should be equal to latest auction index");
-            }
-
-            // R1.2
-            require(add(sellVolumesCurrent[sellToken][buyToken], amount) < 10 ** 30);
-        } else {
-            // C2
-            // R2.1: Sell orders must go to next auction
-            if (auctionIndex == 0) {
-                auctionIndex = latestAuctionIndex + 1;
-            } else {
-                require(auctionIndex == latestAuctionIndex + 1);
-            }
-
-            // R2.2
-            require(add(sellVolumesNext[sellToken][buyToken], amount) < 10 ** 30);
-        }
-
-        // Fee mechanism, fees are added to extraTokens
-        uint amountAfterFee = settleFee(sellToken, buyToken, auctionIndex, amount);
-
-        // Update variables
-        balances[sellToken][msg.sender] = sub(balances[sellToken][msg.sender], amount);
-        uint newSellerBal = add(sellerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
-        sellerBalances[sellToken][buyToken][auctionIndex][msg.sender] = newSellerBal;
-
-        if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING || auctionStart > now) {
-            // C1
-            uint sellVolumeCurrent = sellVolumesCurrent[sellToken][buyToken];
-            sellVolumesCurrent[sellToken][buyToken] = add(sellVolumeCurrent, amountAfterFee);
-        } else {
-            // C2
-            uint sellVolumeNext = sellVolumesNext[sellToken][buyToken];
-            sellVolumesNext[sellToken][buyToken] = add(sellVolumeNext, amountAfterFee);
-
-            // close previous auction if theoretically closed
-            closeTheoreticalClosedAuction(sellToken, buyToken, latestAuctionIndex);
-        }
-
-        if (auctionStart == AUCTION_START_WAITING_FOR_FUNDING) {
-            scheduleNextAuction(sellToken, buyToken);
-        }
-
-        emit NewSellOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
-
-        return (auctionIndex, newSellerBal);
+        (uint pastNum, uint pastDen) = getPriceInPastAuction(token1, token2, auctionIndex - 1);
+        // 43200 = 12 hrs, 86400 = 24 hrs
+        // timeElapsed = 43200(2 * pastNum * sellVolume - buyVolume * pastDen)/(sellVolume * pastNum + buyVolume * pastDen)
+        uint numerator = sub(mul(mul(pastNum, sellVolume), 86400), mul(mul(buyVolume, pastDen), 43200));
+        uint timeElapsed = numerator / (add(mul(sellVolume, pastNum), mul(buyVolume, pastDen)));
+        uint clearingTime = auctionStart + timeElapsed;
+        (token1, token2) = getTokenOrder(token1, token2);
+        clearingTimes[token1][token2][auctionIndex] = clearingTime;
     }
 
-    function postBuyOrder(
-        address sellToken,
-        address buyToken,
-        uint auctionIndex,
-        uint amount
-    )
-        public
-        returns (uint)
-    {
-        // R1: auction must not have cleared
-        require(closingPrices[sellToken][buyToken][auctionIndex].den == 0);
-
-        uint auctionStart = getAuctionStart(sellToken, buyToken);
-
-        // R2
-        require(auctionStart <= now);
-
-        // R4
-        require(auctionIndex == getAuctionIndex(sellToken, buyToken));
-
-        // R5: auction must not be in waiting period
-        require(auctionStart > AUCTION_START_WAITING_FOR_FUNDING);
-
-        // R6: auction must be funded
-        require(sellVolumesCurrent[sellToken][buyToken] > 0);
-
-        uint buyVolume = buyVolumes[sellToken][buyToken];
-        amount = min(amount, balances[buyToken][msg.sender]);
-
-        // R7
-        require(add(buyVolume, amount) < 10 ** 30);
-
-        // Overbuy is when a part of a buy order clears an auction
-        // In that case we only process the part before the overbuy
-        // To calculate overbuy, we first get current price
-        uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
-
-        uint num;
-        uint den;
-        (num, den) = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
-        // 10^30 * 10^37 = 10^67
-        uint outstandingVolume = atleastZero(int(mul(sellVolume, num) / den - buyVolume));
-
-        uint amountAfterFee;
-        if (amount < outstandingVolume) {
-            if (amount > 0) {
-                amountAfterFee = settleFee(buyToken, sellToken, auctionIndex, amount);
-            }
-        } else {
-            amount = outstandingVolume;
-            amountAfterFee = outstandingVolume;
-        }
-
-        // Here we could also use outstandingVolume or amountAfterFee, it doesn't matter
-        if (amount > 0) {
-            // Update variables
-            balances[buyToken][msg.sender] = sub(balances[buyToken][msg.sender], amount);
-            uint newBuyerBal = add(buyerBalances[sellToken][buyToken][auctionIndex][msg.sender], amountAfterFee);
-            buyerBalances[sellToken][buyToken][auctionIndex][msg.sender] = newBuyerBal;
-            buyVolumes[sellToken][buyToken] = add(buyVolumes[sellToken][buyToken], amountAfterFee);
-            emit NewBuyOrder(sellToken, buyToken, msg.sender, auctionIndex, amountAfterFee);
-        }
-
-        // Checking for equality would suffice here. nevertheless:
-        if (amount >= outstandingVolume) {
-            // Clear auction
-            clearAuction(sellToken, buyToken, auctionIndex, sellVolume);
-        }
-
-        return (newBuyerBal);
-    }
-
-    function claimSellerFunds(
-        address sellToken,
-        address buyToken,
-        address user,
+    function getClearingTime(
+        address token1,
+        address token2,
         uint auctionIndex
     )
         public
-        // < (10^60, 10^61)
-        returns (uint returned, uint frtsIssued)
+        view
+        returns (uint time)
     {
-        closeTheoreticalClosedAuction(sellToken, buyToken, auctionIndex);
-        uint sellerBalance = sellerBalances[sellToken][buyToken][auctionIndex][user];
-
-        // R1
-        require(sellerBalance > 0);
-
-        // Get closing price for said auction
-        fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
-        uint num = closingPrice.num;
-        uint den = closingPrice.den;
-
-        // R2: require auction to have cleared
-        require(den > 0);
-
-        // Calculate return
-        // < 10^30 * 10^30 = 10^60
-        returned = mul(sellerBalance, num) / den;
-
-        frtsIssued = issueFrts(sellToken, buyToken, returned, auctionIndex, sellerBalance, user);
-
-        // Claim tokens
-        sellerBalances[sellToken][buyToken][auctionIndex][user] = 0;
-        if (returned > 0) {
-            balances[buyToken][user] = add(balances[buyToken][user], returned);
-        }
-        emit NewSellerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
-    }
-
-    function claimBuyerFunds(
-        address sellToken,
-        address buyToken,
-        address user,
-        uint auctionIndex
-    )
-        public
-        returns (uint returned, uint frtsIssued)
-    {
-        closeTheoreticalClosedAuction(sellToken, buyToken, auctionIndex);
-
-        uint num;
-        uint den;
-        (returned, num, den) = getUnclaimedBuyerFunds(sellToken, buyToken, user, auctionIndex);
-
-        if (closingPrices[sellToken][buyToken][auctionIndex].den == 0) {
-            // Auction is running
-            claimedAmounts[sellToken][buyToken][auctionIndex][user] =
-            add(claimedAmounts[sellToken][buyToken][auctionIndex][user], returned);
-        } else {
-            // Auction has closed
-            // We DON'T want to check for returned > 0, because that would fail if a user claims
-            // intermediate funds & auction clears in same block (he/she would not be able to claim extraTokens)
-
-            // Assign extra sell tokens (this is possible only after auction has cleared,
-            // because buyVolume could still increase before that)
-            uint extraTokensTotal = extraTokens[sellToken][buyToken][auctionIndex];
-            uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
-
-            // closingPrices.num represents buyVolume
-            // < 10^30 * 10^30 = 10^60
-            uint tokensExtra = mul(buyerBalance, extraTokensTotal) / closingPrices[sellToken][buyToken][auctionIndex].num;
-            returned = add(returned, tokensExtra);
-
-            frtsIssued = issueFrts(buyToken, sellToken, mul(buyerBalance, den) / num, auctionIndex, buyerBalance, user);
-
-            // Auction has closed
-            // Reset buyerBalances and claimedAmounts
-            buyerBalances[sellToken][buyToken][auctionIndex][user] = 0;
-            claimedAmounts[sellToken][buyToken][auctionIndex][user] = 0;
-        }
-
-        // Claim tokens
-        if (returned > 0) {
-            balances[sellToken][user] = add(balances[sellToken][user], returned);
-        }
-
-        emit NewBuyerFundsClaim(sellToken, buyToken, user, auctionIndex, returned, frtsIssued);
+        (token1, token2) = getTokenOrder(token1, token2);
+        time = clearingTimes[token1][token2][auctionIndex];
     }
 
     function issueFrts(
@@ -579,75 +1054,12 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         }
     }
 
-    /// @dev allows to close possible theoretical closed markets
-    /// @param sellToken sellToken of an auction
-    /// @param buyToken buyToken of an auction
-    /// @param auctionIndex is the auctionIndex of the auction
-    function closeTheoreticalClosedAuction(
-        address sellToken,
-        address buyToken,
-        uint auctionIndex
-    )
-        public
-    {
-        if (auctionIndex == getAuctionIndex(buyToken, sellToken) &&
-            closingPrices[sellToken][buyToken][auctionIndex].num == 0) {
-            uint buyVolume = buyVolumes[sellToken][buyToken];
-            uint sellVolume = sellVolumesCurrent[sellToken][buyToken];
-            uint num;
-            uint den;
-            (num, den) = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
-            // 10^30 * 10^37 = 10^67
-            if (sellVolume > 0) {
-                uint outstandingVolume = atleastZero(int(mul(sellVolume, num) / den - buyVolume));
-
-                if (outstandingVolume == 0) {
-                    postBuyOrder(sellToken, buyToken, auctionIndex, 0);
-                }
-            }
-        }
-    }
-
-    /// @dev Claim buyer funds for one auction
-    function getUnclaimedBuyerFunds(
-        address sellToken,
-        address buyToken,
-        address user,
-        uint auctionIndex
-    )
-        public
-        view
-        // < (10^67, 10^37)
-        returns (uint unclaimedBuyerFunds, uint num, uint den)
-    {
-        // R1: checks if particular auction has ever run
-        require(auctionIndex <= getAuctionIndex(sellToken, buyToken));
-
-        (num, den) = getCurrentAuctionPrice(sellToken, buyToken, auctionIndex);
-
-        if (num == 0) {
-            // This should rarely happen - as long as there is >= 1 buy order,
-            // auction will clear before price = 0. So this is just fail-safe
-            unclaimedBuyerFunds = 0;
-        } else {
-            uint buyerBalance = buyerBalances[sellToken][buyToken][auctionIndex][user];
-            // < 10^30 * 10^37 = 10^67
-            unclaimedBuyerFunds = atleastZero(int(
-                mul(buyerBalance, den) / num -
-                claimedAmounts[sellToken][buyToken][auctionIndex][user]
-            ));
-        }
-    }
-
-    function settleFee(
-        address primaryToken,
-        address secondaryToken,
-        uint auctionIndex,
-        uint amount
-    )
+    function settleFee(address primaryToken, address secondaryToken, uint auctionIndex, uint amount)
         internal
+        returns (
         // < 10^30
-        returns (uint amountAfterFee)
+        uint amountAfterFee
+    )
     {
         uint feeNum;
         uint feeDen;
@@ -667,13 +1079,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         amountAfterFee = sub(amount, fee);
     }
 
-    function settleFeeSecondPart(
-        address primaryToken,
-        uint fee
-    )
-        internal
-        returns (uint newFee)
-    {
+    function settleFeeSecondPart(address primaryToken, uint fee) internal returns (uint newFee) {
         // Allow user to reduce up to half of the fee with owlToken
         uint num;
         uint den;
@@ -687,9 +1093,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         // 10^29 * 10^6 = 10^35
         // Uses 18 decimal places <> exactly as owlToken tokens: 10**18 owlToken == 1 USD
         uint feeInUSD = mul(feeInETH, ethUSDPrice);
-        uint amountOfowlTokenBurned = min(owlToken.allowance(msg.sender, this), feeInUSD / 2);
+        uint amountOfowlTokenBurned = min(owlToken.allowance(msg.sender, address(this)), feeInUSD / 2);
         amountOfowlTokenBurned = min(owlToken.balanceOf(msg.sender), amountOfowlTokenBurned);
-
 
         if (amountOfowlTokenBurned > 0) {
             owlToken.burnOWL(msg.sender, amountOfowlTokenBurned);
@@ -702,56 +1107,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         }
     }
 
-    function getFeeRatio(
-        address user
-    )
-        public
-        view
-        // feeRatio < 10^4
-        returns (uint num, uint den)
-    {
-        uint totalSupply = frtToken.totalSupply();
-        uint lockedFrt = frtToken.lockedTokenBalances(user);
-
-        /*
-          Fee Model:
-            locked FRT range     Fee
-            -----------------   ------
-            [0, 0.01%)           0.5%
-            [0.01%, 0.1%)        0.4%
-            [0.1%, 1%)           0.3%
-            [1%, 10%)            0.2%
-            [10%, 100%)          0.1%
-        */
-
-        if (lockedFrt * 10000 < totalSupply || totalSupply == 0) {
-            // Maximum fee, if user has locked less than 0.01% of the total FRT
-            // Fee: 0.5%
-            num = 1;
-            den = 200;
-        } else if (lockedFrt * 1000 < totalSupply) {
-            // If user has locked more than 0.01% and less than 0.1% of the total FRT
-            // Fee: 0.4%
-            num = 1;
-            den = 250;
-        } else if (lockedFrt * 100 < totalSupply) {
-            // If user has locked more than 0.1% and less than 1% of the total FRT
-            // Fee: 0.3%
-            num = 3;
-            den = 1000;
-        } else if (lockedFrt * 10 < totalSupply) {
-            // If user has locked more than 1% and less than 10% of the total FRT
-            // Fee: 0.2%
-            num = 1;
-            den = 500;
-        } else {
-            // If user has locked more than 10% of the total FRT
-            // Fee: 0.1%
-            num = 1;
-            den = 1000;
-        }
-    }
-
+    // addClearTimes
     /// @dev clears an Auction
     /// @param sellToken sellToken of the auction
     /// @param buyToken  buyToken of the auction
@@ -772,7 +1128,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
 
         // Update closing price
         if (sellVolume > 0) {
-            closingPrices[sellToken][buyToken][auctionIndex] = fraction(buyVolume, sellVolume);
+            closingPrices[sellToken][buyToken][auctionIndex] = Fraction(buyVolume, sellVolume);
         }
 
         // if (opposite is 0 auction OR price = 0 OR opposite auction cleared)
@@ -782,7 +1138,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
             uint buyVolumeOpp = buyVolumes[buyToken][sellToken];
             if (closingPriceOppDen == 0 && sellVolumeOpp > 0) {
                 // Save opposite price
-                closingPrices[buyToken][sellToken][auctionIndex] = fraction(buyVolumeOpp, sellVolumeOpp);
+                closingPrices[buyToken][sellToken][auctionIndex] = Fraction(buyVolumeOpp, sellVolumeOpp);
             }
 
             uint sellVolumeNext = sellVolumesNext[sellToken][buyToken];
@@ -805,6 +1161,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
                 buyVolumes[buyToken][sellToken] = 0;
             }
 
+            // Save clearing time
+            setClearingTime(sellToken, buyToken, auctionIndex, auctionStart, sellVolume, buyVolume);
             // Increment auction index
             setAuctionIndex(sellToken, buyToken);
             // Check if next auction can be scheduled
@@ -814,208 +1172,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         emit AuctionCleared(sellToken, buyToken, sellVolume, buyVolume, auctionIndex);
     }
 
-    function scheduleNextAuction(
-        address sellToken,
-        address buyToken
-    )
-        internal
-    {
-        // Check if auctions received enough sell orders
-        uint ethUSDPrice = ethUSDOracle.getUSDETHPrice();
-
-        uint sellNum;
-        uint sellDen;
-        (sellNum, sellDen) = getPriceOfTokenInLastAuction(sellToken);
-
-        uint buyNum;
-        uint buyDen;
-        (buyNum, buyDen) = getPriceOfTokenInLastAuction(buyToken);
-
-        // We use current sell volume, because in clearAuction() we set
-        // sellVolumesCurrent = sellVolumesNext before calling this function
-        // (this is so that we don't need case work,
-        // since it might also be called from postSellOrder())
-
-        // < 10^30 * 10^31 * 10^6 = 10^67
-        uint sellVolume = mul(mul(sellVolumesCurrent[sellToken][buyToken], sellNum), ethUSDPrice) / sellDen;
-        uint sellVolumeOpp = mul(mul(sellVolumesCurrent[buyToken][sellToken], buyNum), ethUSDPrice) / buyDen;
-        if (sellVolume >= thresholdNewAuction && sellVolumeOpp >= thresholdNewAuction) {
-            // Schedule next auction
-            setAuctionStart(sellToken, buyToken, WAITING_PERIOD_NEW_AUCTION);
-        } else {
-            resetAuctionStart(sellToken, buyToken);
-        }
-    }
-
-    //@ dev returns price in units [token2]/[token1]
-    //@ param token1 first token for price calculation
-    //@ param token2 second token for price calculation
-    //@ param auctionIndex index for the auction to get the averaged price from
-    function getPriceInPastAuction(
-        address token1,
-        address token2,
-        uint auctionIndex
-    )
-        public
-        view
-        // price < 10^31
-        returns (uint num, uint den)
-    {
-        if (token1 == token2) {
-            // C1
-            num = 1;
-            den = 1;
-        } else {
-            // C2
-            // R2.1
-            require(auctionIndex >= 0);
-
-
-            // C3
-            // R3.1
-            require(auctionIndex <= getAuctionIndex(token1, token2));
-            // auction still running
-
-            uint i = 0;
-            bool correctPair = false;
-            fraction memory closingPriceToken1;
-            fraction memory closingPriceToken2;
-
-            while (!correctPair) {
-                closingPriceToken2 = closingPrices[token2][token1][auctionIndex - i];
-                closingPriceToken1 = closingPrices[token1][token2][auctionIndex - i];
-
-                if (closingPriceToken1.num > 0 && closingPriceToken1.den > 0 ||
-                    closingPriceToken2.num > 0 && closingPriceToken2.den > 0)
-                {
-                    correctPair = true;
-                }
-                i++;
-            }
-
-            // At this point at least one closing price is strictly positive
-            // If only one is positive, we want to output that
-            if (closingPriceToken1.num == 0 || closingPriceToken1.den == 0) {
-                num = closingPriceToken2.den;
-                den = closingPriceToken2.num;
-            } else if (closingPriceToken2.num == 0 || closingPriceToken2.den == 0) {
-                num = closingPriceToken1.num;
-                den = closingPriceToken1.den;
-            } else {
-                // If both prices are positive, output weighted average
-                num = closingPriceToken2.den + closingPriceToken1.num;
-                den = closingPriceToken2.num + closingPriceToken1.den;
-            }
-        }
-    }
-
-    /// @dev Gives best estimate for market price of a token in ETH of any price oracle on the Ethereum network
-    /// @param token address of ERC-20 token
-    /// @return Weighted average of closing prices of opposite Token-ethToken auctions, based on their sellVolume
-    function getPriceOfTokenInLastAuction(
-        address token
-    )
-        public
-        view
-        // price < 10^31
-        returns (uint num, uint den)
-    {
-        uint latestAuctionIndex = getAuctionIndex(token, ethToken);
-        // getPriceInPastAuction < 10^30
-        (num, den) = getPriceInPastAuction(token, ethToken, latestAuctionIndex - 1);
-    }
-
-    function getCurrentAuctionPrice(
-        address sellToken,
-        address buyToken,
-        uint auctionIndex
-    )
-        public
-        view
-        // price < 10^37
-        returns (uint num, uint den)
-    {
-        fraction memory closingPrice = closingPrices[sellToken][buyToken][auctionIndex];
-
-        if (closingPrice.den != 0) {
-            // Auction has closed
-            (num, den) = (closingPrice.num, closingPrice.den);
-        } else if (auctionIndex > getAuctionIndex(sellToken, buyToken)) {
-            (num, den) = (0, 0);
-        } else {
-            // Auction is running
-            uint pastNum;
-            uint pastDen;
-            (pastNum, pastDen) = getPriceInPastAuction(sellToken, buyToken, auctionIndex - 1);
-
-            // If we're calling the function into an unstarted auction,
-            // it will return the starting price of that auction
-            uint timeElapsed = atleastZero(int(now - getAuctionStart(sellToken, buyToken)));
-
-            // The numbers below are chosen such that
-            // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
-
-            // 10^5 * 10^31 = 10^36
-            num = atleastZero(int((86400 - timeElapsed) * pastNum));
-            // 10^6 * 10^31 = 10^37
-            den = mul((timeElapsed + 43200), pastDen);
-
-            if (mul(num, sellVolumesCurrent[sellToken][buyToken]) <= mul(den, buyVolumes[sellToken][buyToken])) {
-                num = buyVolumes[sellToken][buyToken];
-                den = sellVolumesCurrent[sellToken][buyToken];
-            }
-        }
-    }
-
-    function depositAndSell(
-        address sellToken,
-        address buyToken,
-        uint amount
-    )
-        external
-        returns (uint newBal, uint auctionIndex, uint newSellerBal)
-    {
-        newBal = deposit(sellToken, amount);
-        (auctionIndex, newSellerBal) = postSellOrder(sellToken, buyToken, 0, amount);
-    }
-
-    function claimAndWithdraw(
-        address sellToken,
-        address buyToken,
-        address user,
-        uint auctionIndex,
-        uint amount
-    )
-        external
-        returns (uint returned, uint frtsIssued, uint newBal)
-    {
-        (returned, frtsIssued) = claimSellerFunds(sellToken, buyToken, user, auctionIndex);
-        newBal = withdraw(buyToken, amount);
-    }
-
-    // > Helper fns
-    function getTokenOrder(
-        address token1,
-        address token2
-    )
-        public
-        pure
-        returns (address, address)
-    {
-        if (token2 < token1) {
-            (token1, token2) = (token2, token1);
-        }
-
-        return (token1, token2);
-    }
-
-    function setAuctionStart(
-        address token1,
-        address token2,
-        uint value
-    )
-        internal
-    {
+    function setAuctionStart(address token1, address token2, uint value) internal {
         (token1, token2) = getTokenOrder(token1, token2);
         uint auctionStart = now + value;
         uint auctionIndex = latestAuctionIndices[token1][token2];
@@ -1023,232 +1180,23 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         emit AuctionStartScheduled(token1, token2, auctionIndex, auctionStart);
     }
 
-    function resetAuctionStart(
-        address token1,
-        address token2
-    )
-        internal
-    {
+    function resetAuctionStart(address token1, address token2) internal {
         (token1, token2) = getTokenOrder(token1, token2);
         if (auctionStarts[token1][token2] != AUCTION_START_WAITING_FOR_FUNDING) {
             auctionStarts[token1][token2] = AUCTION_START_WAITING_FOR_FUNDING;
         }
     }
 
-    function getAuctionStart(
-        address token1,
-        address token2
-    )
-        public
-        view
-        returns (uint auctionStart)
-    {
-        (token1, token2) = getTokenOrder(token1, token2);
-        auctionStart = auctionStarts[token1][token2];
-    }
-
-    function setAuctionIndex(
-        address token1,
-        address token2
-    )
-        internal
-    {
+    function setAuctionIndex(address token1, address token2) internal {
         (token1, token2) = getTokenOrder(token1, token2);
         latestAuctionIndices[token1][token2] += 1;
     }
 
-
-    function getAuctionIndex(
-        address token1,
-        address token2
-    )
-        public
-        view
-        returns (uint auctionIndex)
-    {
-        (token1, token2) = getTokenOrder(token1, token2);
-        auctionIndex = latestAuctionIndices[token1][token2];
-    }
-
-    function getRunningTokenPairs(
-        address[] tokens
-    )
-        external
-        view
-        returns (address[] tokens1, address[] tokens2)
-    {
-        uint arrayLength;
-
-        for (uint k = 0; k < tokens.length - 1; k++) {
-            for (uint l = k + 1; l < tokens.length; l++) {
-                if (getAuctionIndex(tokens[k], tokens[l]) > 0) {
-                    arrayLength++;
-                }
-            }
-        }
-
-        tokens1 = new address[](arrayLength);
-        tokens2 = new address[](arrayLength);
-
-        uint h;
-
-        for (uint i = 0; i < tokens.length - 1; i++) {
-            for (uint j = i + 1; j < tokens.length; j++) {
-                if (getAuctionIndex(tokens[i], tokens[j]) > 0) {
-                    tokens1[h] = tokens[i];
-                    tokens2[h] = tokens[j];
-                    h++;
-                }
-            }
-        }
-    }
-
-    /// @dev for quick overview of possible sellerBalances to calculate the possible withdraw tokens
-    /// @param auctionSellToken is the sellToken defining an auctionPair
-    /// @param auctionBuyToken is the buyToken defining an auctionPair
-    /// @param user is the user who wants to his tokens
-    /// @param lastNAuctions how many auctions will be checked. 0 means all
-    //@returns returns sellbal for all indices for all tokenpairs
-    function getIndicesWithClaimableTokensForSellers(
-        address auctionSellToken,
-        address auctionBuyToken,
-        address user,
-        uint lastNAuctions
-    )
-        external
-        view
-        returns(uint[] indices, uint[] usersBalances)
-    {
-        uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
-
-        uint arrayLength;
-
-        uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
-
-        for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
-            if (sellerBalances[auctionSellToken][auctionBuyToken][j][user] > 0) {
-                arrayLength++;
-            }
-        }
-
-        indices = new uint[](arrayLength);
-        usersBalances = new uint[](arrayLength);
-
-        uint k;
-
-        for (uint i = startingIndex; i <= runningAuctionIndex; i++) {
-            if (sellerBalances[auctionSellToken][auctionBuyToken][i][user] > 0) {
-                indices[k] = i;
-                usersBalances[k] = sellerBalances[auctionSellToken][auctionBuyToken][i][user];
-                k++;
-            }
-        }
-    }
-
-    /// @dev for quick overview of current sellerBalances for a user
-    /// @param auctionSellTokens are the sellTokens defining an auctionPair
-    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
-    /// @param user is the user who wants to his tokens
-    function getSellerBalancesOfCurrentAuctions(
-        address[] auctionSellTokens,
-        address[] auctionBuyTokens,
-        address user
-    )
-        external
-        view
-        returns (uint[])
-    {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2);
-
-        uint[] memory sellersBalances = new uint[](length);
-
-        for (uint i = 0; i < length; i++) {
-            uint runningAuctionIndex = getAuctionIndex(auctionSellTokens[i], auctionBuyTokens[i]);
-            sellersBalances[i] = sellerBalances[auctionSellTokens[i]][auctionBuyTokens[i]][runningAuctionIndex][user];
-        }
-
-        return sellersBalances;
-    }
-
-    /// @dev for quick overview of possible buyerBalances to calculate the possible withdraw tokens
-    /// @param auctionSellToken is the sellToken defining an auctionPair
-    /// @param auctionBuyToken is the buyToken defining an auctionPair
-    /// @param user is the user who wants to his tokens
-    /// @param lastNAuctions how many auctions will be checked. 0 means all
-    //@returns returns sellbal for all indices for all tokenpairs
-    function getIndicesWithClaimableTokensForBuyers(
-        address auctionSellToken,
-        address auctionBuyToken,
-        address user,
-        uint lastNAuctions
-    )
-        external
-        view
-        returns(uint[] indices, uint[] usersBalances)
-    {
-        uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
-
-        uint arrayLength;
-
-        uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
-
-        for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
-            if (buyerBalances[auctionSellToken][auctionBuyToken][j][user] > 0) {
-                arrayLength++;
-            }
-        }
-
-        indices = new uint[](arrayLength);
-        usersBalances = new uint[](arrayLength);
-
-        uint k;
-
-        for (uint i = startingIndex; i <= runningAuctionIndex; i++) {
-            if (buyerBalances[auctionSellToken][auctionBuyToken][i][user] > 0) {
-                indices[k] = i;
-                usersBalances[k] = buyerBalances[auctionSellToken][auctionBuyToken][i][user];
-                k++;
-            }
-        }
-    }
-
-    /// @dev for quick overview of current sellerBalances for a user
-    /// @param auctionSellTokens are the sellTokens defining an auctionPair
-    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
-    /// @param user is the user who wants to his tokens
-    function getBuyerBalancesOfCurrentAuctions(
-        address[] auctionSellTokens,
-        address[] auctionBuyTokens,
-        address user
-    )
-        external
-        view
-        returns (uint[])
-    {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2);
-
-        uint[] memory buyersBalances = new uint[](length);
-
-        for (uint i = 0; i < length; i++) {
-            uint runningAuctionIndex = getAuctionIndex(auctionSellTokens[i], auctionBuyTokens[i]);
-            buyersBalances[i] = buyerBalances[auctionSellTokens[i]][auctionBuyTokens[i]][runningAuctionIndex][user];
-        }
-
-        return buyersBalances;
-    }
-
     function checkLengthsForSeveralAuctionClaiming(
-        address[] auctionSellTokens,
-        address[] auctionBuyTokens,
-        uint[] auctionIndices
-    )
-        internal
-        pure
-        returns (uint length)
+        address[] memory auctionSellTokens,
+        address[] memory auctionBuyTokens,
+        uint[] memory auctionIndices
+    ) internal pure returns (uint length)
     {
         length = auctionSellTokens.length;
         uint length2 = auctionBuyTokens.length;
@@ -1257,153 +1205,11 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint length3 = auctionIndices.length;
         require(length2 == length3);
     }
-
-    /// @dev for multiple claims
-    /// @param auctionSellTokens are the sellTokens defining an auctionPair
-    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
-    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
-    /// @param user is the user who wants to his tokens
-    function claimTokensFromSeveralAuctionsAsSeller(
-        address[] auctionSellTokens,
-        address[] auctionBuyTokens,
-        uint[] auctionIndices,
-        address user
-    )
-        external
-        returns (uint[], uint[])
-    {
-        uint length = checkLengthsForSeveralAuctionClaiming(
-            auctionSellTokens,
-            auctionBuyTokens,
-            auctionIndices
-        );
-
-        uint[] memory claimAmounts = new uint[](length);
-        uint[] memory frtsIssuedList = new uint[](length);
-
-        for (uint i = 0; i < length; i++) {
-            (claimAmounts[i], frtsIssuedList[i]) = claimSellerFunds(
-            auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
-        }
-
-        return (claimAmounts, frtsIssuedList);
-    }
-
-    /// @dev for multiple claims
-    /// @param auctionSellTokens are the sellTokens defining an auctionPair
-    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
-    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
-    /// @param user is the user who wants to his tokens
-    function claimTokensFromSeveralAuctionsAsBuyer(
-        address[] auctionSellTokens,
-        address[] auctionBuyTokens,
-        uint[] auctionIndices,
-        address user
-    )
-        external
-        returns (uint[], uint[])
-    {
-        uint length = checkLengthsForSeveralAuctionClaiming(
-            auctionSellTokens,
-            auctionBuyTokens,
-            auctionIndices
-        );
-
-        uint[] memory claimAmounts = new uint[](length);
-        uint[] memory frtsIssuedList = new uint[](length);
-
-        for (uint i = 0; i < length; i++) {
-            (claimAmounts[i], frtsIssuedList[i]) = claimBuyerFunds(
-            auctionSellTokens[i], auctionBuyTokens[i], user, auctionIndices[i]);
-        }
-
-        return (claimAmounts, frtsIssuedList);
-    }
-
-    /// @dev for multiple withdraws
-    /// @param auctionSellTokens are the sellTokens defining an auctionPair
-    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
-    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
-    function claimAndWithdrawTokensFromSeveralAuctionsAsSeller(
-        address[] auctionSellTokens,
-        address[] auctionBuyTokens,
-        uint[] auctionIndices
-    )
-        external
-        returns (uint[], uint frtsIssued)
-    {
-        uint length = checkLengthsForSeveralAuctionClaiming(
-            auctionSellTokens,
-            auctionBuyTokens,
-            auctionIndices
-        );
-
-        uint[] memory claimAmounts = new uint[](length);
-        uint claimFrts = 0;
-
-        for (uint i = 0; i < length; i++) {
-            (claimAmounts[i], claimFrts) = claimSellerFunds(
-            auctionSellTokens[i], auctionBuyTokens[i], msg.sender, auctionIndices[i]);
-
-            frtsIssued += claimFrts;
-
-            withdraw(auctionBuyTokens[i], claimAmounts[i]);
-        }
-
-        return (claimAmounts, frtsIssued);
-    }
-
-    /// @dev for multiple withdraws
-    /// @param auctionSellTokens are the sellTokens defining an auctionPair
-    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
-    /// @param auctionIndices are the auction indices on which an token should be claimedAmounts
-    function claimAndWithdrawTokensFromSeveralAuctionsAsBuyer(
-        address[] auctionSellTokens,
-        address[] auctionBuyTokens,
-        uint[] auctionIndices
-    )
-        external
-        returns (uint[], uint frtsIssued)
-    {
-        uint length = checkLengthsForSeveralAuctionClaiming(
-            auctionSellTokens,
-            auctionBuyTokens,
-            auctionIndices
-        );
-
-        uint[] memory claimAmounts = new uint[](length);
-        uint claimFrts = 0;
-
-        for (uint i = 0; i < length; i++) {
-            (claimAmounts[i], claimFrts) = claimBuyerFunds(
-            auctionSellTokens[i], auctionBuyTokens[i], msg.sender, auctionIndices[i]);
-
-            frtsIssued += claimFrts;
-
-            withdraw(auctionSellTokens[i], claimAmounts[i]);
-        }
-
-        return (claimAmounts, frtsIssued);
-    }
-
-    function getMasterCopy()
-        external
-        view
-        returns (address)
-    {
-        return masterCopy;
-    }
-
+    
     // > Events
-    event NewDeposit(
-        address indexed token,
-        uint amount
-    );
+    event NewDeposit(address indexed token, uint amount);
 
-    event NewWithdrawal(
-        address indexed token,
-        uint amount
-    );
+    event NewWithdrawal(address indexed token, uint amount);
 
     event NewSellOrder(
         address indexed sellToken,
@@ -1439,10 +1245,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle {
         uint frtsIssued
     );
 
-    event NewTokenPair(
-        address indexed sellToken,
-        address indexed buyToken
-    );
+    event NewTokenPair(address indexed sellToken, address indexed buyToken);
 
     event AuctionCleared(
         address indexed sellToken,

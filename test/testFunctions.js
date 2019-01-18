@@ -687,6 +687,9 @@ const calculateTokensInExchange = async (Accounts, Tokens) => {
   return results
 }
 
+const getClearingTime = async (sellToken, buyToken, auctionIndex) =>
+  (await dx.getClearingTime.call(sellToken.address || sellToken, buyToken.address || buyToken, auctionIndex)).toNumber()
+
 module.exports = {
   assertClaimingFundsCreatesMGNs,
   assertReturnedPlusMGNs,
@@ -705,4 +708,5 @@ module.exports = {
   wait,
   waitUntilPriceIsXPercentOfPreviousPrice,
   calculateTokensInExchange,
+  getClearingTime,
 }

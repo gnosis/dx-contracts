@@ -14,6 +14,8 @@ function migrate ({
   const DutchExchange = artifacts.require('DutchExchange')
   const DutchExchangeProxy = artifacts.require('DutchExchangeProxy')
   const PriceOracleInterface = artifacts.require('PriceOracleInterface')
+  const DutchExchangeHelper = artifacts.require('DutchExchangeHelper')
+
   const {
     EtherToken,
     TokenGNO,
@@ -61,6 +63,11 @@ function migrate ({
         thresholdNewTokenPairUsd * 1e18,
         thresholdAuctionStartUsd * 1e18
       )
+    })
+    // Deploy the helper
+    .then(() => {
+      console.log('Deploy DutchExchangeHelper:')
+      return deployer.deploy(DutchExchangeHelper, DutchExchangeProxy.address)
     })
 }
 

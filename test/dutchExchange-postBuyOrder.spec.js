@@ -13,7 +13,8 @@ const {
   postBuyOrder,
   postSellOrder,
   getAuctionIndex,
-  waitUntilPriceIsXPercentOfPreviousPrice
+  waitUntilPriceIsXPercentOfPreviousPrice,
+  getClearingTime
 } = require('./testFunctions')
 
 // Test VARS
@@ -184,6 +185,11 @@ contract('DutchExchange - postBuyOrder', accounts => {
     // check also that closing Price is set correctly
     const [num2] = await dx.closingPrices.call(eth.address, gno.address, 1)
     assert.equal(buyVolume.add(outstandingVolume).minus(num2).toNumber(), 0)
+
+    // check that clearingTime was set correctly
+    const clearingTime = await getClearingTime(eth.address, gno.address, auctionIndex)
+    const now = timestamp()
+    assert.equal(clearingTime, now, 'clearingTime was set')     
   })
 
   it('rejects when auction is not funded', async () => {
