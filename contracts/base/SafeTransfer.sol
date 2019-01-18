@@ -15,6 +15,7 @@ contract SafeTransfer {
             BadToken(token).transfer(to, value);
         }
 
+        // solium-disable-next-line security/no-inline-assembly
         assembly {
             switch returndatasize
                 case 0 {

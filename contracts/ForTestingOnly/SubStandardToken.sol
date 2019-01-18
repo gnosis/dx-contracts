@@ -17,16 +17,13 @@ contract SubStandardToken is BadToken, StandardTokenData {
     /// @return Was transfer successful?
     function transfer(address to, uint value)
         public
-        // returns (bool)
     {
-        if (   !balances[msg.sender].safeToSub(value)
-            || !balances[to].safeToAdd(value))
+        if (    !balances[msg.sender].safeToSub(value) ||
+                !balances[to].safeToAdd(value))
             return;
-            // return false;
         balances[msg.sender] -= value;
         balances[to] += value;
         emit Transfer(msg.sender, to, value);
-        // return true;
     }
 
     /// @dev Allows allowed third party to transfer tokens from one address to another. Returns success
@@ -36,18 +33,15 @@ contract SubStandardToken is BadToken, StandardTokenData {
     /// @return Was transfer successful?
     function transferFrom(address from, address to, uint value)
         public
-        // returns (bool)
     {
-        if (   !balances[from].safeToSub(value)
-            || !allowances[from][msg.sender].safeToSub(value)
-            || !balances[to].safeToAdd(value))
+        if (    !balances[from].safeToSub(value) ||
+                !allowances[from][msg.sender].safeToSub(value) ||
+                !balances[to].safeToAdd(value))
             return;
-            // return false;
         balances[from] -= value;
         allowances[from][msg.sender] -= value;
         balances[to] += value;
         emit Transfer(from, to, value);
-        // return true;
     }
 
     /// @dev Sets approved amount of tokens for spender. Returns success
