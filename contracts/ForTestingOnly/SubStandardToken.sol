@@ -4,9 +4,10 @@ import "@gnosis.pm/util-contracts/contracts/Math.sol";
 import "@gnosis.pm/util-contracts/contracts/Proxy.sol";
 import {StandardTokenData} from "@gnosis.pm/util-contracts/contracts/GnosisStandardToken.sol";
 
+
 /// @title Standard token contract with overflow protection
 contract SubStandardToken is BadToken, StandardTokenData {
-    using Math for *;
+    using GnosisMath for *;
 
     /*
      *  Public functions
