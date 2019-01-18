@@ -11,6 +11,6 @@ contract BadGNO is SubStandardToken {
     	public 
     {
         totalTokens = amount;
-    	balances[msg.sender] = amount;
+        balances[msg.sender] = amount;
     }
 }
