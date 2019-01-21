@@ -9,7 +9,7 @@ const {
   gasLogger
 } = require('./utils')
 
-const { getContracts, setupTest, getClearingTime } = require('./testFunctions')
+const { getContracts, setupTest, getClearingTime, getAuctionIndex } = require('./testFunctions')
 
 const TokenGNO = artifacts.require('TokenGNO')
 
