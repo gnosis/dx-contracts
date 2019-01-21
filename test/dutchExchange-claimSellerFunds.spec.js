@@ -16,6 +16,7 @@ const {
   setupTest,
   getContracts,
   getAuctionIndex,
+  getClearingTime,
   waitUntilPriceIsXPercentOfPreviousPrice,
   setAndCheckAuctionStarted,
   postBuyOrder,

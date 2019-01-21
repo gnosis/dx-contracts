@@ -63,13 +63,14 @@ const getContracts = async () => {
   const deployedContracts = contractNames.reduce((acc, name, i) => {
     acc[name] = gasLoggedContracts[i]
     return acc
-  }, {});
-
-  [deployedContracts.DutchExchange, deployedContracts.TokenOWL, deployedContracts.TokenFRT] = gasLogWrapper([
+  }, {})
+  const proxiedContracts = await Promise.all([
     artifacts.require('DutchExchange').at(deployedContracts.DutchExchangeProxy.address),
     artifacts.require('TokenOWL').at(deployedContracts.TokenOWLProxy.address),
     artifacts.require('TokenFRT').at(deployedContracts.TokenFRTProxy.address)
-  ])
+  ]);
+
+  [deployedContracts.DutchExchange, deployedContracts.TokenOWL, deployedContracts.TokenFRT] = gasLogWrapper(proxiedContracts)
   return deployedContracts
 }
 
@@ -697,8 +698,12 @@ const calculateTokensInExchange = async (Accounts, Tokens) => {
   return results
 }
 
-const getClearingTime = async (sellToken, buyToken, auctionIndex) =>
-  (await dx.getClearingTime.call(sellToken.address || sellToken, buyToken.address || buyToken, auctionIndex)).toNumber()
+const getClearingTime = async (sellToken, buyToken, auctionIndex) => {
+  const { DutchExchange: dx } = await getContracts()
+  return (await dx.getClearingTime.call(sellToken.address ||
+    sellToken, buyToken.address ||
+    buyToken, auctionIndex)).toNumber()
+}
 
 module.exports = {
   assertClaimingFundsCreatesMGNs,
