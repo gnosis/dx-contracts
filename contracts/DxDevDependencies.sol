@@ -19,6 +19,7 @@ import "./Oracle/Medianizer.sol";
 import "./TokenFRT.sol";
 import "./TokenFRTProxy.sol";
 import "./DutchExchange.sol";
+import "./DutchExchangeHelper.sol";
 import "./DutchExchangeProxy.sol";
 
 
