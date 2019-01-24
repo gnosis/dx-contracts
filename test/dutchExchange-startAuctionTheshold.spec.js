@@ -1,4 +1,4 @@
-/* global contract, assert, timestamp */
+/* global contract, assert */
 /* eslint no-undef: "error" */
 
 /* Fee Reduction Token issuing is tested seperately in dutchExchange-MGN.js */
@@ -67,7 +67,7 @@ const setupAmountUsedForTesting = async () => {
   amountGnoBelowTheshold = threshold * 0.9 / usdEthPrice / gnoEthPrice
   amountGnoAboveThreshold = threshold * 1.1 / usdEthPrice / gnoEthPrice
 
-  log(`Amounts used for testing:' 
+  log(`Amounts used for testing:'
     ETH:
       - below: ${amountEthBelowThreshold}
       - above: ${amountEthAboveThreshold}
