@@ -1,4 +1,4 @@
-/* global contract, assert, timestamp */
+/* global contract, assert */
 /* eslint no-undef: "error" */
 
 /* Fee Reduction Token issuing is tested seperately in dutchExchange-MGN.js */
@@ -8,6 +8,7 @@ const {
   assertRejects,
   enableContractFlag,
   gasLogger,
+  timestamp,
   makeSnapshot,
   revertSnapshot
 } = require('./utils')

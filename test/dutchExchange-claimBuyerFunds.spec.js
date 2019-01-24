@@ -1,4 +1,4 @@
-/* global contract, assert, timestamp */
+/* global contract, assert */
 /* eslint no-undef: "error" */
 
 /*
@@ -11,6 +11,7 @@ const {
   assertRejects,
   logger,
   gasLogger,
+  timestamp,
   makeSnapshot,
   revertSnapshot
 } = require('./utils')

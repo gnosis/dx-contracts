@@ -1,4 +1,4 @@
-/* global contract, assert, timestamp */
+/* global contract, assert */
 /* eslint no-undef: "error" */
 
 const {
@@ -6,7 +6,8 @@ const {
   log: utilsLog,
   assertRejects,
   gasLogger,
-  varLogger
+  varLogger,
+  timestamp
 } = require('./utils')
 
 const bn = require('bignumber.js')
