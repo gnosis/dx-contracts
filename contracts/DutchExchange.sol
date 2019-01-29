@@ -613,7 +613,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
             returned,
             frtsIssued
         );
-    }    
+    }
 
     /// @dev allows to close possible theoretical closed markets
     /// @param sellToken sellToken of an auction
@@ -797,7 +797,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         if (enoughSellVolume && enoughSellVolumeOpp) {
             schedule = true;
         } else if (enoughSellVolume || enoughSellVolumeOpp) {
-            // But if the auction didn't start in 24h, then is enough to have 
+            // But if the auction didn't start in 24h, then is enough to have
             // liquidity in one of the two sides
             uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
             uint clearingTime = getClearingTime(sellToken, buyToken, latestAuctionIndex - 1);
@@ -807,7 +807,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         if (schedule) {
             // Schedule next auction
             setAuctionStart(sellToken, buyToken, WAITING_PERIOD_NEW_AUCTION);
-        } else {            
+        } else {
             resetAuctionStart(sellToken, buyToken);
         }
     }
@@ -840,7 +840,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         sellVolume = mul(mul(sellVolumesCurrent[sellToken][buyToken], sellNum), ethUSDPrice) / sellDen;
         sellVolumeOpp = mul(mul(sellVolumesCurrent[buyToken][sellToken], buyNum), ethUSDPrice) / buyDen;
     }
-    
+
     /// @dev Gives best estimate for market price of a token in ETH of any price oracle on the Ethereum network
     /// @param token address of ERC-20 token
     /// @return Weighted average of closing prices of opposite Token-ethToken auctions, based on their sellVolume
@@ -1205,7 +1205,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         uint length3 = auctionIndices.length;
         require(length2 == length3);
     }
-    
+
     // > Events
     event NewDeposit(address indexed token, uint amount);
 
