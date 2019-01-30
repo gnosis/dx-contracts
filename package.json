@@ -57,6 +57,7 @@
     "prettier-plugin-solidity-refactor": "^1.0.0-alpha.14",
     "solc": "0.5.2",
     "solidity-coverage": "^0.5.11",
+    "solium": "^1.2.2",
     "truffle": "^5.0.0-beta.2",
     "truffle-contract": "^3.0.6",
     "truffle-flattener": "^1.2.10",
