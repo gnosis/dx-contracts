@@ -26,7 +26,7 @@ function _getDependencies (artifacts, network, deployer) {
     Math = artifacts.require('GnosisMath')
   } else {
     const contract = require('truffle-contract')
-    Math = contract(require('@gnosis.pm/util-contracts/build/contracts/Math'))
+    Math = contract(require('@gnosis.pm/util-contracts/build/contracts/GnosisMath'))
     Math.setProvider(deployer.provider)
   }
 

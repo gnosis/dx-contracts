@@ -17,7 +17,7 @@ function migrate ({
   const medianizerAddress = getMedianizerAddress(Medianizer)
   const account = accounts[0]
   if (!medianizerAddress) {
-    console.log(`Deploying Maker Dao feed contracts, because they weren published in network "${network}" yet`)
+    console.log(`Deploying Maker Dao feed contracts, because they weren't published in network "${network}" yet`)
     // Deployment of PriceFeedInfrastructure
     return deployer
       .deploy(PriceFeed)

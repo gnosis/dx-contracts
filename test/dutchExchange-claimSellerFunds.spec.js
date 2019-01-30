@@ -1,4 +1,4 @@
-/* global contract, assert, timestamp */
+/* global contract, assert */
 /* eslint no-undef: "error" */
 
 /* Fee Reduction Token issuing is tested seperately in dutchExchange-MGN.js */
@@ -8,6 +8,7 @@ const {
   assertRejects,
   enableContractFlag,
   gasLogger,
+  timestamp,
   makeSnapshot,
   revertSnapshot
 } = require('./utils')
@@ -87,14 +88,15 @@ contract('DutchExchange - claimSellerFunds', accounts => {
     let auctionIndex = await getAuctionIndex()
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     await postBuyOrder(eth, gno, auctionIndex, totalBuyAmount, buyer1)
-    auctionIndex = await getAuctionIndex()
-    // await setAndCheckAuctionStarted(eth, gno)
-    assert.equal(2, auctionIndex)
 
     // check that clearingTime was saved
     const clearingTime = await getClearingTime(gno, eth, auctionIndex)
     const now = timestamp()
     assert.equal(clearingTime, now, 'clearingTime was set')
+
+    auctionIndex = await getAuctionIndex()
+    // await setAndCheckAuctionStarted(eth, gno)
+    assert.equal(2, auctionIndex)
 
     // check condition
     assert.equal((await dx.sellerBalances.call(eth.address, gno.address, 1, seller2)).toNumber(), 0)
