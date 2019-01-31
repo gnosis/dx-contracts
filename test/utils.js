@@ -1,3 +1,5 @@
+/* global assert, web3 */
+
 // `truffle test --silent` or `truffle test -s` to suppress logs
 const BigNumber = require('bignumber.js')
 
@@ -235,17 +237,33 @@ const enableContractFlag = (...contractTests) => {
 }
 
 const makeSnapshot = () => {
-  return web3.currentProvider.send({
-    jsonrpc: '2.0',
-    method: 'evm_snapshot'
-  }).result
+  return new Promise((resolve, reject) => {
+    web3.currentProvider.send({
+      jsonrpc: '2.0',
+      method: 'evm_snapshot'
+    }, (err, { result }) => {
+      if (err) {
+        return reject(err)
+      } else {
+        resolve(result)
+      }
+    })
+  })
 }
 
 const revertSnapshot = snapshotId => {
-  web3.currentProvider.send({
-    jsonrpc: '2.0',
-    method: 'evm_revert',
-    params: [snapshotId]
+  return new Promise((resolve, reject) => {
+    web3.currentProvider.send({
+      jsonrpc: '2.0',
+      method: 'evm_revert',
+      params: [snapshotId]
+    }, (err, result) => {
+      if (err) {
+        return reject(err)
+      } else {
+        resolve(result)
+      }
+    })
   })
 }
 

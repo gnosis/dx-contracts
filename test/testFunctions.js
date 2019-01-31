@@ -1,17 +1,6 @@
-/* global, assert, artifacts */
-/* eslint no-undef: "error" */
+/* global assert, artifacts, web3 */
+const { BN, ether } = require('openzeppelin-test-helpers')
 
-/*
-  eslint prefer-const: 0,
-  max-len: 0,
-  object-curly-newline: 1,
-  no-param-reassign: 0,
-  no-console: 0,
-  no-mixed-operators: 0,
-  no-floating-decimal: 0,
-  no-underscore-dangle:0,
-  no-return-assign:0,
-*/
 const bn = require('bignumber.js')
 const { wait } = require('@digix/tempo')(web3)
 const {
@@ -25,12 +14,14 @@ const {
 // I know, it's gross
 // add wei converter
 /* eslint no-extend-native: 0 */
-
 Number.prototype.toWei = function toWei () {
-  return bn(this, 10).times(10 ** 18).toNumber()
+  return ether(this.toString())
 }
 Number.prototype.toEth = function toEth () {
-  return bn(this, 10).div(10 ** 18).toNumber()
+  return bn(this, 10).div(10 ** 18)
+}
+Number.prototype.toBN = function toBN () {
+  return new BN(this.toString(), 10)
 }
 
 const MaxRoundingError = 100
