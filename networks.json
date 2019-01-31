@@ -9,8 +9,8 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0x01b812e96275e5b2551ee8741dfe9a53525deef5",
-      "transactionHash": "0xac8bcc6f67e838017ae17ae82425e511948d58771007b6bae4cbaf72cb7b4b48"
+      "address": "0x385d7324e16fad99a939a538a73772ba6bc6be7c",
+      "transactionHash": "0xafb5354c7d166187a4dddbfaf50bd244400a442032e09129eae7129926fa536a"
     },
     "42": {
       "events": {},
@@ -23,8 +23,8 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0x14b8008da4912d2bc932740e2f4ae4c0d6eef5c4",
-      "transactionHash": "0x7b62bc6affcd8dfe80f66d2b7e2e5536af51eb0ff4f4518d135017a677f84dcd"
+      "address": "0xfdad5b7bcd79edd98175c1befd016482cc6ca729",
+      "transactionHash": "0xc349bf98103e0dc8fa75a43610c86ba6b211f63b25d91928a5e9f3064abe3a2f"
     }
   },
   "DutchExchangeProxy": {
@@ -37,8 +37,8 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0xad6aea9b383409ebfd4191a60dfbd68c5fa89e71",
-      "transactionHash": "0x5f60d04951739ed6bee5c33673476ec801c8bf8a4f838aa50d65f8bbb5e80cc2"
+      "address": "0x25b8c27508a59bf498646d8819dc349876789f83",
+      "transactionHash": "0xc94d561ccfd30b0d1d26c264d42bb307a1c1105815f0f65647fb377417fcc09e"
     },
     "42": {
       "events": {},
@@ -47,12 +47,12 @@
       "transactionHash": "0x2263b0fff8338875e4c3310b627a02cdec06d91d5e2c73f7980bc3faf9d55f2a"
     }
   },
-  "Math": {
+  "GnosisMath": {
     "4": {
       "events": {},
       "links": {},
-      "address": "0xbf0dacc0d3897dda763f90cfaf1d0e36c61ae68c",
-      "transactionHash": "0x3de205d13f08995f8682818d64cbff0e936cc931779d1410c0709ec99e4621e3"
+      "address": "0x68b4cd98bb99378954b4ba323cc169067d133b28",
+      "transactionHash": "0xdd2bf5f17496d58cfee843ae338f3c1f088e727b078028fffc45cfcf5cffedb5"
     }
   },
   "Medianizer": {
@@ -64,7 +64,7 @@
     "4": {
       "events": {
         "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
-          "anonymous": true,
+          "anonymous": false,
           "inputs": [
             {
               "indexed": true,
@@ -82,7 +82,7 @@
               "type": "bytes32"
             },
             {
-              "indexed": true,
+              "indexed": false,
               "name": "bar",
               "type": "bytes32"
             },
@@ -126,8 +126,8 @@
         }
       },
       "links": {},
-      "address": "0xbfff80b73f081cc159534d922712551c5ed8b3d3",
-      "transactionHash": "0xe420016bb602c45b06c71a37007a8d7742223f45a0099e70de64f7822135d8c7"
+      "address": "0xd6fe8f66520a245626cb4035501903e44fd1ad44",
+      "transactionHash": "0xa585003303e97864fadc8e98a64c50ca431ccfc41a0471cba5d678198cbc00d8"
     },
     "42": {
       "address": "0xa944bd4b25c9f186a846fd5668941aa3d3b8425f",
@@ -136,31 +136,11 @@
       "events": {}
     }
   },
-  "Migrations": {
-    "1": {
-      "events": {},
-      "links": {},
-      "address": "0xdf42ce6fafcb999e9c3aea829ed4482401190604",
-      "transactionHash": "0x50458c97fe30ed4a56b2da8cb4d5df3b0f21d74d0fec6e1dbe70a965835a7a0c"
-    },
-    "4": {
-      "events": {},
-      "links": {},
-      "address": "0xf28a14fad9442844d37050543fd36f1b2cb2bcde",
-      "transactionHash": "0x8b122e083555eb4c1c7c570bb8fd183acc821d4567d5ed175a903b6f3e7b206e"
-    },
-    "42": {
-      "events": {},
-      "links": {},
-      "address": "0x1a1474b73779116d1fc36b5d58b56180a427c626",
-      "transactionHash": "0x4254de5d7b6616f42ef7c226db35f25f27789f150af87d1cac755c0d4eec7e1f"
-    }
-  },
   "PriceFeed": {
     "4": {
       "events": {
         "0x644843f351d3fba4abcd60109eaff9f54bac8fb8ccf0bab941009c21df21cf31": {
-          "anonymous": true,
+          "anonymous": false,
           "inputs": [
             {
               "indexed": true,
@@ -178,7 +158,7 @@
               "type": "bytes32"
             },
             {
-              "indexed": true,
+              "indexed": false,
               "name": "bar",
               "type": "bytes32"
             },
@@ -222,8 +202,8 @@
         }
       },
       "links": {},
-      "address": "0xc20beab9c3aec406437fbf5c2c979a7c6c3101d9",
-      "transactionHash": "0xdff2b776aa25882be176d19ee3cc5377dea07baeabbb75bc0fbdbe630b80a420"
+      "address": "0xbc62e0917cb3da6b0ff755d3a7d69fca3a7d283d",
+      "transactionHash": "0x811aa2c0519f46eaa4fb02091ab2c5ddf06ae61b3e172b4cabacc7a368122887"
     }
   },
   "PriceOracleInterface": {
@@ -236,8 +216,8 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0x25b0d44506db86212180ac16a63f30e129520b22",
-      "transactionHash": "0x117a9f23859dc67771c1f5cdd36460c5f0352001e1fc9deed66c0c4eef433162"
+      "address": "0xa0e0c95bfc1c9ca18b6d03dee249b558720b04d1",
+      "transactionHash": "0x8224abc7cc40a1879185fe8408294e9ab550db50d2a0f1fca46401fa1f2883d8"
     },
     "42": {
       "events": {},
@@ -255,25 +235,23 @@
     },
     "4": {
       "events": {},
-      "links": {
-        "Math": "0xbf0dacc0d3897dda763f90cfaf1d0e36c61ae68c"
-      },
-      "address": "0x6949d0d3f6c757b01abaf32e7a90c5e6ddef6913",
-      "transactionHash": "0x8c0b7ef6fc88e81b8e7b3494962693585b6624d40cef08200fc5092f2019f0eb"
+      "links": {},
+      "address": "0x547127c6cb8b242bf5b5f38b97799a61477d951a",
+      "transactionHash": "0xfe763f9886018a6326a32cd81c951253bf8b840e1cc501de100e8f013ddaefe3"
     },
     "42": {
       "events": {},
       "links": {},
-      "address": "0x98709b83af325a46edfac2f053a730a2980b3682",
-      "transactionHash": "0xa233d23d16da564837231a64fd7267f6b5c994d8f4201cbcd11a8f7cb669d7c5"
+      "address": "0x4edc383adea781762b74e7082c03f423523e61bb",
+      "transactionHash": "0xcaafd2e64aafb84f9f923314a19ca078c040ac3023a467b66fa71eb0031e9d2f"
     }
   },
   "TokenFRTProxy": {
     "4": {
       "events": {},
       "links": {},
-      "address": "0x6f1b6a44bfeef30e264d15ad6eb0273a5374e117",
-      "transactionHash": "0xe67fd933b52a6fb06c8312615df1af8c85c8f789763bf936154ab8959baadadb"
+      "address": "0xb32a217d61397550c4c09a2b7a07e6fd224c2718",
+      "transactionHash": "0x019f72dfc831ab40afa5b1f7432d99335c596d59dfdb03037c1f606f1d116418"
     }
   }
 }
