@@ -1,9 +1,10 @@
 /* global assert, web3 */
-
 // `truffle test --silent` or `truffle test -s` to suppress logs
 const BigNumber = require('bignumber.js')
+const { BN, ether, time } = require('openzeppelin-test-helpers')
 
 const AUCTION_START_WAITING_FOR_FUNDING = 1
+const BN_ZERO = new BN('0')
 
 const {
   silent,
@@ -105,9 +106,23 @@ const assertRejects = async (q, msg) => {
   }
 }
 
+const toEth = value => {
+  return new BN(web3.utils.fromWei(value))
+}
+
 const blockNumber = () => web3.eth.blockNumber
 
-const timestamp = (block = 'latest') => web3.eth.getBlock(block).timestamp
+const timestamp = (block = 'latest') => {
+  return new Promise((resolve, reject) => {
+    web3.eth.getBlock(block, false, (err, { timestamp }) => {
+      if (err) {
+        return reject(err)
+      } else {
+        resolve(timestamp)
+      }
+    })
+  })
+}
 
 // keeps track of watched events
 let stopWatching = {}
@@ -269,6 +284,8 @@ const revertSnapshot = snapshotId => {
 
 module.exports = {
   AUCTION_START_WAITING_FOR_FUNDING,
+  BN_ZERO,
+  BN,
   silent,
   assertRejects,
   blockNumber,
@@ -278,6 +295,7 @@ module.exports = {
   gasLogWrapper,
   log,
   logger,
+  toEth,
   timestamp,
   varLogger,
   makeSnapshot,

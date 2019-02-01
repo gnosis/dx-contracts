@@ -1,12 +1,12 @@
 /* global assert, artifacts, web3 */
-const { BN, ether } = require('openzeppelin-test-helpers')
+const { BN, ether, time } = require('openzeppelin-test-helpers')
 
 const bn = require('bignumber.js')
-const { wait } = require('@digix/tempo')(web3)
 const {
   silent,
   gasLogWrapper,
   log,
+  toEth,
   timestamp,
   varLogger
 } = require('./utils')
@@ -143,14 +143,14 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
 
   // wait for the right time to send buyOrder
   // implements isAtLeastZero (aka will not go BACK in time)
-  await wait((startingTimeOfAuction - timestamp()))
+  await time.increase(startingTimeOfAuction - await timestamp())
 
   log(`
-  time now ----------> ${new Date(timestamp() * 1000)}
+  time now ----------> ${new Date(await timestamp() * 1000)}
   auction starts ----> ${new Date(startingTimeOfAuction * 1000)}
   `)
 
-  assert.equal(timestamp() >= startingTimeOfAuction, true)
+  assert.equal(await timestamp() >= startingTimeOfAuction, true)
 }
 
 /**
@@ -170,7 +170,8 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const startingTimeOfAuction = getAuctionStart.toNumber()
   let priceBefore = 1
   if (!silent) {
-    let [num, den] = (await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex))
+    let currentAuctionPrice = await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex)
+    let { num, den } = currentAuctionPrice
     priceBefore = num.div(den)
     log(`
       Price BEFORE waiting until Price = initial Closing Price (2) * 2
@@ -184,21 +185,23 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
 
   const timeToWaitFor = Math.ceil((86400 - p * 43200) / (1 + p)) + startingTimeOfAuction
   // wait until the price is good
-  await wait(timeToWaitFor - timestamp())
+  await time.increase(timeToWaitFor - await timestamp())
 
   if (!silent) {
-    ([num, den] = (await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex)))
+    currentAuctionPrice = await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex)
+    num = currentAuctionPrice.num
+    den = currentAuctionPrice.den
     const priceAfter = num.div(den)
     log(`
       Price AFTER waiting until Price = ${p * 100}% of ${priceBefore / 2} (initial Closing Price)
       ==============================
-      Price.num             = ${num.toNumber()}
-      Price.den             = ${den.toNumber()}
+      Price.num             = ${num.toString()}
+      Price.den             = ${den.toString()}
       Price at this moment  = ${(priceAfter)}
       ==============================
     `)
   }
-  assert.equal(timestamp() >= timeToWaitFor, true)
+  assert.equal(await timestamp() >= timeToWaitFor, true)
   // assert.isAtLeast(priceAfter, (priceBefore / 2) * p)
 }
 
@@ -238,12 +241,12 @@ const checkBalanceBeforeClaim = async (
   }
 
   const balanceAfterClaim = (await dx.balances.call(token.address, acct))
-  const difference = balanceBeforeClaim.add(amt).minus(balanceAfterClaim).abs()
+  const difference = balanceBeforeClaim.add(amt).sub(balanceAfterClaim).abs()
   varLogger('claiming for', claiming)
-  varLogger('balanceBeforeClaim', balanceBeforeClaim.toNumber())
-  varLogger('amount', amt)
-  varLogger('balanceAfterClaim', balanceAfterClaim.toNumber())
-  varLogger('difference', difference.toNumber())
+  varLogger('balanceBeforeClaim', balanceBeforeClaim.toString(10))
+  varLogger('amount', amt.toString(10))
+  varLogger('balanceAfterClaim', balanceAfterClaim.toString(10))
+  varLogger('difference', difference.toString(10))
   assert.equal(difference.toNumber() < round, true)
 }
 
@@ -279,13 +282,13 @@ const postBuyOrder = async (ST, BT, aucIdx, amt, acct) => {
     log(`
     Current Auction Index -> ${auctionIdx}
     `)
-    const buyVolumes = (await dx.buyVolumes.call(ST.address, BT.address)).toNumber()
-    const sellVolumes = (await dx.sellVolumesCurrent.call(ST.address, BT.address)).toNumber()
+    const buyVolumes = await dx.buyVolumes.call(ST.address, BT.address)
+    const sellVolumes = await dx.sellVolumesCurrent.call(ST.address, BT.address)
     log(`
-      Current Buy Volume BEFORE Posting => ${buyVolumes.toEth()}
-      Current Sell Volume               => ${sellVolumes.toEth()}
+      Current Buy Volume BEFORE Posting => ${toEth(buyVolumes)}
+      Current Sell Volume               => ${toEth(sellVolumes)}
       ----
-      Posting Buy Amt -------------------> ${amt.toEth()} in GNO for ETH
+      Posting Buy Amt -------------------> ${toEth(amt)} in GNO for ETH
     `)
   }
   // log('POSTBUYORDER TX RECEIPT ==', await dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct }))
@@ -616,7 +619,7 @@ const unlockMGNTokens = async (user, ST, BT) => {
     // Auction HAS cleared
     assert.equal(unlockedFunds, lockedUserMGNs, 'unlockedFunds should be = lockedUserMGNs')
     // assert withdrawTime === now (in seconds) + 24 hours (in seconds)
-    assert.equal(withdrawTime, timestamp() + (24 * 3600), 'Withdraw time should be equal to [(24 hours in seconds) + (current Block timestamp in seconds)]')
+    assert.equal(withdrawTime, await timestamp() + (24 * 3600), 'Withdraw time should be equal to [(24 hours in seconds) + (current Block timestamp in seconds)]')
   } else {
     assert.equal(unlockedFunds, 0, 'unlockedFunds should be = 0 as no tokens minted')
     // assert withdrawTime === now (in seconds) + 24 hours (in seconds)
@@ -633,7 +636,7 @@ const calculateTokensInExchange = async (Accounts, Tokens) => {
   const { DutchExchange: dx } = await getContracts()
   for (let token of Tokens) {
     // add all normal balances
-    let balance = bn(0)
+    let balance = new BN('0')
     for (let acct of Accounts) {
       balance = balance.add((await dx.balances.call(token.address, acct)))
     }
@@ -647,13 +650,15 @@ const calculateTokensInExchange = async (Accounts, Tokens) => {
         // check old auctions balances
         for (let auctionIndex = 1; auctionIndex < lastAuctionIndex; auctionIndex += 1) {
           for (let acct of Accounts) {
-            if ((await dx.buyerBalances.call(token.address, tokenPartner.address, auctionIndex, acct)).toNumber() > 0) {
-              const [w] = (await dx.claimBuyerFunds.call(token.address, tokenPartner.address, acct, auctionIndex))
-              balance = balance.add(w)
+            const buyerBalance = await dx.buyerBalances.call(token.address, tokenPartner.address, auctionIndex, acct)
+            if (buyerBalance.gt(new BN('0'))) {
+              const { returned } = (await dx.claimBuyerFunds.call(token.address, tokenPartner.address, acct, auctionIndex))
+              balance = balance.add(returned)
             }
-            if ((await dx.sellerBalances.call(tokenPartner.address, token.address, auctionIndex, acct)).toNumber() > 0) {
-              const [w] = await dx.claimSellerFunds.call(tokenPartner.address, token.address, acct, auctionIndex)
-              balance = balance.add(w)
+            const sellerBalance = await dx.sellerBalances.call(tokenPartner.address, token.address, auctionIndex, acct)
+            if (sellerBalance.gt(new BN('0'))) {
+              const { returned } = await dx.claimSellerFunds.call(tokenPartner.address, token.address, acct, auctionIndex)
+              balance = balance.add(returned)
             }
           }
         }
@@ -711,7 +716,7 @@ module.exports = {
   setAndCheckAuctionStarted,
   setupTest,
   unlockMGNTokens,
-  wait,
+  wait: time.increase,
   waitUntilPriceIsXPercentOfPreviousPrice,
   calculateTokensInExchange,
   getClearingTime,

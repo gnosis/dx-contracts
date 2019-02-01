@@ -127,7 +127,7 @@ const getState = async (ST, BT) => {
     (dx.closingPrices.call(BT.address, ST.address, auctionIndex))
   ])
 
-  const isOppAuctionTheoreticalClosed = (numP2.mul(denBasedOnVolumeOpp).minus(numBasedOnVolumeOpp.mul(denP2)).toNumber() <= 0)
+  const isOppAuctionTheoreticalClosed = (numP2.mul(denBasedOnVolumeOpp).sub(numBasedOnVolumeOpp.mul(denP2)).toNumber() <= 0)
   const isOppAuctionClosed = (numPPOpp.toNumber() > 0)
 
   // Got sellVolumesCurrent as denominator based on volume. Rename for better reading
@@ -325,7 +325,7 @@ const checkInvariants = async (invariant, accounts, tokens, allowedRoundingError
   logger('invariant before', invariant.map(v => v.toNumber()))
   logger('invariant after', newBalanceInvariant.map(v => v.toNumber()))
   for (let i = 0; i < tokens.length; i += 1) {
-    assert.isAtMost(balanceInvariant[i].minus(newBalanceInvariant[i]).abs().toNumber(), allowedRoundingErrors, `issue with Token${i}`)
+    assert.isAtMost(balanceInvariant[i].sub(newBalanceInvariant[i]).abs().toNumber(), allowedRoundingErrors, `issue with Token${i}`)
   }
 }
 
