@@ -7,12 +7,12 @@ const contract = require('truffle-contract')
 const GAS = 5e5 // 500K
 
 // Usage example:
-//  PK=PRIVATE_KEY yarn wrap-eth --amount 40 --dry-run
+//  PK=PRIVATE_KEY yarn deposit-weth --amount 40 --dry-run
 var argv = require('yargs')
-  .usage('Usage: yarn wrap-eth [--amount wethAmount] [--network name] [--dry-run]')
+  .usage('Usage: yarn deposit-weth [--amount wethAmount] [--network name] [--dry-run]')
   .option('amount', {
     type: 'integer',
-    describe: 'Amount of ETH to wrap into WETH',
+    describe: 'Amount of WETH to set as the new allowance',
     demandOption: true
   })
   .option('network', {
@@ -29,12 +29,12 @@ var argv = require('yargs')
   .strict()
   .argv
 
-async function wrapEth () {
+async function depositWeth () {
   if (!argv._[0]) {
     argv.showHelp()
   } else {
     const { network, amount, dryRun } = argv
-    console.log('\n **************  Wrap ETH  **************\n')
+    console.log('\n **************  Deposit WETH  **************\n')
     console.log(`Data:
     Dry run: ${dryRun ? 'Yes' : 'No'}
     Network: ${network}
@@ -44,6 +44,7 @@ async function wrapEth () {
     // Load the DX info
     const { weth, dx, account, etherBalance } = await loadContractsInfo()
     const wethBalance = await weth.balanceOf(account)
+    const allowance = await weth.allowance(account, dx.address)
     const wethBalanceInDx = await dx.balances(weth.address, account)
 
     console.log(`\
@@ -55,30 +56,31 @@ async function wrapEth () {
         Balance of Ether: ${etherBalance / 1e18}
         Balance of WETH: ${wethBalance / 1e18}
         Balance of WETH in DutchX: ${wethBalanceInDx / 1e18}
-    Amount to wrap: ${amount}
+    WETH allowance for DutchX: ${allowance / 1e18}
+    Amount: ${amount}
 `)
+
     assert(amount > 0, 'amount must be grater than 0')
-    assert(amount * 1e18 <= etherBalance, "You don't have enough Ether balance")
+    assert(amount * 1e18 <= wethBalance, "You don't have enough WETH")
+    assert(amount * 1e18 <= allowance, "You don't have allowance")
 
     if (dryRun) {
       // Dry run
       console.log('The dry run execution passed all validations')
-      await weth.deposit.call({
-        from: account,
-        value: amount * 1e18
+      await dx.deposit.call(weth.address, amount * 1e18, {
+        from: account
       })
       console.log('Dry run success!')
     } else {
       // Real wrap WETH
-      console.log('Wrapping %s ETH into WETH', amount)
-      const wrapResult = await weth.deposit({
-        from: account,
-        value: amount * 1e18
+      console.log('Setting the allowance to %s for WETH', amount)
+      const setAllowanceResult = await dx.deposit(weth.address, amount * 1e18, {
+        from: account
       })
-      console.log('Success! Wrapped %s. Transaction: %s', amount, wrapResult.tx)
+      console.log('Success! The allowance is now %s. Transaction: %s', amount, setAllowanceResult.tx)
     }
 
-    console.log('\n **************  Wrap ETH  **************\n')
+    console.log('\n **************  Deposit WETH  **************\n')
   }
 }
 
@@ -125,7 +127,7 @@ async function loadContractsInfo () {
 }
 
 module.exports = callback => {
-  wrapEth()
+  depositWeth()
     .then(callback)
     .catch(callback)
 }

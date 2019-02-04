@@ -20,6 +20,7 @@
     "solium": "solium --dir ./contracts/",
     "wrap-eth": "npx truffle exec src/truffle/wrap-eth.js",
     "set-weth-allowance": "npx truffle exec src/truffle/set-weth-allowance.js",
+    "deposit-weth": "npx truffle exec src/truffle/deposit-weth.js",
     "add-token-pairs": "npx truffle exec src/truffle/add-token-pairs.js",
     "approve-tokens": "npx truffle exec src/truffle/approve-tokens.js",
     "unlock-mgn": "npx truffle exec src/truffle/unlock-mgn.js",
