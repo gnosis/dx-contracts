@@ -314,7 +314,7 @@ contract('DutchExchange - TradeFlows', accounts => {
       // clearing first auction
       await postBuyOrder(eth, gno, auctionIndex, 30.0.toWei(), buyer1)
       // checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
-      await checkState(1, auctionStart, valMinusFee(10.0.toWei()), BN_ZERO, valMinusFee(30.0.toWei()), valMinusFee(10.0.toWei()), valMinusFee(10.0.toWei()), eth, gno, 10 ** 16)
+      await checkState(1, auctionStart, valMinusFee(10.0.toWei()), BN_ZERO, valMinusFee(30.0.toWei()), valMinusFee(30.0.toWei()), valMinusFee(10.0.toWei()), eth, gno, 10 ** 16)
     })
 
     it('step 2 - ensuring immediate restart of next auctions', async () => {
