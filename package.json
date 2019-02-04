@@ -18,6 +18,7 @@
     "migrate": "npx truffle migrate",
     "lint": "eslint .",
     "solium": "solium --dir ./contracts/",
+    "wrap-eth": "npx truffle exec src/truffle/wrap-eth.js",
     "add-token-pairs": "npx truffle exec src/truffle/add-token-pairs.js",
     "approve-tokens": "npx truffle exec src/truffle/approve-tokens.js",
     "unlock-mgn": "npx truffle exec src/truffle/unlock-mgn.js",
