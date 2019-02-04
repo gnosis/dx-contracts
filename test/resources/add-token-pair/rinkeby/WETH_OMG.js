@@ -17,10 +17,10 @@ module.exports = {
   },
   // Price:
   //   https://www.coingecko.com/en/price_charts/omisego/eth
-  //   1 ETH = 100,1840982990343 OMG
-  //   initial price = 101 OMG/WETH
+  //   1 ETH = 97,09644726041404 OMG
+  //   initial price = 98 OMG/WETH
   initialPrice: {
-    numerator: 101,
+    numerator: 98,
     denominator: 1
   }
 }
