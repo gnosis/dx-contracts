@@ -288,7 +288,7 @@ const postBuyOrder = async (ST, BT, aucIdx, amt, acct) => {
       Current Buy Volume BEFORE Posting => ${toEth(buyVolumes)}
       Current Sell Volume               => ${toEth(sellVolumes)}
       ----
-      Posting Buy Amt -------------------> ${toEth(amt)} in GNO for ETH
+      Posting Buy Amt -------------------> ${toEth(amt)} in ${await ST.symbol()} for ${await BT.symbol()} in auction ${auctionIdx}
     `)
   }
   // log('POSTBUYORDER TX RECEIPT ==', await dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct }))
@@ -310,13 +310,13 @@ const postSellOrder = async (ST, BT, aucIdx, amt, acct) => {
   let auctionIdx = aucIdx || 0
 
   if (!silent) {
-    const buyVolumes = (await dx.buyVolumes.call(ST.address, BT.address)).toNumber()
-    const sellVolumes = (await dx.sellVolumesCurrent.call(ST.address, BT.address)).toNumber()
+    const buyVolumes = (await dx.buyVolumes.call(ST.address, BT.address))
+    const sellVolumes = (await dx.sellVolumesCurrent.call(ST.address, BT.address))
     log(`
-      Current Buy Volume BEFORE Posting => ${buyVolumes.toEth()}
-      Current Sell Volume               => ${sellVolumes.toEth()}
+      Current Buy Volume BEFORE Posting => ${toEth(buyVolumes)}
+      Current Sell Volume               => ${toEth(sellVolumes)}
       ----
-      Posting Sell Amt -------------------> ${amt.toEth()} in ${await ST.symbol()} for ${await BT.symbol()} in auction ${auctionIdx}
+      Posting Sell Amt -------------------> ${toEth(amt)} in ${await ST.symbol()} for ${await BT.symbol()} in auction ${auctionIdx}
     `)
   }
   // log('POSTBUYORDER TX RECEIPT ==', await dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct }))

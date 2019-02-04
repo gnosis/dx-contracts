@@ -16,7 +16,7 @@ let dx
 
 let contracts
 
-contract('DutchExchange updating token aprroval', accounts => {
+contract('DutchExchange updating token approval', accounts => {
   const [master, seller1] = accounts
   let testingTokens
 

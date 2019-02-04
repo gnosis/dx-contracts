@@ -75,7 +75,7 @@ contract('DutchExchange - addTokenPair', accounts => {
     }
 
     // a new deployed GNO to act as a different token
-    gno2 = await TokenGNO.new(1e22, { from: master })
+    gno2 = await TokenGNO.new(10000.0.toWei(), { from: master })
     await Promise.all([
       gno2.transfer(seller1, startBal.startingGNO, { from: master }),
       gno2.approve(dx.address, startBal.startingGNO, { from: seller1 })
