@@ -3,8 +3,8 @@
     "1": {
       "events": {},
       "links": {},
-      "address": "0x039fb002d21c1c5eeb400612aef3d64d49eb0d94",
-      "transactionHash": "0x9174afb5952e41e2277a7ed1b5e8136efcefd86ec45bbca92ec396eb6227f50e"
+      "address": "0xcea5b9314a7b67cc25edb8c270e3965a62fe595b",
+      "transactionHash": "0x0297673a0e7b70ab8da0bfdb127def6cc57abd1b94de269016c214b9446af438"
     },
     "4": {
       "events": {},
@@ -20,6 +20,12 @@
     }
   },
   "DutchExchangeHelper": {
+    "1": {
+      "events": {},
+      "links": {},
+      "address": "0xb4e4b9c2f18cab43003d2a5edff61664c677c84a",
+      "transactionHash": "0x6f4cef5a4c686b6948a54246428a5e560cb56d6b7a0df231ef2d664897501005"
+    },
     "4": {
       "events": {},
       "links": {},
@@ -31,8 +37,8 @@
     "1": {
       "events": {},
       "links": {},
-      "address": "0xaf1745c0f8117384dfa5fff40f824057c70f2ed3",
-      "transactionHash": "0xac754e7287e66bb77db92a8578f43eb277f42da82ce78298a1845deb7c057254"
+      "address": "0x43329af8e0a66910ccdd085e56d8117a4a50c7f6",
+      "transactionHash": "0x86c29a72075a083d974f514552fbafd649b652a38361309ec0985e5861df4994"
     },
     "4": {
       "events": {},
@@ -45,14 +51,6 @@
       "links": {},
       "address": "0x4183931cce346feece44eae2cf14d84c3347d779",
       "transactionHash": "0x2263b0fff8338875e4c3310b627a02cdec06d91d5e2c73f7980bc3faf9d55f2a"
-    }
-  },
-  "Math": {
-    "4": {
-      "events": {},
-      "links": {},
-      "address": "0xbf0dacc0d3897dda763f90cfaf1d0e36c61ae68c",
-      "transactionHash": "0x3de205d13f08995f8682818d64cbff0e936cc931779d1410c0709ec99e4621e3"
     }
   },
   "GnosisMath": {
@@ -218,8 +216,8 @@
     "1": {
       "events": {},
       "links": {},
-      "address": "0xff29b0b15a0a1da474bc9a132077153c53a2373b",
-      "transactionHash": "0x9ce1ef77f6435059101f7820759a50d69c6c0a19ed2be0b7e060897b5316faae"
+      "address": "0xc25308ffd64bad73cf16da2d31201175f75bb8c8",
+      "transactionHash": "0xfa237529bc59b264ff13cd9898440b1e1b1be42fae5bdbe281d50f899db7b839"
     },
     "4": {
       "events": {},
@@ -238,8 +236,8 @@
     "1": {
       "events": {},
       "links": {},
-      "address": "0xb9625381f086e7b8512e4825f6af1117e9c84d43",
-      "transactionHash": "0xdcbdb3b7ad84790aadce9ccbf744d8f94403c26f2b440fe02a2da14abc3d103a"
+      "address": "0x4134de664cbe77a81d58e841b5357d2b654b05c8",
+      "transactionHash": "0x8ded985bcb0b7eedaa6dfb0458e8e879553506e03df76847a82da3c322c5153c"
     },
     "4": {
       "events": {},
@@ -255,6 +253,12 @@
     }
   },
   "TokenFRTProxy": {
+    "1": {
+      "events": {},
+      "links": {},
+      "address": "0xad7afa687bc9cf02b791c0e2f7dd8f88070065e4",
+      "transactionHash": "0x599c156f09f70678c66503eee9cd278142e989d5853182c2be3919afe1e1ff6f"
+    },
     "4": {
       "events": {},
       "links": {},
