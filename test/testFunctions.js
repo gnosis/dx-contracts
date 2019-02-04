@@ -176,8 +176,8 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
     log(`
       Price BEFORE waiting until Price = initial Closing Price (2) * 2
       ==============================
-      Price.num             = ${num.toNumber()}
-      Price.den             = ${den.toNumber()}
+      Price.num             = ${num}
+      Price.den             = ${den}
       Price at this moment  = ${(priceBefore)}
       ==============================
     `)
@@ -195,8 +195,8 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
     log(`
       Price AFTER waiting until Price = ${p * 100}% of ${priceBefore / 2} (initial Closing Price)
       ==============================
-      Price.num             = ${num.toString()}
-      Price.den             = ${den.toString()}
+      Price.num             = ${num}
+      Price.den             = ${den}
       Price at this moment  = ${(priceAfter)}
       ==============================
     `)

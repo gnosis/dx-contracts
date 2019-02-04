@@ -282,6 +282,8 @@ const revertSnapshot = snapshotId => {
   })
 }
 
+const valMinusFee = amount => amount.sub(amount.div(new BN('200')))
+
 module.exports = {
   AUCTION_START_WAITING_FOR_FUNDING,
   BN_ZERO,
@@ -299,5 +301,6 @@ module.exports = {
   timestamp,
   varLogger,
   makeSnapshot,
-  revertSnapshot
+  revertSnapshot,
+  valMinusFee
 }

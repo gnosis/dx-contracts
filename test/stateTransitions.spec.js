@@ -16,7 +16,8 @@ const {
   assertRejects,
   gasLogger,
   makeSnapshot,
-  revertSnapshot
+  revertSnapshot,
+  valMinusFee
 } = require('./utils')
 
 const {
@@ -38,8 +39,6 @@ let balanceInvariant
 const ether = 10 ** 18
 
 let contracts
-
-const valMinusFee = amount => amount - (amount / 200)
 
 // checkState is only a rough check for right updates of the numbers in the smart contract. It allows a big tolerance (MaxroundingError)
 // since there are unpredicted timejumps with an evm_increase time, which are not caught.

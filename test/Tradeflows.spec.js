@@ -15,7 +15,8 @@ const {
   timestamp,
   gasLogger,
   makeSnapshot,
-  revertSnapshot
+  revertSnapshot,
+  valMinusFee
 } = require('./utils')
 
 const {
@@ -38,8 +39,6 @@ let tokenMGN
 let balanceInvariant
 const ether = 1.0.toWei()
 let contracts
-
-const valMinusFee = amount => amount.sub(amount.div(new BN('200')))
 
 // checkState is only a rough check for right updates of the numbers in the smart contract. It allows a big tolerance (MaxroundingError)
 // since there are unpredicted timejumps with an evm_increase time, which are not caught.
