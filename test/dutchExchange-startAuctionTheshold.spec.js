@@ -5,6 +5,7 @@
 
 const {
   AUCTION_START_WAITING_FOR_FUNDING,
+  BN,
   BN_ZERO,
   eventWatcher,
   log: utilsLog,
@@ -55,7 +56,7 @@ const setupContracts = async () => {
 const setupAmountUsedForTesting = async () => {
   // Amounts used for testing
   const [threshold, usdEthPriceAux, gnoEthPrice] = await Promise.all([
-    dx.thresholdNewAuction().then(bn => toEth(bn).toNumber()),
+    dx.thresholdNewAuction().then(bn => parseInt(toEth(bn))),
     oracle.getUSDETHPrice.call().then(bn => bn.toNumber()),
     dx.getPriceOfTokenInLastAuction.call(gno.address).then(({ num, den }) => num.toNumber() / den.toNumber())
   ])

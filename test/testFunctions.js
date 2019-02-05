@@ -72,7 +72,7 @@ const getContracts = async () => {
  */
 const getBalance = async (acct, token) => {
   const { DutchExchange: dx } = await getContracts()
-  return (await dx.balances.call(token.address, acct)).toNumber()
+  return dx.balances.call(token.address, acct)
 }
 
 const getAuctionStart = async (ST, BT) => {

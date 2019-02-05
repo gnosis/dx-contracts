@@ -1,20 +1,6 @@
 /* global contract, assert, artifacts */
 /* eslint no-undef: "error" */
 
-/*
-  eslint prefer-const: 0,
-  max-len: 0,
-  object-curly-newline: 1,
-  no-param-reassign: 0,
-  no-console: 0,
-  no-mixed-operators: 0,
-  no-floating-decimal: 0,
-  no-trailing-spaces: 0,
-  no-multi-spaces: 0,
-  comma-dangle: 0,
-  no-undef: 0,
-*/
-
 const TokenGNO2 = artifacts.require('TokenGNO')
 const {
   eventWatcher,
@@ -23,7 +9,8 @@ const {
   timestamp,
   enableContractFlag,
   makeSnapshot,
-  revertSnapshot
+  revertSnapshot,
+  toEth
 } = require('./utils')
 
 const {
@@ -105,8 +92,8 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
      * SUB TEST 2: Check passed in ACCT has NO balances in DX for token passed in
      */
     ([seller1Balance, seller2Balance] = await Promise.all(sellers.map(s => getBalance(s, eth))))
-    assert.equal(seller1Balance, startingETH, `Seller1 should have balance of ${startingETH.toEth()}`)
-    assert.equal(seller2Balance, startingETH, `Seller2 should have balance of ${startingETH.toEth()}`)
+    assert.equal(seller1Balance.toString(), startingETH.toString(), `Seller1 should have balance of ${toEth(startingETH)}`)
+    assert.equal(seller2Balance.toString(), startingETH.toString(), `Seller2 should have balance of ${toEth(startingETH)}`)
 
     /*
      * SUB TEST 3: assert both eth and gno get approved by DX
@@ -132,7 +119,7 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
        * SUB TEST 4: create new token pair and assert Seller1Balance = 0 after depositing more than Balance
        */
       // add tokenPair ETH GNO
-      log('Selling amt ', sellingAmount.toEth())
+      log('Selling amt ', toEth(sellingAmount))
       await dx.addTokenPair(
         eth.address,
         gno.address,
@@ -143,8 +130,8 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
         { from: seller1 }
       )
       seller1Balance = await getBalance(seller1, eth) // dx.balances(token) - sellingAmt
-      log(`\nSeller Balance ====> ${seller1Balance.toEth()}\n`)
-      assert.equal(seller1Balance, startingETH - sellingAmount, `Seller1 should have ${startingETH.toEth()} balance after new Token Pair add`)
+      log(`\nSeller Balance ====> ${toEth(seller1Balance)}\n`)
+      assert.equal(seller1Balance, startingETH - sellingAmount, `Seller1 should have ${toEth(startingETH)} balance after new Token Pair add`)
     })
 
     after(async () => {
@@ -161,8 +148,8 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       sellVolumes = (await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber()
       const svFee = f => sellingAmount * (f / 100)
       log(`
-      SELLVOLUMES === ${sellVolumes.toEth()}
-      FEE         === ${svFee(0.5).toEth()}
+      SELLVOLUMES === ${toEth(sellVolumes)}
+      FEE         === ${toEth(svFee(0.5))}
       `)
       assert.equal(sellVolumes, sellingAmount - svFee(0.5), 'sellVolumes === seller1Balance')
     })
@@ -176,8 +163,8 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       ============================================================================================
       `)
       log(`
-      BUYER1 GNO BALANCE = ${(await getBalance(buyer1, gno)).toEth()}
-      BUYER1 ETH BALANCE = ${(await getBalance(buyer1, eth)).toEth()}
+      BUYER1 GNO BALANCE = ${toEth(await getBalance(buyer1, gno))}
+      BUYER1 ETH BALANCE = ${toEth(await getBalance(buyer1, eth))}
       `)
       /*
        * SUB TEST 1: MOVE TIME AFTER SCHEDULED AUCTION START TIME && ASSERT AUCTION-START =TRUE
@@ -207,14 +194,14 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
        */
       await postBuyOrder(eth, gno, false, (20).toWei(), buyer1)
       log(`
-      Buy Volume AFTER = ${((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()).toEth()}
+      Buy Volume AFTER = ${toEth(await dx.buyVolumes.call(eth.address, gno.address))}
       Left to clear auction = ${((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber() - ((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()) * (den / num)).toEth()}
       `)
       let idx = await getAuctionIndex()
       const [claimedFunds, mgnsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
       log(`
-      CLAIMED FUNDS => ${claimedFunds.toEth()}
-      MGN ISSUED => ${mgnsIssued.toEth()}
+      CLAIMED FUNDS => ${toEth(claimedFunds)}
+      MGN ISSUED => ${toEth(mgnsIssued)}
       `)
 
       assert.equal(mgnsIssued, 0, 'MGNs only issued / minted after auction Close so here = 0')
@@ -233,8 +220,8 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       ================================================================================================
       `)
       log(`
-      BUYER1 GNO BALANCE = ${(await getBalance(buyer1, gno)).toEth()}
-      BUYER1 ETH BALANCE = ${(await getBalance(buyer1, eth)).toEth()}
+      BUYER1 GNO BALANCE = ${toEth(await getBalance(buyer1, gno))}
+      BUYER1 ETH BALANCE = ${toEth(await getBalance(buyer1, eth))}
       `)
 
       // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
@@ -927,7 +914,7 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
        * SUB TEST 4: create new token pair and assert Seller1Balance = 0 after depositing more than Balance
        */
       // add tokenPair ETH GNO
-      log('Selling amt ', sellingAmount.toEth())
+      log('Selling amt ', toEth(sellingAmount))
       await dx.addTokenPair(
         eth.address,
         gno.address,
@@ -938,8 +925,8 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
         { from: seller1 }
       )
       seller1Balance = await getBalance(seller1, eth) // dx.balances(token) - sellingAmt
-      log(`\nSeller Balance ====> ${seller1Balance.toEth()}\n`)
-      assert.equal(seller1Balance, startingETH - sellingAmount, `Seller1 should have ${startingETH.toEth()} balance after new Token Pair add`)
+      log(`\nSeller Balance ====> ${toEth(seller1Balance)}\n`)
+      assert.equal(seller1Balance.toString(), startingETH.sub(sellingAmount).toString(), `Seller1 should have ${startingETH.toEth()} balance after new Token Pair add`)
     })
 
     after(async () => {
