@@ -3,7 +3,7 @@ const deployUtils = require('@gnosis.pm/util-contracts/src/migrations-truffle-5'
 const deployGno = require('@gnosis.pm/gno-token/src/migrations-truffle-5')
 const deployOwl = require('@gnosis.pm/owl-token/src/migrations-truffle-5')
 
-async function migrate ({
+async function migrate({
   artifacts,
   deployer,
   network,

@@ -86,12 +86,14 @@ Transaction: ${txResult.tx}`)
 async function loadContractsInfo () {
   const DutchExchangeProxy = artifacts.require('DutchExchangeProxy')
   const DutchExchange = artifacts.require('DutchExchange')
+  const TokenFRTProxy = artifacts.require('TokenFRTProxy')
   const TokenFRT = artifacts.require('TokenFRT')
 
   // Get contract examples
   const dxProxy = await DutchExchangeProxy.deployed()
   const dx = DutchExchange.at(dxProxy.address)
-  const mgn = await TokenFRT.deployed()
+  const mgnProxy = await TokenFRTProxy.deployed()
+  const mgn = TokenFRT.at(mgnProxy.address)
 
   // get Accounts
   const accounts = await new Promise((resolve, reject) => {

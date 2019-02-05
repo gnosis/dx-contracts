@@ -17,7 +17,7 @@ function migrate ({
   const medianizerAddress = getMedianizerAddress(Medianizer)
   const account = accounts[0]
   if (!medianizerAddress) {
-    console.log(`Deploying Maker Dao feed contracts, because they weren published in network "${network}" yet`)
+    console.log(`Deploying Maker Dao feed contracts, because they weren't published in network "${network}" yet`)
     // Deployment of PriceFeedInfrastructure
     return deployer
       .deploy(PriceFeed)
@@ -29,7 +29,7 @@ function migrate ({
         PriceFeed.deployed(),
         getTime(web3)
       ]))
-      .then(([ priceFeed, now ]) => priceFeed.post(
+      .then(([priceFeed, now]) => priceFeed.post(
         ethUsdPrice * 1e18,
         now + feedExpirePeriodDays * 24 * 60 * 60,
         Medianizer.address, {

@@ -1,3 +1,6 @@
+/* global contract, assert */
+/* eslint no-undef: "error" */
+
 /*
 MGN token issuing will not be covered in these tests, as they are covered in the magnolia testing scripts
 */
@@ -8,6 +11,7 @@ const {
   assertRejects,
   logger,
   gasLogger,
+  timestamp,
   makeSnapshot,
   revertSnapshot
 } = require('./utils')
@@ -106,14 +110,15 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
       ])
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
       await postBuyOrder(eth, gno, auctionIndex, 2 * 10e18, buyer1)
-      auctionIndex = await getAuctionIndex()
-      await setAndCheckAuctionStarted(eth, gno)
-      assert.equal(2, auctionIndex)
 
       // check that clearingTime was saved
       const clearingTime = await getClearingTime(gno, eth, auctionIndex)
       const now = timestamp()
       assert.equal(clearingTime, now, 'clearingTime was set')
+
+      auctionIndex = await getAuctionIndex()
+      await setAndCheckAuctionStarted(eth, gno)
+      assert.equal(2, auctionIndex)
 
       // now claiming should not be possible and return == 0
       await setAndCheckAuctionStarted(eth, gno)
@@ -174,7 +179,7 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
     })
   })
 
-  describe ('Running independent tests', () => {
+  describe('Running independent tests', () => {
     beforeEach(async () => {
       currentSnapshotId = await makeSnapshot()
       // add tokenPair ETH GNO
@@ -278,14 +283,14 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
         postSellOrder(gno, eth, 0, 10e18, seller1)
       ])
 
-      auctionIndex = await getAuctionIndex()
-      assert.equal(auctionIndex, 2)
-
       // check that clearingTime was saved
       const clearingTime = await getClearingTime(gno, eth, auctionIndex)
       const now = timestamp()
       assert.equal(clearingTime, now, 'clearingTime was set')
-      
+
+      auctionIndex = await getAuctionIndex()
+      assert.equal(auctionIndex, 2)
+
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.6)
       const extraTokensAvailable = await dx.extraTokens.call(eth.address, gno.address, 2)
       await postBuyOrder(eth, gno, auctionIndex, 10e18, buyer1)

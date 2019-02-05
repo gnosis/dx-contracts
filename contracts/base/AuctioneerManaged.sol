@@ -1,15 +1,11 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.5.2;
+
 
 contract AuctioneerManaged {
     // auctioneer has the power to manage some variables
     address public auctioneer;
 
-    function updateAuctioneer(
-        address _auctioneer
-    )
-        public
-        onlyAuctioneer
-    {
+    function updateAuctioneer(address _auctioneer) public onlyAuctioneer {
         require(_auctioneer != address(0), "The auctioneer must be a valid address");
         auctioneer = _auctioneer;
     }

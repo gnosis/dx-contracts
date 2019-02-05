@@ -14,11 +14,14 @@ if (!privateKey && !mnemonic) {
   mnemonic = DEFAULT_MNEMONIC
 }
 
-// TODO: Uncomment next lines once the project is migrated to truffle5
-// Solidity compiler (solc) config:
-// const solcUseDocker = process.env.SOLC_USE_DOCKER === 'true' || false
-// const solcVersion = '0.4.25'
+// Solc
 const compatibilityTruffle4 = true
+let solcUseDocker, solcVersion
+if (!compatibilityTruffle4) {
+  // Use truffle 5
+  solcUseDocker = process.env.SOLC_USE_DOCKER === 'true' || false
+  solcVersion = '0.5.2'
+}
 
 // Gas price
 const gasPriceGWei = process.env.GAS_PRICE_GWEI || DEFAULT_GAS_PRICE_GWEI
@@ -30,16 +33,20 @@ const gas = process.env.GAS_LIMIT || DEFAULT_GAS_LIMIT
 //  i.e. NETWORK='{ "name": "docker", "networkId": "99999", "url": "http://rpc:8545", "gas": "6700000", "gasPrice": "25000000000"  }'
 let aditionalNetwork = process.env.NETWORK ? JSON.parse(process.env.NETWORK) : null
 
-module.exports = truffleConfig({
-  mnemonic,
-  privateKey,
-  gasPriceGWei,
-  gas,
-  aditionalNetwork,
-  optimizedEnabled: true,
-  compatibilityTruffle4
-  /*
-  solcUseDocker,
-  solcVersion
-  */
-})
+module.exports = {
+  ...truffleConfig({
+    mnemonic,
+    privateKey,
+    gasPriceGWei,
+    gas,
+    aditionalNetwork,
+    optimizedEnabled: true,
+    solcUseDocker,
+    solcVersion,
+    compatibilityTruffle4
+  }),
+  // https://github.com/mochajs/mocha/wiki/Using-mocha-programmatically#set-options
+  mocha: {
+
+  }
+}

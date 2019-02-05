@@ -1,6 +1,8 @@
 // `truffle test --silent` or `truffle test -s` to suppress logs
 const BigNumber = require('bignumber.js')
 
+const AUCTION_START_WAITING_FOR_FUNDING = 1
+
 const {
   silent,
   contract: contractFlag,
@@ -248,6 +250,7 @@ const revertSnapshot = snapshotId => {
 }
 
 module.exports = {
+  AUCTION_START_WAITING_FOR_FUNDING,
   silent,
   assertRejects,
   blockNumber,
