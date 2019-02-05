@@ -107,7 +107,7 @@ const assertRejects = async (q, msg) => {
 }
 
 const toEth = value => {
-  return new BN(web3.utils.fromWei(value))
+  return web3.utils.fromWei(value)
 }
 
 const blockNumber = () => web3.eth.blockNumber
