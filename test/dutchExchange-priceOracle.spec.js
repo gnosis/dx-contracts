@@ -1,18 +1,6 @@
 /* global contract, assert, artifacts */
 /* eslint no-undef: "error" */
 
-/*
-  eslint prefer-const: 0,
-  max-len: 0,
-  object-curly-newline: 1,
-  no-param-reassign: 0,
-  no-console: 0,
-  no-mixed-operators: 0,
-  no-floating-decimal: 0,
-  no-trailing-spaces: 0,
-  no-multi-spaces: 0,
-*/
-
 const {
   assertRejects,
   gasLogger,
@@ -51,10 +39,10 @@ const c1 = () => contract('DX PriceOracleInterface Flow', accounts => {
   const [owner, notOwner, newCurator] = accounts
 
   const startBal = {
-    startingETH: 1000..toWei(),
-    startingGNO: 1000..toWei(),
-    ethUSDPrice: 1100..toWei(),   // 400 ETH @ $6000/ETH = $2,400,000 USD
-    sellingAmount: 100..toWei() // Same as web3.toWei(50, 'ether') - $60,000USD
+    startingETH: 1000.0.toWei(),
+    startingGNO: 1000.0.toWei(),
+    ethUSDPrice: 1100.0.toWei(), // 400 ETH @ $6000/ETH = $2,400,000 USD
+    sellingAmount: 100.0.toWei() // Same as web3.toWei(50, 'ether') - $60,000USD
   }
 
   afterEach(gasLogger)
@@ -100,7 +88,7 @@ const c1 = () => contract('DX PriceOracleInterface Flow', accounts => {
     assert.equal(ethUSDPrice, 1, 'Oracle ethUSDPrice is not set and should return 1')
   })
   it('getUSDETHPrice: set price should work correctly', async () => {
-    const ethUSDPrice = 1500..toWei()
+    const ethUSDPrice = 1500.0.toWei()
     await Medianizer.at(medzr2.address).set(PriceFeed.address, { from: owner })
     await priceFeed.post(ethUSDPrice, 1516168838 * 2, medzr2.address, { from: owner })
     const getNewETHUSDPrice = (await newPriceOracleInterface.getUSDETHPrice.call()).toNumber()

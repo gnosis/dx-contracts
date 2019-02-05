@@ -243,10 +243,10 @@ const checkBalanceBeforeClaim = async (
   const balanceAfterClaim = (await dx.balances.call(token.address, acct))
   const difference = balanceBeforeClaim.add(amt).sub(balanceAfterClaim).abs()
   varLogger('claiming for', claiming)
-  varLogger('balanceBeforeClaim', balanceBeforeClaim.toString(10))
-  varLogger('amount', amt.toString(10))
-  varLogger('balanceAfterClaim', balanceAfterClaim.toString(10))
-  varLogger('difference', difference.toString(10))
+  varLogger('balanceBeforeClaim', balanceBeforeClaim.toString())
+  varLogger('amount', amt.toString())
+  varLogger('balanceAfterClaim', balanceAfterClaim.toString())
+  varLogger('difference', difference.toString())
   assert.equal(difference.toNumber() < round, true)
 }
 
