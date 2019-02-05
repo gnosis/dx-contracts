@@ -101,8 +101,8 @@ module.exports = [
     'name': 'Melonport',
     'symbol': 'MLN',
     'approve': true,
-    'etherScanLink': 'https://etherscan.io/token/0xBEB9eF514a379B997e0798FDcC901Ee474B6D9A1',
-    'address': '0xBEB9eF514a379B997e0798FDcC901Ee474B6D9A1'
+    'address': '0xec67005c4E498Ec7f55E092bd1d35cbC47C91892',
+    'etherScanLink': 'https://etherscan.io/token/0xec67005c4E498Ec7f55E092bd1d35cbC47C91892'
   },
   {
     'name': 'Numeraire',
@@ -126,7 +126,7 @@ module.exports = [
     'address': '0x9992ec3cf6a55b00978cddf2b27bc6882d88d1ec'
   },
   {
-    'name': 'REP',
+    'name': 'Augur',
     'symbol': 'REP',
     'approve': true,
     'etherScanLink': 'https://etherscan.io/token/0x1985365e9f78359a9B6AD760e32412f4a445E862',
@@ -161,7 +161,7 @@ module.exports = [
   //   'address': '0x05f4a42e251f2d52b8ed15e9fedaacfcef1fad27'
   // },
   {
-    'name': 'ZRX',
+    'name': '0x',
     'symbol': 'ZRX',
     'approve': true,
     'etherScanLink': 'https://etherscan.io/token/0xe41d2489571d322189246dafa5ebde1f4699f498',
@@ -252,7 +252,7 @@ module.exports = [
     'etherScanLink': 'https://etherscan.io/token/0x543ff227f64aa17ea132bf9886cab5db55dcaddf'
   },
   {
-    'name': 'DGD',
+    'name': 'DigixDAO',
     'symbol': 'DGD',
     'address': '0xe0b7927c4af23765cb51314a0e0521a9645f0e2a',
     'approve': true,
@@ -321,13 +321,13 @@ module.exports = [
     'approve': true,
     'etherScanLink': 'https://etherscan.io/token/0x226bb599a12c826476e3a771454697ea52e9e220'
   },
-  // {
-  //   'name': 'Quantstamp',
-  //   'symbol': 'QSP',
-  //   'address': '0x99ea4db9ee77acd40b119bd1dc4e33e1c070b80d',
-  //   'approve': true,
-  //   'etherScanLink': 'https://etherscan.io/token/0x99ea4db9ee77acd40b119bd1dc4e33e1c070b80d'
-  // },
+  {
+    'name': 'Quantstamp',
+    'symbol': 'QSP',
+    'address': '0x99ea4db9ee77acd40b119bd1dc4e33e1c070b80d',
+    'approve': true,
+    'etherScanLink': 'https://etherscan.io/token/0x99ea4db9ee77acd40b119bd1dc4e33e1c070b80d'
+  },
   {
     'name': 'Raiden',
     'symbol': 'RDN',
