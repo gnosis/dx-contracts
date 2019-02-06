@@ -5,7 +5,6 @@
 
 const {
   AUCTION_START_WAITING_FOR_FUNDING,
-  BN,
   BN_ZERO,
   eventWatcher,
   log: utilsLog,
