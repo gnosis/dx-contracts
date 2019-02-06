@@ -146,20 +146,6 @@ module.exports = [
     'etherScanLink': 'https://etherscan.io/token/0xb64ef51c888972c908cfacf59b47c1afbc0ab8ac',
     'address': '0xb64ef51c888972c908cfacf59b47c1afbc0ab8ac'
   },
-  // {
-  //   'name': 'USD Coin',
-  //   'symbol': 'USDC',
-  //   'approve': true,
-  //   'etherScanLink': 'https://etherscan.io/token/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-  //   'address': '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
-  // },
-  // {
-  //   'name': 'Zilliqa',
-  //   'symbol': 'ZIL',
-  //   'approve': true,
-  //   'etherScanLink': 'https://etherscan.io/token/0x05f4a42e251f2d52b8ed15e9fedaacfcef1fad27',
-  //   'address': '0x05f4a42e251f2d52b8ed15e9fedaacfcef1fad27'
-  // },
   {
     'name': '0x',
     'symbol': 'ZRX',
@@ -181,13 +167,6 @@ module.exports = [
     'approve': true,
     'etherScanLink': 'https://etherscan.io/token/0xd0d6d6c5fe4a677d343cc433536bb717bae167dd'
   },
-  // {
-  //   'name': 'Aeternity',
-  //   'symbol': 'AE',
-  //   'address': '0x5ca9a71b1d01849c0a95490cc00559717fcf0d1d',
-  //   'approve': true,
-  //   'etherScanLink': 'https://etherscan.io/token/0x5ca9a71b1d01849c0a95490cc00559717fcf0d1d'
-  // },
   {
     'name': 'AirSwap',
     'symbol': 'AST',
@@ -216,20 +195,6 @@ module.exports = [
     'approve': true,
     'etherScanLink': 'https://etherscan.io/token/0x5732046a883704404f284ce41ffadd5b007fd668'
   },
-  // {
-  //   'name': 'Bounty0x',
-  //   'symbol': 'BNTY',
-  //   'address': '0xd2d6158683aee4cc838067727209a0aaf4359de3',
-  //   'approve': true,
-  //   'etherScanLink': 'https://etherscan.io/token/0xd2d6158683aee4cc838067727209a0aaf4359de3'
-  // },
-  // {
-  //   'name': 'Bread',
-  //   'symbol': 'BRD',
-  //   'address': '0x558ec3152e2eb2174905cd19aea4e34a23de9ad6',
-  //   'approve': true,
-  //   'etherScanLink': 'https://etherscan.io/token/0x558ec3152e2eb2174905cd19aea4e34a23de9ad6'
-  // },
   {
     'name': 'Chainlink',
     'symbol': 'LINK',
@@ -258,13 +223,6 @@ module.exports = [
     'approve': true,
     'etherScanLink': 'https://etherscan.io/token/0xe0b7927c4af23765cb51314a0e0521a9645f0e2a'
   },
-  // {
-  //   'name': 'Edgeless',
-  //   'symbol': 'EDG',
-  //   'address': '0x08711d3b02c8758f2fb3ab4e80228418a7f8e39c',
-  //   'approve': true,
-  //   'etherScanLink': 'https://etherscan.io/token/0x08711d3b02c8758f2fb3ab4e80228418a7f8e39c'
-  // },
   {
     'name': 'Eidoo',
     'symbol': 'EDO',
@@ -272,20 +230,6 @@ module.exports = [
     'approve': true,
     'etherScanLink': 'https://etherscan.io/token/0xced4e93198734ddaff8492d525bd258d49eb388e'
   },
-  // {
-  //   'name': 'Enigma',
-  //   'symbol': 'ENG',
-  //   'address': '0xf0ee6b27b759c9893ce4f094b49ad28fd15a23e4',
-  //   'approve': true,
-  //   'etherScanLink': 'https://etherscan.io/token/0xf0ee6b27b759c9893ce4f094b49ad28fd15a23e4'
-  // },
-  // {
-  //   'name': 'ETHLend',
-  //   'symbol': 'LEND',
-  //   'address': '0x80fB784B7eD66730e8b1DBd9820aFD29931aab03',
-  //   'approve': true,
-  //   'etherScanLink': 'https://etherscan.io/token/0x80fB784B7eD66730e8b1DBd9820aFD29931aab03'
-  // },
   {
     'name': 'Funfair',
     'symbol': 'FUN',
@@ -342,11 +286,4 @@ module.exports = [
     'approve': true,
     'etherScanLink': 'https://etherscan.io/token/0x8f8221afbb33998d8584a2b05749ba73c37a938a'
   }
-  // {
-  //   'name': 'SALT',
-  //   'symbol': 'SALT',
-  //   'address': '0x4156D3342D5c385a87D264F90653733592000581',
-  //   'approve': true,
-  //   'etherScanLink': 'https://etherscan.io/token/0x4156D3342D5c385a87D264F90653733592000581'
-  // }
 ]
