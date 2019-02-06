@@ -1,10 +1,13 @@
 /* global assert, web3 */
 // `truffle test --silent` or `truffle test -s` to suppress logs
 const BigNumber = require('bignumber.js')
-const { BN, ether, time } = require('openzeppelin-test-helpers')
+const { BN, ether } = require('openzeppelin-test-helpers')
 
 const AUCTION_START_WAITING_FOR_FUNDING = 1
 const BN_ZERO = new BN('0')
+const ETH_5_WEI = ether('5')
+const ETH_10_WEI = ether('10')
+const ETH_20_WEI = ether('20')
 
 const {
   silent,
@@ -288,6 +291,9 @@ module.exports = {
   AUCTION_START_WAITING_FOR_FUNDING,
   BN_ZERO,
   BN,
+  ETH_5_WEI,
+  ETH_10_WEI,
+  ETH_20_WEI,
   silent,
   assertRejects,
   blockNumber,

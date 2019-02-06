@@ -694,6 +694,51 @@ const calculateTokensInExchange = async (Accounts, Tokens) => {
   return results
 }
 
+// checkState is only a rough check for right updates of the numbers in the smart contract. It allows a big tolerance (MaxroundingError)
+// since there are unpredicted timejumps with an evm_increase time, which are not caught.
+// This should not be a issue, because the focus within these tests is system testing instead of unit testing.
+// Testing exact amounts is not needed, since the correct execution of number updates is checked
+// with our unit tests within dutchExchange-postBuyOrder/dutchExchange-postSellOrder
+const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+  const { DutchExchange: dx } = await getContracts()
+  const [
+    stBtAuctionIndex,
+    btStAuctionIndex,
+    getAuctionStart,
+    getSellVolumesCurrent,
+    getSellVolumesNext,
+    getBuyVolumes,
+    getClosingPrices
+  ] = await Promise.all([
+    dx.getAuctionIndex.call(ST.address, BT.address),
+    dx.getAuctionIndex.call(BT.address, ST.address),
+    dx.getAuctionStart.call(ST.address, BT.address),
+    dx.sellVolumesCurrent.call(ST.address, BT.address),
+    dx.sellVolumesNext.call(ST.address, BT.address),
+    dx.buyVolumes.call(ST.address, BT.address),
+    dx.closingPrices.call(ST.address, BT.address, auctionIndex)
+  ])
+
+  assert.equal(stBtAuctionIndex.toNumber(), auctionIndex, 'auction index is not correct')
+  assert.equal(btStAuctionIndex.toNumber(), auctionIndex, 'auction index is not correct')
+
+  let difference = Math.abs(getAuctionStart.toNumber() - auctionStart)
+  assert.isAtMost(difference, 5, 'time difference bigger than 5 sec')
+  assert.equal(getSellVolumesCurrent.toString(), sellVolumesCurrent.toString(), ' current SellVolume not correct')
+  assert.equal(getSellVolumesNext.toString(), sellVolumesNext.toString(), 'sellVolumeNext is incorrect')
+  log('buyVolumes', buyVolumes.toString())
+  log(getBuyVolumes.toString())
+  difference = getBuyVolumes.sub(buyVolumes).abs().toNumber()
+  assert.isAtMost(difference, MaxRoundingError, 'buyVolumes incorrect')
+
+  const { num: closingPriceNumReal, den: closingPriceDenReal } = getClosingPrices
+  log('ClosingPriceNumReal', closingPriceNumReal.toString())
+  log('ClosingPriceNum', closingPriceNum.toString())
+  difference = closingPriceNumReal.sub(closingPriceNum).abs().toNumber()
+  assert.isAtMost(difference, MaxRoundingError, 'ClosingPriceNum is not okay')
+  assert.equal(closingPriceDenReal.toString(), closingPriceDen.toString(), 'ClosingPriceDen is not okay')
+}
+
 const getClearingTime = async (sellToken, buyToken, auctionIndex) => {
   const { DutchExchange: dx } = await getContracts()
   return (await dx.getClearingTime.call(sellToken.address ||
@@ -720,5 +765,6 @@ module.exports = {
   waitUntilPriceIsXPercentOfPreviousPrice,
   calculateTokensInExchange,
   getClearingTime,
-  getAuctionStart
+  getAuctionStart,
+  checkState
 }
