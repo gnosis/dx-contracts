@@ -204,15 +204,21 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
       await postBuyOrder(eth, gno, auctionIndex, 10e18, buyer1)
 
-      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.4)
+      const time = await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.4)
 
       // checking that closingPriceToken.num == 0
       const [closingPriceNumToken] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex)).map(i => i.toNumber())
       assert.equal(closingPriceNumToken, 0)
 
       // actual testing
-      const [claimedAmount] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, auctionIndex)).map(i => i.toNumber())
+      const [claimedAmount] = (await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)).map(i => i.toNumber())
       assert.equal(valMinusFee(totalSellAmount2ndAuction), claimedAmount)
+
+      // claimBuyerFunds also cleared auction
+      // test clearingTime
+      const clearingTimeSol = await getClearingTime(gno, eth, auctionIndex)
+      // clearingTime and time differ by less than 30 s
+      assert.lessThan(Math.abs(clearingTimeSol - time), 30, 'clearingTime for theoretical auction')
     })
 
     it('6. check that already claimedBuyerfunds are substracted properly', async () => {
