@@ -98,7 +98,6 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
       eventWatcher.stopWatching()
     })
 
-    // FIXME this test is dependent from the previous one
     it(' 2. checks that the return value == 0, if price.num == 0 ', async () => {
       // prepare test by starting and clearing new auction
       let auctionIndex = await getAuctionIndex()
@@ -110,8 +109,8 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
       await postBuyOrder(eth, gno, auctionIndex, totalBuyAmount, buyer1)
 
       // check that clearingTime was saved
-      const clearingTime = await getClearingTime(gno, eth, auctionIndex)
       const now = await timestamp()
+      const clearingTime = await getClearingTime(gno, eth, auctionIndex)
       assert.equal(clearingTime, now, 'clearingTime was set')
 
       auctionIndex = await getAuctionIndex()
@@ -119,18 +118,16 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
       assert.equal(2, auctionIndex)
 
       // now claiming should not be possible and return == 0
-      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
       const { num: closingPriceNum } =
         await dx.closingPrices.call(gno.address, eth.address, auctionIndex - 1)
-
       // checking that test is executed correctly
-      assert.equal(closingPriceNum.toString(), '0')
-      logger('here it is', closingPriceNum)
+      assert.isTrue(closingPriceNum.isZero())
+      // logger('here it is', closingPriceNum)
+
       const { returned: claimedAmount } =
         await dx.claimBuyerFunds.call(gno.address, eth.address, buyer1, auctionIndex - 1)
-
       // checking that right amount is claimed
-      assert.equal(claimedAmount.toString(), '0')
+      assert.isTrue(claimedAmount.isZero())
     })
 
     // FIXME this test is dependent from the previous ones
@@ -138,7 +135,7 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
       const auctionIndex = await getAuctionIndex()
 
       // prepare test by starting and closing theoretical auction
-      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
+      await waitUntilPriceIsXPercentOfPreviousPrice(gno, eth, 1)
       await postBuyOrder(gno, eth, auctionIndex, totalSellAmount2ndAuction.div(new BN('4')), buyer2)
 
       // checking that closingPriceToken.num == 0
@@ -171,8 +168,8 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
         .sub(claimedAmount).abs().toNumber()
       assert.isAtMost(difference, 5)
 
-      // actual testing at time with previous 2/3 price
-      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 2 / 3)
+      // actual testing at time with previous 1/3 price
+      await waitUntilPriceIsXPercentOfPreviousPrice(gno, eth, 1 / 3)
       const [
         { returned: claimedAmount2 },
         { num: num2, den: den2 },
@@ -229,7 +226,6 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
     it('1. check for a throw, if auctionIndex is bigger than the latest auctionIndex', async () => {
       // GIVEN a running token pair
       const auctionIndex = await getAuctionIndex()
-      // await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
       await assertRejects(dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex + 1))
     })
 
@@ -241,7 +237,7 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
     })
 
     it('5. check right amount of coins is returned by claimBuyerFunds if auction is  not closed, but closed theoretical ', async () => {
-      // prepare test by starting and clearning new auction
+      // prepare test by starting and clearing new auction
       const auctionIndex = await getAuctionIndex()
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
       await postBuyOrder(eth, gno, auctionIndex, 10.0.toWei(), buyer1)
@@ -260,7 +256,7 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
     })
 
     it('6. check that already claimedBuyerfunds are substracted properly', async () => {
-      // prepare test by starting and clearning new auction
+      // prepare test by starting and clearing new auction
       const auctionIndex = await getAuctionIndex()
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
       await postBuyOrder(eth, gno, auctionIndex, 10.0.toWei(), buyer1)
@@ -286,7 +282,9 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
 
       const { returned: claimedAmount2 } = await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, auctionIndex)
       await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)
-      assert.equal(valMinusFee(10.0.toWei()).sub(valMinusFee(10.0.toWei()).div(num2).mul(den2)).toString(), claimedAmount2.toString())
+      assert.equal(
+        valMinusFee(10.0.toWei()).sub(valMinusFee(10.0.toWei()).mul(den2).div(num2)).toString(),
+        claimedAmount2.toString())
     })
   })
 
