@@ -2,7 +2,7 @@ yarn run v1.12.3
 $ npx truffle migrate --network rinkeby --reset
 Create HDWalletProvider
 Using gas limit: 6721.975 K
-Using gas price: 30 Gwei
+Using gas price: 5 Gwei
 Optimizer enabled: true
 Sign transactions using: Private Key
 Using private key
@@ -19,87 +19,66 @@ Writing artifacts to ./build/contracts
 Using network 'rinkeby'.
 
 Running migration: 1_initial_migration.js
-  Replacing Migrations...
-[HDWalletProvider] Using nonce:  2493
-  ... 0x8514144dd8eaaf802330e9a27d79382ad16192d539047d5d8f9188a7a8eb9fc4
-  Migrations: 0x36eef350f3c3ca3203b492f909059c4351d6826f
-Saving successful migration to network...
-[HDWalletProvider] Using nonce:  2494
-  ... 0x4929fc715275e072ca92dbb0f996dfc8e2c220e6b33fbee0d339942c88ba9920
+  Deploying Migrations...
+[HDWalletProvider] Using nonce:  3307
+  ... 0x431f79e8e8c590554c6e440504df963b3d225507844f92f106afdca314414bf5
+  Migrations: 0x22fd67707762be0109e64b708c7774900241e40e
 Saving artifacts...
 Running migration: 2_DEV_migrate_dependencies.js
 Not in development, so nothing to do. Current network is rinkeby
-Saving successful migration to network...
-[HDWalletProvider] Using nonce:  2495
-  ... 0x1255b9ac202cfc9b4568f6ca42eb3b49d9e5eeba6bc61e6f0ac542055539020c
 Saving artifacts...
 Running migration: 3_DEV-deploy_price_feed.js
-No need to deploy the Medianizer. Using 0xbfff80b73f081cc159534d922712551c5ed8b3d3 as the Medianizer address
+No need to deploy the Medianizer. Using 0xd6fe8f66520a245626cb4035501903e44fd1ad44 as the Medianizer address
 Deploying PriceOracleInterface with owner: 0xf85d1a0e1b71e72013db51139f285c6d5356b712
   Replacing PriceOracleInterface...
-[HDWalletProvider] Using nonce:  2496
-  ... 0x117a9f23859dc67771c1f5cdd36460c5f0352001e1fc9deed66c0c4eef433162
-  PriceOracleInterface: 0x25b0d44506db86212180ac16a63f30e129520b22
-Saving successful migration to network...
-[HDWalletProvider] Using nonce:  2497
-  ... 0xe961fcf1372deb0e1c6ac9207cada962a8795cd3222e4ed75beec52986730a63
+[HDWalletProvider] Using nonce:  3308
+  ... 0x6bbf16fb6c46c05d0c7e1c919f797c6e3da995cc07fd9558c2df3eb76f460b99
+  PriceOracleInterface: 0xbee04d92b297d79889b3bca0c33ed76e02de62b4
 Saving artifacts...
 Running migration: 4_deploy_FRT.js
   Running step...
   Replacing TokenFRT...
-[HDWalletProvider] Using nonce:  2498
-  ... 0x8c0b7ef6fc88e81b8e7b3494962693585b6624d40cef08200fc5092f2019f0eb
-  TokenFRT: 0x6949d0d3f6c757b01abaf32e7a90c5e6ddef6913
+[HDWalletProvider] Using nonce:  3309
+  ... 0x35adc72bfb2495307027f2acb6ece4243b119589bf58e6a5a1265579b08198cb
+  TokenFRT: 0x84fb65d27ffa1c5ed2671e680438a988f295a4f4
 Deploying TokenFRTProxy with ACCOUNT ==>  0xf85d1a0e1b71e72013db51139f285c6d5356b712
   Replacing TokenFRTProxy...
-[HDWalletProvider] Using nonce:  2499
-  ... 0xe67fd933b52a6fb06c8312615df1af8c85c8f789763bf936154ab8959baadadb
-  TokenFRTProxy: 0x6f1b6a44bfeef30e264d15ad6eb0273a5374e117
-Saving successful migration to network...
-[HDWalletProvider] Using nonce:  2500
-  ... 0x7779cd07af473d7b95ce31715171d15e5e8705fb67ae412ed4fa08436539a348
+[HDWalletProvider] Using nonce:  3310
+  ... 0x85d818256c3d65ba8be5297702cc03b965b9bfdecab84ddfeb569a40e44fcadb
+  TokenFRTProxy: 0x4ed5e1ec6bdbecf5967fe257f60e05237db9d583
 Saving artifacts...
 Running migration: 5_deploy_DX.js
   Running step...
   Replacing DutchExchange...
-[HDWalletProvider] Using nonce:  2501
-  ... 0xac8bcc6f67e838017ae17ae82425e511948d58771007b6bae4cbaf72cb7b4b48
-  DutchExchange: 0x01b812e96275e5b2551ee8741dfe9a53525deef5
+[HDWalletProvider] Using nonce:  3311
+  ... 0xbbd3b20e3b310233f76998e95e2ba79c8ba6794ce3228d9910ce351b30f6baa6
+  DutchExchange: 0x7b7dc59adbe59ca4d0eb32042fd5259cf5329de1
   Replacing DutchExchangeProxy...
-[HDWalletProvider] Using nonce:  2502
-  ... 0x5f60d04951739ed6bee5c33673476ec801c8bf8a4f838aa50d65f8bbb5e80cc2
-  DutchExchangeProxy: 0xad6aea9b383409ebfd4191a60dfbd68c5fa89e71
-Saving successful migration to network...
-[HDWalletProvider] Using nonce:  2503
-  ... 0xcdbf773fca3fa1e51b327c1c8ed327e41da650883dd82b23b37e90ed071809b0
+[HDWalletProvider] Using nonce:  3312
+  ... 0xfaef0f2ded54fd853f7c90d4e6a15da03d011fad1ecac5f37c3ad63165f9d308
+  DutchExchangeProxy: 0xaaeb2035ff394fdb2c879190f95e7676f1a9444b
 Saving artifacts...
 Running migration: 6_setup_DX.js
   Running step...
 Setup DX with:
 	 Owner: 0xf85d1a0e1b71e72013db51139f285c6d5356b712
 	 OWL address: 0xa7d1c04faf998f9161fc9f800a99a809b84cfc9d
-	 FRT address: 0x6f1b6a44bfeef30e264d15ad6eb0273a5374e117
+	 FRT address: 0x4ed5e1ec6bdbecf5967fe257f60e05237db9d583
 	 WETH address: 0xc778417e063141139fce010982780140aa0cd5ab
-	 Price Oracle address: 0x25b0d44506db86212180ac16a63f30e129520b22
+	 Price Oracle address: 0xbee04d92b297d79889b3bca0c33ed76e02de62b4
 	 Threshold for new token pair: 10000
 	 Threshold for auction to start: 1000
-[HDWalletProvider] Using nonce:  2504
-  ... 0x7cb8eed1e8d085cf6196db061dec1f22b4edb8a873f2494c600053aea535b46e
+[HDWalletProvider] Using nonce:  3313
+  ... 0xa455a25114934c002056d121624028daf842c45cd1987488e121b3a6759af9a1
 Deploy DutchExchangeHelper:
-  Deploying DutchExchangeHelper...
-[HDWalletProvider] Using nonce:  2505
-  ... 0x7b62bc6affcd8dfe80f66d2b7e2e5536af51eb0ff4f4518d135017a677f84dcd
-  DutchExchangeHelper: 0x14b8008da4912d2bc932740e2f4ae4c0d6eef5c4
-Saving successful migration to network...
-[HDWalletProvider] Using nonce:  2506
-  ... 0x581cf65b97f63713d84258bcfbdfc8261e88ea16f31e05fe32dba4829712da91
+  Replacing DutchExchangeHelper...
+[HDWalletProvider] Using nonce:  3314
+  ... 0xe8f089304327bc6685fb768c2c9b95c1d914aaa4c98ce77b5612e7ecc5137ddd
+  DutchExchangeHelper: 0x97f73cde38699065ba00fb5eeb34c02dcda667cd
 Saving artifacts...
 Running migration: 7_set_DX_as_FRT_minter.js
   Running step...
-[HDWalletProvider] Using nonce:  2507
-  ... 0xdcbeef423796c3d1930b67e83d76ad31c8cd08a9154e78bb7a8323238aa7138e
-Saving successful migration to network...
-[HDWalletProvider] Using nonce:  2508
-  ... 0x6908c589466452a0558ee9e6860f5c7d584b4873af0b4f31a3ef73999a1f4e12
+[HDWalletProvider] Using nonce:  3315
+  ... 0x725bba133d3123378e5ce16a4b1ea9ae3b7aaf44a80708791fec76541001c2ed
 Saving artifacts...
-Done in 327.49s.
+Done in 152.13s.
