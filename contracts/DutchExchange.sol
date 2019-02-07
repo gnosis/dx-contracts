@@ -1132,7 +1132,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
 
         // if (opposite is 0 auction OR price = 0 OR opposite auction cleared)
         // price = 0 happens if auction pair has been running for >= 24 hrs
-        if (sellVolumeOpp == 0 || now >= auctionStart + 24 hrs || closingPriceOppDen > 0) {
+        if (sellVolumeOpp == 0 || now >= auctionStart + 24 hours || closingPriceOppDen > 0) {
             // Close auction pair
             uint buyVolumeOpp = buyVolumes[buyToken][sellToken];
             if (closingPriceOppDen == 0 && sellVolumeOpp > 0) {
