@@ -369,7 +369,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         amount = min(amount, balances[sellToken][msg.sender]);
 
         // R1
-        require(amount >= 0, "Sell amount should be greater than 0");
+        // require(amount >= 0, "Sell amount should be greater than 0");
 
         // R2
         uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
@@ -741,7 +741,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         } else {
             // C2
             // R2.1
-            require(auctionIndex >= 0);
+            // require(auctionIndex >= 0);
 
 
             // C3
