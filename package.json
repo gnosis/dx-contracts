@@ -38,9 +38,9 @@
   "author": "Gnosis",
   "license": "LGPL-3.0",
   "dependencies": {
-    "@gnosis.pm/gno-token": "^2.0.0-RC4",
-    "@gnosis.pm/owl-token": "^2.0.0-RC3",
-    "@gnosis.pm/util-contracts": "^2.0.0-RC5"
+    "@gnosis.pm/gno-token": "^2.0.0",
+    "@gnosis.pm/owl-token": "^2.0.0",
+    "@gnosis.pm/util-contracts": "^2.0.0"
   },
   "devDependencies": {
     "@digix/tempo": "^0.2.0",

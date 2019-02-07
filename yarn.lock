@@ -23,25 +23,25 @@
   resolved "https://registry.yarnpkg.com/@digix/tempo/-/tempo-0.2.0.tgz#5daf91ad788d6b596a19aad22e2e667e4ec808a8"
   integrity sha1-Xa+RrXiNa1lqGarSLi5mfk7ICKg=
 
-"@gnosis.pm/gno-token@^2.0.0-RC4":
-  version "2.0.0-RC4"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/gno-token/-/gno-token-2.0.0-RC4.tgz#2cde76ca071cb2a7b173f9ad34d29ef1301656a9"
-  integrity sha512-gK38ZDwOK6SGCYbUmz/3a2whsJdaIOF2CKfih550vFjlnElO7eHBo98yFwqlZv2lrAW1hdcEI5jznufdMDO1cg==
+"@gnosis.pm/gno-token@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/gno-token/-/gno-token-2.0.0.tgz#f9662d3897735ec6fc0e4814233e6613afded5c6"
+  integrity sha512-qFPlhUtKjgCeS4XgJVqOVs+7KZY/MEo0JwQEaXBNqQIO5HMsU32VnF5bcIOnFZ5wWxW7UCnGx8ZYlPR4x6Z+Ww==
   dependencies:
-    "@gnosis.pm/util-contracts" "2.0.0-RC5"
+    "@gnosis.pm/util-contracts" "2.0.0"
 
-"@gnosis.pm/owl-token@^2.0.0-RC3":
-  version "2.0.0-RC3"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/owl-token/-/owl-token-2.0.0-RC3.tgz#c7f43d1e7715ee460f724f6125f80891707f0c51"
-  integrity sha512-cvLuADVTRETQZ0/0hRaYNpCJiYDFlQJkZO8i04IFjKkg2u/2Er3dOnXTx28vBPTKIfc/bgOpGzGksxhWYir2Xg==
+"@gnosis.pm/owl-token@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/owl-token/-/owl-token-2.0.0.tgz#a1dac90a902c5a6dad238d3332d9ffff03aabaa2"
+  integrity sha512-XuAE0/NUVR7uZacz5zHhgsspB2QlAe71dUlVcZWPPp5GDLOdA+c6UwDZUggufxZmLm8TM7VoDcAh/lc4BfOxeg==
   dependencies:
-    "@gnosis.pm/gno-token" "^2.0.0-RC4"
-    "@gnosis.pm/util-contracts" "^2.0.0-RC5"
+    "@gnosis.pm/gno-token" "^2.0.0"
+    "@gnosis.pm/util-contracts" "^2.0.0"
 
-"@gnosis.pm/util-contracts@2.0.0-RC5", "@gnosis.pm/util-contracts@^2.0.0-RC5":
-  version "2.0.0-RC5"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/util-contracts/-/util-contracts-2.0.0-RC5.tgz#ff540a53858a6729f6b608d49dc7fd016c36dde3"
-  integrity sha512-vHBJc12p8PSlYkMUrjQ6/t5YsBv8chPPF1KkWgXY6m2GvM/HcLLuzGrbjhbmlsyhctn33fmxun0qr7pFdF65CA==
+"@gnosis.pm/util-contracts@2.0.0", "@gnosis.pm/util-contracts@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/util-contracts/-/util-contracts-2.0.0.tgz#562b14a2d6cb4a59189476dd0f6aaeba5f65abe2"
+  integrity sha512-vRgTV36d4ZFdcetKcNbnAtSDrP3OSWEj8YmG3RHK4DBMulPX2asRh8VnopTrZnZQ8enZIDbT1pT7buW+UJqd4g==
 
 "@types/node@^10.3.2":
   version "10.12.18"
