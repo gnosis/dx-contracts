@@ -1,86 +1,84 @@
-yarn run v1.10.1
-$ truffle migrate --network rinkeby --reset
+yarn run v1.12.3
+$ npx truffle migrate --network rinkeby --reset
 Create HDWalletProvider
-Using gas limit: 6500 K
+Using gas limit: 6721.975 K
 Using gas price: 5 Gwei
 Optimizer enabled: true
-Sign transactions using: Mnemonic
-Using default mnemonic
+Sign transactions using: Private Key
+Using private key
+Truffle 4
+Compiling ./contracts/ForTestingOnly/BadToken.sol...
+Compiling ./contracts/ForTestingOnly/SubStandardToken.sol...
+Compiling ./contracts/ForTestingOnly/TokenGNO.sol...
+Compiling @gnosis.pm/util-contracts/contracts/GnosisStandardToken.sol...
+Compiling @gnosis.pm/util-contracts/contracts/Math.sol...
+Compiling @gnosis.pm/util-contracts/contracts/Proxy.sol...
+Compiling @gnosis.pm/util-contracts/contracts/Token.sol...
+Writing artifacts to ./build/contracts
+
 Using network 'rinkeby'.
 
 Running migration: 1_initial_migration.js
-  Replacing Migrations...
-[HDWalletProvider] Using nonce:  18934
-  ... 0x02d4c0058872e8e306ca39b75ced98324a9d40422639b205f84b048adc56504c
-  Migrations: 0x4ef11481977fe157d7a454f7f9ae7e827d0cf617
-Saving successful migration to network...
-[HDWalletProvider] Using nonce:  18935
-  ... 0xaaa912b5f2207377db1dc3725010eca276b935029dec2a8b9106cff7eb1bf6b5
+  Deploying Migrations...
+[HDWalletProvider] Using nonce:  3307
+  ... 0x431f79e8e8c590554c6e440504df963b3d225507844f92f106afdca314414bf5
+  Migrations: 0x22fd67707762be0109e64b708c7774900241e40e
 Saving artifacts...
 Running migration: 2_DEV_migrate_dependencies.js
 Not in development, so nothing to do. Current network is rinkeby
-Saving successful migration to network...
-[HDWalletProvider] Using nonce:  18936
-  ... 0x721523d7aa8421f5a734d09d949e9de6af5278ba855cc68710796a71d23df58e
 Saving artifacts...
 Running migration: 3_DEV-deploy_price_feed.js
-No need to deploy the Medianizer. Using 0xbfff80b73f081cc159534d922712551c5ed8b3d3 as the Medianizer address
-Deploying PriceOracleInterface with owner: 0x627306090abab3a6e1400e9345bc60c78a8bef57
+No need to deploy the Medianizer. Using 0xd6fe8f66520a245626cb4035501903e44fd1ad44 as the Medianizer address
+Deploying PriceOracleInterface with owner: 0xf85d1a0e1b71e72013db51139f285c6d5356b712
   Replacing PriceOracleInterface...
-[HDWalletProvider] Using nonce:  18937
-  ... 0x2809d446f0841670648b5fdc8ce7fc8c0098efece554e7f7b4c291e5bec34e42
-  PriceOracleInterface: 0x685fec95cbe753e8a40395fca4b0dfd59690e092
-Saving successful migration to network...
-[HDWalletProvider] Using nonce:  18938
-  ... 0x96b5cb58965af371203a15f4aeecc362afcbfc9ee6a1ce5a8793da4c96acb68f
+[HDWalletProvider] Using nonce:  3308
+  ... 0x6bbf16fb6c46c05d0c7e1c919f797c6e3da995cc07fd9558c2df3eb76f460b99
+  PriceOracleInterface: 0xbee04d92b297d79889b3bca0c33ed76e02de62b4
 Saving artifacts...
 Running migration: 4_deploy_FRT.js
   Running step...
-Deploying TokenFRT with owner: 0x627306090abab3a6e1400e9345bc60c78a8bef57
   Replacing TokenFRT...
-[HDWalletProvider] Using nonce:  18939
-  ... 0x153dc7f73529ccde8837be9056d2b3db095a305eea13dbf71c89249c4a2b9161
-  TokenFRT: 0xc9624253a8bdc5ba40246f54c353e1ec7d51e318
-Saving successful migration to network...
-[HDWalletProvider] Using nonce:  18940
-  ... 0xd608f3be9f6570a1f18661b22b89737110b7ac558b56e4681ab5219b2a572d78
+[HDWalletProvider] Using nonce:  3309
+  ... 0x35adc72bfb2495307027f2acb6ece4243b119589bf58e6a5a1265579b08198cb
+  TokenFRT: 0x84fb65d27ffa1c5ed2671e680438a988f295a4f4
+Deploying TokenFRTProxy with ACCOUNT ==>  0xf85d1a0e1b71e72013db51139f285c6d5356b712
+  Replacing TokenFRTProxy...
+[HDWalletProvider] Using nonce:  3310
+  ... 0x85d818256c3d65ba8be5297702cc03b965b9bfdecab84ddfeb569a40e44fcadb
+  TokenFRTProxy: 0x4ed5e1ec6bdbecf5967fe257f60e05237db9d583
 Saving artifacts...
 Running migration: 5_deploy_DX.js
   Running step...
   Replacing DutchExchange...
-[HDWalletProvider] Using nonce:  18941
-  ... 0xbd27cc11035be07b0421ffe7d8cc5aa6698783d05f1ffbf3e7b13d93cf1c7f5f
-  DutchExchange: 0x8c3dbe27504e1e263c963c621f7837f119165e24
+[HDWalletProvider] Using nonce:  3311
+  ... 0xbbd3b20e3b310233f76998e95e2ba79c8ba6794ce3228d9910ce351b30f6baa6
+  DutchExchange: 0x7b7dc59adbe59ca4d0eb32042fd5259cf5329de1
   Replacing DutchExchangeProxy...
-[HDWalletProvider] Using nonce:  18942
-  ... 0xeb258b04413c4b65b13011728ecae7ac721087c792a6cf6216fda956f65225ef
-  DutchExchangeProxy: 0xfa74b6bc66b7cb005083bbd77536a8eaf910f34f
-Saving successful migration to network...
-[HDWalletProvider] Using nonce:  18943
-  ... 0xd5b4377ecc68a9d5048c57a22f0b38c8cac1a6c327d685cbf75fd00519fde9a0
+[HDWalletProvider] Using nonce:  3312
+  ... 0xfaef0f2ded54fd853f7c90d4e6a15da03d011fad1ecac5f37c3ad63165f9d308
+  DutchExchangeProxy: 0xaaeb2035ff394fdb2c879190f95e7676f1a9444b
 Saving artifacts...
 Running migration: 6_setup_DX.js
   Running step...
 Setup DX with:
-	 Owner: 0x627306090abab3a6e1400e9345bc60c78a8bef57
+	 Owner: 0xf85d1a0e1b71e72013db51139f285c6d5356b712
 	 OWL address: 0xa7d1c04faf998f9161fc9f800a99a809b84cfc9d
-	 FRT address: 0xc9624253a8bdc5ba40246f54c353e1ec7d51e318
+	 FRT address: 0x4ed5e1ec6bdbecf5967fe257f60e05237db9d583
 	 WETH address: 0xc778417e063141139fce010982780140aa0cd5ab
-	 Price Oracle address: 0x685fec95cbe753e8a40395fca4b0dfd59690e092
+	 Price Oracle address: 0xbee04d92b297d79889b3bca0c33ed76e02de62b4
 	 Threshold for new token pair: 10000
 	 Threshold for auction to start: 1000
-[HDWalletProvider] Using nonce:  18944
-  ... 0x7c8dadffc9fc0f3092871dca3b460329b36ae2e6dd3113bf5d9fef9854cda82b
-Saving successful migration to network...
-[HDWalletProvider] Using nonce:  18945
-  ... 0x1b41c8f7115e8a75975a3ef1201ef8b156eca77a9807d490089033e416b95912
+[HDWalletProvider] Using nonce:  3313
+  ... 0xa455a25114934c002056d121624028daf842c45cd1987488e121b3a6759af9a1
+Deploy DutchExchangeHelper:
+  Replacing DutchExchangeHelper...
+[HDWalletProvider] Using nonce:  3314
+  ... 0xe8f089304327bc6685fb768c2c9b95c1d914aaa4c98ce77b5612e7ecc5137ddd
+  DutchExchangeHelper: 0x97f73cde38699065ba00fb5eeb34c02dcda667cd
 Saving artifacts...
 Running migration: 7_set_DX_as_FRT_minter.js
   Running step...
-[HDWalletProvider] Using nonce:  18946
-  ... 0xba777be267bd0740fccc8b034719edcc780f1ef192aa6c909dc09971f03fa6b3
-Saving successful migration to network...
-[HDWalletProvider] Using nonce:  18947
-  ... 0xa07e9d21edd2134832db2901082e3564166fc398e947f8b061d8c605cbc63a8e
+[HDWalletProvider] Using nonce:  3315
+  ... 0x725bba133d3123378e5ce16a4b1ea9ae3b7aaf44a80708791fec76541001c2ed
 Saving artifacts...
-Done in 211.37s.
+Done in 152.13s.

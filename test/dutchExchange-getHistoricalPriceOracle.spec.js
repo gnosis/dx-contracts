@@ -1,3 +1,6 @@
+/* global contract, assert */
+/* eslint no-undef: "error" */
+
 const {
   eventWatcher,
   assertRejects,

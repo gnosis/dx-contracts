@@ -17,10 +17,10 @@ module.exports = {
   },
   // Price:
   //   https://www.coingecko.com/en/price_charts/raiden-network/eth
-  //   1 ETH = 626,0492193635771 RDN
-  //   initial price = 630 RDN/WETH
+  //   1 ETH = 511,3250313237714 RDN
+  //   initial price = 512 RDN/WETH
   initialPrice: {
-    numerator: 630,
+    numerator: 512,
     denominator: 1
   }
 }

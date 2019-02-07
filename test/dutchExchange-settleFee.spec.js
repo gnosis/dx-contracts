@@ -1,3 +1,6 @@
+/* global contract, assert, artifacts */
+/* eslint no-undef: "error" */
+
 const {
   eventWatcher,
   gasLogger,
@@ -136,9 +139,8 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', accounts => {
       TokenGNO: gno,
       TokenFRT: mgn,
       // using internal contract with settleFeePub calling dx.settleFee internally
-      DutchExchange: dxOld,
+      DutchExchange: dxOld
     } = contracts)
-
 
     const initParams = await getExchangeParams(dxOld)
     dx = await InternalTests.new(...initParams)
@@ -149,7 +151,7 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', accounts => {
       eth.deposit({ from: acct, value: ETHBalance }),
       eth.approve(dx.address, ETHBalance, { from: acct }),
       gno.transfer(acct, GNOBalance, { from: master }),
-      gno.approve(dx.address, GNOBalance, { from: acct }),
+      gno.approve(dx.address, GNOBalance, { from: acct })
     ])))
 
     await mgn.updateMinter(master, { from: master })
@@ -167,7 +169,7 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', accounts => {
     getLockedMGN,
     mintTokens,
     calculateFeeRatio,
-    mintPercent,
+    mintPercent
   } = getHelperFunctions(master)
 
   it('feeRatio == 0.5% when total MGN == 0', async () => {
@@ -278,7 +280,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
     startingETH: 90.0.toWei(),
     startingGNO: 90.0.toWei(),
     ethUSDPrice: 1008.0.toWei(),
-    sellingAmount: 50.0.toWei(),
+    sellingAmount: 50.0.toWei()
   }
 
   const ETHBalance = 20.0.toWei()
@@ -298,9 +300,8 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
       OWLAirdrop: owlA,
       // using internal contract with settleFeePub calling dx.settleFee internally
       DutchExchange: dxOld,
-      PriceOracleInterface: oracle,
+      PriceOracleInterface: oracle
     } = contracts)
-
 
     const initParams = await getExchangeParams(dxOld)
     dx = await InternalTests.new(...initParams)
@@ -308,7 +309,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
 
     await setupTest(accounts, contracts, startBal)
 
-    //generatae OWL
+    // generatae OWL
 
     gno.approve(owlA.address, 50000 * (10 ** 18))
     owlA.lockGNO(50000 * (10 ** 18))
@@ -324,9 +325,8 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
     // deposit ETHER into DX
     await depositETH(ETHBalance, seller1)
 
-
     await mgn.updateMinter(dx.address, { from: master })
-    /*// add tokenPair ETH GNO
+    /* // add tokenPair ETH GNO
     await dx.addTokenPair(
       eth.address,
       gno.address,
@@ -339,7 +339,6 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
 
     await mgn.updateMinter(master, { from: master })
     logger('PRICE ORACLE', await oracle.getUSDETHPrice.call())
-
 
     eventWatcher(dx, 'LogNumber')
   })
@@ -375,7 +374,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
     unlockMGN,
     mintTokens,
     mintPercent,
-    calculateFeeRatio,
+    calculateFeeRatio
   } = getHelperFunctions(master)
 
   const ensureTotalMGN = async () => {
@@ -386,7 +385,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
   }
 
   const feeRatioShortcuts = {
-    '0.1%': async (account) => {
+    '0.1%': async account => {
       let [num, den] = await calculateFeeRatio(account, false)
       let feeRatio = num / den
       if (feeRatio === 0.1) return feeRatio
@@ -401,7 +400,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
 
       return feeRatio
     },
-    '0.5%': async (account) => {
+    '0.5%': async account => {
       let [num, den] = await calculateFeeRatio(account, false)
       let feeRatio = num / den
       if (feeRatio === 0.005) return feeRatio
@@ -424,7 +423,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
 
       return feeRatio
     },
-    '0.25%': async (account) => {
+    '0.25%': async account => {
       let [num, den] = await calculateFeeRatio(account, false)
       let feeRatio = num / den
       if (feeRatio.toFixed(4) === 0.0025) return feeRatio
@@ -440,7 +439,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
       assert.equal(feeRatio.toFixed(4), 0.0025, 'feeRatio is 0.25% when total MGN tokens > 0 but account\'s MGN balance == 1% total MGN')
 
       return feeRatio
-    },
+    }
   }
 
   /**
@@ -482,7 +481,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
   const calculateFeeInUSD = async (fee, token) => {
     const [ETHUSDPrice, [num, den]] = await Promise.all([
       oracle.getUSDETHPrice.call(),
-      dx.getPriceOfTokenInLastAuction.call(token),
+      dx.getPriceOfTokenInLastAuction.call(token)
     ])
 
     const feeInETH = calculateFee(fee, num.toNumber() / den.toNumber(), false)
@@ -495,7 +494,6 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
 
     return adjustedFee
   }
-
 
   // it('amountAfterFee == amount when fee == 0.1', async () => {
   //   const feeRatio = await makeFeeRatioPercent(0.1, seller1)
@@ -542,7 +540,6 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
 
     await settleFee(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
     const extraTokens2 = await getExtraTokens(eth.address, gno.address, auctionIndex)
-
 
     assert.strictEqual(extraTokens1 + fee, extraTokens2, 'extraTokens should be increased by fee')
   })
@@ -602,13 +599,11 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
 
     assert.strictEqual(owlBalance1, owlAmount, 'account should have OWL balance > feeInUSD / 2')
 
-
     await owl.approve(dx.address, owlAmount * 5, { from: seller1 })
 
-    const amountOfOWLBurned = Math.min(Math.floor(feeInUSD / 2), owlAmount);
+    const amountOfOWLBurned = Math.min(Math.floor(feeInUSD / 2), owlAmount)
     fee = adjustFee(fee, amountOfOWLBurned, feeInUSD)
     assert.isAbove(fee, 0, 'fee must be > 0')
-
 
     const auctionIndex = 1
 
@@ -671,6 +666,5 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
     assert.strictEqual(owlBalance2, 0, 'all OWL should be burned as it was < feeInUSD/2 and all used up')
   })
 })
-
 
 enableContractFlag(c1, c2)

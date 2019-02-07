@@ -85,95 +85,6 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         newBal = withdraw(buyToken, amount);
     }
 
-    
-
-    /// @dev for quick overview of current sellerBalances for a user
-    /// @param auctionSellTokens are the sellTokens defining an auctionPair
-    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
-    /// @param user is the user who wants to his tokens
-    function getSellerBalancesOfCurrentAuctions(
-        address[] calldata auctionSellTokens,
-        address[] calldata auctionBuyTokens,
-        address user
-    ) external view returns (uint[] memory)
-    {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2);
-
-        uint[] memory sellersBalances = new uint[](length);
-
-        for (uint i = 0; i < length; i++) {
-            uint runningAuctionIndex = getAuctionIndex(auctionSellTokens[i], auctionBuyTokens[i]);
-            sellersBalances[i] = sellerBalances[auctionSellTokens[i]][auctionBuyTokens[i]][runningAuctionIndex][user];
-        }
-
-        return sellersBalances;
-    }
-
-    /// @dev for quick overview of possible buyerBalances to calculate the possible withdraw tokens
-    /// @param auctionSellToken is the sellToken defining an auctionPair
-    /// @param auctionBuyToken is the buyToken defining an auctionPair
-    /// @param user is the user who wants to his tokens
-    /// @param lastNAuctions how many auctions will be checked. 0 means all
-    //@returns returns sellbal for all indices for all tokenpairs
-    function getIndicesWithClaimableTokensForBuyers(
-        address auctionSellToken,
-        address auctionBuyToken,
-        address user,
-        uint lastNAuctions
-    ) external view returns (uint[] memory indices, uint[] memory usersBalances)
-    {
-        uint runningAuctionIndex = getAuctionIndex(auctionSellToken, auctionBuyToken);
-
-        uint arrayLength;
-
-        uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
-
-        for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
-            if (buyerBalances[auctionSellToken][auctionBuyToken][j][user] > 0) {
-                arrayLength++;
-            }
-        }
-
-        indices = new uint[](arrayLength);
-        usersBalances = new uint[](arrayLength);
-
-        uint k;
-
-        for (uint i = startingIndex; i <= runningAuctionIndex; i++) {
-            if (buyerBalances[auctionSellToken][auctionBuyToken][i][user] > 0) {
-                indices[k] = i;
-                usersBalances[k] = buyerBalances[auctionSellToken][auctionBuyToken][i][user];
-                k++;
-            }
-        }
-    }
-
-    /// @dev for quick overview of current sellerBalances for a user
-    /// @param auctionSellTokens are the sellTokens defining an auctionPair
-    /// @param auctionBuyTokens are the buyTokens defining an auctionPair
-    /// @param user is the user who wants to his tokens
-    function getBuyerBalancesOfCurrentAuctions(
-        address[] calldata auctionSellTokens,
-        address[] calldata auctionBuyTokens,
-        address user
-    ) external view returns (uint[] memory)
-    {
-        uint length = auctionSellTokens.length;
-        uint length2 = auctionBuyTokens.length;
-        require(length == length2);
-
-        uint[] memory buyersBalances = new uint[](length);
-
-        for (uint i = 0; i < length; i++) {
-            uint runningAuctionIndex = getAuctionIndex(auctionSellTokens[i], auctionBuyTokens[i]);
-            buyersBalances[i] = buyerBalances[auctionSellTokens[i]][auctionBuyTokens[i]][runningAuctionIndex][user];
-        }
-
-        return buyersBalances;
-    }
-
     /// @dev for multiple claims
     /// @param auctionSellTokens are the sellTokens defining an auctionPair
     /// @param auctionBuyTokens are the buyTokens defining an auctionPair
@@ -458,7 +369,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         amount = min(amount, balances[sellToken][msg.sender]);
 
         // R1
-        require(amount > 0, "Sell amount should be greater than 0");
+        // require(amount >= 0, "Sell amount should be greater than 0");
 
         // R2
         uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
@@ -702,7 +613,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
             returned,
             frtsIssued
         );
-    }    
+    }
 
     /// @dev allows to close possible theoretical closed markets
     /// @param sellToken sellToken of an auction
@@ -830,8 +741,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         } else {
             // C2
             // R2.1
-            require(auctionIndex >= 0);
-
+            // require(auctionIndex >= 0);
 
             // C3
             // R3.1
@@ -886,17 +796,17 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         if (enoughSellVolume && enoughSellVolumeOpp) {
             schedule = true;
         } else if (enoughSellVolume || enoughSellVolumeOpp) {
-            // But if the auction didn't start in 24h, then is enough to have 
+            // But if the auction didn't start in 24h, then is enough to have
             // liquidity in one of the two sides
             uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
-            uint clearingTime = getClearingTime(sellToken, buyToken, latestAuctionIndex);
+            uint clearingTime = getClearingTime(sellToken, buyToken, latestAuctionIndex - 1);
             schedule = clearingTime <= now - 24 hours;
         }
 
         if (schedule) {
             // Schedule next auction
             setAuctionStart(sellToken, buyToken, WAITING_PERIOD_NEW_AUCTION);
-        } else {            
+        } else {
             resetAuctionStart(sellToken, buyToken);
         }
     }
@@ -929,7 +839,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         sellVolume = mul(mul(sellVolumesCurrent[sellToken][buyToken], sellNum), ethUSDPrice) / sellDen;
         sellVolumeOpp = mul(mul(sellVolumesCurrent[buyToken][sellToken], buyNum), ethUSDPrice) / buyDen;
     }
-    
+
     /// @dev Gives best estimate for market price of a token in ETH of any price oracle on the Ethereum network
     /// @param token address of ERC-20 token
     /// @return Weighted average of closing prices of opposite Token-ethToken auctions, based on their sellVolume
@@ -977,9 +887,9 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
             // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
 
             // 10^5 * 10^31 = 10^36
-            num = atleastZero(int((86400 - timeElapsed) * pastNum));
+            num = atleastZero(int((24 hours - timeElapsed) * pastNum));
             // 10^6 * 10^31 = 10^37
-            den = mul((timeElapsed + 43200), pastDen);
+            den = mul((timeElapsed + 12 hours), pastDen);
 
             if (mul(num, sellVolumesCurrent[sellToken][buyToken]) <= mul(den, buyVolumes[sellToken][buyToken])) {
                 num = buyVolumes[sellToken][buyToken];
@@ -1086,9 +996,9 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         internal
     {
         (uint pastNum, uint pastDen) = getPriceInPastAuction(token1, token2, auctionIndex - 1);
-        // 43200 = 12 hrs, 86400 = 24 hrs
-        // timeElapsed = 43200(2 * pastNum * sellVolume - buyVolume * pastDen)/(sellVolume * pastNum + buyVolume * pastDen)
-        uint numerator = sub(mul(mul(pastNum, sellVolume), 86400), mul(mul(buyVolume, pastDen), 43200));
+        // timeElapsed = (12 hours)*(2 * pastNum * sellVolume - buyVolume * pastDen)/
+            // (sellVolume * pastNum + buyVolume * pastDen)
+        uint numerator = sub(mul(mul(pastNum, sellVolume), 24 hours), mul(mul(buyVolume, pastDen), 12 hours));
         uint timeElapsed = numerator / (add(mul(sellVolume, pastNum), mul(buyVolume, pastDen)));
         uint clearingTime = auctionStart + timeElapsed;
         (token1, token2) = getTokenOrder(token1, token2);
@@ -1221,8 +1131,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         }
 
         // if (opposite is 0 auction OR price = 0 OR opposite auction cleared)
-        // price = 0 happens if auction pair has been running for >= 24 hrs = 86400
-        if (sellVolumeOpp == 0 || now >= auctionStart + 86400 || closingPriceOppDen > 0) {
+        // price = 0 happens if auction pair has been running for >= 24 hrs
+        if (sellVolumeOpp == 0 || now >= auctionStart + 24 hours || closingPriceOppDen > 0) {
             // Close auction pair
             uint buyVolumeOpp = buyVolumes[buyToken][sellToken];
             if (closingPriceOppDen == 0 && sellVolumeOpp > 0) {
@@ -1294,7 +1204,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         uint length3 = auctionIndices.length;
         require(length2 == length3);
     }
-    
+
     // > Events
     event NewDeposit(address indexed token, uint amount);
 

@@ -1,3 +1,6 @@
+/* global contract, assert */
+/* eslint no-undef: "error" */
+
 const {
   eventWatcher,
   log: utilsLog,
@@ -198,7 +201,7 @@ contract('DutchExchange - postSellOrder', accounts => {
       0,
       2,
       1,
-      { from: seller1 },
+      { from: seller1 }
     )
     const latestAuctionIndex = await getAuctionIndex(eth, gno)
 

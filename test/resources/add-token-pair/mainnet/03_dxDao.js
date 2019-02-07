@@ -1,5 +1,10 @@
-// This file can be either JSON, or a JS exporting an object
+module.exports = [
+  // WETH-RDN
+  // require('./WETH_OMG.js')
 
-module.exports = []
+  // WETH-RDN
+  require('./WETH_RDN.js')
 
-throw new Error('TODO: Define initial list of token pairs')
+  // RDN-OMG
+  // require('./RDN_OMG.js')
+]

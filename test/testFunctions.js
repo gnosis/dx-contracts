@@ -1,3 +1,6 @@
+/* global, assert, artifacts */
+/* eslint no-undef: "error" */
+
 /*
   eslint prefer-const: 0,
   max-len: 0,
@@ -23,10 +26,10 @@ const {
 // add wei converter
 /* eslint no-extend-native: 0 */
 
-Number.prototype.toWei = function toWei() {
+Number.prototype.toWei = function toWei () {
   return bn(this, 10).times(10 ** 18).toNumber()
 }
-Number.prototype.toEth = function toEth() {
+Number.prototype.toEth = function toEth () {
   return bn(this, 10).div(10 ** 18).toNumber()
 }
 
@@ -42,7 +45,7 @@ const contractNames = [
   'TokenFRTProxy',
   'PriceOracleInterface',
   'PriceFeed',
-  'Medianizer',
+  'Medianizer'
 ]
 // DutchExchange and TokenOWL are added after their respective Proxy contracts are deployed
 
@@ -60,13 +63,14 @@ const getContracts = async () => {
   const deployedContracts = contractNames.reduce((acc, name, i) => {
     acc[name] = gasLoggedContracts[i]
     return acc
-  }, {});
-
-  [deployedContracts.DutchExchange, deployedContracts.TokenOWL, deployedContracts.TokenFRT] = gasLogWrapper([
+  }, {})
+  const proxiedContracts = await Promise.all([
     artifacts.require('DutchExchange').at(deployedContracts.DutchExchangeProxy.address),
     artifacts.require('TokenOWL').at(deployedContracts.TokenOWLProxy.address),
     artifacts.require('TokenFRT').at(deployedContracts.TokenFRTProxy.address)
-  ])
+  ]);
+
+  [deployedContracts.DutchExchange, deployedContracts.TokenOWL, deployedContracts.TokenFRT] = gasLogWrapper(proxiedContracts)
   return deployedContracts
 }
 
@@ -78,6 +82,11 @@ const getContracts = async () => {
 const getBalance = async (acct, token) => {
   const { DutchExchange: dx } = await getContracts()
   return (await dx.balances.call(token.address, acct)).toNumber()
+}
+
+const getAuctionStart = async (ST, BT) => {
+  const { DutchExchange: dx } = await getContracts()
+  return (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
 }
 
 /**
@@ -93,16 +102,16 @@ const setupTest = async (
     EtherToken: eth,
     TokenGNO: gno,
     PriceFeed: oracle,
-    Medianizer: medianizer,
+    Medianizer: medianizer
   },
   {
     startingETH = 50.0.toWei(),
     startingGNO = 50.0.toWei(),
-    ethUSDPrice = 1100.0.toWei(),
+    ethUSDPrice = 1100.0.toWei()
   }) => {
   // Await ALL Promises for each account setup
 
-  await Promise.all(accounts.map((acct) => {
+  await Promise.all(accounts.map(acct => {
     /* eslint array-callback-return:0 */
     if (acct === accounts[0]) return
     eth.deposit({ from: acct, value: startingETH })
@@ -111,11 +120,12 @@ const setupTest = async (
     gno.approve(dx.address, startingGNO, { from: acct })
   }))
   // Deposit depends on ABOVE finishing first... so run here
-  await Promise.all(accounts.map((acct) => {
+  await Promise.all(accounts.map(acct => {
     if (acct === accounts[0]) return
     dx.deposit(eth.address, startingETH, { from: acct })
     dx.deposit(gno.address, startingGNO, { from: acct })
   }))
+
   // add token Pair
   // updating the oracle Price. Needs to be changed later to another mechanism
   await oracle.post(ethUSDPrice, 1516168838 * 2, medianizer.address, { from: accounts[0] })
@@ -160,7 +170,7 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
  */
 const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const { DutchExchange: dx } = await getContracts()
-  const [ getAuctionIndex, getAuctionStart ] = await Promise.all([
+  const [getAuctionIndex, getAuctionStart] = await Promise.all([
     dx.getAuctionIndex.call(ST.address, BT.address),
     dx.getAuctionStart.call(ST.address, BT.address)
   ])
@@ -183,7 +193,7 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
 
   const timeToWaitFor = Math.ceil((86400 - p * 43200) / (1 + p)) + startingTimeOfAuction
   // wait until the price is good
-  await wait(timeToWaitFor - timestamp());
+  await wait(timeToWaitFor - timestamp())
 
   if (!silent) {
     ([num, den] = (await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex)))
@@ -199,6 +209,8 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   }
   assert.equal(timestamp() >= timeToWaitFor, true)
   // assert.isAtLeast(priceAfter, (priceBefore / 2) * p)
+
+  return timeToWaitFor
 }
 
 /**
@@ -316,6 +328,7 @@ const postSellOrder = async (ST, BT, aucIdx, amt, acct) => {
     `)
   }
   // log('POSTBUYORDER TX RECEIPT ==', await dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct }))
+  // console.log({ st: ST.address, bt: BT.address, auctionIdx, amt, from: acct })
   return dx.postSellOrder(ST.address, BT.address, auctionIdx, amt, { from: acct })
 }
 
@@ -369,7 +382,7 @@ const claimSellerFunds = async (ST, BT, user, aucIdx, acct) => {
    */
 const assertClaimingFundsCreatesMGNs = async (ST, BT, acc, type) => {
   const {
-    DutchExchange: dx, TokenFRT: tokenMGN,
+    DutchExchange: dx, TokenFRT: tokenMGN
   } = await getContracts()
 
   if (!ST || !BT) throw new Error('No tokens passed in')
@@ -409,7 +422,7 @@ const assertClaimingFundsCreatesMGNs = async (ST, BT, acc, type) => {
    */
 const checkUserReceivesTulipTokens = async (ST, BT, user, idx, lastClosingPrice) => {
   const {
-    DutchExchange: dx, EtherToken: eth, TokenGNO: gno, TokenFRT: tokenMGN,
+    DutchExchange: dx, EtherToken: eth, TokenGNO: gno, TokenFRT: tokenMGN
   } = await getContracts()
   ST = ST || eth; BT = BT || gno
   const aucIdx = idx || await getAuctionIndex(ST, BT)
@@ -534,20 +547,20 @@ const assertReturnedPlusMGNs = async (ST, BT, acc, type, idx = 1, eth) => {
       } else {
         assert.equal(tulipsIssued, returned)
       }
-    // else this is a ERC20:ERC20 trade
+      // else this is a ERC20:ERC20 trade
     } else {
       assert.equal(tulipsIssued, userBalances * hNum / hDen)
     }
     // all claimSellFunds calc returned the same
     assert.equal(returned, userBalances * (num / den))
-  // Buyer
+    // Buyer
   } else if (!nonETH) {
     if (BTName === 'Ether Token') {
       assert.equal(tulipsIssued, userBalances, 'claimBuyerFunds: BT = ETH >--> tulips = buyerBalances')
     } else {
       assert.isAtLeast(userBalances * (den / num), tulipsIssued, 'claimBuyerFunds: ST = ETH >--> tulips = buyerBalances * (den/num)')
     }
-  // Trade involves ERC20:ERC20 pair
+    // Trade involves ERC20:ERC20 pair
   } else {
     assert.equal(tulipsIssued, userBalances * (hNum / hDen), 'claimBuyerFunds: ERC20:ERC20 tulips = buyerBalances * (hNum/hDen)')
   }
@@ -687,8 +700,12 @@ const calculateTokensInExchange = async (Accounts, Tokens) => {
   return results
 }
 
-const getClearingTime = async (sellToken, buyToken, auctionIndex) =>
-  (await dx.getClearingTime.call(sellToken.address || sellToken, buyToken.address || buyToken, auctionIndex)).toNumber()
+const getClearingTime = async (sellToken, buyToken, auctionIndex) => {
+  const { DutchExchange: dx } = await getContracts()
+  return (await dx.getClearingTime.call(sellToken.address ||
+    sellToken, buyToken.address ||
+    buyToken, auctionIndex)).toNumber()
+}
 
 module.exports = {
   assertClaimingFundsCreatesMGNs,
@@ -709,4 +726,5 @@ module.exports = {
   waitUntilPriceIsXPercentOfPreviousPrice,
   calculateTokensInExchange,
   getClearingTime,
+  getAuctionStart
 }

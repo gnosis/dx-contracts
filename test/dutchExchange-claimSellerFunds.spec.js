@@ -1,3 +1,6 @@
+/* global contract, assert */
+/* eslint no-undef: "error" */
+
 /* Fee Reduction Token issuing is tested seperately in dutchExchange-MGN.js */
 
 const {
@@ -5,6 +8,7 @@ const {
   assertRejects,
   enableContractFlag,
   gasLogger,
+  timestamp,
   makeSnapshot,
   revertSnapshot
 } = require('./utils')
@@ -13,6 +17,7 @@ const {
   setupTest,
   getContracts,
   getAuctionIndex,
+  getClearingTime,
   waitUntilPriceIsXPercentOfPreviousPrice,
   setAndCheckAuctionStarted,
   postBuyOrder,
@@ -83,14 +88,15 @@ contract('DutchExchange - claimSellerFunds', accounts => {
     let auctionIndex = await getAuctionIndex()
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
     await postBuyOrder(eth, gno, auctionIndex, totalBuyAmount, buyer1)
-    auctionIndex = await getAuctionIndex()
-    // await setAndCheckAuctionStarted(eth, gno)
-    assert.equal(2, auctionIndex)
 
     // check that clearingTime was saved
     const clearingTime = await getClearingTime(gno, eth, auctionIndex)
     const now = timestamp()
     assert.equal(clearingTime, now, 'clearingTime was set')
+
+    auctionIndex = await getAuctionIndex()
+    // await setAndCheckAuctionStarted(eth, gno)
+    assert.equal(2, auctionIndex)
 
     // check condition
     assert.equal((await dx.sellerBalances.call(eth.address, gno.address, 1, seller2)).toNumber(), 0)
@@ -276,7 +282,7 @@ contract('DutchExchange - claimSellerFunds', accounts => {
       assert.equal((await dx.sellerBalances.call(gno.address, eth.address, auctionIndex, seller1)).toNumber(), 0)
       assert.equal(seller1NotDepositedETHBal + claimedAmountsS1, (await eth.balanceOf.call(seller1)).toNumber())
       assert.equal(seller2NotDepositedETHBal + claimedAmountsS2, (await eth.balanceOf.call(seller2)).toNumber())
-      //assert that claimed and withdrawed the amount (same deposited in DX)
+      // assert that claimed and withdrawed the amount (same deposited in DX)
       assert.equal(seller1ETHBal, (await dx.balances.call(eth.address, seller1)).toNumber())
       assert.equal(seller2ETHBal, (await dx.balances.call(eth.address, seller2)).toNumber())
     })

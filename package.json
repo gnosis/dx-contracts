@@ -1,6 +1,6 @@
 {
   "name": "@gnosis.pm/dx-contracts",
-  "version": "2.0.0-RC9",
+  "version": "2.0.0",
   "description": "DutchX - Gnosis Dutch Auction Trading Platform. This npm package provides all smartcontracts used in the project",
   "scripts": {
     "rpc": "ganache-cli -d --mnemonic 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --defaultBalanceEther '500000000000000000000'",
@@ -18,6 +18,9 @@
     "migrate": "npx truffle migrate",
     "lint": "eslint .",
     "solium": "solium --dir ./contracts/",
+    "wrap-eth": "npx truffle exec src/truffle/wrap-eth.js",
+    "set-weth-allowance": "npx truffle exec src/truffle/set-weth-allowance.js",
+    "deposit-weth": "npx truffle exec src/truffle/deposit-weth.js",
     "add-token-pairs": "npx truffle exec src/truffle/add-token-pairs.js",
     "approve-tokens": "npx truffle exec src/truffle/approve-tokens.js",
     "unlock-mgn": "npx truffle exec src/truffle/unlock-mgn.js",
@@ -26,7 +29,7 @@
     "get-abi-encoded-params": "npx truffle exec src/truffle/get-abi-encoded-params.js",
     "decode": "node ./node_modules/decode-eth/main.js",
     "prettier": "prettier --write --tab-width 4 --print-width 120 '**/*.sol'",
-    "install": "cd node_modules/truffle && npm install solc@0.5.2 && cd ../.."
+    "install": "cd $INIT_CWD && npm explore truffle -- npm install solc@0.5.2"
   },
   "repository": {
     "type": "git",
@@ -35,9 +38,9 @@
   "author": "Gnosis",
   "license": "LGPL-3.0",
   "dependencies": {
-    "@gnosis.pm/gno-token": "^2.0.0-RC2",
-    "@gnosis.pm/owl-token": "^2.0.0-RC1",
-    "@gnosis.pm/util-contracts": "^2.0.0-RC1"
+    "@gnosis.pm/gno-token": "^2.0.0",
+    "@gnosis.pm/owl-token": "^2.0.0",
+    "@gnosis.pm/util-contracts": "^2.0.0"
   },
   "devDependencies": {
     "@digix/tempo": "^0.2.0",
@@ -46,21 +49,22 @@
     "decode-eth": "^0.1.2",
     "dotenv": "^6.2.0",
     "eslint": "^5.12.0",
-    "solium": "^1.2.0",
     "eslint-config-standard": "^12.0.0",
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-node": "^8.0.1",
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-standard": "^4.0.0",
+    "ethereumjs-abi": "^0.6.6",
     "minimist": "^1.2.0",
     "prettier": "^1.15.3",
-    "prettier-plugin-solidity-refactor": "^1.0.0-alpha.12",
+    "prettier-plugin-solidity-refactor": "^1.0.0-alpha.14",
     "solc": "0.5.2",
     "solidity-coverage": "^0.5.11",
+    "solium": "^1.2.0",
     "truffle": "^4.1.14",
     "truffle-contract": "^3.0.6",
-    "truffle-flattener": "^1.2.5",
-    "truffle-hdwallet-provider": "1.0.1",
+    "truffle-flattener": "^1.2.10",
+    "truffle-hdwallet-provider": "1.0.2",
     "yargs": "^11.0.0"
   }
 }
