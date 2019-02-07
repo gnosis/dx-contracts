@@ -1,0 +1,84 @@
+yarn run v1.12.3
+$ npx truffle migrate --network kovan --reset
+Create HDWalletProvider
+Using gas limit: 6721.975 K
+Using gas price: 5 Gwei
+Optimizer enabled: true
+Sign transactions using: Private Key
+Using private key
+Truffle 4
+Compiling ./contracts/ForTestingOnly/BadToken.sol...
+Compiling ./contracts/ForTestingOnly/SubStandardToken.sol...
+Compiling ./contracts/ForTestingOnly/TokenGNO.sol...
+Compiling @gnosis.pm/util-contracts/contracts/GnosisStandardToken.sol...
+Compiling @gnosis.pm/util-contracts/contracts/Math.sol...
+Compiling @gnosis.pm/util-contracts/contracts/Proxy.sol...
+Compiling @gnosis.pm/util-contracts/contracts/Token.sol...
+Writing artifacts to ./build/contracts
+
+Using network 'kovan'.
+
+Running migration: 1_initial_migration.js
+  Deploying Migrations...
+[HDWalletProvider] Using nonce:  356
+  ... 0xbffe78bd757c5fe67f277681fb0849669c1a3998a9c19495f442a836f8ede07c
+  Migrations: 0x4275e9a28b2e9a38e09f6ad34462840e1fdbc618
+Saving artifacts...
+Running migration: 2_DEV_migrate_dependencies.js
+Not in development, so nothing to do. Current network is kovan
+Saving artifacts...
+Running migration: 3_DEV-deploy_price_feed.js
+No need to deploy the Medianizer. Using 0xa944bd4b25c9f186a846fd5668941aa3d3b8425f as the Medianizer address
+Deploying PriceOracleInterface with owner: 0xf85d1a0e1b71e72013db51139f285c6d5356b712
+  Replacing PriceOracleInterface...
+[HDWalletProvider] Using nonce:  357
+  ... 0x997ee57d544c0d1ba45d554a8eadc97e2b93c290464fb3c0d9c3111e01dd921c
+  PriceOracleInterface: 0xbf72ca4c2e7c0edf1ca82ff6c9f6e9204d1e9580
+Saving artifacts...
+Running migration: 4_deploy_FRT.js
+  Running step...
+  Replacing TokenFRT...
+[HDWalletProvider] Using nonce:  358
+  ... 0xbbc458f59a207f07f03d5d67403242f509f3f77b1aa8728e7e9e0f2d167d4bcd
+  TokenFRT: 0xb4d40b3dba88e53cdbd9361717f5d86899ede1b3
+Deploying TokenFRTProxy with ACCOUNT ==>  0xf85d1a0e1b71e72013db51139f285c6d5356b712
+  Deploying TokenFRTProxy...
+[HDWalletProvider] Using nonce:  359
+  ... 0xc5cdd5f19ff58da080b9b509dbe2caeb3c20045ebe600edecfaa7534b914f1da
+  TokenFRTProxy: 0x2b3a76ed4edb76e8fcd261fd978e78efb313d5a2
+Saving artifacts...
+Running migration: 5_deploy_DX.js
+  Running step...
+  Replacing DutchExchange...
+[HDWalletProvider] Using nonce:  360
+  ... 0x0a69add3414410147d96bec629774e634fe74a73de0455a96ca7aa960039e5dc
+  DutchExchange: 0xab4860ccc54f27a1e2c7a8bed64e2980142461b2
+  Replacing DutchExchangeProxy...
+[HDWalletProvider] Using nonce:  361
+  ... 0x64d16ed028081a741ae0de0e75714878a5d54474a4d263eb0e71a64861deadb9
+  DutchExchangeProxy: 0x775ea749a82a87f12199019e5166980f305f4c8f
+Saving artifacts...
+Running migration: 6_setup_DX.js
+  Running step...
+Setup DX with:
+	 Owner: 0xf85d1a0e1b71e72013db51139f285c6d5356b712
+	 OWL address: 0xb6f77a34ff81dd13fa68b5774d74541a61047fe8
+	 FRT address: 0x2b3a76ed4edb76e8fcd261fd978e78efb313d5a2
+	 WETH address: 0xd0a1e359811322d97991e03f863a0c30c2cf029c
+	 Price Oracle address: 0xbf72ca4c2e7c0edf1ca82ff6c9f6e9204d1e9580
+	 Threshold for new token pair: 10000
+	 Threshold for auction to start: 1000
+[HDWalletProvider] Using nonce:  362
+  ... 0x58abbad7a56677f34a010f8ae53473c664294598be9d665f50ce7d7fd30426c8
+Deploy DutchExchangeHelper:
+  Deploying DutchExchangeHelper...
+[HDWalletProvider] Using nonce:  363
+  ... 0xf9dcb3eb85bbb4283b1c9f29cf3634e021d3b20151af5363f9542e74f78001b6
+  DutchExchangeHelper: 0xa71d54360d4adf8d52460fe068611dd608b0a8ef
+Saving artifacts...
+Running migration: 7_set_DX_as_FRT_minter.js
+  Running step...
+[HDWalletProvider] Using nonce:  364
+  ... 0x523d5a266a2eab273a6ef517e4c39b7c183b9254dac68762a5223823d5e4bcb9
+Saving artifacts...
+Done in 116.57s.
