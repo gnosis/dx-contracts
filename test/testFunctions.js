@@ -359,10 +359,10 @@ const claimSellerFunds = async (ST, BT, user, aucIdx, acct) => {
   ST = ST || eth; BT = BT || gno; user = user || acct
   let auctionIdx = aucIdx || await getAuctionIndex(ST, BT)
   log('AUC IDX = ', auctionIdx)
-  const [returned, tulipsIssued] = (await dx.claimSellerFunds.call(ST.address, BT.address, user, auctionIdx)).map(n => n.toNumber())
+  const { returned, frtsIssued } = await dx.claimSellerFunds.call(ST.address, BT.address, user, auctionIdx)
   log(`
-  RETURNED    ===> ${returned.toEth()}
-  TUL ISSUED  ===> ${tulipsIssued.toEth()}
+  RETURNED    ===> ${toEth(returned)}
+  MGN ISSUED  ===> ${toEth(frtsIssued)}
   `)
   return dx.claimSellerFunds(ST.address, BT.address, user, auctionIdx, { from: user })
 }
@@ -381,30 +381,32 @@ const assertClaimingFundsCreatesMGNs = async (ST, BT, acc, type) => {
 
   if (!ST || !BT) throw new Error('No tokens passed in')
 
-  let tulipsIssued
+  let mgnsIssued
   // NOTE: MGNs are NOT minted/issued/etc until Auction has CLEARED
   const auctionIdx = await getAuctionIndex(ST, BT)
   assert.isAtLeast(auctionIdx, 2, 'Auction needs to have cleared - throw otherwise')
 
   // grab prevTulBalance to compare against new MGNs Issued later
-  const prevTulBal = (await tokenMGN.lockedTokenBalances.call(acc)).toNumber()
+  const prevTulBal = await tokenMGN.lockedTokenBalances.call(acc)
 
   if (type === 'seller') {
-    ([, tulipsIssued] = (await dx.claimSellerFunds.call(ST.address, BT.address, acc, auctionIdx - 1)).map(n => n.toNumber()))
+    const { frtsIssued: frtsAsSeller } = await dx.claimSellerFunds.call(ST.address, BT.address, acc, auctionIdx - 1)
     await claimSellerFunds(ST, BT, acc, auctionIdx - 1)
+    mgnsIssued = frtsAsSeller
   } else {
-    ([, tulipsIssued] = (await dx.claimBuyerFunds.call(ST.address, BT.address, acc, auctionIdx - 1)).map(n => n.toNumber()))
+    const { frtsIssued: frtsAsBuyer } = await dx.claimBuyerFunds.call(ST.address, BT.address, acc, auctionIdx - 1)
     await claimBuyerFunds(ST, BT, acc, auctionIdx - 1)
+    mgnsIssued = frtsAsBuyer
   }
 
-  const newTulBal = (await tokenMGN.lockedTokenBalances.call(acc)).toNumber()
+  const newMgnBal = await tokenMGN.lockedTokenBalances.call(acc)
   log(`
-    LockedTulBal === ${newTulBal.toEth()}
-    prevTul + tulipsIss = newTulBal
-    ${prevTulBal.toEth()} + ${tulipsIssued.toEth()} = ${newTulBal.toEth()}
+    LockedMgnBal === ${toEth(newMgnBal)}
+    prevMgn + mgnIssued = newMgnBal
+    ${toEth(prevTulBal)} + ${toEth(mgnsIssued)} = ${toEth(newMgnBal)}
     `)
 
-  assert.equal(newTulBal, prevTulBal + tulipsIssued)
+  assert.equal(newMgnBal.toString(), prevTulBal.add(mgnsIssued).toString())
 }
 
 /**
@@ -561,7 +563,7 @@ const assertReturnedPlusMGNs = async (ST, BT, acc, type, idx = 1, eth) => {
 }
 
 /**
- * unlockTulipTokens
+ * unlockMGNTokens
  * @param {address} user => address to unlock Tokens for
  */
 const unlockMGNTokens = async (user, ST, BT) => {
@@ -571,61 +573,64 @@ const unlockMGNTokens = async (user, ST, BT) => {
 
   // cache locked balances Mapping in TokenFRT contract
   // filled automatically after auction closes and TokenFRT.mintTokens is called
-  const lockedBalMap = (await tokenMGN.lockedTokenBalances.call(user))
+  const lockedBalMap = await tokenMGN.lockedTokenBalances.call(user)
   log(`
-  TOKENTUL.lockedTokenBalances[user] === ${lockedBalMap.toNumber().toEth()}
+  TOKENTUL.lockedTokenBalances[user] === ${toEth(lockedBalMap)}
   `)
 
   // cache the locked Amount of user MGNs from TokenFRT MAP
   // this map is ONLY calculated and filled AFTER auction clears
-  const lockedUserMGNs = (await tokenMGN.lockedTokenBalances.call(user)).toNumber()
+  const lockedUserMGNs = await tokenMGN.lockedTokenBalances.call(user)
   /*
    * SUB TEST 1: CHECK UNLOCKED AMT + WITHDRAWAL TIME
    * [should be 0,0 as none LOCKED so naturally none to unlock yet]
    */
-  let [unlockedFunds, withdrawTime] = (await tokenMGN.unlockedTokens.call(user)).map(n => n.toNumber())
+  const { amountUnlocked: unlockedFunds, withdrawalTime: withdrawTime } = await tokenMGN.unlockedTokens.call(user)
   log(`
-  AMT OF UNLOCKED FUNDS  = ${unlockedFunds.toEth()}
+  AMT OF UNLOCKED FUNDS  = ${toEth(unlockedFunds)}
   TIME OF WITHDRAWAL     = ${withdrawTime} [0 means no withdraw time as there are 0 locked tokens]
   `)
-  assert.equal(unlockedFunds, 0, 'unlockedFunds should be 0')
-  assert.equal(withdrawTime, 0, 'Withdraw time should be 0 ')
+  assert.isTrue(unlockedFunds.isZero(), 'unlockedFunds should be 0')
+  assert.isTrue(withdrawTime.isZero(), 'Withdraw time should be 0 ')
 
   /*
    * SUB TEST 2: LOCK TOKENS
    */
   // lock total tulips in lockedMap
   await tokenMGN.lockTokens(lockedUserMGNs, { from: user })
-  const totalAmtLocked = (await tokenMGN.lockTokens.call(lockedUserMGNs, { from: user })).toNumber()
+  const totalAmtLocked = await tokenMGN.lockTokens.call(lockedUserMGNs, { from: user })
   log(`
-  TOKENS LOCKED          = ${totalAmtLocked.toEth()}
+  TOKENS LOCKED          = ${toEth(totalAmtLocked)}
   `)
   if (aucIdx === 2) {
     // auction HAS cleared, TUL should have been minted
-    assert.equal(totalAmtLocked, lockedUserMGNs, 'Total locked tulips should equal total user balance of tulips')
+    assert.equal(totalAmtLocked.toString(), lockedUserMGNs.toString(), 'Total locked tulips should equal total user balance of tulips')
   } else {
     // auction has NOT cleared, no minting
-    assert.equal(totalAmtLocked, 0, 'Total locked tulips should equal total user balance of tulips')
+    assert.isTrue(totalAmtLocked.isZero(), 'Total locked tulips should equal total user balance of tulips')
   }
 
   /*
    * SUB TEST 3: UN-LOCK TOKENS
    */
-  await tokenMGN.unlockTokens({ from: user });
-  ([unlockedFunds, withdrawTime] = (await tokenMGN.unlockTokens.call({ from: user })).map(t => t.toNumber()))
+  await tokenMGN.unlockTokens({ from: user })
+  const { totalAmountUnlocked: unlockedFunds2, withdrawalTime: withdrawTime2 } = await tokenMGN.unlockTokens.call({ from: user })
   log(`
-  AMT OF UNLOCKED FUNDS  = ${unlockedFunds.toEth()}
-  TIME OF WITHDRAWAL     = ${withdrawTime} --> ${new Date(withdrawTime * 1000)}
+  AMT OF UNLOCKED FUNDS  = ${toEth(unlockedFunds2)}
+  TIME OF WITHDRAWAL     = ${withdrawTime2} --> ${new Date(withdrawTime2 * 1000)}
   `)
   if (aucIdx === 2) {
     // Auction HAS cleared
-    assert.equal(unlockedFunds, lockedUserMGNs, 'unlockedFunds should be = lockedUserMGNs')
+    assert.equal(
+      unlockedFunds2.toString(),
+      lockedUserMGNs.toString(),
+      'unlockedFunds2 should be = lockedUserMGNs')
     // assert withdrawTime === now (in seconds) + 24 hours (in seconds)
-    assert.equal(withdrawTime, await timestamp() + (24 * 3600), 'Withdraw time should be equal to [(24 hours in seconds) + (current Block timestamp in seconds)]')
+    assert.equal(withdrawTime2, await timestamp() + (24 * 3600), 'Withdraw time should be equal to [(24 hours in seconds) + (current Block timestamp in seconds)]')
   } else {
-    assert.equal(unlockedFunds, 0, 'unlockedFunds should be = 0 as no tokens minted')
+    assert.isTrue(unlockedFunds2.isZero(), 'unlockedFunds2 should be = 0 as no tokens minted')
     // assert withdrawTime === now (in seconds) + 24 hours (in seconds)
-    assert.equal(withdrawTime, 0, 'Withdraw time should be equal 0 as no Token minted')
+    assert.equal(withdrawTime2, 0, 'Withdraw time should be equal 0 as no Token minted')
   }
 }
 

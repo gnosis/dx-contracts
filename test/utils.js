@@ -284,8 +284,24 @@ const revertSnapshot = snapshotId => {
     })
   })
 }
-
+/**
+ * valMinusFee
+ * It will substract the standard base fee 0.5%
+ * @param {BN} Amount to substract the fee
+ */
 const valMinusFee = amount => amount.sub(amount.div(new BN('200')))
+
+/**
+ * valMinusCustomFee
+ * @param {BN} Amount to substract the fee
+ * @param {Number} Fee ratio in % (ex. 0.5%)
+ */
+const valMinusCustomFee = (amount, fee) => {
+  assert.isAbove(fee, 0, 'Fee should always be above 0')
+  // Convert fee to be used by BN (can't handle float numbers)
+  const feeToBN = (1 / fee) * 100
+  return amount.sub(amount.div(new BN(feeToBN.toString())))
+}
 
 module.exports = {
   AUCTION_START_WAITING_FOR_FUNDING,
@@ -308,5 +324,6 @@ module.exports = {
   varLogger,
   makeSnapshot,
   revertSnapshot,
-  valMinusFee
+  valMinusFee,
+  valMinusCustomFee
 }
