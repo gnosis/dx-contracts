@@ -369,7 +369,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         amount = min(amount, balances[sellToken][msg.sender]);
 
         // R1
-        require(amount >= 0, "Sell amount should be greater than 0");
+        // require(amount >= 0, "Sell amount should be greater than 0");
 
         // R2
         uint latestAuctionIndex = getAuctionIndex(sellToken, buyToken);
@@ -741,8 +741,7 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         } else {
             // C2
             // R2.1
-            require(auctionIndex >= 0);
-
+            // require(auctionIndex >= 0);
 
             // C3
             // R3.1
@@ -888,9 +887,9 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
             // P(0 hrs) = 2 * lastClosingPrice, P(6 hrs) = lastClosingPrice, P(>=24 hrs) = 0
 
             // 10^5 * 10^31 = 10^36
-            num = atleastZero(int((86400 - timeElapsed) * pastNum));
+            num = atleastZero(int((24 hours - timeElapsed) * pastNum));
             // 10^6 * 10^31 = 10^37
-            den = mul((timeElapsed + 43200), pastDen);
+            den = mul((timeElapsed + 12 hours), pastDen);
 
             if (mul(num, sellVolumesCurrent[sellToken][buyToken]) <= mul(den, buyVolumes[sellToken][buyToken])) {
                 num = buyVolumes[sellToken][buyToken];
@@ -997,9 +996,9 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         internal
     {
         (uint pastNum, uint pastDen) = getPriceInPastAuction(token1, token2, auctionIndex - 1);
-        // 43200 = 12 hrs, 86400 = 24 hrs
-        // timeElapsed = 43200(2 * pastNum * sellVolume - buyVolume * pastDen)/(sellVolume * pastNum + buyVolume * pastDen)
-        uint numerator = sub(mul(mul(pastNum, sellVolume), 86400), mul(mul(buyVolume, pastDen), 43200));
+        // timeElapsed = (12 hours)*(2 * pastNum * sellVolume - buyVolume * pastDen)/
+            // (sellVolume * pastNum + buyVolume * pastDen)
+        uint numerator = sub(mul(mul(pastNum, sellVolume), 24 hours), mul(mul(buyVolume, pastDen), 12 hours));
         uint timeElapsed = numerator / (add(mul(sellVolume, pastNum), mul(buyVolume, pastDen)));
         uint clearingTime = auctionStart + timeElapsed;
         (token1, token2) = getTokenOrder(token1, token2);
@@ -1132,8 +1131,8 @@ contract DutchExchange is DxUpgrade, TokenWhitelist, EthOracle, SafeTransfer {
         }
 
         // if (opposite is 0 auction OR price = 0 OR opposite auction cleared)
-        // price = 0 happens if auction pair has been running for >= 24 hrs = 86400
-        if (sellVolumeOpp == 0 || now >= auctionStart + 86400 || closingPriceOppDen > 0) {
+        // price = 0 happens if auction pair has been running for >= 24 hrs
+        if (sellVolumeOpp == 0 || now >= auctionStart + 24 hours || closingPriceOppDen > 0) {
             // Close auction pair
             uint buyVolumeOpp = buyVolumes[buyToken][sellToken];
             if (closingPriceOppDen == 0 && sellVolumeOpp > 0) {

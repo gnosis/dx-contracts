@@ -6,9 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="./docs/Solidified_Audit_Report.pdf">
   <img width="75px" src="http://dutchx.readthedocs.io/en/latest/_static/Sol_Badge_SlateOnTrans@2x.png" />
-  </a>
 </p>
 
 # DutchX - Smart Contracts
@@ -21,6 +19,15 @@ Please note that depending on how you use this Program, you may be required to s
 
 # Documentation
 Checkout the [DutchX Documentation](http://dutchx.readthedocs.io/en/latest).
+
+# Audit report
+<p align="center">
+  <img width="75px" src="http://dutchx.readthedocs.io/en/latest/_static/Sol_Badge_SlateOnTrans@2x.png" />
+</p>
+
+* [Audit and Bounty information](https://dutchx.readthedocs.io/en/latest/security-of-the-contracts.html)
+* [DutchX 1.0 Audit Report](./docs/DutchX_1.0_Audit_Report.pdf)
+* [DutchX 2.0 Audit Report](./docs/DutchX_2.0_Audit_Report.pdf)
 
 # Contract addresses
 Check out the addresses for the deployed contracts in `rinkeby` and `mainnet` in

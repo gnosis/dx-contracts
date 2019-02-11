@@ -203,6 +203,8 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   }
   assert.equal(await timestamp() >= timeToWaitFor, true)
   // assert.isAtLeast(priceAfter, (priceBefore / 2) * p)
+
+  return timeToWaitFor
 }
 
 /**
