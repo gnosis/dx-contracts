@@ -236,13 +236,12 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
       assert.equal(claimedAmount.toString(), '0')
     })
 
-    it('5. check right amount of coins is returned by claimBuyerFunds if auction is  not closed, but closed theoretical ', async () => {
+    it('5. check right amount of coins is returned by claimBuyerFunds if auction is not closed, but closed theoretical ', async () => {
       // prepare test by starting and clearing new auction
       const auctionIndex = await getAuctionIndex()
-      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
       await postBuyOrder(eth, gno, auctionIndex, 10.0.toWei(), buyer1)
 
-      const time = await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.4)
+      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.4)
 
       // checking that closingPriceToken.num == 0
       const { num: closingPriceNumToken } =
@@ -254,11 +253,12 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
         await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, auctionIndex)
       assert.equal(valMinusFee(10.0.toWei()).toString(), claimedAmount.toString())
 
-      // claimBuyerFunds also cleared auction
+      // claimBuyerFunds also clears the auction
+      await dx.claimBuyerFunds(eth.address, gno.address, buyer1, auctionIndex)
       // test clearingTime
-      const clearingTimeSol = await getClearingTime(gno, eth, auctionIndex)
-      // clearingTime and time differ by less than 30 s
-      assert.isBelow(Math.abs(clearingTimeSol - time), 30, 'clearingTime for theoretical auction')
+      const clearingTime = await getClearingTime(eth, gno, auctionIndex)
+      // clearingTime is set
+      assert.isAbove(clearingTime, 5, 'clearingTime for theoretical auction')
     })
 
     it('6. check that already claimedBuyerfunds are substracted properly', async () => {

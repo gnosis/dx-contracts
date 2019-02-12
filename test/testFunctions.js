@@ -172,7 +172,7 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   if (!silent) {
     let currentAuctionPrice = await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex)
     let { num, den } = currentAuctionPrice
-    priceBefore = num.div(den)
+    priceBefore = num / den
     log(`
       Price BEFORE waiting until Price = initial Closing Price (2) * 2
       ==============================
@@ -191,7 +191,7 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
     currentAuctionPrice = await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex)
     num = currentAuctionPrice.num
     den = currentAuctionPrice.den
-    const priceAfter = num.div(den)
+    const priceAfter = num / den
     log(`
       Price AFTER waiting until Price = ${p * 100}% of ${priceBefore / 2} (initial Closing Price)
       ==============================
