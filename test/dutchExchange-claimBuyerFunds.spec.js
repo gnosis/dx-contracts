@@ -258,7 +258,7 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
       // test clearingTime
       const clearingTimeSol = await getClearingTime(gno, eth, auctionIndex)
       // clearingTime and time differ by less than 30 s
-      assert.lessThan(Math.abs(clearingTimeSol - time), 30, 'clearingTime for theoretical auction')
+      assert.isBelow(Math.abs(clearingTimeSol - time), 30, 'clearingTime for theoretical auction')
     })
 
     it('6. check that already claimedBuyerfunds are substracted properly', async () => {

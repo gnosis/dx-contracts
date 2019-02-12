@@ -427,7 +427,7 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
        * @{return} ... 200GNO * 1/4 => 50 ETHER
        */
       await postBuyOrder(eth, gno, false, (200).toWei(), buyer1)
-      log(`\nBuy Volume AFTER = ${((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()).toEth()}`)
+      log(`\nBuy Volume AFTER = ${toEth(await dx.buyVolumes.call(eth.address, gno.address))}`)
       let idx = await getAuctionIndex()
       const { returned: claimedFunds, frtsIssued } = await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)
       log(`
@@ -453,14 +453,14 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       Last Closing Prices:
       closeN        = ${closingNum}
       closeD        = ${closingDen}
-      closingPrice  = ${closingNum.div(closingDen)}
+      closingPrice  = ${closingNum / closingDen}
       ===========================================
       Current Prices:
       n             = ${num}
       d             = ${den}
-      price         = ${num.div(den)}
+      price         = ${num / den}
       `)
-      assert.isAtLeast((num / den), 2.899999)
+      assert.isAtLeast((num.toNumber() / den.toNumber()), 2.899999)
     })
 
     it('BUYER2: Non Auction clearing PostBuyOrder + Claim => MGNs = 0', async () => {
@@ -473,8 +473,8 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       `)
 
       log(`
-      BUYER1 GNO BALANCE = ${(await getBalance(buyer2, gno)).toEth()}
-      BUYER1 ETH BALANCE = ${(await getBalance(buyer2, eth)).toEth()}
+      BUYER1 GNO BALANCE = ${toEth(await getBalance(buyer2, gno))}
+      BUYER1 ETH BALANCE = ${toEth(await getBalance(buyer2, eth))}
       `)
 
       /*
@@ -483,9 +483,9 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
        * @{return} ... 100GNO * 1/3 => 33.333 ETHER
        */
       // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
-      const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
+      const { num: closingNum, den: closingDen } = await dx.closingPrices.call(eth.address, gno.address, 1)
       // Should be 4 here as closing price starts @ 2 and we times by 2
-      const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+      const { num, den } = await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)
       log(`
       Last Closing Prices:
       closeN        = ${closingNum}
@@ -499,29 +499,30 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       `)
       await postBuyOrder(eth, gno, false, (40).toWei(), buyer2)
       log(`
-      Buy Volume AFTER      = ${((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()).toEth()} GNO
-      Left to clear auction = ${((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber() - ((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()) * (den / num)).toEth()} ETH
+      Buy Volume AFTER      = ${toEth(await dx.buyVolumes.call(eth.address, gno.address))} GNO
+      Left to clear auction = ${toEth((await dx.sellVolumesCurrent.call(eth.address, gno.address)).sub((await dx.buyVolumes.call(eth.address, gno.address))).mul(den).div(num))} ETH
       `)
 
-      const [claimedFunds, mgnsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer2, 1)).map(i => i.toNumber())
+      const { returned: claimedFunds, frtsIssued } = await dx.claimBuyerFunds.call(eth.address, gno.address, buyer2, 1)
       log(`
-      CLAIMED FUNDS => ${claimedFunds.toEth()} ETH
-      MGN ISSUED => ${mgnsIssued.toEth()} MGN
+      CLAIMED FUNDS => ${toEth(claimedFunds)} ETH
+      MGN ISSUED => ${toEth(frtsIssued)} MGN
       `)
 
-      assert.equal(mgnsIssued, 0, 'MGNs only issued / minted after auction Close so here = 0')
+      assert.isTrue(frtsIssued.isZero(), 'MGNs only issued / minted after auction Close so here = 0')
     })
 
     it('BUYER1: Auction clearing PostBuyOrder + Claim => MGNs = sellVolume', async () => {
-      eventWatcher(dx, 'AuctionCleared')
+      // TODO review eventwatcher
+      // eventWatcher(dx, 'AuctionCleared')
       log(`
       ================================================================================================
       T3: Buyer1 PostBuyOrder => Auction clearing PostBuyOrder + Claim => MGNs = 99.5 || sellVolume
       ================================================================================================
       `)
       log(`
-      BUYER1 GNO BALANCE = ${(await getBalance(buyer1, gno)).toEth()}
-      BUYER1 ETH BALANCE = ${(await getBalance(buyer1, eth)).toEth()}
+      BUYER1 GNO BALANCE = ${toEth(await getBalance(buyer1, gno))}
+      BUYER1 ETH BALANCE = ${toEth(await getBalance(buyer1, eth))}
       `)
       /*
        * SUB TEST 2: postBuyOrder => 20 GNO @ 4:1 price
@@ -529,9 +530,9 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
        * @{return} ... 20GNO * 1/4 => 5 ETHER
        */
       // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
-      const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
+      const { num: closingNum, den: closingDen } = await dx.closingPrices.call(eth.address, gno.address, 1)
       // Should be 4 here as closing price starts @ 2 and we times by 2
-      const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+      const { num, den } = await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)
       log(`
       Last Closing Prices:
       closeN        = ${closingNum}
@@ -547,12 +548,12 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       // post buy order that CLEARS auction - 400 / 4 = 100 + 5 from before clears
       await postBuyOrder(eth, gno, false, (400).toWei(), buyer1)
       log(`
-      Buy Volume AFTER = ${((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()).toEth()}
+      Buy Volume AFTER = ${toEth(await dx.buyVolumes.call(eth.address, gno.address))}
       Left to clear auction = ${((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber() - ((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()) * (den / num)).toEth()}
       `)
       let idx = await getAuctionIndex() - 1
-      const [b1ClaimedFunds, b1MGNsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
-      const [b2ClaimedFunds, b2MGNsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer2, idx)).map(i => i.toNumber())
+      const { returned: b1ClaimedFunds, frtsIssued: b1MGNsIssued } = await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)
+      const { returned: b2ClaimedFunds, frtsIssued: b2MGNsIssued } = await dx.claimBuyerFunds.call(eth.address, gno.address, buyer2, idx)
       buyer1Returns = b1MGNsIssued
       buyer2Returns = b2MGNsIssued
 
@@ -564,18 +565,21 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       // Save return amt into state since MGN 1:1 w/ETH
       log(`
       Buyer 1
-      RETURNED//CLAIMED FUNDS => ${b1ClaimedFunds.toEth()}
-      MGN ISSUED           => ${b1MGNsIssued.toEth()}
+      RETURNED//CLAIMED FUNDS => ${toEth(b1ClaimedFunds)}
+      MGN ISSUED           => ${toEth(b1MGNsIssued)}
       `)
 
       log(`
       Buyer 2
-      RETURNED//CLAIMED FUNDS => ${b2ClaimedFunds.toEth()}
-      MGN ISSUED           => ${b2MGNsIssued.toEth()}
+      RETURNED//CLAIMED FUNDS => ${toEth(b2ClaimedFunds)}
+      MGN ISSUED           => ${toEth(b2MGNsIssued)}
       `)
 
       // assert both amount of mgns issued = sellVolume
-      assert.equal((b1MGNsIssued + b2MGNsIssued).toEth(), 99.5, 'MGNs only issued / minted after auction Close so here = 99.5 || sell Volume')
+      assert.equal(
+        (b1MGNsIssued.add(b2MGNsIssued)).toString(),
+        99.5.toWei().toString(),
+        'MGNs only issued / minted after auction Close so here = 99.5 || sell Volume')
     })
 
     it('Clear Auction, assert auctionIndex increase', async () => {
@@ -588,8 +592,8 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
        * SUB TEST 1: clearAuction
        */
       log(`
-      BUYER1 GNO BALANCE = ${(await getBalance(buyer1, gno)).toEth()}
-      BUYER1 ETH BALANCE = ${(await getBalance(buyer1, eth)).toEth()}
+      BUYER1 GNO BALANCE = ${toEth(await getBalance(buyer1, gno))}
+      BUYER1 ETH BALANCE = ${toEth(await getBalance(buyer1, eth))}
       `)
       // just to close auction
       // await postBuyOrder(eth, gno, 1, 400..toWei(), buyer1)
@@ -597,8 +601,14 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       New Auction Index -> ${await getAuctionIndex()}
       `)
 
-      assert.equal(((await getBalance(buyer1, eth)).toEth()).toFixed(2), ((startBal.startingETH + buyer1Returns).toEth()).toFixed(2), 'Buyer 1 has the returned value into ETHER + original balance')
-      assert.equal(((await getBalance(buyer2, eth)).toEth()).toFixed(2), ((startBal.startingETH + buyer2Returns).toEth()).toFixed(2), 'Buyer 2 has the returned value into ETHER + original balance')
+      assert.equal(
+        (await getBalance(buyer1, eth)).toString(),
+        (startBal.startingETH.add(buyer1Returns)).toString(),
+        'Buyer 1 has the returned value into ETHER + original balance')
+      assert.equal(
+        (await getBalance(buyer2, eth)).toString(),
+        (startBal.startingETH.add(buyer2Returns)).toString(),
+        'Buyer 2 has the returned value into ETHER + original balance')
       assert.equal(await getAuctionIndex(), 2)
     })
 
@@ -644,7 +654,7 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       T5: Seller - Locking and Unlocking of Tokens
       ============================================
       `)
-      log('seller BALANCE = ', (await getBalance(seller1, eth)).toEth())
+      log('seller BALANCE = ', (toEth(await getBalance(seller1, eth))))
       await claimSellerFunds(eth, gno, seller1, 1)
       await unlockMGNTokens(seller1)
     })
@@ -658,7 +668,7 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
        * SUB TEST 4: create new token pair and assert Seller1Balance = 0 after depositing more than Balance
        */
       // add tokenPair ETH GNO
-      log('Selling amt ', sellingAmount.toEth())
+      log('Selling amt ', toEth(sellingAmount))
       await dx.addTokenPair(
         eth.address,
         gno.address,
@@ -669,8 +679,11 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
         { from: seller1 }
       )
       seller1Balance = await getBalance(seller1, eth) // dx.balances(token) - sellingAmt
-      log(`\nSeller Balance ====> ${seller1Balance.toEth()}\n`)
-      assert.equal(seller1Balance, startingETH - sellingAmount, `Seller1 should have ${startingETH.toEth()} balance after new Token Pair add`)
+      log(`\nSeller Balance ====> ${toEth(seller1Balance)}\n`)
+      assert.equal(
+        seller1Balance.toString(),
+        startingETH.sub(sellingAmount).toString(),
+        `Seller1 should have ${toEth(startingETH)} balance after new Token Pair add`)
     })
 
     after(async () => {
@@ -684,13 +697,15 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       =====================================
       `)
 
-      sellVolumes = (await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber()
-      const svFee = f => sellingAmount * (f / 100)
+      sellVolumes = await dx.sellVolumesCurrent.call(eth.address, gno.address)
       log(`
-      SELLVOLUMES === ${sellVolumes.toEth()}
-      FEE         === ${svFee(0.5).toEth()}
+      SELLVOLUMES === ${toEth(sellVolumes)}
+      SELLING AMOUNT AFTER FEE === ${toEth(valMinusCustomFee(sellingAmount, 0.5))}
       `)
-      assert.equal(sellVolumes, sellingAmount - svFee(0.5), 'sellVolumes === seller1Balance')
+      assert.equal(
+        sellVolumes.toString(),
+        valMinusCustomFee(sellingAmount, 0.5).toString(),
+        'sellVolumes === seller1Balance')
     })
 
     it('BUYER1: Non Auction clearing PostBuyOrder + Claim => MGNs = 0', async () => {
@@ -702,8 +717,8 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       ============================================================================================
       `)
       log(`
-      BUYER1 GNO BALANCE = ${(await getBalance(buyer1, gno)).toEth()}
-      BUYER1 ETH BALANCE = ${(await getBalance(buyer1, eth)).toEth()}
+      BUYER1 GNO BALANCE = ${toEth(await getBalance(buyer1, gno))}
+      BUYER1 ETH BALANCE = ${toEth(await getBalance(buyer1, eth))}
       `)
       /*
        * SUB TEST 1: MOVE TIME AFTER SCHEDULED AUCTION START TIME && ASSERT AUCTION-START =TRUE
@@ -711,9 +726,9 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       await setAndCheckAuctionStarted(eth, gno)
 
       // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
-      const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
+      const { num: closingNum, den: closingDen } = await dx.closingPrices.call(eth.address, gno.address, 1)
       // Should be 4 here as closing price starts @ 2 and we times by 2
-      const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+      const { num, den } = await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)
       log(`
       Last Closing Prices:
       closeN        = ${closingNum}
@@ -733,17 +748,17 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
        */
       await postBuyOrder(eth, gno, false, (20).toWei(), buyer1)
       log(`
-      Buy Volume AFTER = ${((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()).toEth()}
-      Left to clear auction = ${((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber() - ((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()) * (den / num)).toEth()}
+      Buy Volume AFTER = ${toEth(await dx.buyVolumes.call(eth.address, gno.address))}
+      Left to clear auction = ${toEth((await dx.sellVolumesCurrent.call(eth.address, gno.address)).sub(await dx.buyVolumes.call(eth.address, gno.address)).mul(den).div(num))}
       `)
       let idx = await getAuctionIndex()
-      const [claimedFunds, mgnsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
+      const { returned: claimedFunds, frtsIssued } = await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)
       log(`
-      CLAIMED FUNDS => ${claimedFunds.toEth()}
-      MGN ISSUED => ${mgnsIssued.toEth()}
+      CLAIMED FUNDS => ${toEth(claimedFunds)}
+      MGN ISSUED => ${toEth(frtsIssued)}
       `)
 
-      assert.equal(mgnsIssued, 0, 'MGNs only issued / minted after auction Close so here = 0')
+      assert.isTrue(frtsIssued.isZero(), 'MGNs only issued / minted after auction Close so here = 0')
     })
 
     it(
@@ -759,14 +774,14 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       ================================================================================================
       `)
       log(`
-      BUYER1 GNO BALANCE = ${(await getBalance(buyer1, gno)).toEth()}
-      BUYER1 ETH BALANCE = ${(await getBalance(buyer1, eth)).toEth()}
+      BUYER1 GNO BALANCE = ${toEth(await getBalance(buyer1, gno))}
+      BUYER1 ETH BALANCE = ${toEth(await getBalance(buyer1, eth))}
       `)
 
       // Should be 0 here as aucIdx = 1 ==> we set aucIdx in this case
-      const [closingNum, closingDen] = (await dx.closingPrices.call(eth.address, gno.address, 1))
+      const { num: closingNum, den: closingDen } = await dx.closingPrices.call(eth.address, gno.address, 1)
       // Should be 4 here as closing price starts @ 2 and we times by 2
-      const [num, den] = (await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)).map(i => i.toNumber())
+      const { num, den } = await dx.getCurrentAuctionPrice.call(eth.address, gno.address, 1)
       log(`
       Last Closing Prices:
       closeN        = ${closingNum}
@@ -786,19 +801,22 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       // post buy order that CLEARS auction - 400 / 4 = 100 + 5 from before clears
       await postBuyOrder(eth, gno, false, (400).toWei(), buyer1)
       log(`
-      Buy Volume AFTER = ${((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()).toEth()}
-      Left to clear auction = ${((await dx.sellVolumesCurrent.call(eth.address, gno.address)).toNumber() - ((await dx.buyVolumes.call(eth.address, gno.address)).toNumber()) * (den / num)).toEth()}
+      Buy Volume AFTER = ${toEth(await dx.buyVolumes.call(eth.address, gno.address))}
+      Left to clear auction = ${toEth((await dx.sellVolumesCurrent.call(eth.address, gno.address)).sub((await dx.buyVolumes.call(eth.address, gno.address))).mul(den).div(num))}
       `)
       // drop it down 1 as Auction has cleared
       let idx = await getAuctionIndex() - 1
-      const [claimedFunds, mgnsIssued] = (await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)).map(i => i.toNumber())
+      const { returned: claimedFunds, frtsIssued } = await dx.claimBuyerFunds.call(eth.address, gno.address, buyer1, idx)
       await assertClaimingFundsCreatesMGNs(eth, gno, buyer1, 'buyer')
       log(`
-      RETURNED//CLAIMED FUNDS => ${claimedFunds.toEth()}
-      MGN ISSUED           => ${mgnsIssued.toEth()}
+      RETURNED//CLAIMED FUNDS => ${toEth(claimedFunds)}
+      MGN ISSUED           => ${toEth(frtsIssued)}
       `)
 
-      assert.equal(mgnsIssued.toEth(), 99.5, 'MGNs only issued / minted after auction Close so here = 99.5 || sell Volume')
+      assert.equal(
+        toEth(frtsIssued).toString(),
+        99.5.toWei().toString(),
+        'MGNs only issued / minted after auction Close so here = 99.5 || sell Volume')
     })
 
     it('Clear Auction, assert auctionIndex increase', async () => {
@@ -811,15 +829,18 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
        * SUB TEST 1: clearAuction
        */
       log(`
-      BUYER1 GNO BALANCE = ${(await getBalance(buyer1, gno)).toEth()}
-      BUYER1 ETH BALANCE = ${(await getBalance(buyer1, eth)).toEth()}
+      BUYER1 GNO BALANCE = ${toEth(await getBalance(buyer1, gno))}
+      BUYER1 ETH BALANCE = ${toEth(await getBalance(buyer1, eth))}
       `)
       // just to close auction
       // await postBuyOrder(eth, gno, 1, 400..toWei(), buyer1)
       log(`
       New Auction Index -> ${await getAuctionIndex()}
       `)
-      assert.equal((await getBalance(buyer1, eth)), startBal.startingETH + sellVolumes, 'Buyer 1 has the returned value into ETHER + original balance')
+      assert.equal(
+        (await getBalance(buyer1, eth)).toString(),
+        startBal.startingETH.add(sellVolumes).toString(),
+        'Buyer 1 has the returned value into ETHER + original balance')
       assert.isAtLeast(await getAuctionIndex(), 2)
     })
 
@@ -847,7 +868,7 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       T5: Seller - Locking and Unlocking of Tokens
       ============================================
       `)
-      log('seller BALANCE = ', (await getBalance(seller1, eth)).toEth())
+      log('seller BALANCE = ', toEth(await getBalance(seller1, eth)))
       // await postBuyOrder(eth, gno, 1, 400..toWei(), buyer1)
       // just to close auction
       await claimSellerFunds(eth, gno, seller1, 1)
@@ -867,16 +888,16 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
        * move time 24 hours
        * assert withdrawTime is < now
        */
-      const [amountUnlocked, withdrawTime] = (await tokenMGN.unlockedTokens.call(buyer1)).map(n => n.toNumber())
+      const { amountUnlocked, withdrawalTime } = await tokenMGN.unlockedTokens.call(buyer1)
       assert(amountUnlocked !== 0 && amountUnlocked === sellVolumes, 'Amount unlocked isnt 0 aka there are mgns')
       // wait 24 hours
       await wait(86405)
       log(`
       amt unlocked  ==> ${amountUnlocked.toEth()}
-      withdrawTime  ==> ${withdrawTime} ==> ${new Date(withdrawTime * 1000)}
-      time now      ==> ${timestamp()}  ==> ${new Date(timestamp() * 1000)}
+      withdrawTime  ==> ${withdrawalTime} ==> ${new Date(withdrawalTime * 1000)}
+      time now      ==> ${await timestamp()}  ==> ${new Date(await timestamp() * 1000)}
       `)
-      assert(withdrawTime < timestamp(), 'withdrawTime must be < now')
+      assert(withdrawalTime < await timestamp(), 'withdrawTime must be < now')
       // withdraw them!
       await tokenMGN.withdrawUnlockedTokens({ from: buyer1 })
       /**
