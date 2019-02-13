@@ -4,7 +4,8 @@
 const {
   assertRejects,
   gasLogger,
-  enableContractFlag
+  enableContractFlag,
+  toEth
 } = require('./utils')
 
 const {
@@ -91,9 +92,9 @@ const c1 = () => contract('DX PriceOracleInterface Flow', accounts => {
     const ethUSDPrice = 1500.0.toWei()
     await Medianizer.at(medzr2.address).set(PriceFeed.address, { from: owner })
     await priceFeed.post(ethUSDPrice, 1516168838 * 2, medzr2.address, { from: owner })
-    const getNewETHUSDPrice = (await newPriceOracleInterface.getUSDETHPrice.call()).toNumber()
+    const getNewETHUSDPrice = await newPriceOracleInterface.getUSDETHPrice.call()
 
-    assert.equal(ethUSDPrice.toEth(), getNewETHUSDPrice, 'Should be same')
+    assert.equal(toEth(ethUSDPrice).toString(), getNewETHUSDPrice.toString(), 'Should be same')
   })
 
   it(

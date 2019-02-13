@@ -1,9 +1,8 @@
 /* global contract, assert */
 /* eslint no-undef: "error" */
 
-const bn = require('bignumber.js')
-
 const {
+  BN,
   eventWatcher,
   logger,
   timestamp
@@ -79,8 +78,8 @@ contract('DutchExchange - getCurrentAuctionPrice', accounts => {
     const timeElapsed = currenttime - auctionStart
     logger('numPrevious', numPrevious)
     logger('timeE', timeElapsed)
-    assert.equal(num.toString(), bn((86400 - timeElapsed)).mul(numPrevious).toString())
-    assert.equal(den.toString(), bn((timeElapsed + 43200)).mul(denPrevious).toString())
+    assert.equal(num.toString(), (new BN((86400 - timeElapsed).toString())).mul(numPrevious).toString())
+    assert.equal(den.toString(), (new BN((timeElapsed + 43200).toString())).mul(denPrevious).toString())
   })
 
   it('2. check that getCurrentAuctionPrice returns the right value (closing Price ) for a theoretical closed auction', async () => {

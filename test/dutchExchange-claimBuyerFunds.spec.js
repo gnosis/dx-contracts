@@ -5,7 +5,6 @@
 MGN token issuing will not be covered in these tests, as they are covered in the magnolia testing scripts
 */
 
-const bn = require('bignumber.js')
 const {
   BN,
   BN_ZERO,

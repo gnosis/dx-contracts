@@ -1,6 +1,5 @@
 /* global assert, web3 */
 // `truffle test --silent` or `truffle test -s` to suppress logs
-const BigNumber = require('bignumber.js')
 const { BN, ether } = require('openzeppelin-test-helpers')
 
 const AUCTION_START_WAITING_FOR_FUNDING = 1
@@ -26,8 +25,8 @@ const logger = async (desc, fn) => {
     } else {
       value = fn
     }
-    if (value instanceof BigNumber) {
-      value = value.toNumber()
+    if (value instanceof BN) {
+      value = value.toString()
     }
 
     log(`---- \n => ${desc} ${value ? `|| - - - - - - - - - - - > ${value}` : ''}`)

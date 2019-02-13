@@ -1,7 +1,6 @@
 /* global assert, artifacts, web3 */
 const { BN, ether, time } = require('openzeppelin-test-helpers')
 
-const bn = require('bignumber.js')
 const {
   silent,
   gasLogWrapper,
@@ -16,9 +15,6 @@ const {
 /* eslint no-extend-native: 0 */
 Number.prototype.toWei = function toWei () {
   return ether(this.toString())
-}
-Number.prototype.toEth = function toEth () {
-  return bn(this, 10).div(10 ** 18)
 }
 Number.prototype.toBN = function toBN () {
   return new BN(this.toString(), 10)

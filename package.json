@@ -44,7 +44,6 @@
   },
   "devDependencies": {
     "@digix/tempo": "^0.2.0",
-    "bignumber.js": "^5.0.0",
     "coveralls": "^3.0.2",
     "decode-eth": "^0.1.2",
     "dotenv": "^6.2.0",
