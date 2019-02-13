@@ -50,6 +50,8 @@ const startBal = {
 
 contract('DutchExchange - claimSellerFunds', accounts => {
   const [, seller1, seller2, buyer1, buyer2] = accounts
+  // Accounts to fund for faster setupTest
+  const setupAccounts = [seller1, seller2, buyer1, buyer2]
   const totalSellAmount2ndAuction = 10.0.toWei()
   const totalBuyAmount = 20.0.toWei()
   before(async () => {
@@ -57,7 +59,7 @@ contract('DutchExchange - claimSellerFunds', accounts => {
     await setupContracts()
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts, startBal)
+    await setupTest(setupAccounts, contracts, startBal)
 
     // add tokenPair ETH GNO
     await dx.addTokenPair(

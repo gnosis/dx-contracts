@@ -73,13 +73,15 @@ const startBal = {
 
 contract('DutchExchange - TradeFlows', accounts => {
   const [master, seller1, seller2, buyer1, buyer2, seller3] = accounts
+  // Accounts to fund for faster setupTest
+  const setupAccounts = [master, seller1, seller2, buyer1, buyer2, seller3]
 
   before(async () => {
     // get contracts
     await setupContracts()
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts, startBal)
+    await setupTest(setupAccounts, contracts, startBal)
 
     // calculate the invariants
     balanceInvariant = await calculateTokensInExchange(accounts, [eth, gno])

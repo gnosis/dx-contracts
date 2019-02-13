@@ -27,7 +27,6 @@ let gno
 let mgn
 let dx
 
-let feeRatio
 let contracts
 
 const setupContracts = async () => {
@@ -46,6 +45,8 @@ const log = (...args) => utilsLog('\t', ...args)
 
 contract('DutchExchange - postBuyOrder', accounts => {
   const [, buyer1, seller1] = accounts
+  // Accounts to fund for faster setupTest
+  const setupAccounts = [buyer1, seller1]
 
   const startBal = {
     startingETH: 100.0.toWei(),
@@ -62,7 +63,7 @@ contract('DutchExchange - postBuyOrder', accounts => {
     await setupContracts()
     // destructure contracts into upper state
 
-    await setupTest(accounts, contracts, startBal)
+    await setupTest(setupAccounts, contracts, startBal)
 
     // eventWatcher(dx, 'NewSellOrder')
     // eventWatcher(dx, 'ClearAuction')

@@ -39,7 +39,6 @@ let gno
 let dx
 let tokenMGN
 let contracts
-let pp
 
 const setupContracts = async () => {
   contracts = await getContracts();
@@ -48,8 +47,7 @@ const setupContracts = async () => {
     DutchExchange: dx,
     EtherToken: eth,
     TokenGNO: gno,
-    TokenFRT: tokenMGN,
-    PriceOracleInterface: pp
+    TokenFRT: tokenMGN
   } = contracts)
 }
 
@@ -114,7 +112,7 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
 
   let currentSnapshotId
 
-  describe('DX MGN Flow --> 1 Seller + 1 Buyer', () => {
+  describe.only('DX MGN Flow --> 1 Seller + 1 Buyer', () => {
     before(async () => {
       currentSnapshotId = await makeSnapshot()
 
@@ -577,8 +575,6 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
       MGN ISSUED           => ${toEth(b2MGNsIssued)}
       `)
 
-      console.log(buyer1Returns.toString())
-      console.log(buyer2Returns.toString())
       const totalMGNIssued = b1MGNsIssued.add(b2MGNsIssued)
       const difference = totalMGNIssued.sub(valMinusCustomFee(sellingAmount, 0.5)).abs()
       // assert both amount of mgns issued = sellVolume
@@ -1352,6 +1348,8 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
 
 const c2 = () => contract('DX MGN Flow --> ERC20:ERC20 --> 1 S + 1B', accounts => {
   const [master, seller1, seller2, buyer1] = accounts
+  // Accounts to fund for faster setupTest
+  const setupAccounts = [master, seller1, seller2, buyer1]
   const participants = accounts.slice(1)
   const sellers = [seller1, seller2]
   let seller1Balance, seller2Balance
@@ -1384,7 +1382,7 @@ const c2 = () => contract('DX MGN Flow --> ERC20:ERC20 --> 1 S + 1B', accounts =
     assert.equal(seller2Balance, 0, 'Seller2 should have 0 balance')
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts, startBal)
+    await setupTest(setupAccounts, contracts, startBal)
 
     // create new ERC20 token &&
     // assign said token to gasLogger contracts obj

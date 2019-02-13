@@ -41,7 +41,6 @@ let eth
 let gno
 let dx
 let balanceInvariant
-const ether = 10 ** 18
 const ether5 = ETH_5_WEI
 const ether10 = ETH_10_WEI
 const ether20 = ETH_20_WEI
@@ -240,10 +239,6 @@ const getIntoState = async (state, accounts, ST, BT) => {
       await getIntoState(2, accounts, eth, gno)
       const auctionIndex = await getAuctionIndex()
 
-      // ASSERT Auction has started
-      // await setAndCheckAuctionStarted(ST, BT)
-
-      // await waitUntilPriceIsXPercentOfPreviousPrice(ST, BT, 1.5)
       // clearing first auction
       await postBuyOrder(BT, ST, auctionIndex, ether20, buyer1)
 
@@ -254,11 +249,6 @@ const getIntoState = async (state, accounts, ST, BT) => {
     {
       await getIntoState(4, accounts, eth, gno)
       const auctionIndex = await getAuctionIndex()
-
-      // ASSERT Auction has started
-      // await setAndCheckAuctionStarted(ST, BT)
-
-      // await waitUntilPriceIsXPercentOfPreviousPrice(ST, BT, 0.4)
 
       // clearing first auction
       await postBuyOrder(ST, BT, auctionIndex, ether5, buyer1)
@@ -313,7 +303,9 @@ const startBal = {
 }
 
 contract('DutchExchange - stateTransitions', accounts => {
-  const [master, seller1, seller2, buyer1, buyer2, seller3] = accounts
+  const [, seller1, seller2, buyer1, buyer2, seller3] = accounts
+  // Accounts to fund for faster setupTest
+  const setupAccounts = [seller1, seller2, buyer1, buyer2, seller3]
 
   afterEach(gasLogger)
   after(eventWatcher.stopWatching)
@@ -347,6 +339,9 @@ contract('DutchExchange - stateTransitions', accounts => {
       currentSnapshotId = await makeSnapshot()
 
       await getIntoState(0, accounts, eth, gno)
+
+      await setAndCheckAuctionStarted(eth, gno)
+      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
     })
 
     after(async () => {
@@ -364,9 +359,8 @@ contract('DutchExchange - stateTransitions', accounts => {
     it('postBuyOrder - posting a buyOrder to get into S2', async () => {
       const auctionIndex = await getAuctionIndex()
       const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
-      await setAndCheckAuctionStarted(eth, gno)
 
-      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+      // await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
       // clearing first auction
       await postBuyOrder(eth, gno, auctionIndex, 30.0.toWei(), buyer1)
 
@@ -382,9 +376,8 @@ contract('DutchExchange - stateTransitions', accounts => {
     it('postSellOrder - posting a SellOrder and stay in this state', async () => {
       const auctionIndex = await getAuctionIndex()
       const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
-      await setAndCheckAuctionStarted(eth, gno)
 
-      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+      // await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
       // clearing first auction
       await postSellOrder(eth, gno, auctionIndex + 1, 30.0.toWei(), seller1)
       await postSellOrder(eth, gno, 0, 30.0.toWei(), seller2)
@@ -402,10 +395,8 @@ contract('DutchExchange - stateTransitions', accounts => {
 
     it('postBuyOrder - posting a buyOrder and stay in S0', async () => {
       const auctionIndex = await getAuctionIndex()
-
-      await setAndCheckAuctionStarted(eth, gno)
       const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
-      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+      // await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
 
       // post buyOrder to clear auction with small overbuy
       await postBuyOrder(eth, gno, auctionIndex, (ether10), buyer1)
@@ -418,9 +409,8 @@ contract('DutchExchange - stateTransitions', accounts => {
 
     it('timeelapse - getting into S3', async () => {
       const auctionIndex = await getAuctionIndex()
-      await setAndCheckAuctionStarted(eth, gno)
 
-      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+      // await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
 
       // post buyOrder to clear auction with overbuy
       await postBuyOrder(eth, gno, auctionIndex, ether20, buyer1)
@@ -445,6 +435,8 @@ contract('DutchExchange - stateTransitions', accounts => {
       currentSnapshotId = await makeSnapshot()
 
       await getIntoState(1, accounts, eth, gno)
+      await setAndCheckAuctionStarted(eth, gno)
+      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
     })
 
     after(async () => {
@@ -462,9 +454,9 @@ contract('DutchExchange - stateTransitions', accounts => {
     it('postBuyOrder - posting a buyOrder into 0 sell volume', async () => {
       const auctionIndex = await getAuctionIndex()
       const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
-      await setAndCheckAuctionStarted(eth, gno)
+      // await setAndCheckAuctionStarted(eth, gno)
 
-      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+      // await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
       // clearing first auction
       await assertRejects(postBuyOrder(gno, eth, auctionIndex, 30.0.toWei(), buyer1))
 
@@ -480,9 +472,9 @@ contract('DutchExchange - stateTransitions', accounts => {
 
     it('postBuyOrder - posting a buyOrder to get into S5', async () => {
       const auctionIndex = await getAuctionIndex()
-      await setAndCheckAuctionStarted(eth, gno)
+      // await setAndCheckAuctionStarted(eth, gno)
 
-      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+      // await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
       // clearing first auction
       await postBuyOrder(eth, gno, auctionIndex, 30.0.toWei(), buyer1)
 
@@ -499,9 +491,9 @@ contract('DutchExchange - stateTransitions', accounts => {
     it('postSellOrder - posting a SellOrder and stay in this state', async () => {
       const auctionIndex = await getAuctionIndex()
       const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
-      await setAndCheckAuctionStarted(eth, gno)
+      // await setAndCheckAuctionStarted(eth, gno)
 
-      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+      // await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
       // clearing first auction
       await postSellOrder(eth, gno, auctionIndex + 1, 30.0.toWei(), seller1)
       await postSellOrder(eth, gno, 0, 30.0.toWei(), seller2)
@@ -520,9 +512,9 @@ contract('DutchExchange - stateTransitions', accounts => {
     it('postBuyOrder - posting a buyOrder and stay in S1', async () => {
       const auctionIndex = await getAuctionIndex()
 
-      await setAndCheckAuctionStarted(eth, gno)
+      // await setAndCheckAuctionStarted(eth, gno)
       const auctionStart = (await dx.getAuctionStart.call(eth.address, gno.address)).toNumber()
-      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+      // await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
 
       // post buyOrder to clear auction with small overbuy
       await postBuyOrder(eth, gno, auctionIndex, (10.0.toWei()), buyer1)
@@ -538,9 +530,9 @@ contract('DutchExchange - stateTransitions', accounts => {
 
     it('timeelapse - getting into S7', async () => {
       const auctionIndex = await getAuctionIndex()
-      await setAndCheckAuctionStarted(eth, gno)
+      // await setAndCheckAuctionStarted(eth, gno)
 
-      await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
+      // await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
 
       // post buyOrder to clear auction with small overbuy
       await postBuyOrder(eth, gno, auctionIndex, (20.0.toWei()), buyer1)
@@ -566,7 +558,6 @@ contract('DutchExchange - stateTransitions', accounts => {
 
       // getting into the right state
       await getIntoState(2, accounts, eth, gno)
-      assert.equal(2, await getState(eth, gno))
     })
 
     after(async () => {
@@ -651,8 +642,6 @@ contract('DutchExchange - stateTransitions', accounts => {
 
     it('timeelapse - getting into S6', async () => {
       const auctionIndex = await getAuctionIndex()
-      assert.equal(2, await getState(eth, gno))
-      // await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.1)
 
       await postBuyOrder(gno, eth, auctionIndex, 2.5.toWei(), buyer2)
       await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 0.9)
@@ -891,8 +880,6 @@ contract('DutchExchange - stateTransitions', accounts => {
     })
 
     it('postBuyOrder - posting a sellOrder clearing non-theoretical closed auction getting into S0', async () => {
-      const auctionIndex = await getAuctionIndex()
-
       // clearing first auction
       await postSellOrder(gno, eth, 0, 30.0.toWei(), seller2)
       await postSellOrder(eth, gno, 0, ether10, seller2)
@@ -961,7 +948,6 @@ contract('DutchExchange - stateTransitions', accounts => {
 
     it('postBuyOrder - posting a sellOrder closing the theoretical auction and switch to S0', async () => {
       const auctionIndex = await getAuctionIndex()
-      // await setAndCheckAuctionStarted(eth, gno)
 
       // clearing first auction
       await postSellOrder(gno, eth, auctionIndex + 1, 30.0.toWei(), seller1)

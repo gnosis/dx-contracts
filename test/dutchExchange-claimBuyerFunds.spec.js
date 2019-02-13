@@ -54,6 +54,8 @@ const startBal = {
 
 contract('DutchExchange - claimBuyerFunds', accounts => {
   const [, seller1, seller2, buyer1, buyer2] = accounts
+  // Accounts to fund for faster setupTest
+  const setupAccounts = [seller1, seller2, buyer1, buyer2]
   const totalSellAmount2ndAuction = 10.0.toWei()
   const totalBuyAmount = 20.0.toWei()
 
@@ -62,7 +64,7 @@ contract('DutchExchange - claimBuyerFunds', accounts => {
     await setupContracts()
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts, startBal)
+    await setupTest(setupAccounts, contracts, startBal)
 
     eventWatcher(dx, 'Log', {})
   })

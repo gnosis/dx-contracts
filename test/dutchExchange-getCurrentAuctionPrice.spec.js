@@ -42,13 +42,15 @@ const startBal = {
 
 contract('DutchExchange - getCurrentAuctionPrice', accounts => {
   const [, seller1, , buyer1, buyer2] = accounts
+  // Accounts to fund for faster setupTest
+  const setupAccounts = [seller1, buyer1, buyer2]
 
   before(async () => {
     // get contracts
     await setupContracts()
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts, startBal)
+    await setupTest(setupAccounts, contracts, startBal)
 
     // add tokenPair ETH GNO
     await dx.addTokenPair(

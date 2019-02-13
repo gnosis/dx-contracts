@@ -276,6 +276,8 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', accounts => {
 
 const c2 = () => contract('DutchExchange - settleFee', accounts => {
   const [master, seller1] = accounts
+  // Accounts to fund for faster setupTest
+  const setupAccounts = [master, seller1]
 
   const startBal = {
     startingETH: 90.0.toWei(),
@@ -308,7 +310,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
     dx = await InternalTests.new(...initParams)
     contracts.DutchExchange = dx
 
-    await setupTest(accounts, contracts, startBal)
+    await setupTest(setupAccounts, contracts, startBal)
 
     // generatae OWL
 

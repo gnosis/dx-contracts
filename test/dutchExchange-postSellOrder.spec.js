@@ -19,8 +19,6 @@ let gno
 let mgn
 let dx
 
-let feeRatio
-
 let contracts
 
 const separateLogs = () => utilsLog('\n    ----------------------------------')
@@ -28,6 +26,8 @@ const log = (...args) => utilsLog('\t', ...args)
 
 contract('DutchExchange - postSellOrder', accounts => {
   const [, seller1] = accounts
+  // Accounts to fund for faster setupTest
+  const setupAccounts = [seller1]
 
   const startBal = {
     startingETH: 0,
@@ -50,7 +50,7 @@ contract('DutchExchange - postSellOrder', accounts => {
       DutchExchange: dx
     } = contracts)
 
-    await setupTest(accounts, contracts, startBal)
+    await setupTest(setupAccounts, contracts, startBal)
 
     // eventWatcher(dx, 'NewSellOrder')
     eventWatcher(dx, 'Log')

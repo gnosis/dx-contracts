@@ -88,14 +88,15 @@ const startBal = {
 
 contract('DutchExchange - start auction threshold', accounts => {
   const [, seller1] = accounts
-  // const totalSellAmount2ndAuction = 10e18
-  // const totalBuyAmount = 2 * 10e18
+  // Accounts to fund for faster setupTest
+  const setupAccounts = [seller1]
+
   before(async () => {
     // get contracts
     await setupContracts()
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts, startBal)
+    await setupTest(setupAccounts, contracts, startBal)
 
     // add tokenPair ETH GNO
     await dx.addTokenPair(

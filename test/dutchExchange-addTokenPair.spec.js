@@ -7,8 +7,7 @@ const {
   log: utilsLog,
   assertRejects,
   gasLogger,
-  timestamp,
-  valMinusFee
+  timestamp
 } = require('./utils')
 
 const { getContracts, setupTest, getClearingTime, getAuctionIndex } = require('./testFunctions')
@@ -31,6 +30,8 @@ const log = (...args) => utilsLog('\t', ...args)
 
 contract('DutchExchange - addTokenPair', accounts => {
   const [master, seller1] = accounts
+  // Accounts to fund for faster setupTest
+  const setupAccounts = [master, seller1]
 
   const startBal = {
     startingETH: 90.0.toWei(),
@@ -56,7 +57,7 @@ contract('DutchExchange - addTokenPair', accounts => {
       PriceOracleInterface: oracle
     } = contracts)
 
-    await setupTest(accounts, contracts, startBal)
+    await setupTest(setupAccounts, contracts, startBal)
 
     // TODO enable event watchers again
     // eventWatcher(dx, 'NewTokenPair')
