@@ -44,9 +44,9 @@ const separateLogs = () => utilsLog('\n    ----------------------------------')
 const log = (...args) => utilsLog('\t', ...args)
 
 contract('DutchExchange - postBuyOrder', accounts => {
-  const [, buyer1, seller1] = accounts
+  const [master, buyer1, seller1] = accounts
   // Accounts to fund for faster setupTest
-  const setupAccounts = [buyer1, seller1]
+  const setupAccounts = [master, buyer1, seller1]
 
   const startBal = {
     startingETH: 100.0.toWei(),

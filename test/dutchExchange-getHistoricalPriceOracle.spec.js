@@ -42,9 +42,9 @@ const startBal = {
 }
 
 contract('DutchExchange - getPriceInPastAuction', accounts => {
-  const [, seller1, seller2, buyer1] = accounts
+  const [master, seller1, seller2, buyer1] = accounts
   // Accounts to fund for faster setupTest
-  const setupAccounts = [seller1, seller2, buyer1]
+  const setupAccounts = [master, seller1, seller2, buyer1]
 
   before(async () => {
     // get contracts

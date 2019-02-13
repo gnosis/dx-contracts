@@ -87,9 +87,9 @@ const startBal = {
 }
 
 contract('DutchExchange - start auction threshold', accounts => {
-  const [, seller1] = accounts
+  const [master, seller1] = accounts
   // Accounts to fund for faster setupTest
-  const setupAccounts = [seller1]
+  const setupAccounts = [master, seller1]
 
   before(async () => {
     // get contracts

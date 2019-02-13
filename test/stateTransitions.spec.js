@@ -304,8 +304,6 @@ const startBal = {
 
 contract('DutchExchange - stateTransitions', accounts => {
   const [, seller1, seller2, buyer1, buyer2, seller3] = accounts
-  // Accounts to fund for faster setupTest
-  const setupAccounts = [seller1, seller2, buyer1, buyer2, seller3]
 
   afterEach(gasLogger)
   after(eventWatcher.stopWatching)

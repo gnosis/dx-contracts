@@ -49,9 +49,9 @@ const startBal = {
 }
 
 contract('DutchExchange - claimSellerFunds', accounts => {
-  const [, seller1, seller2, buyer1, buyer2] = accounts
+  const [master, seller1, seller2, buyer1, buyer2] = accounts
   // Accounts to fund for faster setupTest
-  const setupAccounts = [seller1, seller2, buyer1, buyer2]
+  const setupAccounts = [master, seller1, seller2, buyer1, buyer2]
   const totalSellAmount2ndAuction = 10.0.toWei()
   const totalBuyAmount = 20.0.toWei()
   before(async () => {
