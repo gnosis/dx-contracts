@@ -5,9 +5,9 @@ module.exports = {
     address: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
     // Check ETH oracle
     //   https://makerdao.com/feeds/#0x729d19f657bd0614b4985cf1d82531c67569197b
-    //   Price: 106.425
-    //   10000$ = 10000/106.425 ETH = 93.9628846606
-    funding: 94.97
+    //   Price: 118.285
+    //   10000$ = 10000/118.285 ETH = 84.5415733187
+    funding: 86
   },
   // RDN
   tokenB: {
@@ -17,10 +17,10 @@ module.exports = {
   },
   // Price:
   //   https://www.coingecko.com/en/price_charts/raiden-network/eth
-  //   1 ETH = 513,0866864061377 RDN
-  //   initial price = 514 RDN/WETH
+  //   1 ETH = 551,0627106609419 RDN
+  //   initial price = 552 RDN/WETH
   initialPrice: {
-    numerator: 514,
+    numerator: 552,
     denominator: 1
   }
 }
