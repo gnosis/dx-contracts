@@ -112,7 +112,7 @@ const c1 = () => contract('DX MGN Flow --> 1 Seller + 1 Buyer', accounts => {
 
   let currentSnapshotId
 
-  describe.only('DX MGN Flow --> 1 Seller + 1 Buyer', () => {
+  describe('DX MGN Flow --> 1 Seller + 1 Buyer', () => {
     before(async () => {
       currentSnapshotId = await makeSnapshot()
 
