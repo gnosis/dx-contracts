@@ -496,7 +496,7 @@ const checkUserReceivesTulipTokens = async (ST, BT, user, idx, lastClosingPrice)
  * @param {numb} Auction Index
  */
 const assertReturnedPlusMGNs = async (ST, BT, acc, type, idx = 1, eth) => {
-  let returned, tulipsIssued, userBalances
+  let claimedAmount, mgnsIssued, userBalances
   const [
     { DutchExchange: dx },
     STName,
@@ -511,27 +511,31 @@ const assertReturnedPlusMGNs = async (ST, BT, acc, type, idx = 1, eth) => {
   const nonETH = STName !== 'Ether Token' && BTName !== 'Ether Token'
 
   // calc closingPrices for both ETH/ERC20 and nonETH trades
-  const [num, den] = (await dx.closingPrices.call(ST.address, BT.address, idx)).map(s => s.toNumber())
-  const [hNum, hDen] = (await dx.getPriceInPastAuction.call(type === 'seller' ? ST.address : BT.address, eth.address, idx - 1)).map(s => s.toNumber())
+  const { num, den } = await dx.closingPrices.call(ST.address, BT.address, idx)
+  const { num: hNum, den: hDen } = await dx.getPriceInPastAuction.call(type === 'seller' ? ST.address : BT.address, eth.address, idx - 1)
 
   // conditionally check sellerBalances and returned/tulipIssued
   if (type === 'seller') {
-    userBalances = (await dx.sellerBalances.call(ST.address, BT.address, idx, acc)).toNumber();
-    ([returned, tulipsIssued] = (await dx.claimSellerFunds.call(ST.address, BT.address, acc, idx)).map(s => s.toNumber()))
+    userBalances = await dx.sellerBalances.call(ST.address, BT.address, idx, acc)
+    const { returned, frtsIssued } = await dx.claimSellerFunds.call(ST.address, BT.address, acc, idx)
+    claimedAmount = returned
+    mgnsIssued = frtsIssued
   } else {
-    userBalances = (await dx.buyerBalances.call(ST.address, BT.address, idx, acc)).toNumber();
-    ([returned, tulipsIssued] = (await dx.claimBuyerFunds.call(ST.address, BT.address, acc, idx)).map(s => s.toNumber()))
+    userBalances = await dx.buyerBalances.call(ST.address, BT.address, idx, acc)
+    const { returned, frtsIssued } = await dx.claimBuyerFunds.call(ST.address, BT.address, acc, idx)
+    claimedAmount = returned
+    mgnsIssued = frtsIssued
   }
 
   log(`
   ${type === 'seller' ? '==SELLER==' : '==BUYER== '}
   [${STName}]//[${BTName}]
-  ${type === 'seller' ? 'sellerBalance' : 'buyerBalance '}      == ${userBalances.toEth()}
+  ${type === 'seller' ? 'sellerBalance' : 'buyerBalance '}      == ${toEth(userBalances)}
   lastClosingPrice    == ${type === 'seller' ? (num / den) : (den / num)}
   lastHistoricalPrice == ${hNum / hDen}
   PriceToUse          == ${type === 'seller' && !nonETH ? (num / den) : type === 'seller' && nonETH ? (hNum / hDen) : type === 'buyer' && !nonETH ? (den / num) : (hNum / hDen)}
-  RETURNED tokens     == ${returned.toEth()}
-  TULIP tokens        == ${tulipsIssued.toEth()}
+  RETURNED tokens     == ${toEth(claimedAmount)}
+  MGN tokens        == ${toEth(mgnsIssued)}
   `)
 
   // ASSERTIONS
@@ -539,26 +543,29 @@ const assertReturnedPlusMGNs = async (ST, BT, acc, type, idx = 1, eth) => {
   if (type === 'seller') {
     if (!nonETH) {
       if (STName === 'Ether Token') {
-        assert.equal(tulipsIssued, userBalances)
+        assert.equal(mgnsIssued.toString(), userBalances.toString())
       } else {
-        assert.equal(tulipsIssued, returned)
+        assert.equal(mgnsIssued.toString(), claimedAmount.toString())
       }
       // else this is a ERC20:ERC20 trade
     } else {
-      assert.equal(tulipsIssued, userBalances * hNum / hDen)
+      assert.equal(mgnsIssued.toString(), userBalances.mul(hNum).div(hDen).toString())
     }
     // all claimSellFunds calc returned the same
-    assert.equal(returned, userBalances * (num / den))
+    assert.equal(claimedAmount.toString(), userBalances.mul(num).div(den).toString())
     // Buyer
   } else if (!nonETH) {
     if (BTName === 'Ether Token') {
-      assert.equal(tulipsIssued, userBalances, 'claimBuyerFunds: BT = ETH >--> tulips = buyerBalances')
+      assert.equal(mgnsIssued.toString(), userBalances.toString(),
+        'claimBuyerFunds: BT = ETH >--> tulips = buyerBalances')
     } else {
-      assert.isAtLeast(userBalances * (den / num), tulipsIssued, 'claimBuyerFunds: ST = ETH >--> tulips = buyerBalances * (den/num)')
+      assert.isTrue(userBalances.mul(den).div(num).gte(mgnsIssued),
+        'claimBuyerFunds: ST = ETH >--> tulips = buyerBalances * (den/num)')
     }
     // Trade involves ERC20:ERC20 pair
   } else {
-    assert.equal(tulipsIssued, userBalances * (hNum / hDen), 'claimBuyerFunds: ERC20:ERC20 tulips = buyerBalances * (hNum/hDen)')
+    assert.equal(mgnsIssued.toString(), userBalances.mul(hNum).div(hDen).toString(),
+      'claimBuyerFunds: ERC20:ERC20 tulips = buyerBalances * (hNum/hDen)')
   }
 }
 
@@ -585,13 +592,13 @@ const unlockMGNTokens = async (user, ST, BT) => {
    * SUB TEST 1: CHECK UNLOCKED AMT + WITHDRAWAL TIME
    * [should be 0,0 as none LOCKED so naturally none to unlock yet]
    */
-  const { amountUnlocked: unlockedFunds, withdrawalTime: withdrawTime } = await tokenMGN.unlockedTokens.call(user)
+  const { amountUnlocked: unlockedFunds, withdrawalTime } = await tokenMGN.unlockedTokens.call(user)
   log(`
   AMT OF UNLOCKED FUNDS  = ${toEth(unlockedFunds)}
-  TIME OF WITHDRAWAL     = ${withdrawTime} [0 means no withdraw time as there are 0 locked tokens]
+  TIME OF WITHDRAWAL     = ${withdrawalTime} [0 means no withdraw time as there are 0 locked tokens]
   `)
   assert.isTrue(unlockedFunds.isZero(), 'unlockedFunds should be 0')
-  assert.isTrue(withdrawTime.isZero(), 'Withdraw time should be 0 ')
+  assert.isTrue(withdrawalTime.isZero(), 'Withdraw time should be 0 ')
 
   /*
    * SUB TEST 2: LOCK TOKENS
@@ -614,10 +621,10 @@ const unlockMGNTokens = async (user, ST, BT) => {
    * SUB TEST 3: UN-LOCK TOKENS
    */
   await tokenMGN.unlockTokens({ from: user })
-  const { totalAmountUnlocked: unlockedFunds2, withdrawalTime: withdrawTime2 } = await tokenMGN.unlockTokens.call({ from: user })
+  const { totalAmountUnlocked: unlockedFunds2, withdrawalTime: withdrawalTime2 } = await tokenMGN.unlockTokens.call({ from: user })
   log(`
   AMT OF UNLOCKED FUNDS  = ${toEth(unlockedFunds2)}
-  TIME OF WITHDRAWAL     = ${withdrawTime2} --> ${new Date(withdrawTime2 * 1000)}
+  TIME OF WITHDRAWAL     = ${withdrawalTime2} --> ${new Date(withdrawalTime2 * 1000)}
   `)
   if (aucIdx === 2) {
     // Auction HAS cleared
@@ -625,12 +632,12 @@ const unlockMGNTokens = async (user, ST, BT) => {
       unlockedFunds2.toString(),
       lockedUserMGNs.toString(),
       'unlockedFunds2 should be = lockedUserMGNs')
-    // assert withdrawTime === now (in seconds) + 24 hours (in seconds)
-    assert.equal(withdrawTime2, await timestamp() + (24 * 3600), 'Withdraw time should be equal to [(24 hours in seconds) + (current Block timestamp in seconds)]')
+    // assert withdrawalTime === now (in seconds) + 24 hours (in seconds)
+    assert.equal(withdrawalTime2, await timestamp() + (24 * 3600), 'Withdraw time should be equal to [(24 hours in seconds) + (current Block timestamp in seconds)]')
   } else {
     assert.isTrue(unlockedFunds2.isZero(), 'unlockedFunds2 should be = 0 as no tokens minted')
-    // assert withdrawTime === now (in seconds) + 24 hours (in seconds)
-    assert.equal(withdrawTime2, 0, 'Withdraw time should be equal 0 as no Token minted')
+    // assert withdrawalTime === now (in seconds) + 24 hours (in seconds)
+    assert.equal(withdrawalTime2, 0, 'Withdraw time should be equal 0 as no Token minted')
   }
 }
 
