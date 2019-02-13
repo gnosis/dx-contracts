@@ -38,6 +38,8 @@ const setupContracts = async () => {
 
 const c1 = () => contract('DX PriceOracleInterface Flow', accounts => {
   const [owner, notOwner, newCurator] = accounts
+  // Accounts to fund for faster setupTest
+  const setupAccounts = [owner, notOwner, newCurator]
 
   const startBal = {
     startingETH: 1000.0.toWei(),
@@ -56,11 +58,11 @@ const c1 = () => contract('DX PriceOracleInterface Flow', accounts => {
     ({ medzr2 } = contracts)
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts, startBal)
+    await setupTest(setupAccounts, contracts, startBal)
   })
 
-  it('raiseEmergency: throws when NON-OWNER tries to call it',
-    async () => assertRejects(oracle.raiseEmergency({ from: notOwner }))
+  it('raiseEmergency: throws when NON-OWNER tries to call it', async () =>
+    assertRejects(oracle.raiseEmergency(true, { from: notOwner }))
   )
 
   it('raiseEmergency: switches into emergency mode', async () => {
@@ -90,15 +92,15 @@ const c1 = () => contract('DX PriceOracleInterface Flow', accounts => {
   })
   it('getUSDETHPrice: set price should work correctly', async () => {
     const ethUSDPrice = 1500.0.toWei()
-    await Medianizer.at(medzr2.address).set(PriceFeed.address, { from: owner })
+    const medzr = await Medianizer.at(medzr2.address)
+    await medzr.set(PriceFeed.address, { from: owner })
     await priceFeed.post(ethUSDPrice, 1516168838 * 2, medzr2.address, { from: owner })
     const getNewETHUSDPrice = await newPriceOracleInterface.getUSDETHPrice.call()
 
     assert.equal(toEth(ethUSDPrice).toString(), getNewETHUSDPrice.toString(), 'Should be same')
   })
 
-  it(
-    'updateCurator: throws when NON-OWNER tries to change curator',
+  it('updateCurator: throws when NON-OWNER tries to change curator',
     async () => assertRejects(oracle.updateCurator(medzr2, { from: notOwner }))
   )
 
