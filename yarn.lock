@@ -25,11 +25,6 @@
   dependencies:
     regenerator-runtime "^0.12.0"
 
-"@digix/tempo@^0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@digix/tempo/-/tempo-0.2.0.tgz#5daf91ad788d6b596a19aad22e2e667e4ec808a8"
-  integrity sha1-Xa+RrXiNa1lqGarSLi5mfk7ICKg=
-
 "@gnosis.pm/gno-token@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@gnosis.pm/gno-token/-/gno-token-2.0.0.tgz#f9662d3897735ec6fc0e4814233e6613afded5c6"
