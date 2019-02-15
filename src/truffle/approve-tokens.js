@@ -36,8 +36,8 @@ var argv = require('yargs')
   })
   .option('whitelist', {
     type: 'string',
-    default: 'DutchExchangeProxy',
-    describe: 'Address or name of whitelisting contract (DutchExchangeProxy by default)'
+    default: null,
+    describe: 'Address of whitelisting contract (DutchExchangeProxy by default)'
   })
   .option('dryRun', {
     type: 'boolean',
@@ -76,8 +76,7 @@ async function approveTokens () {
     console.log(`\
     User account: ${contractsInfo.account}
     TokenWhitelist contract address: ${contractsInfo.whitelist.address}
-    ${contractsInfo.contractName ? `TokenWhitelist contract name: ${contractsInfo.contractName}` : ''}
-`)
+  `)
 
     const params = {
       gasPrice,
@@ -203,17 +202,15 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
 
 async function loadContractsInfo () {
   let { whitelist } = argv
-  let contractName
-  if (!web3.isAddress(whitelist)) {
-    const WhiteListingContract = artifacts.require(whitelist)
-    const whiteListingContract = await WhiteListingContract.deployed()
-    contractName = whitelist
-    whitelist = whiteListingContract.address
+  if (!whitelist) {
+    const Proxy = artifacts.require('DutchExchangeProxy')
+    const proxy = await Proxy.deployed()
+    whitelist = proxy.address
   }
 
   // Get contract examples
   const TokenWhitelist = artifacts.require('TokenWhitelist')
-  const white = await TokenWhitelist.at(whitelist)
+  const tokenWhitelist = await TokenWhitelist.at(whitelist)
 
   // Get some data from dx
   const [
@@ -234,10 +231,9 @@ async function loadContractsInfo () {
 
   const account = accounts[0]
   return {
-    whitelist: white,
-    account,
-    contractName
-  }
+    whitelist: tokenWhitelist,
+    account
+   }
 }
 
 module.exports = callback => {
