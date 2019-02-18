@@ -70,7 +70,7 @@ contract('DutchExchange - postBuyOrder', accounts => {
     eventWatcher(dx, 'Log')
 
     const totalMGN = (await mgn.totalSupply.call()).toNumber()
-    assert.strictEqual(totalMGN, 0, 'total TUL tokens should be 0')
+    assert.strictEqual(totalMGN, 0, 'total MGN tokens should be 0')
     // then we know that feeRatio = 1 / 200
     feeRatio = 1 / 200
   })

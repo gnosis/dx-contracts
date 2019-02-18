@@ -1,4 +1,4 @@
-/* global assert, artifacts, web3 */
+/* global assert, artifacts */
 const { BN, ether, time } = require('openzeppelin-test-helpers')
 
 const {
@@ -141,12 +141,13 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
   // implements isAtLeastZero (aka will not go BACK in time)
   await time.increase(startingTimeOfAuction - await timestamp())
 
+  const now = await timestamp()
   log(`
-  time now ----------> ${new Date(await timestamp() * 1000)}
+  time now ----------> ${new Date(now * 1000)}
   auction starts ----> ${new Date(startingTimeOfAuction * 1000)}
   `)
 
-  assert.equal(await timestamp() >= startingTimeOfAuction, true)
+  assert.equal(now >= startingTimeOfAuction, true)
 }
 
 /**
@@ -157,16 +158,11 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
  */
 const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const { DutchExchange: dx } = await getContracts()
-  const [getAuctionIndex, getAuctionStart] = await Promise.all([
-    dx.getAuctionIndex.call(ST.address, BT.address),
-    dx.getAuctionStart.call(ST.address, BT.address)
-  ])
 
-  const currentIndex = getAuctionIndex.toNumber()
-  const startingTimeOfAuction = getAuctionStart.toNumber()
-  let priceBefore = 1
+  let currentIndex, priceBefore, currentAuctionPrice
   if (!silent) {
-    let currentAuctionPrice = await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex)
+    currentIndex = await dx.getAuctionIndex.call(ST.address, BT.address)
+    currentAuctionPrice = await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex)
     let { num, den } = currentAuctionPrice
     priceBefore = num / den
     log(`
@@ -179,6 +175,7 @@ const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
     `)
   }
 
+  const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
   const timeToWaitFor = Math.ceil((86400 - p * 43200) / (1 + p)) + startingTimeOfAuction
   // wait until the price is good
   await time.increase(timeToWaitFor - await timestamp())
@@ -230,7 +227,7 @@ const checkBalanceBeforeClaim = async (
     token = BT
   }
 
-  const balanceBeforeClaim = (await dx.balances.call(token.address, acct))
+  const balanceBeforeClaim = await dx.balances.call(token.address, acct)
 
   if (claiming === 'buyer') {
     await dx.claimBuyerFunds(ST.address, BT.address, acct, idx)
@@ -238,7 +235,7 @@ const checkBalanceBeforeClaim = async (
     await dx.claimSellerFunds(ST.address, BT.address, acct, idx)
   }
 
-  const balanceAfterClaim = (await dx.balances.call(token.address, acct))
+  const balanceAfterClaim = await dx.balances.call(token.address, acct)
   const difference = balanceBeforeClaim.add(amt).sub(balanceAfterClaim).abs()
   varLogger('claiming for', claiming)
   varLogger('balanceBeforeClaim', balanceBeforeClaim.toString())

@@ -4,7 +4,6 @@
 const {
   eventWatcher,
   gasLogger,
-  logger,
   log,
   enableContractFlag,
   makeSnapshot,
@@ -341,7 +340,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
     ) */
 
     await mgn.updateMinter(master, { from: master })
-    logger('PRICE ORACLE', await oracle.getUSDETHPrice.call())
+    log('PRICE ORACLE', () => oracle.getUSDETHPrice.call())
 
     eventWatcher(dx, 'LogNumber')
   })

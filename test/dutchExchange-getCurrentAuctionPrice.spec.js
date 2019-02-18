@@ -4,7 +4,7 @@
 const {
   BN,
   eventWatcher,
-  logger,
+  log,
   timestamp
 } = require('./utils')
 
@@ -78,8 +78,8 @@ contract('DutchExchange - getCurrentAuctionPrice', accounts => {
     const currenttime = await timestamp()
     const { num: numPrevious, den: denPrevious } = await dx.getPriceInPastAuction.call(eth.address, gno.address, auctionIndex - 1)
     const timeElapsed = currenttime - auctionStart
-    logger('numPrevious', numPrevious)
-    logger('timeE', timeElapsed)
+    log('numPrevious', numPrevious)
+    log('timeE', timeElapsed)
     assert.equal(num.toString(), (new BN((86400 - timeElapsed).toString())).mul(numPrevious).toString())
     assert.equal(den.toString(), (new BN((timeElapsed + 43200).toString())).mul(denPrevious).toString())
   })

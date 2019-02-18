@@ -16,7 +16,32 @@ const {
   noevents
 } = require('minimist')(process.argv.slice(2), { alias: { silent: 's', contract: 'c', gas: 'g', gasTx: 'gtx' } })
 
-const log = silent ? () => {} : console.log.bind(console)
+const log = silent
+  ? () => {}
+  : async (...params) => {
+    const parsedParams = await Promise.all(params.map(async elem => {
+      let value = elem
+      const isFunction = fn => {
+        return fn instanceof Function
+      }
+
+      const isPromise = pr => {
+        return pr instanceof Promise
+      }
+
+      const isBN = bn => {
+        return bn instanceof BN
+      }
+
+      value = isFunction(value) ? value() : value
+      value = isPromise(value) ? await value : value
+      value = isBN(value) ? value.toString() : value
+
+      return value
+    }))
+    console.log(...parsedParams)
+  }
+
 const logger = async (desc, fn) => {
   if (!silent) {
     let value
