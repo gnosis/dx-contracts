@@ -61,7 +61,7 @@ async function addTokenPairs () {
     User account: ${contractsInfo.account}
     DX address: ${contractsInfo.dx.address}
     WETH address: ${contractsInfo.wethAddress}
-    Ether balance: ${contractsInfo.etherBalance}    
+    Ether balance: ${contractsInfo.etherBalance}
     Threshold: $${contractsInfo.thresholdInUSD.toFixed(2)}
     Current Ether price: ${contractsInfo.etherPrice}
 `)
@@ -72,10 +72,15 @@ async function addTokenPairs () {
       gasPrice,
       dryRun
     }
-    console.log(`Adding ${tokenPairs.length} token pairs`)
-    for (let i = 0; i < tokenPairs.length; i++) {
-      // Add token (syncronously)
-      await addTokenPair(tokenPairs[i], contractsInfo, params)
+    if (Array.isArray(tokenPairs)) {
+      console.log(`Adding ${tokenPairs.length} token pairs`)
+      for (let i = 0; i < tokenPairs.length; i++) {
+        // Add token (syncronously)
+        await addTokenPair(tokenPairs[i], contractsInfo, params)
+      }
+    } else {
+      console.log(`Adding 1 token pair`)
+      await addTokenPair(tokenPairs, contractsInfo, params)
     }
     console.log('\n **************  End of add token pairs  **************\n')
   }
