@@ -29,7 +29,7 @@ contract('DutchExchange deposit and sell tests', accounts => {
 
   before(async () => {
     // get contracts
-    contracts = await getContracts();
+    contracts = await getContracts({ resetCache: true });
     // destructure contracts into upper state
     ({
       DutchExchange: dx,

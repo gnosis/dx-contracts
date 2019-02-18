@@ -33,7 +33,7 @@ let dx
 let contracts
 
 const setupContracts = async () => {
-  contracts = await getContracts();
+  contracts = await getContracts({ resetCache: true });
   // destructure contracts into upper state
   ({
     DutchExchange: dx,

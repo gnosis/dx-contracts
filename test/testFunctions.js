@@ -36,29 +36,35 @@ const contractNames = [
 ]
 // DutchExchange and TokenOWL are added after their respective Proxy contracts are deployed
 
+let contractsCache
+
 /**
  * getContracts - async loads contracts and instances
  *
  * @returns { Mapping(contractName => deployedContract) }
  */
-const getContracts = async () => {
-  const depContracts = contractNames.map(c => artifacts.require(c)).map(cc => cc.deployed())
-  const contractInstances = await Promise.all(depContracts)
+const getContracts = async ({ resetCache } = {}) => {
+  if (!contractsCache || resetCache) {
+    const depContracts = contractNames.map(c => artifacts.require(c)).map(cc => cc.deployed())
+    const contractInstances = await Promise.all(depContracts)
 
-  const gasLoggedContracts = gasLogWrapper(contractInstances)
+    const gasLoggedContracts = gasLogWrapper(contractInstances)
 
-  const deployedContracts = contractNames.reduce((acc, name, i) => {
-    acc[name] = gasLoggedContracts[i]
-    return acc
-  }, {})
-  const proxiedContracts = await Promise.all([
-    artifacts.require('DutchExchange').at(deployedContracts.DutchExchangeProxy.address),
-    artifacts.require('TokenOWL').at(deployedContracts.TokenOWLProxy.address),
-    artifacts.require('TokenFRT').at(deployedContracts.TokenFRTProxy.address)
-  ]);
+    const deployedContracts = contractNames.reduce((acc, name, i) => {
+      acc[name] = gasLoggedContracts[i]
+      return acc
+    }, {})
+    const proxiedContracts = await Promise.all([
+      artifacts.require('DutchExchange').at(deployedContracts.DutchExchangeProxy.address),
+      artifacts.require('TokenOWL').at(deployedContracts.TokenOWLProxy.address),
+      artifacts.require('TokenFRT').at(deployedContracts.TokenFRTProxy.address)
+    ]);
 
-  [deployedContracts.DutchExchange, deployedContracts.TokenOWL, deployedContracts.TokenFRT] = gasLogWrapper(proxiedContracts)
-  return deployedContracts
+    [deployedContracts.DutchExchange, deployedContracts.TokenOWL, deployedContracts.TokenFRT] = gasLogWrapper(proxiedContracts)
+
+    contractsCache = deployedContracts
+  }
+  return contractsCache
 }
 
 /**
@@ -659,7 +665,7 @@ const calculateTokensInExchange = async (Accounts, Tokens) => {
           for (let acct of Accounts) {
             const buyerBalance = await dx.buyerBalances.call(token.address, tokenPartner.address, auctionIndex, acct)
             if (buyerBalance.gt(new BN('0'))) {
-              const { returned } = (await dx.claimBuyerFunds.call(token.address, tokenPartner.address, acct, auctionIndex))
+              const { returned } = await dx.claimBuyerFunds.call(token.address, tokenPartner.address, acct, auctionIndex)
               balance = balance.add(returned)
             }
             const sellerBalance = await dx.sellerBalances.call(tokenPartner.address, token.address, auctionIndex, acct)

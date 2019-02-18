@@ -287,7 +287,7 @@ const checkInvariants = async (invariant, accounts, tokens, allowedRoundingError
 }
 
 const setupContracts = async () => {
-  contracts = await getContracts();
+  contracts = await getContracts({ resetCache: true });
   // destructure contracts into upper state
   ({
     DutchExchange: dx,

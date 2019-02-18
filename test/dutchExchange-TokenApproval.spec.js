@@ -23,7 +23,7 @@ contract('DutchExchange updating token approval', accounts => {
   afterEach(gasLogger)
   before(async () => {
     // get contracts
-    contracts = await getContracts();
+    contracts = await getContracts({ resetCache: true });
     // destructure contracts into upper state
     ({
       DutchExchange: dx,

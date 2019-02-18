@@ -47,7 +47,7 @@ contract('DutchExchange - addTokenPair', accounts => {
 
   before(async () => {
     // get contracts
-    contracts = await getContracts();
+    contracts = await getContracts({ resetCache: true });
     // destructure contracts into upper state
     ({
       EtherToken: eth,
