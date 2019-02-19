@@ -4,14 +4,27 @@ dist: trusty
 language: node_js
 node_js:
   - '8'
+cache: npm
 before_install:
   - rm -rf node_modules
   - npm install -g ganache-cli@6.2.5
 install:
   - npm install
 before_script:
-  - ganache-cli --defaultBalanceEther 500000000 --gasLimit=7e6 > /dev/null &
+  - ganache-cli --defaultBalanceEther 500000000 > /dev/null &
   - sleep 5
-script:
-  - cd $TRAVIS_BUILD_DIR/travscripts
-  - "chmod +x ./BranchScript.sh && ./BranchScript.sh"
+#replace solidity-parser for coverage report
+  - curl https://raw.githubusercontent.com/maxsam4/solidity-parser/solidity-0.5/build/parser.js --output $TRAVIS_BUILD_DIR/node_modules/solidity-parser-sc/build/parser.js
+#script:
+  #- cd $TRAVIS_BUILD_DIR/travscripts
+  #- "chmod +x ./BranchScript.sh && ./BranchScript.sh"
+jobs:
+    include:
+      - stage: script
+        script:
+          - cd $TRAVIS_BUILD_DIR/travscripts
+          - "chmod +x ./BranchScript.sh && ./BranchScript.sh"
+      - stage: script
+        script:
+          - cd $TRAVIS_BUILD_DIR/travscripts
+          - "chmod +x ./AfterScript.sh && ./AfterScript.sh"
