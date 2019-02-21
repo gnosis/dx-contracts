@@ -24,6 +24,7 @@ const MaxRoundingError = 100
 
 const contractNames = [
   'DutchExchangeProxy',
+  'DutchExchangeHelper',
   'EtherToken',
   'OWLAirdrop',
   'TokenGNO',
