@@ -94,16 +94,12 @@ contract('DutchExchange - Helper', accounts => {
     assert.include(runningTokenPairs.tokens2, gno.address)
   })
 
-  // FIXME if we pass lastNAuctions greater than auctionIndex we get an overflow
   it('2. check that getIndicesWithClaimableTokensForSellers returns the right indices', async () => {
     // GIVEN a running auction where seller1 participated as seller
     // WHEN we check for indices with claimable tokens for sellers
     const auctionIndex = await getAuctionIndex()
-    // FIXME this won't return the expected value
-    // let claimableIndicesForSeller = await dxh.getIndicesWithClaimableTokensForSellers(
-    //   eth.address, gno.address, seller1, new BN('5'))
     let claimableIndicesForSeller = await dxh.getIndicesWithClaimableTokensForSellers(
-      eth.address, gno.address, seller1, new BN('0'))
+      eth.address, gno.address, seller1, new BN('5'))
 
     // THEN claimable tokens for sellers is returned even that the auction didn't close
     // Check 1 auction is returned before closing
@@ -123,7 +119,7 @@ contract('DutchExchange - Helper', accounts => {
     await postBuyOrder(eth, gno, auctionIndex, ETH_20_WEI, buyer1)
 
     claimableIndicesForSeller = await dxh.getIndicesWithClaimableTokensForSellers(
-      eth.address, gno.address, seller1, new BN('0'))
+      eth.address, gno.address, seller1, new BN('5'))
     // Check 1 auction is returned before closing
     assert.lengthOf(claimableIndicesForSeller.indices, 1)
     assert.lengthOf(claimableIndicesForSeller.usersBalances, 1)
@@ -174,7 +170,7 @@ contract('DutchExchange - Helper', accounts => {
     // GIVEN a running token pair auction where the buyer1 hasn't participated
     const auctionIndex = await getAuctionIndex()
     let claimableIndicesForBuyer = await dxh.getIndicesWithClaimableTokensForBuyers(
-      eth.address, gno.address, buyer1, new BN('0'))
+      eth.address, gno.address, buyer1, new BN('5'))
     assert.lengthOf(claimableIndicesForBuyer.indices, 0)
 
     // WHEN we post a buy order and close the auction
@@ -183,7 +179,7 @@ contract('DutchExchange - Helper', accounts => {
 
     // THEN the buyer1 has auctions with claimable tokens as a buyer
     claimableIndicesForBuyer = await dxh.getIndicesWithClaimableTokensForBuyers(
-      eth.address, gno.address, buyer1, new BN('0'))
+      eth.address, gno.address, buyer1, new BN('5'))
 
     // Check 1 auction is returned
     assert.lengthOf(claimableIndicesForBuyer.indices, 1)
