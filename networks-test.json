@@ -1,0 +1,58 @@
+{
+  "DutchExchange": {
+    "1": {
+      "events": {},
+      "links": {},
+      "address": "0x3c785d30194ec1118e5d14e7c508c2b4ecbc87c2",
+      "transactionHash": "0x00ef0a935f172c2ed204891ad0ca492ac5dd92aeb5ac72ea34eaf422f73cd087"
+    }
+  },
+  "DutchExchangeHelper": {
+    "1": {
+      "events": {},
+      "links": {},
+      "address": "0x537c2c13728bb016f4d72f69182cb2d38b820b0b",
+      "transactionHash": "0x64b225e34393cfac98ba517628e9330063b420012d59c53c9e81aa19beeae528"
+    }
+  },
+  "DutchExchangeProxy": {
+    "1": {
+      "events": {},
+      "links": {},
+      "address": "0xa1d9922dcf52cb15c68bfac7273daa538b766533",
+      "transactionHash": "0xb22bdd6ebbbfc3b3b8f18e4e2233ea3f825c90b8b66dddcce606ee29d86d0ffe"
+    }
+  },
+  "Migrations": {
+    "1": {
+      "events": {},
+      "links": {},
+      "address": "0xdf42ce6fafcb999e9c3aea829ed4482401190604",
+      "transactionHash": "0x50458c97fe30ed4a56b2da8cb4d5df3b0f21d74d0fec6e1dbe70a965835a7a0c"
+    }
+  },
+  "PriceOracleInterface": {
+    "1": {
+      "events": {},
+      "links": {},
+      "address": "0xeeabcb509e0a2c9f52efd7d788b86a4ea8a095b1",
+      "transactionHash": "0x891db12455de6728cbded5b63dde0c3cdb21d0b833aae8cfe12888ef2ae1eec6"
+    }
+  },
+  "TokenFRT": {
+    "1": {
+      "events": {},
+      "links": {},
+      "address": "0x8faa741875f26ba44375c0983fa8d33eb75f3d66",
+      "transactionHash": "0xde30450dd232cafbbeabc42ca1722720b36ecefeb11b99cb3e7ab683e226ef01"
+    }
+  },
+  "TokenFRTProxy": {
+    "1": {
+      "events": {},
+      "links": {},
+      "address": "0x8700da943160cb80e294b7b6a66f3465f9425036",
+      "transactionHash": "0xa4327c30ae900dbbf445e7dc9301f7844eaa3a819f23cdeb436dc0365eac530e"
+    }
+  }
+}
