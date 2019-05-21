@@ -285,5 +285,12 @@ module.exports = [
     'address': '0x8f8221afbb33998d8584a2b05749ba73c37a938a',
     'approve': true,
     'etherScanLink': 'https://etherscan.io/token/0x8f8221afbb33998d8584a2b05749ba73c37a938a'
+  },
+  {
+    'name': 'OceanToken',
+    'symbol': 'OCEAN',
+    'address': '0x985dd3d42de1e256d09e1c10f112bccb8015ad41',
+    'approve': true,
+    'etherScanLink': 'https://etherscan.io/token/0x985dd3d42de1e256d09e1c10f112bccb8015ad41'
   }
 ]
