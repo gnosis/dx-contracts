@@ -63,13 +63,6 @@ module.exports = [
     'address': '0x6810e776880c02933d47db1b9fc05908e5386b96'
   },
   {
-    'name': 'Golem',
-    'symbol': 'GNT',
-    'approve': true,
-    'etherScanLink': 'https://etherscan.io/token/0xa74476443119A942dE498590Fe1f2454d7D4aC0d',
-    'address': '0xa74476443119A942dE498590Fe1f2454d7D4aC0d'
-  },
-  {
     'name': 'KyberNetwork',
     'symbol': 'KNC',
     'approve': true,
