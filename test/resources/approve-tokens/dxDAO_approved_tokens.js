@@ -1,3 +1,7 @@
+// WARNING: We recommend and it is your own responsibility to check that the token is
+// ERC20 compliant and hence compatible with the DutchX protocol before adding
+// tokens to the protocol layer
+
 module.exports = [
   {
     'name': 'Wrapped Ether',
