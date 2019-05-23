@@ -175,13 +175,6 @@ module.exports = [
     'etherScanLink': 'https://etherscan.io/token/0x960b236A07cf122663c4303350609A66A7B288C0'
   },
   {
-    'name': 'Aurora',
-    'symbol': 'AURA',
-    'address': '0xcdcfc0f66c522fd086a1b725ea3c0eeb9f9e8814',
-    'approve': true,
-    'etherScanLink': 'https://etherscan.io/token/0xcdcfc0f66c522fd086a1b725ea3c0eeb9f9e8814'
-  },
-  {
     'name': 'Bluzelle',
     'symbol': 'BLZ',
     'address': '0x5732046a883704404f284ce41ffadd5b007fd668',
@@ -238,11 +231,18 @@ module.exports = [
     'etherScanLink': 'https://etherscan.io/token/0x12b19d3e2ccc14da04fae33e63652ce469b3f2fd'
   },
   {
+    'name': 'IDEX Token',
+    'symbol': 'IDEX',
+    'address': '0xB705268213D593B8FD88d3FDEFF93AFF5CbDcfAE',
+    'approve': true,
+    'etherScanLink': 'https://etherscan.io/token/0xB705268213D593B8FD88d3FDEFF93AFF5CbDcfAE'
+  },
+  {
     'name': 'Loopring',
     'symbol': 'LRC',
-    'address': '0xef68e7c694f40c8202821edf525de3782458639f',
+    'address': '0xBBbbCA6A901c926F240b89EacB641d8Aec7AEafD',
     'approve': true,
-    'etherScanLink': 'https://etherscan.io/token/0xef68e7c694f40c8202821edf525de3782458639f'
+    'etherScanLink': 'https://etherscan.io/token/0xBBbbCA6A901c926F240b89EacB641d8Aec7AEafD'
   },
   {
     'name': 'OST',
