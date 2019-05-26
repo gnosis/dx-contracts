@@ -1,8 +1,35 @@
-// WARNING: We recommend and it is your own responsibility to check that the token is
-// ERC20 compliant and hence compatible with the DutchX protocol before adding
-// tokens to the protocol layer
-
 module.exports = [
+  // Rinkeby test token
+  {
+    'name': 'Wrapped Ether - Rinkeby',
+    'symbol': 'WETH_Rinkeby',
+    'approve': true,
+    'etherScanLink': 'https://etherscan.io/token/0xc778417e063141139fce010982780140aa0cd5ab',
+    'address': '0xc778417e063141139fce010982780140aa0cd5ab'
+  },
+  {
+    'name': 'OmiseGO - Rinkeby',
+    'symbol': 'OMG_Rinkeby',
+    'approve': true,
+    'etherScanLink': 'https://etherscan.io/token/0x00df91984582e6e96288307e9c2f20b38c8fece9',
+    'address': '0x00df91984582e6e96288307e9c2f20b38c8fece9'
+  },
+  {
+    'name': 'Raiden - Rinkeby',
+    'symbol': 'RDN_Rinkeby',
+    'approve': true,
+    'etherScanLink': 'https://etherscan.io/token/0x3615757011112560521536258c1e7325ae3b48ae',
+    'address': '0x3615757011112560521536258c1e7325ae3b48ae'
+  },
+  {
+    'name': 'Gnosis - Rinkeby',
+    'symbol': 'GNO_Rinkeby',
+    'approve': true,
+    'etherScanLink': 'https://etherscan.io/token/0xd0dab4e640d95e9e8a47545598c33e31bdb53c7c',
+    'address': '0xd0dab4e640d95e9e8a47545598c33e31bdb53c7c'
+  },
+
+  // The following tokens are addresses on mainnet, just for testing to whitelist a similar list as in mainnet
   {
     'name': 'Wrapped Ether',
     'symbol': 'WETH',
@@ -65,6 +92,13 @@ module.exports = [
     'approve': true,
     'etherScanLink': 'https://etherscan.io/token/0x6810e776880c02933d47db1b9fc05908e5386b96',
     'address': '0x6810e776880c02933d47db1b9fc05908e5386b96'
+  },
+  {
+    'name': 'Golem',
+    'symbol': 'GNT',
+    'approve': true,
+    'etherScanLink': 'https://etherscan.io/token/0xa74476443119A942dE498590Fe1f2454d7D4aC0d',
+    'address': '0xa74476443119A942dE498590Fe1f2454d7D4aC0d'
   },
   {
     'name': 'KyberNetwork',
@@ -179,6 +213,13 @@ module.exports = [
     'etherScanLink': 'https://etherscan.io/token/0x960b236A07cf122663c4303350609A66A7B288C0'
   },
   {
+    'name': 'Aurora',
+    'symbol': 'AURA',
+    'address': '0xcdcfc0f66c522fd086a1b725ea3c0eeb9f9e8814',
+    'approve': true,
+    'etherScanLink': 'https://etherscan.io/token/0xcdcfc0f66c522fd086a1b725ea3c0eeb9f9e8814'
+  },
+  {
     'name': 'Bluzelle',
     'symbol': 'BLZ',
     'address': '0x5732046a883704404f284ce41ffadd5b007fd668',
@@ -235,18 +276,11 @@ module.exports = [
     'etherScanLink': 'https://etherscan.io/token/0x12b19d3e2ccc14da04fae33e63652ce469b3f2fd'
   },
   {
-    'name': 'IDEX Token',
-    'symbol': 'IDEX',
-    'address': '0xB705268213D593B8FD88d3FDEFF93AFF5CbDcfAE',
-    'approve': true,
-    'etherScanLink': 'https://etherscan.io/token/0xB705268213D593B8FD88d3FDEFF93AFF5CbDcfAE'
-  },
-  {
     'name': 'Loopring',
     'symbol': 'LRC',
-    'address': '0xBBbbCA6A901c926F240b89EacB641d8Aec7AEafD',
+    'address': '0xef68e7c694f40c8202821edf525de3782458639f',
     'approve': true,
-    'etherScanLink': 'https://etherscan.io/token/0xBBbbCA6A901c926F240b89EacB641d8Aec7AEafD'
+    'etherScanLink': 'https://etherscan.io/token/0xef68e7c694f40c8202821edf525de3782458639f'
   },
   {
     'name': 'OST',
@@ -282,12 +316,5 @@ module.exports = [
     'address': '0x8f8221afbb33998d8584a2b05749ba73c37a938a',
     'approve': true,
     'etherScanLink': 'https://etherscan.io/token/0x8f8221afbb33998d8584a2b05749ba73c37a938a'
-  },
-  {
-    'name': 'OceanToken',
-    'symbol': 'OCEAN',
-    'address': '0x985dd3d42de1e256d09e1c10f112bccb8015ad41',
-    'approve': true,
-    'etherScanLink': 'https://etherscan.io/token/0x985dd3d42de1e256d09e1c10f112bccb8015ad41'
   }
 ]

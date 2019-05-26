@@ -11,6 +11,9 @@ const DEFAULT_BATCH = 50
 // Usage example:
 //  yarn approve-tokens -h
 //  MNEMONIC="your mnemonic here.." yarn approve-tokens -f test/resources/approve-tokens/top150tokens.js --network rinkeby --dry-run
+//  MNEMONIC="your mnemonic here.." yarn approve-tokens -f test/resources/approve-tokens/top150tokens.js --network rinkeby --whitelist 0x1234
+//  uses a specific address or contract as TokenWhitelist contract, DutchExchangeProxy by default
+
 //  MNEMONIC="your mnemonic here.." yarn approve-tokens -f test/resources/approve-tokens/top150tokens.js --network rinkeby
 
 var argv = require('yargs')
@@ -30,6 +33,11 @@ var argv = require('yargs')
     type: 'string',
     default: 'development',
     describe: 'One of the ethereum networks defined in truffle config'
+  })
+  .option('whitelist', {
+    type: 'string',
+    default: null,
+    describe: 'Address of whitelisting contract (DutchExchangeProxy by default)'
   })
   .option('dryRun', {
     type: 'boolean',
@@ -67,8 +75,8 @@ async function approveTokens () {
     const contractsInfo = await loadContractsInfo()
     console.log(`\
     User account: ${contractsInfo.account}
-    DX address: ${contractsInfo.dx.address}
-`)
+    TokenWhitelist contract address: ${contractsInfo.whitelist.address}
+  `)
 
     const params = {
       gasPrice,
@@ -97,7 +105,7 @@ async function approveTokens () {
 
 async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tokensToDisapprove) {
   const { gasPrice, dryRun, batchSize } = params
-  const { dx, account } = contractsInfo
+  const { whitelist, account } = contractsInfo
 
   const printTokenInfo = ({ symbol, address }, approve, approved) => {
     let text
@@ -117,7 +125,7 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
   // Check if tokens approved, print logs and add addresses
   for (let j = 0; j < tokensToApprove.length; j++) {
     const token = tokensToApprove[j]
-    const approved = await dx.approvedTokens.call(token.address)
+    const approved = await whitelist.approvedTokens.call(token.address)
     if (!approved) {
       printTokenInfo(token, true, false)
       addressesToApprove.push(token.address)
@@ -128,7 +136,7 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
 
   for (let j = 0; j < tokensToDisapprove.length; j++) {
     const token = tokensToDisapprove[j]
-    const approved = await dx.approvedTokens.call(token.address)
+    const approved = await whitelist.approvedTokens.call(token.address)
     if (approved) {
       printTokenInfo(token, false, true)
       addressesToDisapprove.push(token.address)
@@ -144,7 +152,7 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
     console.log(`Approving ${addressesToApprove.length} tokens with account: ${account}`)
     for (let j = 0; j < addressesToApprove.length / batchSize; j++) {
       const batch = addressesToApprove.slice(j * batchSize, (j + 1) * batchSize)
-      await dx.updateApprovalOfToken.call(batch, true, {
+      await whitelist.updateApprovalOfToken.call(batch, true, {
         from: account
       })
     }
@@ -152,7 +160,7 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
     console.log(`Disapproving ${addressesToDisapprove.length} tokens with account: ${account}`)
     for (let j = 0; j < addressesToDisapprove.length / batchSize; j++) {
       const batch = addressesToDisapprove.slice(j * batchSize, (j + 1) * batchSize)
-      await dx.updateApprovalOfToken.call(batch, false, {
+      await whitelist.updateApprovalOfToken.call(batch, false, {
         from: account
       })
     }
@@ -167,7 +175,7 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
       const tokenAddressesBatch = addressesToApprove.slice(startIndex, count)
       console.log(`Approving ${j + 1}th batch of tokens: From ${startIndex} to ${startIndex + count}: ${tokenAddressesBatch.length} addresses`)
       // console.log(tokenAddressesBatch)
-      const approveTokens = await dx.updateApprovalOfToken(tokenAddressesBatch, true, {
+      const approveTokens = await whitelist.updateApprovalOfToken(tokenAddressesBatch, true, {
         from: account,
         gas: GAS,
         gasPrice: gasPrice * 1e9
@@ -182,7 +190,7 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
       const count = (j + 1) * batchSize
       const tokenAddressesBatch = addressesToDisapprove.slice(startIndex, count)
       console.log(`Disapproving ${j + 1}th batch of tokens: From ${startIndex} to ${startIndex + count}: ${tokenAddressesBatch.length} addresses`)
-      const disapproveTokens = await dx.updateApprovalOfToken(tokenAddressesBatch, false, {
+      const disapproveTokens = await whitelist.updateApprovalOfToken(tokenAddressesBatch, false, {
         from: account,
         gas: GAS,
         gasPrice: gasPrice * 1e9
@@ -193,12 +201,16 @@ async function approveAndDisapprove (contractsInfo, params, tokensToApprove, tok
 }
 
 async function loadContractsInfo () {
-  const Proxy = artifacts.require('DutchExchangeProxy')
-  const DutchExchange = artifacts.require('DutchExchange')
+  let { whitelist } = argv
+  if (!whitelist) {
+    const Proxy = artifacts.require('DutchExchangeProxy')
+    const proxy = await Proxy.deployed()
+    whitelist = proxy.address
+  }
 
   // Get contract examples
-  const proxy = await Proxy.deployed()
-  const dx = DutchExchange.at(proxy.address)
+  const TokenWhitelist = artifacts.require('TokenWhitelist')
+  const tokenWhitelist = await TokenWhitelist.at(whitelist)
 
   // Get some data from dx
   const [
@@ -219,9 +231,9 @@ async function loadContractsInfo () {
 
   const account = accounts[0]
   return {
-    dx,
+    whitelist: tokenWhitelist,
     account
-  }
+   }
 }
 
 module.exports = callback => {
