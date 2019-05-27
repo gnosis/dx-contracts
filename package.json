@@ -27,7 +27,6 @@
     "claim-unlocked-mgn": "npx truffle exec src/truffle/claim-unlocked-mgn.js",
     "set-auctioneer": "npx truffle exec src/truffle/set-auctioneer.js",
     "get-abi-encoded-params": "npx truffle exec src/truffle/get-abi-encoded-params.js",
-    "decode": "node ./node_modules/decode-eth/main.js",
     "prettier": "prettier --write --tab-width 4 --print-width 120 '**/*.sol'",
     "install": "cd $INIT_CWD && npm explore truffle -- npm install solc@0.5.2"
   },
@@ -46,12 +45,11 @@
     "@digix/tempo": "^0.2.0",
     "bignumber.js": "^5.0.0",
     "coveralls": "^3.0.2",
-    "decode-eth": "^0.1.2",
-    "dotenv": "^6.2.0",
+    "dotenv": "^8.0.0",
     "eslint": "^5.12.0",
     "eslint-config-standard": "^12.0.0",
     "eslint-plugin-import": "^2.14.0",
-    "eslint-plugin-node": "^8.0.1",
+    "eslint-plugin-node": "^9.1.0",
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-standard": "^4.0.0",
     "ethereumjs-abi": "^0.6.6",
@@ -60,11 +58,11 @@
     "prettier-plugin-solidity-refactor": "^1.0.0-alpha.14",
     "solc": "0.5.2",
     "solidity-coverage": "^0.5.11",
-    "solium": "^1.2.0",
+    "solium": "^1.2.4",
     "truffle": "^4.1.14",
     "truffle-contract": "^3.0.6",
-    "truffle-flattener": "^1.2.10",
-    "truffle-hdwallet-provider": "1.0.2",
-    "yargs": "^11.0.0"
+    "truffle-flattener": "^1.3.0",
+    "truffle-hdwallet-provider": "1.0.9",
+    "yargs": "^13.2.4"
   }
 }
