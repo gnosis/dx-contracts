@@ -16,14 +16,14 @@ let dx
 
 let contracts
 
-contract('DutchExchange updating token aprroval', accounts => {
+contract('DutchExchange updating token approval', accounts => {
   const [master, seller1] = accounts
   let testingTokens
 
   afterEach(gasLogger)
   before(async () => {
     // get contracts
-    contracts = await getContracts();
+    contracts = await getContracts({ resetCache: true });
     // destructure contracts into upper state
     ({
       DutchExchange: dx,

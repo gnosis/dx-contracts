@@ -1,6 +1,6 @@
 /* global artifacts, web3 */
 /* eslint no-undef: "error" */
-const migrateDependencies = require('../src/migrations-truffle-4/2_migrate_dependencies')
+const migrateDependencies = require('../src/migrations-truffle-5/2_migrate_dependencies')
 
 module.exports = function (deployer, network, accounts) {
   return migrateDependencies({

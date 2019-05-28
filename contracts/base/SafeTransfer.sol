@@ -7,6 +7,7 @@ interface BadToken {
     function transferFrom(address from, address to, uint value) external;
 }
 
+
 contract SafeTransfer {
     function safeTransfer(address token, address to, uint value, bool from) internal returns (bool result) {
         if (from) {

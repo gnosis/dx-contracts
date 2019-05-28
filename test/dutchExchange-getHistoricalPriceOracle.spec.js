@@ -2,9 +2,9 @@
 /* eslint no-undef: "error" */
 
 const {
+  BN_ZERO,
   eventWatcher,
   assertRejects,
-  enableContractFlag,
   gasLogger
 } = require('./utils')
 
@@ -26,7 +26,7 @@ let dx
 let contracts
 
 const setupContracts = async () => {
-  contracts = await getContracts();
+  contracts = await getContracts({ resetCache: true });
   // destructure contracts into upper state
   ({
     DutchExchange: dx,
@@ -42,20 +42,22 @@ const startBal = {
 }
 
 contract('DutchExchange - getPriceInPastAuction', accounts => {
-  const [, seller1, seller2, buyer1] = accounts
+  const [master, seller1, seller2, buyer1] = accounts
+  // Accounts to fund for faster setupTest
+  const setupAccounts = [master, seller1, seller2, buyer1]
 
   before(async () => {
     // get contracts
     await setupContracts()
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts, startBal)
+    await setupTest(setupAccounts, contracts, startBal)
 
     // add tokenPair ETH GNO
     await dx.addTokenPair(
       eth.address,
       gno.address,
-      10e18,
+      10.0.toWei(),
       0,
       2,
       1,
@@ -76,7 +78,8 @@ contract('DutchExchange - getPriceInPastAuction', accounts => {
     const auctionIndex = await getAuctionIndex()
     await setAndCheckAuctionStarted(eth, gno)
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1.5)
-    const [num, den] = (await dx.getPriceInPastAuction.call(eth.address, eth.address, auctionIndex - 1)).map(i => i.toNumber())
+    const { num, den } = await dx.getPriceInPastAuction.call(
+      eth.address, eth.address, auctionIndex - 1)
 
     assert.equal(num, 1)
     assert.equal(den, 1)
@@ -87,22 +90,25 @@ contract('DutchExchange - getPriceInPastAuction', accounts => {
 
     // closing auction
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
-    await postBuyOrder(eth, gno, auctionIndex, 2 * 10e18, buyer1)
+    await postBuyOrder(eth, gno, auctionIndex, 20.0.toWei(), buyer1)
 
     // check that auction acutally closed
     auctionIndex = await getAuctionIndex()
     assert.equal(2, auctionIndex)
 
     // checking that closingPriceToken.num == 0
-    const [closingPriceNumToken] = (await dx.closingPrices.call(gno.address, eth.address, auctionIndex - 1)).map(i => i.toNumber())
+    const { num: closingPriceNumToken } = await dx.closingPrices.call(
+      gno.address, eth.address, auctionIndex - 1)
     assert.equal(closingPriceNumToken, 0)
 
     // actual testing
-    const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex - 1)).map(i => i.toNumber())
-    const [num, den] = (await dx.getPriceInPastAuction.call(eth.address, gno.address, auctionIndex - 1)).map(i => i.toNumber())
+    const { num: closingPriceNum, den: closingPriceDen } = await dx.closingPrices.call(
+      eth.address, gno.address, auctionIndex - 1)
+    const { num, den } = await dx.getPriceInPastAuction.call(
+      eth.address, gno.address, auctionIndex - 1)
     // We need to check the inverse closingPrices, since we have eth, gno prices
-    assert.equal(closingPriceNum, num)
-    assert.equal(closingPriceDen, den)
+    assert.equal(closingPriceNum.toString(), num.toString())
+    assert.equal(closingPriceDen.toString(), den.toString())
   })
 
   // TODO review: this state is not possible any more since both auction sides should be funded
@@ -110,21 +116,24 @@ contract('DutchExchange - getPriceInPastAuction', accounts => {
     let auctionIndex = await getAuctionIndex()
 
     // prepare test by starting and clearing new auction
-    await postSellOrder(gno, eth, 0, 10e18, seller2)
+    await postSellOrder(gno, eth, 0, 10.0.toWei(), seller2)
     await waitUntilPriceIsXPercentOfPreviousPrice(gno, eth, 1)
-    await postBuyOrder(gno, eth, auctionIndex, 2 * 10e18, buyer1)
+    await postBuyOrder(gno, eth, auctionIndex, 20.0.toWei(), buyer1)
 
     // check that auction acutally closed
     auctionIndex = await getAuctionIndex()
     assert.equal(3, auctionIndex)
 
     // checking that closingPriceETH.num == 0
-    const [closingPriceNumToken] = (await dx.closingPrices.call(eth.address, gno.address, auctionIndex - 1)).map(i => i.toNumber())
+    const [closingPriceNumToken] = (await dx.closingPrices.call(
+      eth.address, gno.address, auctionIndex - 1)).map(i => i.toNumber())
     assert.equal(closingPriceNumToken, 0)
 
     // actual testing
-    const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(gno.address, eth.address, auctionIndex - 1)).map(i => i.toNumber())
-    const [num, den] = (await dx.getPriceInPastAuction.call(eth.address, gno.address, auctionIndex - 1)).map(i => i.toNumber())
+    const [closingPriceNum, closingPriceDen] = (await dx.closingPrices.call(
+      gno.address, eth.address, auctionIndex - 1)).map(i => i.toNumber())
+    const [num, den] = (await dx.getPriceInPastAuction.call(
+      eth.address, gno.address, auctionIndex - 1)).map(i => i.toNumber())
     assert.equal(closingPriceDen, num)
     assert.equal(closingPriceNum, den)
   })
@@ -132,28 +141,31 @@ contract('DutchExchange - getPriceInPastAuction', accounts => {
   it('4. check that price returns the averaged price by volume, if both previous volumes > 0 ', async () => {
     let auctionIndex = await getAuctionIndex()
     // start new auctions
-    await postSellOrder(gno, eth, 0, 10e18, seller2)
-    await postSellOrder(eth, gno, 0, 10e18, seller2)
+    await postSellOrder(gno, eth, 0, 10.0.toWei(), seller2)
+    await postSellOrder(eth, gno, 0, 10.0.toWei(), seller2)
 
     // clear new auctions
     await waitUntilPriceIsXPercentOfPreviousPrice(eth, gno, 1)
-    await postBuyOrder(gno, eth, auctionIndex, 2 * 10e18, buyer1)
-    await postBuyOrder(eth, gno, auctionIndex, 2 * 10e18, buyer1)
+    await postBuyOrder(gno, eth, auctionIndex, 20.0.toWei(), buyer1)
+    await postBuyOrder(eth, gno, auctionIndex, 20.0.toWei(), buyer1)
 
     // check that auction actually closed
     auctionIndex = await getAuctionIndex()
     assert.equal(3, auctionIndex)
 
-    const [closingPriceNum, closingPriceDen] = await dx.closingPrices.call(eth.address, gno.address, auctionIndex - 1)
-    const [closingPriceNumOpp, closingPriceDenOpp] = await dx.closingPrices.call(gno.address, eth.address, auctionIndex - 1)
-    const [num, den] = (await dx.getPriceInPastAuction.call(eth.address, gno.address, auctionIndex - 1)).map(i => i.toNumber())
+    const { num: closingPriceNum, den: closingPriceDen } = await dx.closingPrices.call(
+      eth.address, gno.address, auctionIndex - 1)
+    const { num: closingPriceNumOpp, den: closingPriceDenOpp } = await dx.closingPrices.call(
+      gno.address, eth.address, auctionIndex - 1)
+    const { num, den } = await dx.getPriceInPastAuction.call(
+      eth.address, gno.address, auctionIndex - 1)
 
     // check that the tests is in correct state:
-    assert.equal(closingPriceNum.toNumber() > 0, true)
-    assert.equal(closingPriceNumOpp.toNumber() > 0, true)
+    assert.equal(closingPriceNum.gt(BN_ZERO), true)
+    assert.equal(closingPriceNumOpp.gt(BN_ZERO), true)
 
     // checks for the actual test
-    assert.equal((closingPriceNum).add(closingPriceDenOpp).toNumber(), num)
-    assert.equal((closingPriceDen).add(closingPriceNumOpp).toNumber(), den)
+    assert.equal(closingPriceNum.add(closingPriceDenOpp).toString(), num.toString())
+    assert.equal(closingPriceDen.add(closingPriceNumOpp).toString(), den.toString())
   })
 })

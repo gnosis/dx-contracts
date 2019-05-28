@@ -1,22 +1,11 @@
 /* global contract, assert, artifacts */
 /* eslint no-undef: "error" */
 
-/*
-  eslint prefer-const: 0,
-  max-len: 0,
-  object-curly-newline: 1,
-  no-param-reassign: 0,
-  no-console: 0,
-  no-mixed-operators: 0,
-  no-floating-decimal: 0,
-  no-trailing-spaces: 0,
-  no-multi-spaces: 0,
-*/
-
 const {
   assertRejects,
   gasLogger,
-  enableContractFlag
+  enableContractFlag,
+  toEth
 } = require('./utils')
 
 const {
@@ -38,7 +27,7 @@ let contracts
 let newPriceOracleInterface
 
 const setupContracts = async () => {
-  contracts = await getContracts();
+  contracts = await getContracts({ resetCache: true });
   // destructure contracts into upper state
   ({
     PriceOracleInterface: oracle,
@@ -49,12 +38,14 @@ const setupContracts = async () => {
 
 const c1 = () => contract('DX PriceOracleInterface Flow', accounts => {
   const [owner, notOwner, newCurator] = accounts
+  // Accounts to fund for faster setupTest
+  const setupAccounts = [owner, notOwner, newCurator]
 
   const startBal = {
-    startingETH: 1000..toWei(),
-    startingGNO: 1000..toWei(),
-    ethUSDPrice: 1100..toWei(),   // 400 ETH @ $6000/ETH = $2,400,000 USD
-    sellingAmount: 100..toWei() // Same as web3.toWei(50, 'ether') - $60,000USD
+    startingETH: 1000.0.toWei(),
+    startingGNO: 1000.0.toWei(),
+    ethUSDPrice: 1100.0.toWei(), // 400 ETH @ $6000/ETH = $2,400,000 USD
+    sellingAmount: 100.0.toWei() // Same as web3.toWei(50, 'ether') - $60,000USD
   }
 
   afterEach(gasLogger)
@@ -67,11 +58,11 @@ const c1 = () => contract('DX PriceOracleInterface Flow', accounts => {
     ({ medzr2 } = contracts)
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts, startBal)
+    await setupTest(setupAccounts, contracts, startBal)
   })
 
-  it('raiseEmergency: throws when NON-OWNER tries to call it',
-    async () => assertRejects(oracle.raiseEmergency({ from: notOwner }))
+  it('raiseEmergency: throws when NON-OWNER tries to call it', async () =>
+    assertRejects(oracle.raiseEmergency(true, { from: notOwner }))
   )
 
   it('raiseEmergency: switches into emergency mode', async () => {
@@ -100,16 +91,16 @@ const c1 = () => contract('DX PriceOracleInterface Flow', accounts => {
     assert.equal(ethUSDPrice, 1, 'Oracle ethUSDPrice is not set and should return 1')
   })
   it('getUSDETHPrice: set price should work correctly', async () => {
-    const ethUSDPrice = 1500..toWei()
-    await Medianizer.at(medzr2.address).set(PriceFeed.address, { from: owner })
+    const ethUSDPrice = 1500.0.toWei()
+    const medzr = await Medianizer.at(medzr2.address)
+    await medzr.set(PriceFeed.address, { from: owner })
     await priceFeed.post(ethUSDPrice, 1516168838 * 2, medzr2.address, { from: owner })
-    const getNewETHUSDPrice = (await newPriceOracleInterface.getUSDETHPrice.call()).toNumber()
+    const getNewETHUSDPrice = await newPriceOracleInterface.getUSDETHPrice.call()
 
-    assert.equal(ethUSDPrice.toEth(), getNewETHUSDPrice, 'Should be same')
+    assert.equal(toEth(ethUSDPrice).toString(), getNewETHUSDPrice.toString(), 'Should be same')
   })
 
-  it(
-    'updateCurator: throws when NON-OWNER tries to change curator',
+  it('updateCurator: throws when NON-OWNER tries to change curator',
     async () => assertRejects(oracle.updateCurator(medzr2, { from: notOwner }))
   )
 

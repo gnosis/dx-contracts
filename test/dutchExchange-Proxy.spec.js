@@ -28,7 +28,7 @@ contract('DutchExchange - Proxy', accounts => {
 
   before(async () => {
     // get contractsU
-    contracts = await getContracts();
+    contracts = await getContracts({ resetCache: true });
     // destructure contracts into upper state
     ({
       DutchExchange: dx,
@@ -63,8 +63,8 @@ contract('DutchExchange - Proxy', accounts => {
       auctioneer,
       eth,
       ethUSDOracle,
-      thresholdNewTokenPair.toNumber(),
-      thresholdNewAuction.toNumber()
+      thresholdNewTokenPair,
+      thresholdNewAuction
     ]
   }
 
@@ -120,26 +120,19 @@ contract('DutchExchange - Proxy', accounts => {
     log('tx was rejected')
   })
 
-  it('not auctioneer can\'t update masterCopy', async () => {
+  it('any user can update masterCopy after time limit', async () => {
     await wait(60 * 60 * 24 * 30)
     await assertIsNotAuctioneer(seller1)
-    log('calling dx.updateMasterCopy() as not auctioneer after time limit')
-    await assertRejects(dx.updateMasterCopy({ from: seller1 }), 'should reject as caller isn\'t the auctioneer')
-    log('tx was rejected')
-  })
-
-  it('auctioneer can update masterCopy after time limit', async () => {
-    await assertIsAuctioneer(master)
     const params1 = await getExchangeParams()
 
     assert.notEqual(await dx.getMasterCopy(), dxNew.address, 'address should not yet be the same')
     log(`DutchExchange contract is at the ${dx.address} address`)
 
-    log('calling dx.updateMasterCopy() as auctioneer after time limit')
-    await dx.updateMasterCopy({ from: master })
+    log('calling dx.updateMasterCopy() as not auctioneer after time limit')
+    await dx.updateMasterCopy({ from: seller1 })
 
     // using a new interface as masterCopy is an InternalTests now
-    const ndx = InternalTests.at(pr.address)
+    const ndx = await InternalTests.at(pr.address)
     const params2 = await getExchangeParams(ndx)
     assert.deepEqual(params1, params2, 'exchange params should stay the same')
 

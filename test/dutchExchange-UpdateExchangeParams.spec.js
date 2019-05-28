@@ -28,7 +28,7 @@ contract('DutchExchange updating exchange params', accounts => {
 
   before(async () => {
     // get contractsU
-    contracts = await getContracts();
+    contracts = await getContracts({ resetCache: true });
     // destructure contracts into upper state
     ({
       DutchExchange: dx,
@@ -42,8 +42,8 @@ contract('DutchExchange updating exchange params', accounts => {
     params2 = {
       auctioneer: seller1,
       ethUSDOracle: newPO.address,
-      thresholdNewTokenPair: 5000,
-      thresholdNewAuction: 500
+      thresholdNewTokenPair: '5000',
+      thresholdNewAuction: '500'
     }
   })
 
@@ -58,8 +58,8 @@ contract('DutchExchange updating exchange params', accounts => {
     return {
       auctioneer,
       ethUSDOracle,
-      thresholdNewTokenPair: thresholdNewTokenPair.toNumber(),
-      thresholdNewAuction: thresholdNewAuction.toNumber()
+      thresholdNewTokenPair: thresholdNewTokenPair.toString(),
+      thresholdNewAuction: thresholdNewAuction.toString()
     }
   }
 

@@ -2,6 +2,7 @@
 /* eslint no-undef: "error" */
 
 const {
+  BN_ZERO,
   log: utilsLog,
   gasLogger
 } = require('./utils')
@@ -17,7 +18,7 @@ let contracts
 const separateLogs = () => utilsLog('\n    ----------------------------------')
 const log = (...args) => utilsLog('\t', ...args)
 
-contract('DutchExchange - addTokenPair', accounts => {
+contract('DutchExchange - depoist/withdraw BadToken', accounts => {
   const [master, seller1] = accounts
 
   const startBal = {
@@ -32,13 +33,13 @@ contract('DutchExchange - addTokenPair', accounts => {
 
   before(async () => {
     // get contracts
-    contracts = await getContracts();
+    contracts = await getContracts({ resetCache: true });
     // destructure contracts into upper state
     ({
       DutchExchange: dx
     } = contracts)
 
-    badGNO = await BadGNO.new(1e22, { from: master })
+    badGNO = await BadGNO.new(10000.0.toWei(), { from: master })
     await Promise.all([
       badGNO.transfer(seller1, startBal.startingGNO, { from: master }),
       badGNO.approve(dx.address, startBal.startingGNO, { from: seller1 })
@@ -68,6 +69,6 @@ contract('DutchExchange - addTokenPair', accounts => {
     const deposited = await dx.balances(badGNO.address, seller1)
     log('deposited: ', deposited.toString())
 
-    assert(deposited.eq(0), 'deposited amount is exactly 0 after startingGNO was withdrawn')
+    assert(deposited.eq(BN_ZERO), 'deposited amount is exactly 0 after startingGNO was withdrawn')
   })
 })

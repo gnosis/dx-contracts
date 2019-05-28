@@ -4,13 +4,15 @@
 /* Fee Reduction Token issuing is tested seperately in dutchExchange-MGN.js */
 
 const {
+  AUCTION_START_WAITING_FOR_FUNDING,
+  BN_ZERO,
   eventWatcher,
   log: utilsLog,
   gasLogger,
   makeSnapshot,
   revertSnapshot,
-  timestamp,
-  AUCTION_START_WAITING_FOR_FUNDING
+  toEth,
+  timestamp
 } = require('./utils')
 
 const SECONDS_24H = 86405
@@ -40,7 +42,7 @@ afterEach(gasLogger)
 const log = (...args) => utilsLog('\t', ...args)
 
 const setupContracts = async () => {
-  contracts = await getContracts();
+  contracts = await getContracts({ resetCache: true });
   // destructure contracts into upper state
   ({
     DutchExchange: dx,
@@ -53,9 +55,9 @@ const setupContracts = async () => {
 const setupAmountUsedForTesting = async () => {
   // Amounts used for testing
   const [threshold, usdEthPriceAux, gnoEthPrice] = await Promise.all([
-    dx.thresholdNewAuction().then(bn => bn.div(1e18).toNumber()),
+    dx.thresholdNewAuction().then(bn => parseInt(toEth(bn))),
     oracle.getUSDETHPrice.call().then(bn => bn.toNumber()),
-    dx.getPriceOfTokenInLastAuction.call(gno.address).then(([num, den]) => num.div(den).toNumber())
+    dx.getPriceOfTokenInLastAuction.call(gno.address).then(({ num, den }) => num.toNumber() / den.toNumber())
   ])
   usdEthPrice = usdEthPriceAux
   log(`Threshold to start an auction: ${threshold}`)
@@ -85,15 +87,16 @@ const startBal = {
 }
 
 contract('DutchExchange - start auction threshold', accounts => {
-  const [, seller1] = accounts
-  // const totalSellAmount2ndAuction = 10e18
-  // const totalBuyAmount = 2 * 10e18
+  const [master, seller1] = accounts
+  // Accounts to fund for faster setupTest
+  const setupAccounts = [master, seller1]
+
   before(async () => {
     // get contracts
     await setupContracts()
 
     // set up accounts and tokens[contracts]
-    await setupTest(accounts, contracts, startBal)
+    await setupTest(setupAccounts, contracts, startBal)
 
     // add tokenPair ETH GNO
     await dx.addTokenPair(
@@ -119,14 +122,14 @@ contract('DutchExchange - start auction threshold', accounts => {
     await postBuyOrder(eth, gno, 1, 25.0.toWei(), seller1)
 
     log('Take snapshot of Ganache: Auction 1 just cleared')
-    snapshotId = makeSnapshot()
+    snapshotId = await makeSnapshot()
   })
 
   afterEach(gasLogger)
   afterEach(async () => {
     // log('Revert snapshot of Ganache')
     await revertSnapshot(snapshotId)
-    snapshotId = makeSnapshot()
+    snapshotId = await makeSnapshot()
   })
 
   after(eventWatcher.stopWatching)
@@ -158,7 +161,7 @@ contract('DutchExchange - start auction threshold', accounts => {
     assert.strictEqual(auctionStart, AUCTION_START_WAITING_FOR_FUNDING, 'The auction should remain unscheduled')
   })
 
-  it(`2. does't start if we surplus one of the sides`, async () => {
+  it(`2. doesn't start if we surplus one of the sides`, async () => {
     // GIVEN: Auction 2
     // GIVEN: waiting for funding
     // GIVEN: No sell volume
@@ -198,7 +201,7 @@ contract('DutchExchange - start auction threshold', accounts => {
 
     // WHEN: We surplus both sides
     const auctionIndex = await getAuctionIndex(eth, gno)
-    const now = timestamp()
+    const now = await timestamp()
     log(`Posting sell order below threshold --> WETH-GNO-${auctionIndex}: ${amountEthAboveThreshold}`)
     await postSellOrder(eth, gno, auctionIndex, amountEthAboveThreshold.toWei(), seller1)
     log(`Posting sell order below threshold --> GNO-WETH-${auctionIndex}: ${amountGnoAboveThreshold}`)
@@ -217,7 +220,7 @@ contract('DutchExchange - start auction threshold', accounts => {
 
     // WHEN: We surplus only one of the sides
     const auctionIndex = await getAuctionIndex(eth, gno)
-    const now = timestamp()
+    const now = await timestamp()
     log(`Posting sell order above threshold --> WETH-GNO-${auctionIndex}: ${amountEthAboveThreshold}`)
     await postSellOrder(eth, gno, auctionIndex, amountEthAboveThreshold.toWei(), seller1)
 
@@ -225,7 +228,7 @@ contract('DutchExchange - start auction threshold', accounts => {
     await wait(SECONDS_24H)
 
     // WHEN: A seller "poke" the contract
-    await postSellOrder(eth, gno, auctionIndex, 0.0, seller1)
+    await postSellOrder(eth, gno, auctionIndex, BN_ZERO, seller1)
 
     // THEN: The auction is scheduled
     const auctionStart = await getAuctionStart(eth, gno)
@@ -240,7 +243,7 @@ contract('DutchExchange - start auction threshold', accounts => {
 
     // WHEN: We surplus the opposite side
     const auctionIndex = await getAuctionIndex(eth, gno)
-    const now = timestamp()
+    const now = await timestamp()
     log(`Posting sell order above threshold --> GNO-WETH-${auctionIndex}: ${amountGnoAboveThreshold}`)
     await postSellOrder(gno, eth, auctionIndex, amountGnoAboveThreshold.toWei(), seller1)
 
@@ -248,7 +251,7 @@ contract('DutchExchange - start auction threshold', accounts => {
     await wait(SECONDS_24H)
 
     // WHEN: A seller "poke" the contract
-    await postSellOrder(eth, gno, auctionIndex, 0.0, seller1)
+    await postSellOrder(eth, gno, auctionIndex, BN_ZERO, seller1)
 
     // THEN: The auction is scheduled
     const auctionStart = await getAuctionStart(eth, gno)
@@ -266,7 +269,7 @@ contract('DutchExchange - start auction threshold', accounts => {
 
     // WHEN: We surplus the opposite side
     const auctionIndex = await getAuctionIndex(eth, gno)
-    const now = timestamp()
+    const now = await timestamp()
     log(`Posting sell order above threshold --> WETH-GNO-${auctionIndex}: ${amountEthAboveThreshold}`)
     await postSellOrder(eth, gno, auctionIndex, amountEthAboveThreshold.toWei(), seller1)
 
@@ -286,7 +289,7 @@ contract('DutchExchange - start auction threshold', accounts => {
 
     // WHEN: We surplus the opposite side
     const auctionIndex = await getAuctionIndex(eth, gno)
-    const now = timestamp()
+    const now = await timestamp()
     log(`Posting sell order above threshold --> GNO-WETH-${auctionIndex}: ${amountGnoAboveThreshold}`)
     await postSellOrder(gno, eth, auctionIndex, amountGnoAboveThreshold.toWei(), seller1)
 

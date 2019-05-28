@@ -42,7 +42,6 @@ contract DutchExchangeHelper {
         }
     }
 
-
     /// @dev for quick overview of possible sellerBalances to calculate the possible withdraw tokens
     /// @param auctionSellToken is the sellToken defining an auctionPair
     /// @param auctionBuyToken is the buyToken defining an auctionPair
@@ -60,7 +59,8 @@ contract DutchExchangeHelper {
 
         uint arrayLength;
 
-        uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
+        uint startingIndex = lastNAuctions == 0 || lastNAuctions > runningAuctionIndex
+        ? 1 : runningAuctionIndex - lastNAuctions + 1;
 
         for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
             if (dx.sellerBalances(auctionSellToken, auctionBuyToken, j, user) > 0) {
@@ -81,7 +81,6 @@ contract DutchExchangeHelper {
             }
         }
     }
-
 
     /// @dev for quick overview of current sellerBalances for a user
     /// @param auctionSellTokens are the sellTokens defining an auctionPair
@@ -107,7 +106,6 @@ contract DutchExchangeHelper {
         return sellersBalances;
     }
 
-
     /// @dev for quick overview of possible buyerBalances to calculate the possible withdraw tokens
     /// @param auctionSellToken is the sellToken defining an auctionPair
     /// @param auctionBuyToken is the buyToken defining an auctionPair
@@ -125,7 +123,8 @@ contract DutchExchangeHelper {
 
         uint arrayLength;
 
-        uint startingIndex = lastNAuctions == 0 ? 1 : runningAuctionIndex - lastNAuctions + 1;
+        uint startingIndex = lastNAuctions == 0 || lastNAuctions > runningAuctionIndex
+        ? 1 : runningAuctionIndex - lastNAuctions + 1;
 
         for (uint j = startingIndex; j <= runningAuctionIndex; j++) {
             if (dx.buyerBalances(auctionSellToken, auctionBuyToken, j, user) > 0) {

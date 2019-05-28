@@ -2,11 +2,13 @@
 /* eslint no-undef: "error" */
 
 const {
+  BN_ZERO,
   eventWatcher,
   log: utilsLog,
   assertRejects,
   timestamp,
-  gasLogger
+  gasLogger,
+  valMinusFee
 } = require('./utils')
 
 const { getContracts, setupTest, wait } = require('./testFunctions')
@@ -17,15 +19,15 @@ let gno
 let mgn
 let dx
 
-let feeRatio
-
 let contracts
 
 const separateLogs = () => utilsLog('\n    ----------------------------------')
 const log = (...args) => utilsLog('\t', ...args)
 
 contract('DutchExchange - postSellOrder', accounts => {
-  const [, seller1] = accounts
+  const [master, seller1] = accounts
+  // Accounts to fund for faster setupTest
+  const setupAccounts = [master, seller1]
 
   const startBal = {
     startingETH: 0,
@@ -39,7 +41,7 @@ contract('DutchExchange - postSellOrder', accounts => {
 
   before(async () => {
     // get contracts
-    contracts = await getContracts();
+    contracts = await getContracts({ resetCache: true });
     // destructure contracts into upper state
     ({
       EtherToken: eth,
@@ -48,20 +50,20 @@ contract('DutchExchange - postSellOrder', accounts => {
       DutchExchange: dx
     } = contracts)
 
-    await setupTest(accounts, contracts, startBal)
+    await setupTest(setupAccounts, contracts, startBal)
 
-    eventWatcher(dx, 'NewSellOrder')
+    // eventWatcher(dx, 'NewSellOrder')
     eventWatcher(dx, 'Log')
 
     const totalMGN = (await mgn.totalSupply.call()).toNumber()
-    assert.strictEqual(totalMGN, 0, 'total TUL tokens should be 0')
+    assert.strictEqual(totalMGN, 0, 'total MGN tokens should be 0')
     // then we know that feeRatio = 1 / 200
     feeRatio = 1 / 200
   })
 
   after(eventWatcher.stopWatching)
 
-  const getTokenBalance = async (account, token) => (await dx.balances.call(token.address || token, account)).toNumber()
+  const getTokenBalance = async (account, token) => dx.balances.call(token.address || token, account)
 
   const depositETH = async (account, amount) => {
     await eth.deposit({ from: account, value: amount })
@@ -76,14 +78,13 @@ contract('DutchExchange - postSellOrder', accounts => {
     (await dx.getAuctionStart.call(sellToken.address || sellToken, buyToken.address || buyToken)).toNumber()
 
   const getSellerBalance = async (account, sellToken, buyToken, auctionIndex) =>
-    (await dx.sellerBalances.call(sellToken.address || sellToken, buyToken.address || buyToken, auctionIndex, account))
-      .toNumber()
+    dx.sellerBalances.call(sellToken.address || sellToken, buyToken.address || buyToken, auctionIndex, account)
 
   const getSellVolumeCurrent = async (sellToken, buyToken) =>
-    (await dx.sellVolumesCurrent.call(sellToken.address || sellToken, buyToken.address || buyToken)).toNumber()
+    dx.sellVolumesCurrent.call(sellToken.address || sellToken, buyToken.address || buyToken)
 
   const getSellVolumeNext = async (sellToken, buyToken) =>
-    (await dx.sellVolumesNext.call(sellToken.address || sellToken, buyToken.address || buyToken)).toNumber()
+    dx.sellVolumesNext.call(sellToken.address || sellToken, buyToken.address || buyToken)
 
   const getChangedAmounts = async (account, sellToken, buyToken, auctionIndex) => {
     const [balance, sellerBalance, sellVolumeCurrent, sellVolumeNext] = await Promise.all([
@@ -115,12 +116,12 @@ contract('DutchExchange - postSellOrder', accounts => {
       const oldVal = oldAmounts[key]
       const newVal = newAmounts[key]
 
-      const incByAmountAfterFee = () => assert.strictEqual(oldVal + amountAfterFee, newVal, `${key} should be increased by amountAfterFee`)
-      const remainTheSame = () => assert.strictEqual(oldVal, newVal, `${key} should remain the same`)
+      const incByAmountAfterFee = () => assert.strictEqual(oldVal.add(amountAfterFee).toString(), newVal.toString(), `${key} should be increased by amountAfterFee`)
+      const remainTheSame = () => assert.strictEqual(oldVal.toString(), newVal.toString(), `${key} should remain the same`)
 
       switch (key) {
         case 'balance':
-          assert.strictEqual(oldVal - amount, newVal, 'balance should be reduced by amount')
+          assert.strictEqual(oldVal.sub(amount).toString(), newVal.toString(), 'balance should be reduced by amount')
           return
         case 'sellerBalance':
           incByAmountAfterFee()
@@ -137,7 +138,7 @@ contract('DutchExchange - postSellOrder', accounts => {
       }
     })
 
-  const getAmountAfterFee = amount => Math.floor(amount - Math.floor(amount * feeRatio))
+  const getAmountAfterFee = valMinusFee // amount => Math.floor(amount - Math.floor(amount * feeRatio))
 
   const getEventFromTX = ({ logs }, eventName) => {
     const event = logs.find(l => l.event === eventName)
@@ -150,11 +151,11 @@ contract('DutchExchange - postSellOrder', accounts => {
     const ethBalance = await getTokenBalance(seller1, eth)
     log(`balance == ${ethBalance}`)
 
-    assert.strictEqual(ethBalance, 0, 'initially account has no ETH in DX')
+    assert.isTrue(ethBalance.isZero(), 'initially account has no ETH in DX')
 
-    const amount = 100
+    const amount = 0.1.toWei()
 
-    assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
+    assert.isTrue(amount.gt(BN_ZERO), 'amount should be > 0 so as not to trigger reject')
 
     log(`posting sell order for ${amount}`)
     await assertRejects(dx.postSellOrder(eth.address, gno.address, 1, amount, { from: seller1 }), 'should reject as resulting amount == 0')
@@ -163,16 +164,16 @@ contract('DutchExchange - postSellOrder', accounts => {
 
   it('rejects when sellToken amount == 0', async () => {
     // deposit 20 ETH into DX
-    const eth20 = 20 * (10 ** 18)
+    const eth20 = 20.0.toWei()
     await depositETH(seller1, eth20)
 
     const ethBalance = await getTokenBalance(seller1, eth)
 
-    assert.isAbove(ethBalance, 0, 'account should have some ETH in DX')
+    assert.isTrue(ethBalance.gt(BN_ZERO), 'account should have some ETH in DX')
 
-    const amount = 0
+    const amount = BN_ZERO
 
-    assert.strictEqual(amount, 0, 'amount should be 0')
+    assert.isTrue(amount.eq(BN_ZERO), 'amount should be 0')
 
     log(`posting sell order for ${amount}`)
     await assertRejects(dx.postSellOrder(eth.address, gno.address, 1, amount, { from: seller1 }), 'should reject as resulting amount == 0')
@@ -184,9 +185,9 @@ contract('DutchExchange - postSellOrder', accounts => {
 
     assert.strictEqual(latestAuctionIndex, 0, 'action hasn\'t run yet')
 
-    const amount = 100
+    const amount = 0.1.toWei()
 
-    assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
+    assert.isTrue(amount.gt(BN_ZERO), 'amount should be > 0 so as not to trigger reject')
     log(`posting sell order for ${amount} to a not yet added token pair`)
     await assertRejects(dx.postSellOrder(eth.address, gno.address, latestAuctionIndex, amount, { from: seller1 }), 'should reject as latestAuctionIndex == 0')
     log('tx was rejected')
@@ -208,12 +209,12 @@ contract('DutchExchange - postSellOrder', accounts => {
     assert.strictEqual(latestAuctionIndex, 1, 'action index > 0')
 
     const auctionStart = await getAuctionStart(eth, gno)
-    assert.isAbove(auctionStart, timestamp(), 'auction isn\'t yet running')
+    assert.isAbove(auctionStart, await timestamp(), 'auction isn\'t yet running')
     log(`auction #${latestAuctionIndex} isn't yet running`)
 
-    const amount = 100
+    const amount = 0.01.toWei()
 
-    assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
+    assert.isTrue(amount.gt(BN_ZERO), 'amount should be > 0 so as not to trigger reject')
 
     const auctionIndex = latestAuctionIndex + 1
     assert(auctionIndex !== 0 && auctionIndex !== latestAuctionIndex, 'auctionIndex is nether 0 nor latestAuctionIndex')
@@ -229,16 +230,16 @@ contract('DutchExchange - postSellOrder', accounts => {
     assert.strictEqual(latestAuctionIndex, 1, 'action index > 0')
 
     const auctionStart = await getAuctionStart(eth, gno)
-    const postedToCurrentAuction = timestamp() < auctionStart || auctionStart === 1
-    assert.isAbove(auctionStart, timestamp(), 'auction isn\'t yet running')
+    const postedToCurrentAuction = await timestamp() < auctionStart || auctionStart === 1
+    assert.isAbove(auctionStart, await timestamp(), 'auction isn\'t yet running')
     log(`auction #${latestAuctionIndex} isn't yet running`)
 
-    const amount = 10000
+    const amount = 0.01.toWei()
 
-    assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
+    assert.isTrue(amount.gt(BN_ZERO), 'amount should be > 0 so as not to trigger reject')
 
     const amountAfterFee = getAmountAfterFee(amount)
-    assert.isAbove(amountAfterFee, 0, 'amountAfterFee should be > 0 to make a difference')
+    assert.isTrue(amountAfterFee.gt(BN_ZERO), 'amountAfterFee should be > 0 to make a difference')
 
     const auctionIndex = latestAuctionIndex
     assert.strictEqual(auctionIndex, latestAuctionIndex, 'auctionIndex is latestAuctionIndex')
@@ -258,16 +259,16 @@ contract('DutchExchange - postSellOrder', accounts => {
     assert.strictEqual(latestAuctionIndex, 1, 'action index > 0')
 
     const auctionStart = await getAuctionStart(eth, gno)
-    const postedToCurrentAuction = timestamp() < auctionStart || auctionStart === 1
-    assert.isAbove(auctionStart, timestamp(), 'auction isn\'t yet running')
+    const postedToCurrentAuction = await timestamp() < auctionStart || auctionStart === 1
+    assert.isAbove(auctionStart, await timestamp(), 'auction isn\'t yet running')
     log(`auction #${latestAuctionIndex} isn't yet running`)
 
-    const amount = 10000
+    const amount = 0.01.toWei()
 
-    assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
+    assert.isTrue(amount.gt(BN_ZERO), 'amount should be > 0 so as not to trigger reject')
 
     const amountAfterFee = getAmountAfterFee(amount)
-    assert.isAbove(amountAfterFee, 0, 'amountAfterFee should be > 0 to make a difference')
+    assert.isTrue(amountAfterFee.gt(BN_ZERO), 'amountAfterFee should be > 0 to make a difference')
 
     const auctionIndex = 0
     assert.notStrictEqual(auctionIndex, latestAuctionIndex, 'auctionIndex isn\'t the same as latestAuctionIndex')
@@ -288,17 +289,17 @@ contract('DutchExchange - postSellOrder', accounts => {
     assert.strictEqual(latestAuctionIndex, 1, 'action index > 0')
 
     let auctionStart = await getAuctionStart(eth, gno)
-    assert.isAbove(auctionStart, timestamp(), 'auction isn\'t yet running')
+    assert.isAbove(auctionStart, await timestamp(), 'auction isn\'t yet running')
 
-    await wait(await getAuctionStart(eth, gno) - timestamp())
+    await wait(await getAuctionStart(eth, gno) - await timestamp())
 
     auctionStart = await getAuctionStart(eth, gno)
-    assert.isAtLeast(timestamp(), auctionStart, 'auction is running')
+    assert.isAtLeast(await timestamp(), auctionStart, 'auction is running')
     log(`auction #${latestAuctionIndex} is running`)
 
-    const amount = 100
+    const amount = 0.01.toWei()
 
-    assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
+    assert.isTrue(amount.gt(BN_ZERO), 'amount should be > 0 so as not to trigger reject')
 
     const auctionIndex = latestAuctionIndex
     assert(auctionIndex !== 0 && auctionIndex !== latestAuctionIndex + 1, 'auctionIndex is nether 0 nor latestAuctionIndex + 1')
@@ -314,16 +315,16 @@ contract('DutchExchange - postSellOrder', accounts => {
     assert.strictEqual(latestAuctionIndex, 1, 'action index > 0')
 
     const auctionStart = await getAuctionStart(eth, gno)
-    const postedToCurrentAuction = timestamp() < auctionStart || auctionStart === 1
-    assert.isAtLeast(timestamp(), auctionStart, 'auction is running')
+    const postedToCurrentAuction = await timestamp() < auctionStart || auctionStart === 1
+    assert.isAtLeast(await timestamp(), auctionStart, 'auction is running')
     log(`auction #${latestAuctionIndex} is running`)
 
-    const amount = 10000
+    const amount = 0.01.toWei()
 
-    assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
+    assert.isTrue(amount.gt(BN_ZERO), 'amount should be > 0 so as not to trigger reject')
 
     const amountAfterFee = getAmountAfterFee(amount)
-    assert.isAbove(amountAfterFee, 0, 'amountAfterFee should be > 0 to make a difference')
+    assert.isTrue(amountAfterFee.gt(BN_ZERO), 'amountAfterFee should be > 0 to make a difference')
 
     const auctionIndex = latestAuctionIndex + 1
     assert.strictEqual(auctionIndex, latestAuctionIndex + 1, 'auctionIndex is next auction\'s index')
@@ -343,16 +344,16 @@ contract('DutchExchange - postSellOrder', accounts => {
     assert.strictEqual(latestAuctionIndex, 1, 'action index > 0')
 
     const auctionStart = await getAuctionStart(eth, gno)
-    const postedToCurrentAuction = timestamp() < auctionStart || auctionStart === 1
-    assert.isAtLeast(timestamp(), auctionStart, 'auction is running')
+    const postedToCurrentAuction = await timestamp() < auctionStart || auctionStart === 1
+    assert.isAtLeast(await timestamp(), auctionStart, 'auction is running')
     log(`auction #${latestAuctionIndex} is running`)
 
-    const amount = 10000
+    const amount = 0.01.toWei()
 
-    assert.isAbove(amount, 0, 'amount should be > 0 so as not to trigger reject')
+    assert.isTrue(amount.gt(BN_ZERO), 'amount should be > 0 so as not to trigger reject')
 
     const amountAfterFee = getAmountAfterFee(amount)
-    assert.isAbove(amountAfterFee, 0, 'amountAfterFee should be > 0 to make a difference')
+    assert.isTrue(amountAfterFee.gt(BN_ZERO), 0, 'amountAfterFee should be > 0 to make a difference')
 
     const auctionIndex = 0
     assert.notStrictEqual(auctionIndex, latestAuctionIndex + 1, 'auctionIndex isn\'t latestAuctionIndex + 1')

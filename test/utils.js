@@ -1,7 +1,12 @@
+/* global assert, web3 */
 // `truffle test --silent` or `truffle test -s` to suppress logs
-const BigNumber = require('bignumber.js')
+const { BN, ether } = require('openzeppelin-test-helpers')
 
 const AUCTION_START_WAITING_FOR_FUNDING = 1
+const BN_ZERO = new BN('0')
+const ETH_5_WEI = ether('5')
+const ETH_10_WEI = ether('10')
+const ETH_20_WEI = ether('20')
 
 const {
   silent,
@@ -11,7 +16,32 @@ const {
   noevents
 } = require('minimist')(process.argv.slice(2), { alias: { silent: 's', contract: 'c', gas: 'g', gasTx: 'gtx' } })
 
-const log = silent ? () => {} : console.log.bind(console)
+const log = silent
+  ? () => {}
+  : async (...params) => {
+    const parsedParams = await Promise.all(params.map(async elem => {
+      let value = elem
+      const isFunction = fn => {
+        return fn instanceof Function
+      }
+
+      const isPromise = pr => {
+        return pr instanceof Promise
+      }
+
+      const isBN = bn => {
+        return bn instanceof BN
+      }
+
+      value = isFunction(value) ? value() : value
+      value = isPromise(value) ? await value : value
+      value = isBN(value) ? value.toString() : value
+
+      return value
+    }))
+    console.log(...parsedParams)
+  }
+
 const logger = async (desc, fn) => {
   if (!silent) {
     let value
@@ -20,8 +50,8 @@ const logger = async (desc, fn) => {
     } else {
       value = fn
     }
-    if (value instanceof BigNumber) {
-      value = value.toNumber()
+    if (value instanceof BN) {
+      value = value.toString()
     }
 
     log(`---- \n => ${desc} ${value ? `|| - - - - - - - - - - - > ${value}` : ''}`)
@@ -103,9 +133,23 @@ const assertRejects = async (q, msg) => {
   }
 }
 
+const toEth = value => {
+  return web3.utils.fromWei(value)
+}
+
 const blockNumber = () => web3.eth.blockNumber
 
-const timestamp = (block = 'latest') => web3.eth.getBlock(block).timestamp
+const timestamp = (block = 'latest') => {
+  return new Promise((resolve, reject) => {
+    web3.eth.getBlock(block, false, (err, { timestamp }) => {
+      if (err) {
+        return reject(err)
+      } else {
+        resolve(timestamp)
+      }
+    })
+  })
+}
 
 // keeps track of watched events
 let stopWatching = {}
@@ -235,22 +279,61 @@ const enableContractFlag = (...contractTests) => {
 }
 
 const makeSnapshot = () => {
-  return web3.currentProvider.send({
-    jsonrpc: '2.0',
-    method: 'evm_snapshot'
-  }).result
+  return new Promise((resolve, reject) => {
+    web3.currentProvider.send({
+      jsonrpc: '2.0',
+      method: 'evm_snapshot'
+    }, (err, { result }) => {
+      if (err) {
+        return reject(err)
+      } else {
+        resolve(result)
+      }
+    })
+  })
 }
 
 const revertSnapshot = snapshotId => {
-  web3.currentProvider.send({
-    jsonrpc: '2.0',
-    method: 'evm_revert',
-    params: [snapshotId]
+  return new Promise((resolve, reject) => {
+    web3.currentProvider.send({
+      jsonrpc: '2.0',
+      method: 'evm_revert',
+      params: [snapshotId]
+    }, (err, result) => {
+      if (err) {
+        return reject(err)
+      } else {
+        resolve(result)
+      }
+    })
   })
+}
+/**
+ * valMinusFee
+ * It will substract the standard base fee 0.5%
+ * @param {BN} Amount to substract the fee
+ */
+const valMinusFee = amount => amount.sub(amount.div(new BN('200')))
+
+/**
+ * valMinusCustomFee
+ * @param {BN} Amount to substract the fee
+ * @param {Number} Fee ratio in % (ex. 0.5%)
+ */
+const valMinusCustomFee = (amount, fee) => {
+  assert.isAbove(fee, 0, 'Fee should always be above 0')
+  // Convert fee to be used by BN (can't handle float numbers)
+  const feeToBN = (1 / fee) * 100
+  return amount.sub(amount.div(new BN(feeToBN.toString())))
 }
 
 module.exports = {
   AUCTION_START_WAITING_FOR_FUNDING,
+  BN_ZERO,
+  BN,
+  ETH_5_WEI,
+  ETH_10_WEI,
+  ETH_20_WEI,
   silent,
   assertRejects,
   blockNumber,
@@ -260,8 +343,11 @@ module.exports = {
   gasLogWrapper,
   log,
   logger,
+  toEth,
   timestamp,
   varLogger,
   makeSnapshot,
-  revertSnapshot
+  revertSnapshot,
+  valMinusFee,
+  valMinusCustomFee
 }

@@ -4,7 +4,6 @@
 const {
   eventWatcher,
   gasLogger,
-  logger,
   log,
   enableContractFlag,
   makeSnapshot,
@@ -34,14 +33,14 @@ const getExchangeParams = async (dxContr = dx) => {
     ethUSDOracle,
     thresholdNewTokenPair,
     thresholdNewAuction] = await Promise.all([
-      dxContr.frtToken.call(),
-      dxContr.owlToken.call(),
-      dxContr.auctioneer.call(),
-      dxContr.ethToken.call(),
-      dxContr.ethUSDOracle.call(),
-      dxContr.thresholdNewTokenPair.call(),
-      dxContr.thresholdNewAuction.call()
-    ])
+    dxContr.frtToken.call(),
+    dxContr.owlToken.call(),
+    dxContr.auctioneer.call(),
+    dxContr.ethToken.call(),
+    dxContr.ethUSDOracle.call(),
+    dxContr.thresholdNewTokenPair.call(),
+    dxContr.thresholdNewAuction.call()
+  ])
 
   return [
     frtToken,
@@ -49,8 +48,8 @@ const getExchangeParams = async (dxContr = dx) => {
     auctioneer,
     eth,
     ethUSDOracle,
-    thresholdNewTokenPair.toNumber(),
-    thresholdNewAuction.toNumber()
+    thresholdNewTokenPair,
+    thresholdNewAuction
   ]
 }
 
@@ -76,10 +75,11 @@ const getHelperFunctions = master => {
   const mintTokens = (account, amount) => mgn.mintTokens(account, amount, { from: master })
 
   const calculateFeeRatio = async (account, print = true) => {
-    const [num, den] = (await dx.getFeeRatioForJS.call(account)).map(n => n.toNumber())
-    if (print) log(`\tfeeRatio == ${((num / den) * 100).toFixed(2)}% == ${num}/${den} == ${num / den}`)
+    const feeRatio = await dx.getFeeRatioForJS.call(account)
+    const { feeRatioNum, feeRatioDen } = feeRatio
+    if (print) log(`\tfeeRatio == ${((feeRatioNum / feeRatioDen) * 100).toFixed(2)}% == ${feeRatioNum}/${feeRatioDen} == ${feeRatioNum / feeRatioDen}`)
 
-    return [num, den]
+    return [feeRatioNum, feeRatioDen]
   }
 
   const getHowManyToAdd = (totalMgn, lockedMGNBalance, percent) =>
@@ -131,7 +131,7 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', accounts => {
 
   before(async () => {
     // get contracts
-    contracts = await getContracts();
+    contracts = await getContracts({ resetCache: true });
     // destructure contracts into upper state
     ({
       // DutchExchange: dx,
@@ -275,6 +275,8 @@ const c1 = () => contract('DutchExchange - calculateFeeRatio', accounts => {
 
 const c2 = () => contract('DutchExchange - settleFee', accounts => {
   const [master, seller1] = accounts
+  // Accounts to fund for faster setupTest
+  const setupAccounts = [master, seller1]
 
   const startBal = {
     startingETH: 90.0.toWei(),
@@ -289,7 +291,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
 
   before(async () => {
     // get contracts
-    contracts = await getContracts();
+    contracts = await getContracts({ resetCache: true });
     // destructure contracts into upper state
     ({
       // DutchExchange: dx,
@@ -307,12 +309,12 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
     dx = await InternalTests.new(...initParams)
     contracts.DutchExchange = dx
 
-    await setupTest(accounts, contracts, startBal)
+    await setupTest(setupAccounts, contracts, startBal)
 
     // generatae OWL
 
-    gno.approve(owlA.address, 50000 * (10 ** 18))
-    owlA.lockGNO(50000 * (10 ** 18))
+    gno.approve(owlA.address, 50000.0.toWei())
+    owlA.lockGNO(50000.0.toWei())
 
     const depositETH = async (amt, acct) => {
       await eth.deposit({ from: acct, value: amt })
@@ -335,10 +337,10 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
       2,
       1,
       { from: seller1 },
-    )*/
+    ) */
 
     await mgn.updateMinter(master, { from: master })
-    logger('PRICE ORACLE', await oracle.getUSDETHPrice.call())
+    log('PRICE ORACLE', () => oracle.getUSDETHPrice.call())
 
     eventWatcher(dx, 'LogNumber')
   })
@@ -479,7 +481,7 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
   }
 
   const calculateFeeInUSD = async (fee, token) => {
-    const [ETHUSDPrice, [num, den]] = await Promise.all([
+    const [ETHUSDPrice, { num, den }] = await Promise.all([
       oracle.getUSDETHPrice.call(),
       dx.getPriceOfTokenInLastAuction.call(token)
     ])
@@ -657,7 +659,8 @@ const c2 = () => contract('DutchExchange - settleFee', accounts => {
 
     await settleFee(eth.address, gno.address, auctionIndex, seller1, amount, { from: seller1 })
     const extraTokens2 = await getExtraTokens2(eth.address, gno.address, auctionIndex)
-    assert.isTrue(extraTokens1.add(fee).eq(extraTokens2), 'extraTokens should be increased by fee')
+
+    assert.isTrue(extraTokens1.add(fee.toBN()).eq(extraTokens2), 'extraTokens should be increased by fee')
 
     const owlBalance2 = (await owl.balanceOf(seller1)).toNumber()
     log(`\tburned OWL == ${amountOfOWLBurned}`)

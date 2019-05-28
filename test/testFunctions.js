@@ -1,23 +1,11 @@
-/* global, assert, artifacts */
-/* eslint no-undef: "error" */
+/* global assert, artifacts */
+const { BN, ether, time } = require('openzeppelin-test-helpers')
 
-/*
-  eslint prefer-const: 0,
-  max-len: 0,
-  object-curly-newline: 1,
-  no-param-reassign: 0,
-  no-console: 0,
-  no-mixed-operators: 0,
-  no-floating-decimal: 0,
-  no-underscore-dangle:0,
-  no-return-assign:0,
-*/
-const bn = require('bignumber.js')
-const { wait } = require('@digix/tempo')(web3)
 const {
   silent,
   gasLogWrapper,
   log,
+  toEth,
   timestamp,
   varLogger
 } = require('./utils')
@@ -25,18 +13,18 @@ const {
 // I know, it's gross
 // add wei converter
 /* eslint no-extend-native: 0 */
-
 Number.prototype.toWei = function toWei () {
-  return bn(this, 10).times(10 ** 18).toNumber()
+  return ether(this.toString())
 }
-Number.prototype.toEth = function toEth () {
-  return bn(this, 10).div(10 ** 18).toNumber()
+Number.prototype.toBN = function toBN () {
+  return new BN(this.toString(), 10)
 }
 
 const MaxRoundingError = 100
 
 const contractNames = [
   'DutchExchangeProxy',
+  'DutchExchangeHelper',
   'EtherToken',
   'OWLAirdrop',
   'TokenGNO',
@@ -49,29 +37,35 @@ const contractNames = [
 ]
 // DutchExchange and TokenOWL are added after their respective Proxy contracts are deployed
 
+let contractsCache
+
 /**
  * getContracts - async loads contracts and instances
  *
  * @returns { Mapping(contractName => deployedContract) }
  */
-const getContracts = async () => {
-  const depContracts = contractNames.map(c => artifacts.require(c)).map(cc => cc.deployed())
-  const contractInstances = await Promise.all(depContracts)
+const getContracts = async ({ resetCache } = {}) => {
+  if (!contractsCache || resetCache) {
+    const depContracts = contractNames.map(c => artifacts.require(c)).map(cc => cc.deployed())
+    const contractInstances = await Promise.all(depContracts)
 
-  const gasLoggedContracts = gasLogWrapper(contractInstances)
+    const gasLoggedContracts = gasLogWrapper(contractInstances)
 
-  const deployedContracts = contractNames.reduce((acc, name, i) => {
-    acc[name] = gasLoggedContracts[i]
-    return acc
-  }, {})
-  const proxiedContracts = await Promise.all([
-    artifacts.require('DutchExchange').at(deployedContracts.DutchExchangeProxy.address),
-    artifacts.require('TokenOWL').at(deployedContracts.TokenOWLProxy.address),
-    artifacts.require('TokenFRT').at(deployedContracts.TokenFRTProxy.address)
-  ]);
+    const deployedContracts = contractNames.reduce((acc, name, i) => {
+      acc[name] = gasLoggedContracts[i]
+      return acc
+    }, {})
+    const proxiedContracts = await Promise.all([
+      artifacts.require('DutchExchange').at(deployedContracts.DutchExchangeProxy.address),
+      artifacts.require('TokenOWL').at(deployedContracts.TokenOWLProxy.address),
+      artifacts.require('TokenFRT').at(deployedContracts.TokenFRTProxy.address)
+    ]);
 
-  [deployedContracts.DutchExchange, deployedContracts.TokenOWL, deployedContracts.TokenFRT] = gasLogWrapper(proxiedContracts)
-  return deployedContracts
+    [deployedContracts.DutchExchange, deployedContracts.TokenOWL, deployedContracts.TokenFRT] = gasLogWrapper(proxiedContracts)
+
+    contractsCache = deployedContracts
+  }
+  return contractsCache
 }
 
 /**
@@ -81,7 +75,7 @@ const getContracts = async () => {
  */
 const getBalance = async (acct, token) => {
   const { DutchExchange: dx } = await getContracts()
-  return (await dx.balances.call(token.address, acct)).toNumber()
+  return dx.balances.call(token.address, acct)
 }
 
 const getAuctionStart = async (ST, BT) => {
@@ -152,14 +146,15 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
 
   // wait for the right time to send buyOrder
   // implements isAtLeastZero (aka will not go BACK in time)
-  await wait((startingTimeOfAuction - timestamp()))
+  await time.increase(startingTimeOfAuction - await timestamp())
 
+  const now = await timestamp()
   log(`
-  time now ----------> ${new Date(timestamp() * 1000)}
+  time now ----------> ${new Date(now * 1000)}
   auction starts ----> ${new Date(startingTimeOfAuction * 1000)}
   `)
 
-  assert.equal(timestamp() >= startingTimeOfAuction, true)
+  assert.equal(now >= startingTimeOfAuction, true)
 }
 
 /**
@@ -170,44 +165,43 @@ const setAndCheckAuctionStarted = async (ST, BT) => {
  */
 const waitUntilPriceIsXPercentOfPreviousPrice = async (ST, BT, p) => {
   const { DutchExchange: dx } = await getContracts()
-  const [getAuctionIndex, getAuctionStart] = await Promise.all([
-    dx.getAuctionIndex.call(ST.address, BT.address),
-    dx.getAuctionStart.call(ST.address, BT.address)
-  ])
 
-  const currentIndex = getAuctionIndex.toNumber()
-  const startingTimeOfAuction = getAuctionStart.toNumber()
-  let priceBefore = 1
+  let currentIndex, priceBefore, currentAuctionPrice
   if (!silent) {
-    let [num, den] = (await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex))
-    priceBefore = num.div(den)
+    currentIndex = await dx.getAuctionIndex.call(ST.address, BT.address)
+    currentAuctionPrice = await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex)
+    let { num, den } = currentAuctionPrice
+    priceBefore = num / den
     log(`
       Price BEFORE waiting until Price = initial Closing Price (2) * 2
       ==============================
-      Price.num             = ${num.toNumber()}
-      Price.den             = ${den.toNumber()}
+      Price.num             = ${num}
+      Price.den             = ${den}
       Price at this moment  = ${(priceBefore)}
       ==============================
     `)
   }
 
+  const startingTimeOfAuction = (await dx.getAuctionStart.call(ST.address, BT.address)).toNumber()
   const timeToWaitFor = Math.ceil((86400 - p * 43200) / (1 + p)) + startingTimeOfAuction
   // wait until the price is good
-  await wait(timeToWaitFor - timestamp())
+  await time.increase(timeToWaitFor - await timestamp())
 
   if (!silent) {
-    ([num, den] = (await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex)))
-    const priceAfter = num.div(den)
+    currentAuctionPrice = await dx.getCurrentAuctionPrice.call(ST.address, BT.address, currentIndex)
+    num = currentAuctionPrice.num
+    den = currentAuctionPrice.den
+    const priceAfter = num / den
     log(`
       Price AFTER waiting until Price = ${p * 100}% of ${priceBefore / 2} (initial Closing Price)
       ==============================
-      Price.num             = ${num.toNumber()}
-      Price.den             = ${den.toNumber()}
+      Price.num             = ${num}
+      Price.den             = ${den}
       Price at this moment  = ${(priceAfter)}
       ==============================
     `)
   }
-  assert.equal(timestamp() >= timeToWaitFor, true)
+  assert.equal(await timestamp() >= timeToWaitFor, true)
   // assert.isAtLeast(priceAfter, (priceBefore / 2) * p)
 
   return timeToWaitFor
@@ -240,7 +234,7 @@ const checkBalanceBeforeClaim = async (
     token = BT
   }
 
-  const balanceBeforeClaim = (await dx.balances.call(token.address, acct))
+  const balanceBeforeClaim = await dx.balances.call(token.address, acct)
 
   if (claiming === 'buyer') {
     await dx.claimBuyerFunds(ST.address, BT.address, acct, idx)
@@ -248,13 +242,13 @@ const checkBalanceBeforeClaim = async (
     await dx.claimSellerFunds(ST.address, BT.address, acct, idx)
   }
 
-  const balanceAfterClaim = (await dx.balances.call(token.address, acct))
-  const difference = balanceBeforeClaim.add(amt).minus(balanceAfterClaim).abs()
+  const balanceAfterClaim = await dx.balances.call(token.address, acct)
+  const difference = balanceBeforeClaim.add(amt).sub(balanceAfterClaim).abs()
   varLogger('claiming for', claiming)
-  varLogger('balanceBeforeClaim', balanceBeforeClaim.toNumber())
-  varLogger('amount', amt)
-  varLogger('balanceAfterClaim', balanceAfterClaim.toNumber())
-  varLogger('difference', difference.toNumber())
+  varLogger('balanceBeforeClaim', balanceBeforeClaim.toString())
+  varLogger('amount', amt.toString())
+  varLogger('balanceAfterClaim', balanceAfterClaim.toString())
+  varLogger('difference', difference.toString())
   assert.equal(difference.toNumber() < round, true)
 }
 
@@ -290,13 +284,13 @@ const postBuyOrder = async (ST, BT, aucIdx, amt, acct) => {
     log(`
     Current Auction Index -> ${auctionIdx}
     `)
-    const buyVolumes = (await dx.buyVolumes.call(ST.address, BT.address)).toNumber()
-    const sellVolumes = (await dx.sellVolumesCurrent.call(ST.address, BT.address)).toNumber()
+    const buyVolumes = await dx.buyVolumes.call(ST.address, BT.address)
+    const sellVolumes = await dx.sellVolumesCurrent.call(ST.address, BT.address)
     log(`
-      Current Buy Volume BEFORE Posting => ${buyVolumes.toEth()}
-      Current Sell Volume               => ${sellVolumes.toEth()}
+      Current Buy Volume BEFORE Posting => ${toEth(buyVolumes)}
+      Current Sell Volume               => ${toEth(sellVolumes)}
       ----
-      Posting Buy Amt -------------------> ${amt.toEth()} in GNO for ETH
+      Posting Buy Amt -------------------> ${toEth(amt)} in ${await ST.symbol()} for ${await BT.symbol()} in auction ${auctionIdx}
     `)
   }
   // log('POSTBUYORDER TX RECEIPT ==', await dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct }))
@@ -318,13 +312,13 @@ const postSellOrder = async (ST, BT, aucIdx, amt, acct) => {
   let auctionIdx = aucIdx || 0
 
   if (!silent) {
-    const buyVolumes = (await dx.buyVolumes.call(ST.address, BT.address)).toNumber()
-    const sellVolumes = (await dx.sellVolumesCurrent.call(ST.address, BT.address)).toNumber()
+    const buyVolumes = (await dx.buyVolumes.call(ST.address, BT.address))
+    const sellVolumes = (await dx.sellVolumesCurrent.call(ST.address, BT.address))
     log(`
-      Current Buy Volume BEFORE Posting => ${buyVolumes.toEth()}
-      Current Sell Volume               => ${sellVolumes.toEth()}
+      Current Buy Volume BEFORE Posting => ${toEth(buyVolumes)}
+      Current Sell Volume               => ${toEth(sellVolumes)}
       ----
-      Posting Sell Amt -------------------> ${amt.toEth()} in ${await ST.symbol()} for ${await BT.symbol()} in auction ${auctionIdx}
+      Posting Sell Amt -------------------> ${toEth(amt)} in ${await ST.symbol()} for ${await BT.symbol()} in auction ${auctionIdx}
     `)
   }
   // log('POSTBUYORDER TX RECEIPT ==', await dx.postBuyOrder(ST.address, BT.address, auctionIdx, amt, { from: acct }))
@@ -365,10 +359,10 @@ const claimSellerFunds = async (ST, BT, user, aucIdx, acct) => {
   ST = ST || eth; BT = BT || gno; user = user || acct
   let auctionIdx = aucIdx || await getAuctionIndex(ST, BT)
   log('AUC IDX = ', auctionIdx)
-  const [returned, tulipsIssued] = (await dx.claimSellerFunds.call(ST.address, BT.address, user, auctionIdx)).map(n => n.toNumber())
+  const { returned, frtsIssued } = await dx.claimSellerFunds.call(ST.address, BT.address, user, auctionIdx)
   log(`
-  RETURNED    ===> ${returned.toEth()}
-  TUL ISSUED  ===> ${tulipsIssued.toEth()}
+  RETURNED    ===> ${toEth(returned)}
+  MGN ISSUED  ===> ${toEth(frtsIssued)}
   `)
   return dx.claimSellerFunds(ST.address, BT.address, user, auctionIdx, { from: user })
 }
@@ -387,30 +381,32 @@ const assertClaimingFundsCreatesMGNs = async (ST, BT, acc, type) => {
 
   if (!ST || !BT) throw new Error('No tokens passed in')
 
-  let tulipsIssued
+  let mgnsIssued
   // NOTE: MGNs are NOT minted/issued/etc until Auction has CLEARED
   const auctionIdx = await getAuctionIndex(ST, BT)
   assert.isAtLeast(auctionIdx, 2, 'Auction needs to have cleared - throw otherwise')
 
   // grab prevTulBalance to compare against new MGNs Issued later
-  const prevTulBal = (await tokenMGN.lockedTokenBalances.call(acc)).toNumber()
+  const prevTulBal = await tokenMGN.lockedTokenBalances.call(acc)
 
   if (type === 'seller') {
-    ([, tulipsIssued] = (await dx.claimSellerFunds.call(ST.address, BT.address, acc, auctionIdx - 1)).map(n => n.toNumber()))
+    const { frtsIssued: frtsAsSeller } = await dx.claimSellerFunds.call(ST.address, BT.address, acc, auctionIdx - 1)
     await claimSellerFunds(ST, BT, acc, auctionIdx - 1)
+    mgnsIssued = frtsAsSeller
   } else {
-    ([, tulipsIssued] = (await dx.claimBuyerFunds.call(ST.address, BT.address, acc, auctionIdx - 1)).map(n => n.toNumber()))
+    const { frtsIssued: frtsAsBuyer } = await dx.claimBuyerFunds.call(ST.address, BT.address, acc, auctionIdx - 1)
     await claimBuyerFunds(ST, BT, acc, auctionIdx - 1)
+    mgnsIssued = frtsAsBuyer
   }
 
-  const newTulBal = (await tokenMGN.lockedTokenBalances.call(acc)).toNumber()
+  const newMgnBal = await tokenMGN.lockedTokenBalances.call(acc)
   log(`
-    LockedTulBal === ${newTulBal.toEth()}
-    prevTul + tulipsIss = newTulBal
-    ${prevTulBal.toEth()} + ${tulipsIssued.toEth()} = ${newTulBal.toEth()}
+    LockedMgnBal === ${toEth(newMgnBal)}
+    prevMgn + mgnIssued = newMgnBal
+    ${toEth(prevTulBal)} + ${toEth(mgnsIssued)} = ${toEth(newMgnBal)}
     `)
 
-  assert.equal(newTulBal, prevTulBal + tulipsIssued)
+  assert.equal(newMgnBal.toString(), prevTulBal.add(mgnsIssued).toString())
 }
 
 /**
@@ -500,7 +496,7 @@ const checkUserReceivesTulipTokens = async (ST, BT, user, idx, lastClosingPrice)
  * @param {numb} Auction Index
  */
 const assertReturnedPlusMGNs = async (ST, BT, acc, type, idx = 1, eth) => {
-  let returned, tulipsIssued, userBalances
+  let claimedAmount, mgnsIssued, userBalances
   const [
     { DutchExchange: dx },
     STName,
@@ -515,27 +511,31 @@ const assertReturnedPlusMGNs = async (ST, BT, acc, type, idx = 1, eth) => {
   const nonETH = STName !== 'Ether Token' && BTName !== 'Ether Token'
 
   // calc closingPrices for both ETH/ERC20 and nonETH trades
-  const [num, den] = (await dx.closingPrices.call(ST.address, BT.address, idx)).map(s => s.toNumber())
-  const [hNum, hDen] = (await dx.getPriceInPastAuction.call(type === 'seller' ? ST.address : BT.address, eth.address, idx - 1)).map(s => s.toNumber())
+  const { num, den } = await dx.closingPrices.call(ST.address, BT.address, idx)
+  const { num: hNum, den: hDen } = await dx.getPriceInPastAuction.call(type === 'seller' ? ST.address : BT.address, eth.address, idx - 1)
 
   // conditionally check sellerBalances and returned/tulipIssued
   if (type === 'seller') {
-    userBalances = (await dx.sellerBalances.call(ST.address, BT.address, idx, acc)).toNumber();
-    ([returned, tulipsIssued] = (await dx.claimSellerFunds.call(ST.address, BT.address, acc, idx)).map(s => s.toNumber()))
+    userBalances = await dx.sellerBalances.call(ST.address, BT.address, idx, acc)
+    const { returned, frtsIssued } = await dx.claimSellerFunds.call(ST.address, BT.address, acc, idx)
+    claimedAmount = returned
+    mgnsIssued = frtsIssued
   } else {
-    userBalances = (await dx.buyerBalances.call(ST.address, BT.address, idx, acc)).toNumber();
-    ([returned, tulipsIssued] = (await dx.claimBuyerFunds.call(ST.address, BT.address, acc, idx)).map(s => s.toNumber()))
+    userBalances = await dx.buyerBalances.call(ST.address, BT.address, idx, acc)
+    const { returned, frtsIssued } = await dx.claimBuyerFunds.call(ST.address, BT.address, acc, idx)
+    claimedAmount = returned
+    mgnsIssued = frtsIssued
   }
 
   log(`
   ${type === 'seller' ? '==SELLER==' : '==BUYER== '}
   [${STName}]//[${BTName}]
-  ${type === 'seller' ? 'sellerBalance' : 'buyerBalance '}      == ${userBalances.toEth()}
+  ${type === 'seller' ? 'sellerBalance' : 'buyerBalance '}      == ${toEth(userBalances)}
   lastClosingPrice    == ${type === 'seller' ? (num / den) : (den / num)}
   lastHistoricalPrice == ${hNum / hDen}
   PriceToUse          == ${type === 'seller' && !nonETH ? (num / den) : type === 'seller' && nonETH ? (hNum / hDen) : type === 'buyer' && !nonETH ? (den / num) : (hNum / hDen)}
-  RETURNED tokens     == ${returned.toEth()}
-  TULIP tokens        == ${tulipsIssued.toEth()}
+  RETURNED tokens     == ${toEth(claimedAmount)}
+  MGN tokens        == ${toEth(mgnsIssued)}
   `)
 
   // ASSERTIONS
@@ -543,31 +543,34 @@ const assertReturnedPlusMGNs = async (ST, BT, acc, type, idx = 1, eth) => {
   if (type === 'seller') {
     if (!nonETH) {
       if (STName === 'Ether Token') {
-        assert.equal(tulipsIssued, userBalances)
+        assert.equal(mgnsIssued.toString(), userBalances.toString())
       } else {
-        assert.equal(tulipsIssued, returned)
+        assert.equal(mgnsIssued.toString(), claimedAmount.toString())
       }
       // else this is a ERC20:ERC20 trade
     } else {
-      assert.equal(tulipsIssued, userBalances * hNum / hDen)
+      assert.equal(mgnsIssued.toString(), userBalances.mul(hNum).div(hDen).toString())
     }
     // all claimSellFunds calc returned the same
-    assert.equal(returned, userBalances * (num / den))
+    assert.equal(claimedAmount.toString(), userBalances.mul(num).div(den).toString())
     // Buyer
   } else if (!nonETH) {
     if (BTName === 'Ether Token') {
-      assert.equal(tulipsIssued, userBalances, 'claimBuyerFunds: BT = ETH >--> tulips = buyerBalances')
+      assert.equal(mgnsIssued.toString(), userBalances.toString(),
+        'claimBuyerFunds: BT = ETH >--> tulips = buyerBalances')
     } else {
-      assert.isAtLeast(userBalances * (den / num), tulipsIssued, 'claimBuyerFunds: ST = ETH >--> tulips = buyerBalances * (den/num)')
+      assert.isTrue(userBalances.mul(den).div(num).gte(mgnsIssued),
+        'claimBuyerFunds: ST = ETH >--> tulips = buyerBalances * (den/num)')
     }
     // Trade involves ERC20:ERC20 pair
   } else {
-    assert.equal(tulipsIssued, userBalances * (hNum / hDen), 'claimBuyerFunds: ERC20:ERC20 tulips = buyerBalances * (hNum/hDen)')
+    assert.equal(mgnsIssued.toString(), userBalances.mul(hNum).div(hDen).toString(),
+      'claimBuyerFunds: ERC20:ERC20 tulips = buyerBalances * (hNum/hDen)')
   }
 }
 
 /**
- * unlockTulipTokens
+ * unlockMGNTokens
  * @param {address} user => address to unlock Tokens for
  */
 const unlockMGNTokens = async (user, ST, BT) => {
@@ -577,61 +580,64 @@ const unlockMGNTokens = async (user, ST, BT) => {
 
   // cache locked balances Mapping in TokenFRT contract
   // filled automatically after auction closes and TokenFRT.mintTokens is called
-  const lockedBalMap = (await tokenMGN.lockedTokenBalances.call(user))
+  const lockedBalMap = await tokenMGN.lockedTokenBalances.call(user)
   log(`
-  TOKENTUL.lockedTokenBalances[user] === ${lockedBalMap.toNumber().toEth()}
+  TOKENTUL.lockedTokenBalances[user] === ${toEth(lockedBalMap)}
   `)
 
   // cache the locked Amount of user MGNs from TokenFRT MAP
   // this map is ONLY calculated and filled AFTER auction clears
-  const lockedUserMGNs = (await tokenMGN.lockedTokenBalances.call(user)).toNumber()
+  const lockedUserMGNs = await tokenMGN.lockedTokenBalances.call(user)
   /*
    * SUB TEST 1: CHECK UNLOCKED AMT + WITHDRAWAL TIME
    * [should be 0,0 as none LOCKED so naturally none to unlock yet]
    */
-  let [unlockedFunds, withdrawTime] = (await tokenMGN.unlockedTokens.call(user)).map(n => n.toNumber())
+  const { amountUnlocked: unlockedFunds, withdrawalTime } = await tokenMGN.unlockedTokens.call(user)
   log(`
-  AMT OF UNLOCKED FUNDS  = ${unlockedFunds.toEth()}
-  TIME OF WITHDRAWAL     = ${withdrawTime} [0 means no withdraw time as there are 0 locked tokens]
+  AMT OF UNLOCKED FUNDS  = ${toEth(unlockedFunds)}
+  TIME OF WITHDRAWAL     = ${withdrawalTime} [0 means no withdraw time as there are 0 locked tokens]
   `)
-  assert.equal(unlockedFunds, 0, 'unlockedFunds should be 0')
-  assert.equal(withdrawTime, 0, 'Withdraw time should be 0 ')
+  assert.isTrue(unlockedFunds.isZero(), 'unlockedFunds should be 0')
+  assert.isTrue(withdrawalTime.isZero(), 'Withdraw time should be 0 ')
 
   /*
    * SUB TEST 2: LOCK TOKENS
    */
   // lock total tulips in lockedMap
   await tokenMGN.lockTokens(lockedUserMGNs, { from: user })
-  const totalAmtLocked = (await tokenMGN.lockTokens.call(lockedUserMGNs, { from: user })).toNumber()
+  const totalAmtLocked = await tokenMGN.lockTokens.call(lockedUserMGNs, { from: user })
   log(`
-  TOKENS LOCKED          = ${totalAmtLocked.toEth()}
+  TOKENS LOCKED          = ${toEth(totalAmtLocked)}
   `)
   if (aucIdx === 2) {
     // auction HAS cleared, TUL should have been minted
-    assert.equal(totalAmtLocked, lockedUserMGNs, 'Total locked tulips should equal total user balance of tulips')
+    assert.equal(totalAmtLocked.toString(), lockedUserMGNs.toString(), 'Total locked tulips should equal total user balance of tulips')
   } else {
     // auction has NOT cleared, no minting
-    assert.equal(totalAmtLocked, 0, 'Total locked tulips should equal total user balance of tulips')
+    assert.isTrue(totalAmtLocked.isZero(), 'Total locked tulips should equal total user balance of tulips')
   }
 
   /*
    * SUB TEST 3: UN-LOCK TOKENS
    */
-  await tokenMGN.unlockTokens({ from: user });
-  ([unlockedFunds, withdrawTime] = (await tokenMGN.unlockTokens.call({ from: user })).map(t => t.toNumber()))
+  await tokenMGN.unlockTokens({ from: user })
+  const { totalAmountUnlocked: unlockedFunds2, withdrawalTime: withdrawalTime2 } = await tokenMGN.unlockTokens.call({ from: user })
   log(`
-  AMT OF UNLOCKED FUNDS  = ${unlockedFunds.toEth()}
-  TIME OF WITHDRAWAL     = ${withdrawTime} --> ${new Date(withdrawTime * 1000)}
+  AMT OF UNLOCKED FUNDS  = ${toEth(unlockedFunds2)}
+  TIME OF WITHDRAWAL     = ${withdrawalTime2} --> ${new Date(withdrawalTime2 * 1000)}
   `)
   if (aucIdx === 2) {
     // Auction HAS cleared
-    assert.equal(unlockedFunds, lockedUserMGNs, 'unlockedFunds should be = lockedUserMGNs')
-    // assert withdrawTime === now (in seconds) + 24 hours (in seconds)
-    assert.equal(withdrawTime, timestamp() + (24 * 3600), 'Withdraw time should be equal to [(24 hours in seconds) + (current Block timestamp in seconds)]')
+    assert.equal(
+      unlockedFunds2.toString(),
+      lockedUserMGNs.toString(),
+      'unlockedFunds2 should be = lockedUserMGNs')
+    // assert withdrawalTime === now (in seconds) + 24 hours (in seconds)
+    assert.equal(withdrawalTime2, await timestamp() + (24 * 3600), 'Withdraw time should be equal to [(24 hours in seconds) + (current Block timestamp in seconds)]')
   } else {
-    assert.equal(unlockedFunds, 0, 'unlockedFunds should be = 0 as no tokens minted')
-    // assert withdrawTime === now (in seconds) + 24 hours (in seconds)
-    assert.equal(withdrawTime, 0, 'Withdraw time should be equal 0 as no Token minted')
+    assert.isTrue(unlockedFunds2.isZero(), 'unlockedFunds2 should be = 0 as no tokens minted')
+    // assert withdrawalTime === now (in seconds) + 24 hours (in seconds)
+    assert.equal(withdrawalTime2, 0, 'Withdraw time should be equal 0 as no Token minted')
   }
 }
 
@@ -644,7 +650,7 @@ const calculateTokensInExchange = async (Accounts, Tokens) => {
   const { DutchExchange: dx } = await getContracts()
   for (let token of Tokens) {
     // add all normal balances
-    let balance = bn(0)
+    let balance = new BN('0')
     for (let acct of Accounts) {
       balance = balance.add((await dx.balances.call(token.address, acct)))
     }
@@ -658,13 +664,15 @@ const calculateTokensInExchange = async (Accounts, Tokens) => {
         // check old auctions balances
         for (let auctionIndex = 1; auctionIndex < lastAuctionIndex; auctionIndex += 1) {
           for (let acct of Accounts) {
-            if ((await dx.buyerBalances.call(token.address, tokenPartner.address, auctionIndex, acct)).toNumber() > 0) {
-              const [w] = (await dx.claimBuyerFunds.call(token.address, tokenPartner.address, acct, auctionIndex))
-              balance = balance.add(w)
+            const buyerBalance = await dx.buyerBalances.call(token.address, tokenPartner.address, auctionIndex, acct)
+            if (buyerBalance.gt(new BN('0'))) {
+              const { returned } = await dx.claimBuyerFunds.call(token.address, tokenPartner.address, acct, auctionIndex)
+              balance = balance.add(returned)
             }
-            if ((await dx.sellerBalances.call(tokenPartner.address, token.address, auctionIndex, acct)).toNumber() > 0) {
-              const [w] = await dx.claimSellerFunds.call(tokenPartner.address, token.address, acct, auctionIndex)
-              balance = balance.add(w)
+            const sellerBalance = await dx.sellerBalances.call(tokenPartner.address, token.address, auctionIndex, acct)
+            if (sellerBalance.gt(new BN('0'))) {
+              const { returned } = await dx.claimSellerFunds.call(tokenPartner.address, token.address, acct, auctionIndex)
+              balance = balance.add(returned)
             }
           }
         }
@@ -700,6 +708,51 @@ const calculateTokensInExchange = async (Accounts, Tokens) => {
   return results
 }
 
+// checkState is only a rough check for right updates of the numbers in the smart contract. It allows a big tolerance (MaxroundingError)
+// since there are unpredicted timejumps with an evm_increase time, which are not caught.
+// This should not be a issue, because the focus within these tests is system testing instead of unit testing.
+// Testing exact amounts is not needed, since the correct execution of number updates is checked
+// with our unit tests within dutchExchange-postBuyOrder/dutchExchange-postSellOrder
+const checkState = async (auctionIndex, auctionStart, sellVolumesCurrent, sellVolumesNext, buyVolumes, closingPriceNum, closingPriceDen, ST, BT, MaxRoundingError) => {
+  const { DutchExchange: dx } = await getContracts()
+  const [
+    stBtAuctionIndex,
+    btStAuctionIndex,
+    getAuctionStart,
+    getSellVolumesCurrent,
+    getSellVolumesNext,
+    getBuyVolumes,
+    getClosingPrices
+  ] = await Promise.all([
+    dx.getAuctionIndex.call(ST.address, BT.address),
+    dx.getAuctionIndex.call(BT.address, ST.address),
+    dx.getAuctionStart.call(ST.address, BT.address),
+    dx.sellVolumesCurrent.call(ST.address, BT.address),
+    dx.sellVolumesNext.call(ST.address, BT.address),
+    dx.buyVolumes.call(ST.address, BT.address),
+    dx.closingPrices.call(ST.address, BT.address, auctionIndex)
+  ])
+
+  assert.equal(stBtAuctionIndex.toNumber(), auctionIndex, 'auction index is not correct')
+  assert.equal(btStAuctionIndex.toNumber(), auctionIndex, 'auction index is not correct')
+
+  let difference = Math.abs(getAuctionStart.toNumber() - auctionStart)
+  assert.isAtMost(difference, 5, 'time difference bigger than 5 sec')
+  assert.equal(getSellVolumesCurrent.toString(), sellVolumesCurrent.toString(), ' current SellVolume not correct')
+  assert.equal(getSellVolumesNext.toString(), sellVolumesNext.toString(), 'sellVolumeNext is incorrect')
+  log('buyVolumes', buyVolumes.toString())
+  log(getBuyVolumes.toString())
+  difference = getBuyVolumes.sub(buyVolumes).abs().toNumber()
+  assert.isAtMost(difference, MaxRoundingError, 'buyVolumes incorrect')
+
+  const { num: closingPriceNumReal, den: closingPriceDenReal } = getClosingPrices
+  log('ClosingPriceNumReal', closingPriceNumReal.toString())
+  log('ClosingPriceNum', closingPriceNum.toString())
+  difference = closingPriceNumReal.sub(closingPriceNum).abs().toNumber()
+  assert.isAtMost(difference, MaxRoundingError, 'ClosingPriceNum is not okay')
+  assert.equal(closingPriceDenReal.toString(), closingPriceDen.toString(), 'ClosingPriceDen is not okay')
+}
+
 const getClearingTime = async (sellToken, buyToken, auctionIndex) => {
   const { DutchExchange: dx } = await getContracts()
   return (await dx.getClearingTime.call(sellToken.address ||
@@ -722,9 +775,10 @@ module.exports = {
   setAndCheckAuctionStarted,
   setupTest,
   unlockMGNTokens,
-  wait,
+  wait: time.increase,
   waitUntilPriceIsXPercentOfPreviousPrice,
   calculateTokensInExchange,
   getClearingTime,
-  getAuctionStart
+  getAuctionStart,
+  checkState
 }
