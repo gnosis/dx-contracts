@@ -3,11 +3,11 @@ sudo: required
 dist: trusty
 language: node_js
 node_js:
-  - '8'
+  - '10'
 cache: npm
 before_install:
   - rm -rf node_modules
-  - npm install -g ganache-cli@6.2.5
+  - npm install -g ganache-cli@6.4.3
 install:
   - npm install
 before_script:
