@@ -289,5 +289,12 @@ module.exports = [
     'address': '0x985dd3d42de1e256d09e1c10f112bccb8015ad41',
     'approve': true,
     'etherScanLink': 'https://etherscan.io/token/0x985dd3d42de1e256d09e1c10f112bccb8015ad41'
+  },
+  {
+    'name': 'Streamr',
+    'symbol': 'DATA',
+    'address': '0x0cf0ee63788a0849fe5297f3407f701e122cc023',
+    'approve': true,
+    'etherScanLink': 'https://etherscan.io/token/0x0cf0ee63788a0849fe5297f3407f701e122cc023'
   }
 ]
