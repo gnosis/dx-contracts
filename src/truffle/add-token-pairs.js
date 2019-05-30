@@ -157,6 +157,8 @@ async function addTokenPair (tokenPair, contractsInfo, params) {
 
 async function ensureEnoughBalance (token, { account, wethAddress, etherBalance, GnosisStandardToken, dx }) {
   const { address: tokenAddress, funding, symbol } = token
+  assert(tokenAddress, 'Address is mandatory. Missing for token ' + symbol)
+
   if (funding === 0) {
     // If we don fund the token, we can skip the balance check
     return
@@ -165,7 +167,7 @@ async function ensureEnoughBalance (token, { account, wethAddress, etherBalance,
   const tokenContract = GnosisStandardToken.at(tokenAddress)
 
   // dx.deposit.call(tokenAddress)
-  const [ balanceToken, balanceDx ] = await Promise.all([
+  const [balanceToken, balanceDx] = await Promise.all([
     // Get balance of the token ERC20 for the user
     tokenContract
       .balanceOf
@@ -265,7 +267,7 @@ async function getPriceInPastAuction (tokenA, tokenB, dx) {
     .getPriceInPastAuction
     .call(addressA, addressB, auctionIndex)
 
-  const [ numerator, denominator ] = priceFraction
+  const [numerator, denominator] = priceFraction
   return numerator.div(denominator)
 }
 
