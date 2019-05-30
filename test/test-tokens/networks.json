@@ -7,6 +7,14 @@
       "transactionHash": "0xcc49cb1456fbc7beaf1278952577ef84ec46c5efd5bf61c410e09444547faa28"
     }
   },
+  "TokenCVC": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0x67Fe0FDf579043de35d9CB2F10C81B63aa8aEef9",
+      "transactionHash": "0x7a2e9f575b2f58f71a7ec311dbfa873e65fe05b65103a606acc86813f3049336"
+    }
+  },
   "TokenDAI": {
     "4": {
       "events": {},
@@ -21,6 +29,14 @@
       "links": {},
       "address": "0xA1F34744C80e7a9019a5Cd2Bf697F13DF00F9773",
       "transactionHash": "0x1619011f643a3a0ecd32d5d9fc348c72060710acbe264c91284d98f296475b58"
+    }
+  },
+  "TokenGRID": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0xB35E3E3E7A87C2B04DEc49a7b5DA7c1A23a09e64",
+      "transactionHash": "0x0f7bc9c59a1f2dfe5d61ed600c2bc2473ffaad3a87e01732a9182a06c7f3755f"
     }
   },
   "TokenKNC": {

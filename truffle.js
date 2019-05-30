@@ -37,6 +37,9 @@ module.exports = {
   ...truffleConfig({
     mnemonic,
     privateKey,
+    urlRinkeby: 'https://rinkeby.infura.io/v3/9408f47dedf04716a03ef994182cf150',
+    urlKovan: 'https://kovan.infura.io/v3/9408f47dedf04716a03ef994182cf150',
+    urlMainnet: 'https://mainnet.infura.io/v3/9408f47dedf04716a03ef994182cf150',
     gasPriceGWei,
     gas,
     aditionalNetwork,
